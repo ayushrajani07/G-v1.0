@@ -1,0 +1,885 @@
+groups:
+  - name: g6_option_greeks.rules
+    interval: 30s
+    rules:
+      # Focus ATM (delta~0.5) CE/PE by selecting strike with max(open interest) near spot implicitly via min without explicit join.
+      # Simplify by restricting to strikes where |delta| between 0.40 and 0.60 as ATM proxy (reduces label churn vs dynamic strike math).
+      - record: g6:atm_option_delta_ce
+        expr: max by (index, expiry) ((g6_option_delta{type="CE"} > 0.40) * (g6_option_delta{type="CE"} < 0.60) * g6_option_delta{type="CE"})
+      - record: g6:atm_option_delta_pe
+        expr: min by (index, expiry) ((g6_option_delta{type="PE"} < -0.40) * (g6_option_delta{type="PE"} > -0.60) * g6_option_delta{type="PE"})
+      # ATM IV representative (average CE+PE ATM IV)
+      - record: g6:atm_option_iv
+        expr: |
+          (
+            avg by (index, expiry) ((g6_option_delta{type="CE"} > 0.40) * (g6_option_delta{type="CE"} < 0.60) * g6_option_iv{type="CE"})
+            +
+            avg by (index, expiry) ((g6_option_delta{type="PE"} < -0.40) * (g6_option_delta{type="PE"} > -0.60) * g6_option_iv{type="PE"})
+          ) / 2
+      # Intraday baseline: 30m rolling mean & stddev for atm iv (requires ~30m warmup)
+      - record: g6:atm_option_iv_mean_30m
+        expr: avg_over_time(g6:atm_option_iv[30m])
+      - record: g6:atm_option_iv_stddev_30m
+        expr: stddev_over_time(g6:atm_option_iv[30m])
+      # IV z-score (cap stddev min to avoid explosion when flat early)
+      - record: g6:atm_option_iv_zscore_30m
+        expr: (g6:atm_option_iv - g6:atm_option_iv_mean_30m) / clamp_min(g6:atm_option_iv_stddev_30m, 1e-6)
+      # Gamma & Vega spikes (use p95 10m vs 30m mean as relative spike ratio)
+      - record: g6:atm_option_gamma_ce
+        expr: max by (index, expiry) ((g6_option_delta{type="CE"} > 0.40) * (g6_option_delta{type="CE"} < 0.60) * g6_option_gamma{type="CE"})
+      - record: g6:atm_option_gamma_pe
+        expr: max by (index, expiry) ((g6_option_delta{type="PE"} < -0.40) * (g6_option_delta{type="PE"} > -0.60) * g6_option_gamma{type="PE"})
+      - record: g6:atm_option_vega_ce
+        expr: max by (index, expiry) ((g6_option_delta{type="CE"} > 0.40) * (g6_option_delta{type="CE"} < 0.60) * g6_option_vega{type="CE"})
+      - record: g6:atm_option_vega_pe
+        expr: max by (index, expiry) ((g6_option_delta{type="PE"} < -0.40) * (g6_option_delta{type="PE"} > -0.60) * g6_option_vega{type="PE"})
+      - record: g6:atm_option_gamma_ratio_10m_vs_30m
+        expr: |
+          (
+            avg_over_time(((g6:atm_option_gamma_ce + g6:atm_option_gamma_pe)/2)[10m:])
+            /
+            clamp_min(avg_over_time(((g6:atm_option_gamma_ce + g6:atm_option_gamma_pe)/2)[30m:]), 1e-9)
+          )
+      - record: g6:atm_option_vega_ratio_10m_vs_30m
+        expr: |
+          (
+            avg_over_time(((g6:atm_option_vega_ce + g6:atm_option_vega_pe)/2)[10m:])
+            /
+            clamp_min(avg_over_time(((g6:atm_option_vega_ce + g6:atm_option_vega_pe)/2)[30m:]), 1e-9)
+          )
+      # Theta drift detection (CE+PE mean absolute change over 15m vs 30m mean magnitude)
+      - record: g6:atm_option_theta_ce
+        expr: max by (index, expiry) ((g6_option_delta{type="CE"} > 0.40) * (g6_option_delta{type="CE"} < 0.60) * g6_option_theta{type="CE"})
+      - record: g6:atm_option_theta_pe
+        expr: max by (index, expiry) ((g6_option_delta{type="PE"} < -0.40) * (g6_option_delta{type="PE"} > -0.60) * g6_option_theta{type="PE"})
+      - record: g6:atm_option_theta_drift_ratio_15m
+        expr: |
+          (
+            abs(
+              (g6:atm_option_theta_ce + g6:atm_option_theta_pe)/2
+              -
+              ((g6:atm_option_theta_ce offset 15m + g6:atm_option_theta_pe offset 15m)/2)
+            )
+            /
+            clamp_min(avg_over_time(abs(((g6:atm_option_theta_ce + g6:atm_option_theta_pe)/2))[30m:]), 1e-9)
+          )
+      # Data gap detector: no update in 5m for ATM IV
+      - record: g6:atm_option_iv_stale_5m
+        expr: (time() - max_over_time(g6:atm_option_iv[5m])) > 300
+  
+  - name: g6_option_volume_ratios.rules
+    interval: 30s
+    rules:
+      # Aggregate per-index option volume (sum across expiry/strikes) split by type to compute ratios.
+      - record: g6:option_call_volume_5m
+        expr: sum by (index) (increase(g6_option_volume{type="CE"}[5m]))
+      - record: g6:option_put_volume_5m
+        expr: sum by (index) (increase(g6_option_volume{type="PE"}[5m]))
+      - record: g6:option_volume_ratio_call_put_5m
+        expr: g6:option_call_volume_5m / clamp_min(g6:option_put_volume_5m, 1)
+      - record: g6:option_volume_ratio_put_call_5m
+        expr: g6:option_put_volume_5m / clamp_min(g6:option_call_volume_5m, 1)
+      # Smooth (30m) versions for trend context.
+      - record: g6:option_call_volume_30m
+        expr: sum by (index) (increase(g6_option_volume{type="CE"}[30m]))
+      - record: g6:option_put_volume_30m
+        expr: sum by (index) (increase(g6_option_volume{type="PE"}[30m]))
+      - record: g6:option_volume_ratio_call_put_30m
+        expr: g6:option_call_volume_30m / clamp_min(g6:option_put_volume_30m, 1)
+      - record: g6:option_volume_ratio_put_call_30m
+        expr: g6:option_put_volume_30m / clamp_min(g6:option_call_volume_30m, 1)
+  
+  - name: g6_external_vix.rules
+    interval: 30s
+    rules:
+      # Rolling 30m statistics for external VIX (fraction) per source.
+      - record: g6:external_vix_mean_30m
+        expr: avg_over_time(g6_external_vix[30m])
+      - record: g6:external_vix_stddev_30m
+        expr: stddev_over_time(g6_external_vix[30m])
+      - record: g6:external_vix_zscore_30m
+        expr: (g6_external_vix - g6:external_vix_mean_30m) / clamp_min(g6:external_vix_stddev_30m, 1e-6)
+      # Align ATM IV series with VIX (need index dimension; assume primary index variable mapping). Keep only if both present.
+      - record: g6:vix_iv_cov_30m
+        expr: |
+          avg_over_time(((g6_external_vix - g6:external_vix_mean_30m)
+            * (g6:atm_option_iv - g6:atm_option_iv_mean_30m))[30m:])
+      - record: g6:atm_option_iv_stddev_30m  # mirror for join without recompute (already defined earlier but ensure label compatibility)
+        expr: g6:atm_option_iv_stddev_30m
+      - record: g6:vix_iv_corr_30m
+        expr: |
+          g6:vix_iv_cov_30m / (clamp_min(g6:external_vix_stddev_30m,1e-9) * clamp_min(g6:atm_option_iv_stddev_30m,1e-9))
+      # Regime shift detector: large absolute correlation drop from prior 30m window.
+      - record: g6:vix_iv_corr_change_30m
+        expr: abs(g6:vix_iv_corr_30m - (g6:vix_iv_corr_30m offset 30m))
+  - name: g6_external_vix.alerts
+    interval: 30s
+    rules:
+      - alert: G6VixZScoreElevated
+        expr: g6_market_session_open_flag == 1 and g6:external_vix_zscore_30m > 2.5 and g6:external_vix_stddev_30m > 0
+        for: 5m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "External VIX z-score >2.5"
+          description: |-
+            VIX spike vs 30m baseline (z={{ $value | printf "%.2f" }}). Potential volatility event.
+      - alert: G6VixZScoreCritical
+        expr: g6_market_session_open_flag == 1 and g6:external_vix_zscore_30m > 4 and g6:external_vix_stddev_30m > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "External VIX z-score >4"
+          description: |-
+            Severe volatility expansion; review hedging posture.
+      - alert: G6VixIvHighCorrelation
+        expr: g6_market_session_open_flag == 1 and abs(g6:vix_iv_corr_30m) > 0.75
+        for: 15m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "High VIX/ATM IV correlation (|corr|>0.75)"
+          description: |-
+            Sustained strong coupling between external VIX and ATM IV (corr={{ $value | printf "%.2f" }}). Indicates broad market volatility driver.
+      - alert: G6VixIvCorrelationShift
+        expr: g6_market_session_open_flag == 1 and g6:vix_iv_corr_change_30m > 0.4
+        for: 15m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "VIX/ATM IV correlation regime shift"
+          description: |-
+            Correlation changed by >0.4 over 30m. Possible transition in volatility regime or data anomaly.
+  - name: g6_option_volume_ratios.alerts
+    interval: 30s
+    rules:
+      - alert: G6OptionVolumeCallSkewHigh
+        expr: g6_market_session_open_flag == 1 and g6:option_volume_ratio_call_put_5m > 2 and g6:option_volume_ratio_call_put_30m > 1.5
+        for: 10m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "Call volume skew high"
+          description: |-
+            5m call/put volume ratio {{ $value | printf "%.2f" }} (>2) with 30m ratio elevated (>1.5). Persistent bullish flow.
+      - alert: G6OptionVolumePutSkewHigh
+        expr: g6_market_session_open_flag == 1 and g6:option_volume_ratio_put_call_5m > 2 and g6:option_volume_ratio_put_call_30m > 1.5
+        for: 10m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "Put volume skew high"
+          description: |-
+            5m put/call volume ratio {{ $value | printf "%.2f" }} (>2) with 30m ratio elevated (>1.5). Persistent defensive flow.
+  - name: g6_option_greeks.alerts
+    interval: 30s
+    rules:
+      - alert: G6AtmIvZScoreElevated
+        expr: g6_market_session_open_flag == 1 and g6:atm_option_iv_zscore_30m > 2.5 and g6:atm_option_iv_stddev_30m > 0
+        for: 5m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "ATM IV z-score >2.5"
+          description: |-
+            ATM implied volatility elevated (z-score {{ $value | printf "%.2f" }} >2.5 vs 30m mean). Potential volatility expansion.
+      - alert: G6AtmIvZScoreCritical
+        expr: g6_market_session_open_flag == 1 and g6:atm_option_iv_zscore_30m > 4 and g6:atm_option_iv_stddev_30m > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "ATM IV z-score >4"
+          description: |-
+            Severe IV spike (z-score {{ $value | printf "%.2f" }} >4). Likely macro/news event; widen risk limits.
+      - alert: G6AtmGammaSpike
+        expr: g6_market_session_open_flag == 1 and g6:atm_option_gamma_ratio_10m_vs_30m > 1.6
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "ATM gamma 10m/30m >1.6"
+          description: |-
+            ATM gamma elevated vs recent baseline (ratio {{ $value | printf "%.2f" }}). Risk of rapid delta changes.
+      - alert: G6AtmVegaSpike
+        expr: g6_market_session_open_flag == 1 and g6:atm_option_vega_ratio_10m_vs_30m > 1.5
+        for: 10m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "ATM vega 10m/30m >1.5"
+          description: |-
+            ATM vega uplift (ratio {{ $value | printf "%.2f" }}) indicating sensitivity increase to IV changes.
+      - alert: G6AtmThetaDriftHigh
+        expr: g6_market_session_open_flag == 1 and g6:atm_option_theta_drift_ratio_15m > 2
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "ATM theta drift ratio >2"
+          description: |-
+            Theta changed >2x typical 30m magnitude over last 15m. Possible decay regime shift or data inconsistency.
+      - alert: G6AtmIvStale
+        expr: g6_market_session_open_flag == 1 and g6:atm_option_iv_stale_5m == 1
+        for: 2m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "ATM IV series stale >5m"
+          description: |-
+            No ATM IV updates for >5m. Check option feed / collector health and strike filtering logic.
+  - name: g6_health_score.rules
+    interval: 30s
+    rules:
+      # Aggregated platform health score (0-1). Component weights:
+      #   Errors inverse (recent error rate).............25%
+      #   API success rate (percent/100)................25%
+      #   Collection success rate (percent/100).........20%
+      #   Backlog headroom (1 - utilization)............15%
+      #   Need_full absence (1 - need_full_active)......15%
+      # Formula mirrors the Grafana inline expression previously used; now centralized.
+      - record: g6:aggregated_health_score
+        expr: |
+          (
+            (1 - clamp_max(sum(rate(g6_total_errors_total[5m])) / 5, 1)) * 0.25
+            + (clamp_max(g6_api_success_rate_percent / 100, 1)) * 0.25
+            + (clamp_max(g6_collection_success_rate_percent / 100, 1)) * 0.20
+            + (1 - clamp_max(g6_events_backlog_current / clamp_min(g6_events_backlog_highwater,1), 1)) * 0.15
+            + (1 - clamp_max(g6_events_need_full_active, 1)) * 0.15
+          )
+        labels:
+          job: g6_platform
+  - name: g6_memory_pressure.rules
+    interval: 15s
+    rules:
+      # Record instantaneous level as separate series per level for simpler Grafana annotations
+      - record: g6_memory_pressure_is_level
+        expr: g6_memory_pressure_level
+        labels:
+          job: g6_platform
+      # Transition detection using increase over scrape windows (0->1 upgrade, etc.)
+      - record: g6_memory_pressure_transition
+        expr: |
+          clamp_min(
+            g6_memory_pressure_level - (g6_memory_pressure_level offset 30s), 0
+          )
+      # Downgrade detection (positive value when level decreased)
+      - record: g6_memory_pressure_downgrade
+        expr: |
+          clamp_min(
+            (g6_memory_pressure_level offset 30s) - g6_memory_pressure_level, 0
+          )
+      # Seconds in current level (mirrors raw gauge but keep for more evaluation granularity)
+      - record: g6_memory_pressure_time_in_level
+        expr: g6_memory_pressure_seconds_in_level
+      # Count of actions per tier over 5m
+      - record: g6_memory_pressure_actions_5m
+        expr: sum by (action, tier)(increase(g6_memory_pressure_actions_total[5m]))
+      # Upgrade rate (per minute) last 10m
+      - record: g6_memory_pressure_upgrade_rate_per_min
+        expr: sum(increase(g6_memory_pressure_transition[10m])) / 10
+      # Downgrade rate (per minute) last 10m
+      - record: g6_memory_pressure_downgrade_rate_per_min
+        expr: sum(increase(g6_memory_pressure_downgrade[10m])) / 10
+      # Current depth scale summarized (can apply functions later)
+      - record: g6_memory_depth_scale_current
+        expr: g6_memory_depth_scale
+      # Flags as binary (already 1/0) but record to tag job
+      - record: g6_memory_greeks_enabled_flag
+        expr: g6_memory_greeks_enabled
+        labels:
+          job: g6_platform
+      - record: g6_memory_per_option_metrics_enabled_flag
+        expr: g6_memory_per_option_metrics_enabled
+        labels:
+          job: g6_platform
+  - name: g6_overlay_quality.alerts
+    interval: 30s
+    rules:
+      - alert: G6OverlayCriticalIssues
+        expr: max by (index) (g6_overlay_quality_last_run_critical) > 0
+        for: 2m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Overlay critical issues present"
+          description: |-
+            Index {{ $labels.index }} has {{ $value }} critical overlay quality issue(s) in the last run.
+            Investigate EOD overlay generation and data inputs.
+  - name: g6_events_stream.rules
+    interval: 30s
+    rules:
+      # Panel diff write savings ratio (requires both diff and full bytes)
+      - record: g6_panel_diff_bytes_5m
+        expr: sum(rate(g6_panel_diff_bytes_total{type="diff"}[5m]))
+      - record: g6_panel_full_bytes_5m
+        expr: sum(rate(g6_panel_diff_bytes_total{type="full"}[5m]))
+      - record: g6_panel_diff_write_savings_ratio
+        expr: 1 - (g6_panel_diff_bytes_5m / clamp_min(g6_panel_full_bytes_5m, 1))
+        labels:
+          job: g6_platform
+      # Events backlog utilization (needs manual max config; expose as ratio if max exported later)
+      - record: g6_events_backlog_highwater_ratio
+        expr: clamp_max(g6_events_backlog_current / clamp_min(g6_events_backlog_highwater,1), 1)
+        labels:
+          job: g6_platform
+      # Dropped diffs (generation mismatch) 10m velocity
+      - record: g6_events_dropped_generation_mismatch_10m
+        expr: sum(increase(g6_events_dropped_total{reason="generation_mismatch"}[10m]))
+      # Need-full episodes 30m velocity
+      - record: g6_events_need_full_episodes_30m
+        expr: increase(g6_events_need_full_episodes_total[30m])
+      # Recovery attempts 30m velocity
+      - record: g6_events_full_recovery_30m
+        expr: increase(g6_events_full_recovery_total[30m])
+  - name: g6_events_stream.alerts
+    interval: 30s
+    rules:
+      - alert: G6EventsDroppedDiffs
+        expr: g6_events_dropped_generation_mismatch_10m > 5
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Sustained diff generation mismatches"
+          description: |-
+            {{ $value }} panel diffs dropped (generation mismatch) over 10m. Check for missing full snapshots or ordering issues.
+      - alert: G6EventsGenerationStagnation
+        expr: (time() - max_over_time(g6_events_generation[15m])) > 900 and sum(rate(g6_events_published_total{type="panel_diff"}[15m])) > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Panel generation stagnated while diffs flowing"
+          description: |-
+            No panel_full generation advance in >15m but diffs continue. Clients may accumulate dropped diffs.
+      - alert: G6EventsNeedFullActive
+        expr: max_over_time(g6_events_need_full_active[5m]) == 1
+        for: 5m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Client need_full state persisting"
+          description: |-
+            Summary client has remained in degraded (need_full) state for >5m. Investigate missing forced baseline.
+      - alert: G6EventsRecoverySpike
+        expr: g6_events_full_recovery_30m > 3
+        for: 5m
+        labels:
+            severity: info
+            team: g6
+        annotations:
+          summary: "Recovery attempt spike"
+          description: |-
+            {{ $value }} forced baseline recoveries in 30m window. Potential systemic diff rejection.
+      - alert: G6EventsNeedFullFlapping
+        expr: g6_events_need_full_episodes_30m > 5
+        for: 10m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "Need_full flapping episodes"
+          description: |-
+            {{ $value }} need_full episodes in 30m (frequent degrade/recover cycle). Review SSE ordering & snapshot cadence.
+  - name: g6_health_score.alerts
+    interval: 30s
+    rules:
+      - alert: G6HealthScoreDegraded
+        expr: g6:aggregated_health_score < 0.85
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Aggregated health score degraded (<0.85)"
+          description: |-
+            Health score {{ $value | printf "%.2f" }} below warning threshold for >10m.
+            Components (weights): errors inverse 25%, API success 25%, collection success 20%, backlog headroom 15%, need_full absence 15%.
+            Triage: 1) Check recent error spikes (g6_total_errors_total). 2) Inspect API & collection success rates. 3) Examine backlog utilization & need_full state.
+      - alert: G6HealthScoreCritical
+        expr: g6:aggregated_health_score < 0.70
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Aggregated health score CRITICAL (<0.70)"
+          description: |-
+            Health score {{ $value | printf "%.2f" }} below critical threshold for >5m.
+            Immediate action required. Likely multiple degradations: sustained errors OR low success rates plus backlog pressure / need_full active.
+            Runbook: validate SSE stream continuity, force baseline if needed, inspect provider/API error logs, confirm memory pressure not causing cascading impact.
+  - name: g6_events_latency.rules
+    interval: 30s
+    rules:
+      # Market session open flag (ensure job label & future flexibility)
+      - record: g6_market_session_open_flag
+        expr: g6_market_session_open
+        labels:
+          job: g6_platform
+      # Freshness (age) of last full snapshot; useful for detecting stalled full baselines.
+      - record: g6_events_last_full_age_seconds
+        expr: time() - g6_events_last_full_unixtime
+        labels:
+          job: g6_platform
+      # Histogram quantiles over 5m (publish -> client apply latency) per event type.
+      - record: g6:panel_event_latency_p50_seconds
+        expr: histogram_quantile(0.50, sum(rate(g6_panel_event_latency_seconds_bucket[5m])) by (le,type))
+        labels:
+          job: g6_platform
+      - record: g6:panel_event_latency_p95_seconds
+        expr: histogram_quantile(0.95, sum(rate(g6_panel_event_latency_seconds_bucket[5m])) by (le,type))
+        labels:
+          job: g6_platform
+      - record: g6:panel_event_latency_p99_seconds
+        expr: histogram_quantile(0.99, sum(rate(g6_panel_event_latency_seconds_bucket[5m])) by (le,type))
+        labels:
+          job: g6_platform
+      # Overall (all types combined) latency quantiles (helps single stat panels)
+      - record: g6:panel_event_latency_overall_p95_seconds
+        expr: histogram_quantile(0.95, sum(rate(g6_panel_event_latency_seconds_bucket[5m])) by (le))
+        labels:
+          job: g6_platform
+      # Mean latency approximation: sum(rate(sum)) / sum(rate(count)) per type.
+      - record: g6:panel_event_latency_mean_seconds
+        expr: |
+          sum by (type) (rate(g6_panel_event_latency_seconds_sum[5m]))
+            /
+          clamp_min(sum by (type) (rate(g6_panel_event_latency_seconds_count[5m])), 1e-9)
+        labels:
+          job: g6_platform
+      # Publish->flush server-side latency quantiles (histogram exported as g6_sse_flush_latency_seconds)
+      - record: g6:sse_flush_latency_p95_seconds
+        expr: histogram_quantile(0.95, sum(rate(g6_sse_flush_latency_seconds_bucket[5m])) by (le))
+        labels:
+          job: g6_platform
+      - record: g6:sse_flush_latency_p99_seconds
+        expr: histogram_quantile(0.99, sum(rate(g6_sse_flush_latency_seconds_bucket[5m])) by (le))
+        labels:
+            job: g6_platform
+      # Adaptive degraded dwell seconds approximation: time since last adaptive exit (derivable if transition counter increments)
+      - record: g6_adaptive_backlog_ratio_last
+        expr: g6_adaptive_backlog_ratio
+        labels:
+          job: g6_platform
+      # Backpressure degraded mode flag (mirror gauge for downstream joins)
+      - record: g6_degraded_mode_flag
+        expr: g6_events_degraded_mode
+        labels:
+          job: g6_platform
+  - name: g6_events_latency.alerts
+    interval: 30s
+    rules:
+      # Full snapshot freshness: warn when no full snapshot for >10m while diffs flowing; critical at 20m.
+      - alert: G6EventsFullSnapshotStaleWarn
+        expr: g6_market_session_open_flag == 1 and g6_events_last_full_age_seconds > 600 and sum(rate(g6_events_published_total{type="panel_diff"}[10m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Full snapshot stale (>10m) while diffs active"
+          description: |-
+            Last panel_full older than 10m (age={{ $value | printf "%.0f" }}s) yet diffs still publishing. Potential risk of diff rejection if baseline drifts. Consider forcing baseline.
+      - alert: G6EventsFullSnapshotStaleCritical
+        expr: g6_market_session_open_flag == 1 and g6_events_last_full_age_seconds > 1200 and sum(rate(g6_events_published_total{type="panel_diff"}[20m])) > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Full snapshot VERY stale (>20m)"
+          description: |-
+            No full snapshot in >20m. Immediate action: trigger forced baseline; inspect generation increment path.
+      # Diff latency regression (p95) sustained
+      - alert: G6PanelDiffLatencyHigh
+        expr: g6_market_session_open_flag == 1 and g6:panel_event_latency_p95_seconds{type="panel_diff"} > 0.25
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Panel diff p95 latency >250ms"
+          description: |-
+            p95 panel_diff end-to-end latency above 250ms for >10m. Investigate network/server saturation or client apply overhead.
+      - alert: G6PanelDiffLatencyCritical
+        expr: g6_market_session_open_flag == 1 and g6:panel_event_latency_p95_seconds{type="panel_diff"} > 0.5
+        for: 10m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Panel diff p95 latency >500ms"
+          description: |-
+            Sustained p95 >500ms indicates severe degradation. Check backlog, CPU contention, network latency.
+      # Full snapshot larger payload latencies have looser thresholds
+      - alert: G6PanelFullLatencyHigh
+        expr: g6_market_session_open_flag == 1 and g6:panel_event_latency_p95_seconds{type="panel_full"} > 0.75
+        for: 15m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Full snapshot p95 latency >750ms"
+          description: |-
+            Large full snapshot latency sustained. Validate snapshot size growth or serialization overhead.
+  - name: g6_pipeline_parity.alerts
+    interval: 30s
+    rules:
+      - record: g6:pipeline_fatal_ratio_15m
+        expr: |
+          clamp_max(
+            sum(increase(pipeline_index_fatal_total[15m]))
+              /
+            clamp_min(sum(increase(pipeline_index_fatal_total[15m])) + sum(increase(pipeline_expiry_recoverable_total[15m])) + 1, 1), 1)
+        labels:
+          job: g6_platform
+      - alert: G6PipelineFatalSpike
+        expr: g6:pipeline_fatal_ratio_15m > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Pipeline fatal ratio >5% (15m window)"
+          description: |-
+            Fatal index-level pipeline failures exceeded 5% of (fatal+recoverable) events in the last 15m. Investigate provider stability, expiry map, or recent deploy.
+      - alert: G6PipelineFatalSustained
+        expr: g6:pipeline_fatal_ratio_15m > 0.10
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Pipeline fatal ratio >10% sustained"
+          description: |-
+            Sustained critical level of fatal failures (>10% /15m). Initiate rollback drill and parity snapshot capture immediately.
+      - alert: G6PipelineParityDegraded
+        expr: g6_pipeline_parity_rolling_avg < 0.985
+        for: 15m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Rolling parity average <0.985"
+          description: |-
+            Rolling parity score below 0.985 for 15m. Examine alert parity diff, strike coverage alignment, and recent changes.
+      - alert: G6PipelineParityCritical
+        expr: g6_pipeline_parity_rolling_avg < 0.975
+        for: 10m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Rolling parity average <0.975"
+          description: |-
+            Critical parity degradation. Consider halting promotion or triggering rollback.
+      - alert: G6PipelineParityFatalCombo
+        expr: (g6_pipeline_parity_rolling_avg < 0.985) and (g6:pipeline_fatal_ratio_15m > 0.05)
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Parity + Fatal spike combination"
+          description: |-
+            Simultaneous parity dip and elevated fatal ratio. High risk of systemic divergence; escalate rollback procedure.
+      # Overall (merged types) p95 regression to capture broad impact
+      - alert: G6PanelEventOverallLatencyElevated
+        expr: g6_market_session_open_flag == 1 and g6:panel_event_latency_overall_p95_seconds > 0.4
+        for: 10m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "Overall panel event p95 latency >400ms"
+          description: |-
+            Broad latency elevation across event types. Cross-check diff vs full breakdown to isolate driver.
+      # Server-side flush latency alerts
+      - alert: G6FlushLatencyHigh
+        expr: g6_market_session_open_flag == 1 and g6:sse_flush_latency_p95_seconds > 0.15
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "SSE publish->flush p95 >150ms"
+          description: |-
+            Server-side flush path latency elevated. Investigate serialization hot spots, I/O flush blocking, or lock contention.
+      - alert: G6FlushLatencyCritical
+        expr: g6_market_session_open_flag == 1 and g6:sse_flush_latency_p95_seconds > 0.3
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "SSE publish->flush p95 >300ms"
+          description: |-
+            Severe server-side flush latency. Immediate action: profile event bus publish & network stack; consider temporary rate limiting.
+      # Adaptive degraded dwell: degraded flag stuck despite low backlog ratio (ratio < exit threshold ~0.4 default). Use 5m window.
+      - alert: G6AdaptiveDegradedStuck
+        expr: g6_market_session_open_flag == 1 and max_over_time(g6_events_degraded_mode[5m]) == 1 and avg_over_time(g6_adaptive_backlog_ratio[5m]) < 0.3
+        for: 5m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Degraded mode stuck though backlog low"
+          description: |-
+            Degraded mode active >5m while backlog ratio averaged below 0.3. Adaptive exit may be suppressed; inspect adaptive controller logs.
+      # Trace stagnation: no trace stage observations while events flowing (serialize+flush stages missing)
+      - alert: G6TraceStagesStalled
+        expr: sum(increase(g6_events_published_total{type="panel_diff"}[10m])) > 50 and increase(g6_sse_trace_stages_total[10m]) == 0
+        for: 10m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "Trace stage counter not advancing"
+          description: |-
+            Events publishing but trace stage counter static. Verify G6_SSE_TRACE env flag and instrumentation health.
+      # Adaptive exit scarcity: no adaptive transition increments over a long interval while degraded episodes occurred.
+      - alert: G6AdaptiveNoExits
+        expr: sum(increase(g6_events_backpressure_events_total{reason="enter_degraded"}[30m])) > 0 and increase(g6_adaptive_transitions_total[30m]) == 0
+        for: 10m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "Adaptive controller did not exit any degraded episodes in 30m"
+          description: |-
+            Degraded episodes detected but no adaptive exits recorded. Investigate backlog ratio thresholds and latency window settings.
+  - name: g6_lifecycle.rules
+    interval: 30s
+    rules:
+      # Retention deletions 5m rate (aggregate all labels)
+      - record: g6_retention_deletions_rate_5m
+        expr: sum(rate(g6_retention_files_deleted_total[5m]))
+      # Efficiency ratio (0-1) and percent (0-100). Candidates gauge updated per run.
+      - record: g6_retention_efficiency_ratio
+        expr: g6_retention_deletions_rate_5m / clamp_min(g6_retention_candidates, 1)
+      - record: g6_retention_efficiency_percent
+        expr: 100 * g6_retention_efficiency_ratio
+      # Retention scan latency p95 over 5m window.
+      - record: g6_retention_scan_latency_p95_seconds
+        expr: histogram_quantile(0.95, sum(rate(g6_retention_scan_seconds_bucket[5m])) by (le))
+      # Delete cap utilization percent (rate vs configured per-cycle limit). >80% sustained may indicate impending backlog growth.
+      - record: g6_retention_delete_cap_utilization_percent
+        expr: 100 * ( g6_retention_deletions_rate_5m / clamp_min(g6_retention_delete_limit, 1) )
+  - name: g6_lifecycle.alerts
+    interval: 30s
+    rules:
+      # Low retention efficiency sustained: deletions rate low relative to candidates present.
+      - alert: G6RetentionEfficiencyLow
+        expr: g6_retention_candidates > 10 and g6_retention_efficiency_percent < 30
+        for: 30m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Retention efficiency <30% with candidate backlog"
+          description: |-
+            Efficiency {{ $value | printf "%.1f" }}% (<30%) for >30m while candidates >10. Potential delete limit too low or IO issues.
+      # Critical inefficiency: near-stall with large backlog.
+      - alert: G6RetentionEfficiencyCritical
+        expr: g6_retention_candidates > 25 and g6_retention_efficiency_percent < 15
+        for: 15m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Retention efficiency critically low (<15%)"
+          description: |-
+            Critical retention stall: efficiency <15% and candidates >25 for >15m. Consider increasing delete limit or investigating FS latency.
+      # Candidate surge: high candidate backlog irrespective of efficiency (tunable threshold placeholder 100).
+      - alert: G6RetentionCandidateSurge
+        expr: g6_retention_candidates > 100
+        for: 10m
+        labels:
+          severity: info
+          team: g6
+        annotations:
+          summary: "Retention candidate surge (>100)"
+          description: |-
+            Candidate backlog exceeded 100 for >10m. Tune threshold post baseline observation; may indicate compression behind or retention window too short.
+      # Scan latency elevated (p95) sustained.
+      - alert: G6RetentionScanLatencyHigh
+        expr: g6_retention_scan_latency_p95_seconds > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Retention scan p95 latency >500ms"
+          description: |-
+            Retention scan + delete phase p95 latency above 500ms for >10m. Investigate filesystem load or directory explosion.
+      # Critical scan latency.
+      - alert: G6RetentionScanLatencyCritical
+        expr: g6_retention_scan_latency_p95_seconds > 1.0
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Retention scan p95 latency >1s"
+          description: |-
+            Severe retention scan latency indicates IO saturation or large directory traversal. Consider sharding directories or lowering per-cycle limits.
+      # High delete cap utilization sustained: operating near configured delete limit; risk of backlog growth if candidates rising.
+      - alert: G6RetentionDeleteCapHigh
+        expr: g6_retention_delete_cap_utilization_percent > 80 and g6_retention_candidates > 10
+        for: 15m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Delete cap utilization >80% sustained"
+          description: |-
+            Delete throughput using >80% of configured cap for >15m with candidates backlog present. Monitor efficiency & candidate trend; consider raising limit if IO headroom exists.
+      # Near-saturation delete cap: very little headroom; backlog growth likely unless efficiency recovers.
+      - alert: G6RetentionDeleteCapNearSaturation
+        expr: g6_retention_delete_cap_utilization_percent > 90 and g6_retention_candidates > 25
+        for: 10m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Delete cap utilization >90% sustained"
+          description: |-
+            Retention deletions running >90% of cap for >10m with sizable candidate backlog (>25). Increase delete limit temporarily or investigate IO constraints / scan latency before backlog escalates.
+  - name: g6_bus.rules
+    interval: 30s
+    rules:
+      # Bus publish rate (5m) per bus for alert joins / job tagging
+      - record: g6_bus_publish_rate_5m
+        expr: sum by (bus) (rate(g6_bus_events_published_total[5m]))
+        labels:
+          job: g6_platform
+      # Bus drop rate (5m) per bus (all reasons consolidated)
+      - record: g6_bus_drop_rate_5m
+        expr: sum by (bus) (rate(g6_bus_events_dropped_total[5m]))
+        labels:
+          job: g6_platform
+      # Publish latency p95 over 5m per bus
+      - record: g6:bus_publish_latency_p95_ms
+        expr: histogram_quantile(0.95, sum(rate(g6_bus_publish_latency_ms_bucket[5m])) by (le,bus))
+        labels:
+          job: g6_platform
+      # Publish latency p99 (helps debugging before paging)
+      - record: g6:bus_publish_latency_p99_ms
+        expr: histogram_quantile(0.99, sum(rate(g6_bus_publish_latency_ms_bucket[5m])) by (le,bus))
+        labels:
+          job: g6_platform
+      # Queue saturation ratio (current retained vs high water assumption). If max_retained exported later, adjust denominator.
+      - record: g6_bus_queue_retained_ratio
+        expr: clamp_max(g6_bus_queue_retained_events / 50000, 1)  # assumes default capacity 50k
+        labels:
+          job: g6_platform
+  - name: g6_bus.alerts
+    interval: 30s
+    rules:
+      # Sustained drop rate indicates overflow pressure.
+      - alert: G6BusDropRateElevated
+        expr: g6_bus_drop_rate_5m > 5
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Bus drop rate >5 eps (5m avg)"
+          description: |-
+            Drop rate {{ $value | printf "%.2f" }} eps sustained >10m. Likely ring buffer overflow. Investigate consumer lag or raise capacity cautiously.
+      - alert: G6BusDropRateCritical
+        expr: g6_bus_drop_rate_5m > 20
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Bus drop rate >20 eps"
+          description: |-
+            Severe sustained event loss. Immediate action: profile slow subscribers, consider sharding events or increasing buffer; confirm not a burst artifact.
+      # Publish latency regression (p95)
+      - alert: G6BusPublishLatencyHigh
+        expr: g6:bus_publish_latency_p95_ms > 10
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Bus publish p95 >10ms"
+          description: |-
+            Publish path p95 above 10ms for >10m. Check lock contention or payload serialization cost.
+      - alert: G6BusPublishLatencyCritical
+        expr: g6:bus_publish_latency_p95_ms > 25
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Bus publish p95 >25ms"
+          description: |-
+            Severe publish latency. Potential deadlock risk or CPU saturation. Triage with profiler and inspect recent deployment changes.
+      # Subscriber lag: top lag > 5k events for prolonged period.
+      - alert: G6BusSubscriberLagHigh
+        expr: topk(1, g6_bus_subscriber_lag_events) > 5000
+        for: 15m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Subscriber lag >5000 events"
+          description: |-
+            A subscriber is >5000 events behind for >15m. Investigate slow consumer or implement filtering / partitioning.
+      # Queue saturation ratio near 1 (>=0.9) indicates imminent overflow risk.
+      - alert: G6BusQueueSaturationHigh
+        expr: g6_bus_queue_retained_ratio > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Bus queue >90% full"
+          description: |-
+            Ring buffer occupancy >90% for >10m. Evaluate increasing capacity or reducing publish rate; verify downstream consumers keeping up.
+      - alert: G6BusQueueSaturationCritical
+        expr: g6_bus_queue_retained_ratio > 0.97
+        for: 5m
+        labels:
+          severity: critical
+          team: g6
+        annotations:
+          summary: "Bus queue >97% full"
+          description: |-
+            Buffer nearly full for >5m—overflow/drops imminent. Immediate mitigation: throttle publishers, scale consumers, or expand capacity temporarily.
+  - name: g6_benchmark.alerts
+    interval: 30s
+    rules:
+      # P95 regression alert: pipeline collector p95 latency delta vs legacy baseline exceeded configured threshold.
+      # Emits when delta (% difference) above threshold AND threshold non-negative (disabled if <0) for sustained window.
+      - alert: BenchP95RegressionHigh
+        expr: (g6_bench_delta_p95_pct > g6_bench_p95_regression_threshold_pct) and (g6_bench_p95_regression_threshold_pct >= 0)
+        for: 5m
+        labels:
+          severity: warning
+          team: g6
+        annotations:
+          summary: "Pipeline p95 regression above threshold"
+          description: |-
+            P95 pipeline vs legacy regression exceeded configured threshold (delta={{ $value | printf "%.1f" }}%). Investigate recent collector changes or performance hotspots.

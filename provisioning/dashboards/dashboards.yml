@@ -1,0 +1,9 @@
+apiVersion: 1
+
+providers:
+  - name: G6 Repo Dashboards
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: "c:/Users/Asus/Desktop/g6_reorganized/grafana/dashboards/generated"

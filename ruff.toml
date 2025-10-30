@@ -1,0 +1,12 @@
+line-length = 120
+
+[lint]
+extend-select = ["B", "W", "I", "UP", "F", "E", "PERF"]
+ignore = ["E203"]
+
+[lint.per-file-ignores]
+# Heavy, Windows-robust FS logic and intentional try/except guards
+"src/utils/output.py" = ["PERF203", "E501"]
+"src/utils/memory_manager.py" = ["PERF203", "E501"]
+"src/utils/overlay_plotting.py" = ["E501"]
+"src/utils/timeutils.py" = ["I001", "E501"]

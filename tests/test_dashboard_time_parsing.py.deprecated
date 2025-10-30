@@ -1,0 +1,27 @@
+from __future__ import annotations
+
+import pytest
+
+from src.web.dashboard.app import _parse_time_any, _parse_time_epoch_ms, _norm_offset
+
+
+def test_parse_time_any_iso_and_dayfirst():
+    assert _parse_time_any("2024-01-02 03:04:05").startswith("2024-01-02T03:04:05")
+    # Day-first format
+    out = _parse_time_any("02-01-2024 03:04:05")
+    assert "2024-01-02T03:04:05" in out
+
+
+def test_parse_time_epoch_ms_basic():
+    # ISO-like
+    ms = _parse_time_epoch_ms("2024-01-02 03:04:05")
+    assert ms is None or isinstance(ms, int)
+    # Invalid
+    assert _parse_time_epoch_ms("") is None
+
+
+def test_norm_offset_variants():
+    assert _norm_offset("ATM") == "0"
+    assert _norm_offset("+100") == "+100"
+    assert _norm_offset("100") == "+100"
+    assert _norm_offset("-50") == "-50"

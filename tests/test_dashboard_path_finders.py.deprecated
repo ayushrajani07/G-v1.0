@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+from datetime import date
+from pathlib import Path
+
+from src.web.dashboard.app import _find_live_csv, _find_overlay_csv
+
+
+def test_find_live_csv_variants(tmp_path: Path) -> None:
+    root = tmp_path
+    idx = "NIFTY"
+    exp = "this_week"
+    day = date(2024, 1, 2)
+    ymd = day.strftime('%Y-%m-%d')
+
+    # Create ATM alias folder '0' and file
+    p0 = root / idx / exp / '0'
+    p0.mkdir(parents=True)
+    f0 = p0 / f"{ymd}.csv"
+    f0.write_text("timestamp,tp\n2024-01-02 09:15:00,1\n", encoding='utf-8')
+
+    # ATM should resolve to 0
+    found_atm = _find_live_csv(root, idx, exp, 'ATM', day)
+    assert found_atm is not None and found_atm.name == f"{ymd}.csv"
+
+    # +100 folder
+    p100 = root / idx / exp / '+100'
+    p100.mkdir(parents=True)
+    f100 = p100 / f"{ymd}.csv"
+    f100.write_text("timestamp,tp\n2024-01-02 09:15:00,1\n", encoding='utf-8')
+
+    found_100 = _find_live_csv(root, idx, exp, '+100', day)
+    assert found_100 == f100
+
+    # Lower-case expiry fallback
+    p_lc = root / idx / exp.lower() / '+50'
+    p_lc.mkdir(parents=True)
+    f_lc = p_lc / f"{ymd}.csv"
+    f_lc.write_text("timestamp,tp\n2024-01-02 09:15:00,1\n", encoding='utf-8')
+    found_lc = _find_live_csv(root, idx, exp, '+50', day)
+    assert found_lc == f_lc
+
+
+def test_find_overlay_csv_variants(tmp_path: Path) -> None:
+    root = tmp_path
+    idx = "NIFTY"
+    exp = "this_week"
+    weekday = "Monday"
+
+    # New preferred layout: <root>/<Weekday>/<INDEX>/<EXPIRY>/<OFFSET>.csv
+    n_dir = root / weekday / idx / exp
+    (n_dir / 'ATM.csv').parent.mkdir(parents=True)
+    f_new = n_dir / '0.csv'
+    f_new.write_text("timestamp,tp_mean\n2024-01-01 09:15:00,1\n", encoding='utf-8')
+
+    found_new = _find_overlay_csv(root, weekday, idx, exp, 'ATM')
+    assert found_new == f_new
+
+    # Previous layout: <root>/<INDEX>/<EXPIRY>/<OFFSET>/<Weekday>.csv
+    p_dir = root / idx / exp / '+25'
+    p_dir.mkdir(parents=True)
+    f_prev = p_dir / f"{weekday}.csv"
+    f_prev.write_text("timestamp,tp_mean\n2024-01-01 09:15:00,1\n", encoding='utf-8')
+    found_prev = _find_overlay_csv(root, weekday, idx, exp, '+25')
+    assert found_prev == f_prev
+
+    # Legacy flat layout: <root>/<Weekday>/<index>_<expiry>_<offset>.csv
+    legacy_dir = root / weekday
+    legacy_dir.mkdir(parents=True, exist_ok=True)
+    f_legacy = legacy_dir / f"{idx}_{exp}_+10.csv"
+    f_legacy.write_text("timestamp,tp_mean\n2024-01-01 09:15:00,1\n", encoding='utf-8')
+    found_legacy = _find_overlay_csv(root, weekday, idx, exp, '+10')
+    assert found_legacy == f_legacy

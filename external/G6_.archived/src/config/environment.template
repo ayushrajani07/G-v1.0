@@ -1,0 +1,132 @@
+# G6 Platform Environment Variables
+# Authentication secrets only - all other config in JSON files
+
+# Kite Connect API (Required)
+KITE_API_KEY=j9f5yixi8xarailr
+KITE_API_SECRET=5a4eirccm51upuogwm63dhis3a3p6h09
+KITE_ACCESS_TOKEN=your_access_token_here
+
+# InfluxDB Authentication (Required if using InfluxDB)  
+INFLUX_TOKEN=VFEhioeCi2vFCtv-dH_7Fe6gEgNtO-Tu7qcQW4WvIbAFQIdKGa_hDu4dxatOgwskZcva4CHkeOPbjkQwAvPyVg==
+
+# Optional runtime overrides (usually not needed)
+# RUN_INTERVAL_SEC=60
+# RUN_OFFSET_SEC=0
+# LOG_LEVEL=INFO
+
+# ---- Provider/Kite Connect ----
+# Per-call timeout guard for Kite API operations (seconds). Calls exceeding this
+# will raise TimeoutError and be retried according to retry settings.
+# Default: 4.0
+# G6_KITE_TIMEOUT_SEC=4.0
+
+# Optional throttle between Kite API calls (milliseconds). Helps avoid upstream
+# rate limit bursts when loops are tight. Set to 0 to disable.
+# Default: 0 (disabled)
+# G6_KITE_THROTTLE_MS=50
+
+# ---- Summarizer UI (Rich) ----
+# Clip long text to this many characters in certain panels (market, loop, provider, health, sinks, analytics, links)
+# Default: 60
+# G6_PANEL_CLIP=60
+
+# Auto-fit layout to content. When enabled, panels use tighter minimum sizes
+# and column/row ratios are derived more directly from content estimates.
+# Default: off
+# G6_PANEL_AUTO_FIT=false
+
+# When true, arrange footer blocks (Indices/Analytics/Alerts/Links) freely across
+# two columns without a single "Summary" wrapper; otherwise keep under one Summary panel.
+# Default: off (auto-fit implies true at runtime)
+# G6_SUMMARY_FREE_FOOTER=false
+
+# When true, arrange body panels freely across columns as well (auto-fit implies true)
+# G6_SUMMARY_FREE_BODY=false
+
+# Max number of columns for body/footer when free layout is enabled (1-3). Default: 3 in auto-fit, else 2
+# G6_SUMMARY_MAX_COLS=3
+
+# Minimum column width when splitting into multiple columns (characters)
+# Default derived from G6_PANEL_CLIP + 4, clamped to [30,80]
+# G6_PANEL_MIN_COL_W=40
+
+# Refresh throttling
+# Refresh metadata / status snapshot at most once per this many seconds (default 10)
+# G6_SUMMARY_META_REFRESH_SEC=10
+# Refresh resources overlay (CPU/mem) this often, independent of snapshot cycle (default 15)
+# G6_SUMMARY_RES_REFRESH_SEC=15
+# Backoff applied when the Summary UI loop encounters transient errors (milliseconds)
+# Default: 300
+# G6_SUMMARY_LOOP_BACKOFF_MS=300
+
+# Panel JSON files sink (for summarizer streaming)
+# Add 'panels' to G6_OUTPUT_SINKS to enable writing per-panel JSON files that
+# the summarizer can later pick up. Files are written to G6_PANELS_DIR/<panel>.json
+# with atomic replace on Windows by default.
+# G6_PANELS_DIR=data/panels
+# G6_PANELS_INCLUDE=indices,market,loop,health,sinks,resources,analytics,alerts,links
+# G6_PANELS_ATOMIC=true
+
+# Retry/backoff for panels/status reads (helps on Windows file sharing)
+# When true, bridge retries reading status file on transient errors
+# and uses these backoff knobs (in milliseconds) for read and loop errors.
+# Defaults: retry=true, read_backoff=200, loop_backoff=300
+# G6_PANELS_READ_RETRY=true
+# G6_PANELS_READ_BACKOFF_MS=200
+# G6_PANELS_LOOP_BACKOFF_MS=300
+
+# Prefer per-panel JSON over status (default: true)
+# When enabled, the summarizer will first read data/panels/*.json files for
+# each panel (market, loop, provider, health, sinks, resources, analytics,
+# alerts, links, indices) if present and fall back to fields in the status
+# snapshot. Disable to ignore panel files.
+# G6_SUMMARY_READ_PANELS=true
+
+# Per-panel widths (characters). Leave unset to let Rich auto-size.
+# Examples:
+# G6_PANEL_W_MARKET=60
+# G6_PANEL_W_LOOP=60
+# G6_PANEL_W_PROVIDER=60
+# G6_PANEL_W_HEALTH=60
+# G6_PANEL_W_SINKS=60
+# G6_PANEL_W_ANALYTICS=60
+# G6_PANEL_W_LINKS=60
+
+# Per-panel heights (relative weights/min sizes). Leave unset for auto.
+# Header/body/footer wrappers
+# G6_PANEL_H_HEADER=3
+# G6_PANEL_H_BODY=6
+# G6_PANEL_H_FOOTER=10
+# Body sub-panels
+# G6_PANEL_H_MARKET=6
+# G6_PANEL_H_LOOP=7
+# G6_PANEL_H_PROVIDER=7
+# G6_PANEL_H_HEALTH=9
+# G6_PANEL_H_SINKS=6
+# G6_PANEL_H_RESOURCES=7
+# Footer sub-panels
+# G6_PANEL_H_ANALYTICS=6
+# G6_PANEL_H_ALERTS=3
+# G6_PANEL_H_LINKS=3
+
+# Indices panel terminal log source (optional)
+# If set, summarizer will parse lines like "NIFTY TOTAL LEGS: 272 | FAILS: 0 | STATUS: OK"
+# from the given file and show Legs/Fails/Status alongside LTP/Age.
+# G6_INDICES_PANEL_LOG=C:\\path\\to\\your\\daily_options_log.txt
+
+# Data Quality thresholds (display only)
+# The Summary View colors DQ% based on these thresholds and shows a small legend in the Indices panel footer.
+# Default: warn=85, error=70
+# G6_DQ_WARN_THRESHOLD=85
+# G6_DQ_ERROR_THRESHOLD=70
+
+# Provider latency thresholds (display only)
+# The Provider panel colors the reported latency using these thresholds.
+# Default: warn=400 ms, error=800 ms (values in milliseconds)
+# G6_PROVIDER_LAT_WARN_MS=400
+# G6_PROVIDER_LAT_ERR_MS=800
+
+# Backoff badge window (display only)
+# When the bridge publishes a WARN backoff event, the System panel shows a small yellow badge
+# if the event occurred within this many milliseconds from now. Default: 120000 (2 minutes)
+# G6_SUMMARY_BACKOFF_BADGE_MS=120000

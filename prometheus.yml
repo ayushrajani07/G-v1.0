@@ -1,0 +1,29 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "prometheus_rules.yml"
+  - "prometheus_alerts.yml"
+  - "prometheus_recording_rules_generated.sanitized.yml"
+
+scrape_configs:
+  # DEPRECATED: Ports 9108 (start_metrics_server.py) and 9109 (overlay_exporter.py) removed
+  # Web API at port 9500 serves JSON data directly to Grafana via Infinity plugin
+  # No Prometheus scraping needed for current architecture
+  #
+  # If time-series storage is needed in the future, add:
+  # - job_name: 'g6_webapi'
+  #   metrics_path: '/metrics/raw'
+  #   static_configs:
+  #     - targets: ['127.0.0.1:9500']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['127.0.0.1:9093']
+
+  # Example: add node exporter later
+  # - job_name: 'node'
+  #   static_configs:
+  #     - targets: ['localhost:9100']

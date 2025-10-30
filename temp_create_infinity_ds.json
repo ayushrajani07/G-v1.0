@@ -1,0 +1,10 @@
+{
+  "name": "Infinity",
+  "type": "yesoreyeram-infinity-datasource",
+  "uid": "INFINITY",
+  "access": "proxy",
+  "url": "",
+  "isDefault": false,
+  "jsonData": {},
+  "secureJsonFields": {}
+}

@@ -1,0 +1,28 @@
+{
+  "queries": [
+    {
+      "refId": "A",
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "type": "json",
+      "source": "url",
+      "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+      "method": "GET",
+      "format": "table",
+      "json_options": {"root_is_array": true},
+      "columns": [
+        {"selector": "ts", "type": "time"},
+        {"selector": "index_price", "type": "number"}
+      ],
+      "url_options": {
+        "params": [
+          {"key": "limit", "value": "2000"},
+          {"key": "include_index", "value": "1"},
+          {"key": "from_ms", "value": "${__from}"},
+          {"key": "to_ms", "value": "${__to}"}
+        ]
+      }
+    }
+  ],
+  "from": "now-6h",
+  "to": "now"
+}

@@ -1,0 +1,97 @@
+# Observability Module Cleanup - Deprecation Summary
+
+**Date:** October 25, 2025
+
+## Files Deprecated (Renamed to .deprecated)
+
+### 1. `scripts/overlay_exporter.py` → `scripts/overlay_exporter.py.deprecated`
+**Reason:** Redundant - functionality already provided by Web API `/api/overlay` endpoint
+- Was serving Prometheus metrics on port 9109
+- Web API serves the same weekday master data via JSON HTTP endpoint
+- Grafana Infinity datasource can query Web API directly (no need for Prometheus scraping)
+
+### 2. `scripts/overlay_replay.py` → `scripts/overlay_replay.py.deprecated`
+**Reason:** Dev-only testing tool, not used in production
+- Was used for replaying weekday master data for UI development
+- Not needed for production observability stack
+
+### 3. `scripts/start_metrics_server.py` → `scripts/start_metrics_server.py.deprecated`
+**Reason:** Demo/smoke server, not needed for actual deployments
+- Was serving demo metrics on port 9108
+- Prometheus can scrape the Web API directly if needed
+- No dashboards reference this endpoint
+
+## Script Updates
+
+### `obs_start_clean.ps1`
+**Changes:**
+- Removed MetricsPort parameter (was 9108)
+- Removed metrics server startup code
+- Updated numbering: Step 2 is now Prometheus (was Step 3)
+- Updated final output to show Web API endpoints:
+  - Live data: `/api/live_csv`
+  - Overlay data: `/api/overlay`
+
+### `obs_stop.ps1`
+**Changes:**
+- Removed MetricsPort and OverlayPort parameters
+- Removed stop logic for ports 9108 and 9109
+- Removed Python script-specific stop calls for deprecated services
+- Added 'grafana' process name to aggressive kill list (in addition to 'grafana-server')
+- Simplified final status check to only monitor Grafana, Prometheus, and InfluxDB
+
+## Current Architecture (Simplified)
+
+### Services Running:
+1. **Web API** (port 9500)
+   - `/api/live_csv` - Real-time data from today's CSV files
+   - `/api/overlay` - Static weekday master overlay data
+   - `/health` - Health check endpoint
+
+2. **Prometheus** (port 9091)
+   - Scrapes Web API for time-series data storage
+   - Provides query interface for Grafana
+
+3. **Grafana** (port 3002)
+   - Visualization layer
+   - Uses Infinity datasource to query Web API
+   - Uses Prometheus datasource for historical queries
+
+### Data Flow:
+```
+CSV Files → Web API (FastAPI) → Grafana (Infinity Plugin)
+                ↓
+         Prometheus (scraping) → Grafana (Prometheus Plugin)
+```
+
+## Benefits of This Cleanup
+
+1. **Simplified Architecture:** 3 main services instead of 5
+2. **Reduced Port Usage:** Freed up ports 9108 and 9109
+3. **Single Source of Truth:** All data served by Web API
+4. **Easier Maintenance:** Fewer Python processes to manage
+5. **Clear Separation:** Live data and overlay data both served from one API with different endpoints
+
+## Migration Notes
+
+- **No dashboard changes required:** Dashboards don't reference the deprecated services
+- **No data loss:** All data is still accessible via Web API endpoints
+- **Easy rollback:** Deprecated files can be restored by removing `.deprecated` extension
+- **Forward compatibility:** New dashboards should use `/api/live_csv` and `/api/overlay` endpoints
+
+## Testing Verification
+
+✅ Startup script (`obs_start_clean.ps1`) runs cleanly  
+✅ All services start correctly (Grafana, Prometheus, Web API)  
+✅ Process counts are correct (1 Prometheus, 2 Grafana, 2 Python)  
+✅ Web API endpoints respond correctly  
+✅ No orphaned processes on subsequent restarts  
+
+## If You Need to Restore
+
+To restore any deprecated file:
+```powershell
+Move-Item scripts\overlay_exporter.py.deprecated scripts\overlay_exporter.py
+```
+
+However, this is **not recommended** as the functionality is already available via the Web API.

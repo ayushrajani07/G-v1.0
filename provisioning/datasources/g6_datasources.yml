@@ -1,0 +1,51 @@
+apiVersion: 1
+
+datasources:
+  # Prometheus (standardized default 9091)
+  - name: Prometheus
+    uid: PROM
+    type: prometheus
+    access: proxy
+    url: ${G6_PROM_URL:http://127.0.0.1:9091}
+    isDefault: true
+    editable: true
+
+  # Infinity (primary) – standardized on Web API port 9500
+  - name: Infinity
+    uid: INFINITY
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    url: ${G6_ANALYTICS_URL:http://127.0.0.1:9500}
+    jsonData:
+      allowedHosts:
+        # Primary (current standard)
+        - http://127.0.0.1:9500
+        - http://localhost:9500
+        - 127.0.0.1:9500
+        # Backwards compatibility (older local ports)
+        - http://127.0.0.1:8003
+        - http://localhost:8003
+        - 127.0.0.1:8003
+        - http://127.0.0.1:8010
+        - http://localhost:8010
+        - 127.0.0.1:8010
+    editable: true
+
+  # Infinity (secondary alias) – provided to match older dashboards/user preference
+  - name: G6 Infinity
+    uid: G6_INFINITY
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    url: ${G6_ANALYTICS_URL:http://127.0.0.1:9500}
+    jsonData:
+      allowedHosts:
+        - http://127.0.0.1:9500
+        - http://localhost:9500
+        - 127.0.0.1:9500
+        - http://127.0.0.1:8003
+        - http://localhost:8003
+        - 127.0.0.1:8003
+        - http://127.0.0.1:8010
+        - http://localhost:8010
+        - 127.0.0.1:8010
+    editable: true
