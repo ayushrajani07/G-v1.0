@@ -1,0 +1,8 @@
+date,index,expiry_tag,offset,horizon,window,k,mode,scale,bucket_ms,distance_metric,weight_mode,recent_gamma,regime_tolerance,regime_penalty,at,ann_use,ann_space,ann_max_candidates,ann_enabled,ann_total_windows,ann_shortlisted,ann_build_ms,ann_index_mem_bytes,ann_prune_ratio,ann_effectiveness,latency_ms,baseline_latency_ms,ann_speedup,ann_q50_mad,ann_guard_triggered,ann_guard_original_mad,samples,coverage,band_width,mae,bias
+2025-10-24,NIFTY,next_week,+50,60,120,15,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,19,19,327,9120,1.0,,330,2,0.006060606060606061,0.0,0,,0,nan,nan,nan,nan
+2025-10-28,NIFTY,next_week,+50,60,120,15,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,60.0,nan,nan,11.54843025426721,11.54843025426721
+2025-10-29,NIFTY,next_week,+50,60,120,15,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,60.0,nan,nan,4.0022937784053605,1.5325875534272086
+2025-10-30,NIFTY,next_week,+50,60,120,15,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,32.0,nan,nan,2.3626103574286788,-2.3248447421520204
+2025-10-31,NIFTY,next_week,+50,60,120,15,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,19,19,0,8512,1.0,,3,2,0.6666666666666666,0.0,0,,57.0,nan,nan,1.7446991841741815,-0.07331559839881745
+2025-11-03,NIFTY,next_week,+50,60,120,15,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,38.0,nan,nan,4.677552248394812,4.1234285483907405
+2025-11-04,NIFTY,next_week,+50,60,120,15,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,3,2,0.6666666666666666,0.0,0,,60.0,nan,nan,2.6796861917302266,2.4402013459902596

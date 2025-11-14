@@ -1,0 +1,20 @@
+{
+  "index": "NIFTY",
+  "horizon": 1,
+  "features": [
+    "index_price",
+    "minutes_to_expiry",
+    "ce_iv",
+    "pe_iv",
+    "tp",
+    "tp_net_change",
+    "tp_day_change"
+  ],
+  "labeling": {
+    "rolling_window": 60,
+    "threshold_factor": 1.25
+  },
+  "inference": {
+    "prob_threshold": 0.6
+  }
+}

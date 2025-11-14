@@ -1,0 +1,39 @@
+{
+  "model_type": "sk_hgb_residual",
+  "description": "Hybrid residual model: predict TP residual over structural baseline (baseline_tp)",
+  "index": "NIFTY",
+  "target": "tp",
+  "horizon": 1,
+  "feature_source": "live_csv",
+  "features": [
+    "index_price", "tp", "ce_iv", "pe_iv", "ce_vol", "pe_vol",
+    "ce_oi", "pe_oi", "pcr"
+  ],
+  "derived_features": {
+    "lags": [1, 2, 4, 8],
+    "lag_columns": ["tp", "index_price"],
+    "roll_windows": [3, 6, 12],
+    "add_time": true,
+    "add_moneyness": false
+  },
+  "baseline": {
+    "k": 1.0,
+    "min_iv": 0.0001,
+    "min_T_minutes": 1.0
+  },
+  "train": {
+    "split": 0.8,
+    "shuffle": false,
+    "seed": 42
+  },
+  "params": {
+    "loss": "squared_error",
+    "learning_rate": 0.05,
+    "max_depth": 3,
+    "n_estimators": 300,
+    "subsample": 1.0
+  },
+  "artifact_base": "models/nifty_tp_forecast_hybrid_residual",
+  "metrics": ["mae", "rmse"],
+  "prediction_type": "residual"
+}

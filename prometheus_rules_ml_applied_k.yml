@@ -1,0 +1,80 @@
+groups:
+  - name: ml_applied_k.coverage.rules
+    interval: 60s
+    rules:
+      - record: ml:ensemble:effective_cov_15m
+        expr: sum_over_time(g6_ml_ensemble_effective_hit[15m]) / count_over_time(g6_ml_ensemble_effective_hit[15m])
+      - record: ml:ensemble:effective_cov_60m
+        expr: sum_over_time(g6_ml_ensemble_effective_hit[60m]) / count_over_time(g6_ml_ensemble_effective_hit[60m])
+      - record: ml:ensemble:applied_k_latest
+        expr: max_over_time(g6_ml_ensemble_applied_k[5m])
+      - record: ml:ensemble:scaled_radius_latest
+        expr: max_over_time(g6_ml_ensemble_scaled_radius[5m])
+      - record: ml:ensemble:predicted_disagreement_latest
+        expr: last_over_time(g6_ml_ensemble_predicted_disagreement[5m])
+      - record: ml:ensemble:disagreement_forecast_mape_30m
+        expr: avg_over_time(g6_ml_ensemble_disagreement_forecast_mape[30m])
+      - record: ml:ensemble:disagreement_forecast_mape_180m
+        expr: avg_over_time(g6_ml_ensemble_disagreement_forecast_mape[180m])
+      - record: ml:ensemble:projected_radius_latest
+        expr: ml:ensemble:predicted_disagreement_latest * on(index,horizon) group_left() ml:ensemble:applied_k_latest
+      - record: ml:ensemble:applied_vs_projected_radius_ratio
+        expr: ml:ensemble:scaled_radius_latest / ignoring(source) ml:ensemble:projected_radius_latest
+  - name: ml_applied_k.alerts
+    interval: 60s
+    rules:
+      - alert: MLAppliedKCoverageDriftFast
+        expr: (ml:ensemble:effective_cov_15m{index!="",horizon!=""} < 0.75 or ml:ensemble:effective_cov_15m{index!="",horizon!=""} > 0.85)
+        for: 10m
+        labels:
+          severity: warning
+          category: ml_k
+          drift_window: fast
+        annotations:
+          summary: "Effective coverage drift (15m window outside [0.75,0.85])"
+          description: |
+            Effective coverage over last 15m outside expected band around target (0.8). Investigate calibration stability, disagreement spikes, or override misuse.
+      - alert: MLAppliedKCoverageDriftSlow
+        expr: (ml:ensemble:effective_cov_60m{index!="",horizon!=""} < 0.76 or ml:ensemble:effective_cov_60m{index!="",horizon!=""} > 0.84)
+        for: 30m
+        labels:
+          severity: info
+          category: ml_k
+          drift_window: slow
+        annotations:
+          summary: "Effective coverage slow drift (60m window outside [0.76,0.84])"
+          description: |
+            Effective coverage over last 60m deviates from target. Consider re-running calibration daemon or inspecting disagreement trend.
+      - alert: MLAppliedKOverrideActiveLong
+        expr: count_over_time(g6_ml_ensemble_applied_k{source="override"}[30m]) > 0
+        for: 30m
+        labels:
+          severity: info
+          category: ml_k
+          subtype: override_duration
+        annotations:
+          summary: "Applied k override active >30m"
+          description: |
+            An applied_k override has remained active for >30m. Ensure override is still justified; consider reverting to smoothed calibration.
+      - alert: MLDisagreementForecastMAPEHigh
+        expr: avg_over_time(g6_ml_ensemble_disagreement_forecast_mape[60m]) > 0.35
+        for: 15m
+        labels:
+          severity: warning
+          category: ml_k
+          subtype: forecast_mape
+        annotations:
+          summary: "Disagreement forecast MAPE elevated"
+          description: |
+            EMA disagreement forecast MAPE exceeded 35% over the last hour. Inspect volatility or consider stronger models than EMA.
+      - alert: MLProjectedRadiusLagging
+        expr: (ml:ensemble:projected_radius_latest - ml:ensemble:scaled_radius_latest) / ml:ensemble:projected_radius_latest > 0.4
+        for: 10m
+        labels:
+          severity: info
+          category: ml_k
+          subtype: projected_radius_gap
+        annotations:
+          summary: "Operational radius significantly below projection"
+          description: |
+            Applied scaled radius trails projected radius by >40%. Potential under-coverage risk if disagreement surge persists.

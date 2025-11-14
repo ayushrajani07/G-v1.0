@@ -1,0 +1,348 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "id": "prometheus",
+      "name": "Prometheus",
+      "type": "prometheus",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "g6_meta": {
+    "description": "",
+    "families": [
+      "path_forecast"
+    ],
+    "spec_hash": "d626c84305d49e88"
+  },
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "histogram",
+        "metric": "pf_alpha_hist",
+        "panel_uuid": "4d2e2f2b51051cf9",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1294872363,
+      "targets": [
+        {
+          "expr": "pf_alpha_hist",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_alpha_hist (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "histogram",
+        "metric": "pf_candidate_richness",
+        "panel_uuid": "19ddc13f1f960363",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 433963327,
+      "targets": [
+        {
+          "expr": "pf_candidate_richness",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_candidate_richness (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "gauge",
+        "metric": "pf_composite_alpha",
+        "panel_uuid": "ff1965a3efd12a22",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 4279854499,
+      "targets": [
+        {
+          "expr": "pf_composite_alpha",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_composite_alpha (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "histogram",
+        "metric": "pf_composite_latency_ms",
+        "panel_uuid": "05284066c91c606e",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 86524006,
+      "targets": [
+        {
+          "expr": "pf_composite_latency_ms",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_composite_latency_ms (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "gauge",
+        "metric": "pf_horizon_sanitized",
+        "panel_uuid": "dff056bb8b7f2da2",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 3757070011,
+      "targets": [
+        {
+          "expr": "pf_horizon_sanitized",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_horizon_sanitized (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "gauge",
+        "metric": "pf_quantile_agg_ms",
+        "panel_uuid": "d78310d7ad98be19",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 3615690967,
+      "targets": [
+        {
+          "expr": "pf_quantile_agg_ms",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_quantile_agg_ms (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "gauge",
+        "metric": "pf_retrieval_candidates_total",
+        "panel_uuid": "a8904e285aee2049",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 2828029480,
+      "targets": [
+        {
+          "expr": "pf_retrieval_candidates_total",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_retrieval_candidates_total (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "histogram",
+        "metric": "pf_retrieval_latency_ms",
+        "panel_uuid": "8ba365249e9d2c61",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 2342741284,
+      "targets": [
+        {
+          "expr": "pf_retrieval_latency_ms",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_retrieval_latency_ms (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "path_forecast",
+        "kind": "gauge",
+        "metric": "pf_window_sanitized",
+        "panel_uuid": "50fba58e944fe457",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 1358669198,
+      "targets": [
+        {
+          "expr": "pf_window_sanitized",
+          "refId": "A"
+        }
+      ],
+      "title": "pf_window_sanitized (auto)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "forecast",
+    "path",
+    "g6",
+    "generated"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Path Forecast Overview",
+  "uid": "g6-path_forecast_overview",
+  "version": 1
+}

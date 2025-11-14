@@ -1,0 +1,6 @@
+# Aggregate all extras (API + monitoring + ML)
+-r requirements.api.txt
+-r requirements.monitoring.txt
+-r requirements.ml.txt
+
+# Note: Torch remains optional; see requirements.ml.txt for guidance.

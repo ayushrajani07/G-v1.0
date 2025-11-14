@@ -1,0 +1,60 @@
+name: Windows Core Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  core-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          if (Test-Path "requirements-all.txt") { pip install -r requirements-all.txt }
+          elseif (Test-Path "requirements.txt") { pip install -r requirements.txt }
+          else { pip install -U pip pytest prometheus-client pyyaml }
+
+      - name: Run core-only tests (script runner)
+        shell: pwsh
+        run: |
+          python scripts/dev/run_core_pytest.py
+
+      - name: Upload pytest_core_out.txt on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-core-output
+          path: pytest_core_out.txt
+          if-no-files-found: warn
+
+  metrics-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements-all.txt ]; then pip install -r requirements-all.txt; \
+          elif [ -f requirements.txt ]; then pip install -r requirements.txt; \
+          else pip install -U pip prometheus-client pyyaml; fi
+
+      - name: Check metrics spec drift
+        run: |
+          python scripts/ci/check_metrics_spec.py

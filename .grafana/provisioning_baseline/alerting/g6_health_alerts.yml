@@ -1,0 +1,693 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: G6 Health Alerts
+    folder: G6 Platform
+    interval: 1m
+    rules:
+      # Alert 1: Broker API Failure
+      - uid: g6_broker_api_failure
+        title: Broker API Success Rate Critical
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: '${DS_INFINITY}'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: '${DS_INFINITY}'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: ''
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/health/metrics'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 90
+                      - 0
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          description: 'Broker API success rate has dropped to {{ $values.B.broker_api_success_rate }}% (threshold: 90%). Collection cycles will fail. Check broker connectivity and API credentials.'
+          summary: 'Critical: Broker API failing'
+        labels:
+          severity: critical
+          component: broker_api
+          impact: high
+        isPaused: false
+
+      # Alert 2: Collection Cycle Errors
+      - uid: g6_collection_errors
+        title: Collection Cycle Errors Detected
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: '${DS_INFINITY}'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: '${DS_INFINITY}'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: ''
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/health/metrics'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 3
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          description: 'Multiple collection cycles have failed ({{ $values.B.collection_cycles_failed }} failures). Data gaps may occur. Check logs for error details.'
+          summary: 'Warning: Collection cycles failing'
+        labels:
+          severity: high
+          component: collection
+          impact: medium
+        isPaused: false
+
+      # Alert 3: Data Quality Degradation
+      - uid: g6_data_quality_low
+        title: Data Quality Score Below Threshold
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: '${DS_INFINITY}'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: '${DS_INFINITY}'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: ''
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/health/metrics'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 95
+                      - 0
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          description: 'Data quality score has degraded to {{ $values.B.data_quality_score }}% (threshold: 95%). Broker may be sending bad ticks. Check price outlier logs and broker data quality.'
+          summary: 'Medium: Data quality degraded'
+        labels:
+          severity: medium
+          component: data_quality
+          impact: low
+        isPaused: false
+
+      # Alert 4: Phase 8 Dual Storage Error Rate
+      - uid: g6_phase8_storage_errors
+        title: Phase 8 Dual Storage Error Rate High
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: '${DS_INFINITY}'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: '${DS_INFINITY}'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: ''
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/health/metrics'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0.01
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          description: 'Phase 8 dual storage error rate is {{ $values.B.dual_storage_error_rate | humanizePercentage }} (threshold: 1%). CSV writes are primary and unaffected, but columnar validation is compromised. Check columnar storage logs.'
+          summary: 'High: Phase 8 validation at risk'
+        labels:
+          severity: high
+          component: phase8_storage
+          impact: medium
+        isPaused: false
+
+      # Alert 5: Health Endpoint Unavailable
+      - uid: g6_health_endpoint_down
+        title: Health Metrics Endpoint Unavailable
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 180
+              to: 0
+            datasourceUid: '${DS_INFINITY}'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: '${DS_INFINITY}'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: ''
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/health/metrics'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 180
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 180
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                      - 0
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 3m
+        annotations:
+          description: 'The health metrics endpoint at http://127.0.0.1:9500/health/metrics is not responding. Web API may be down or unreachable. Check if orchestrator is running.'
+          summary: 'Critical: Health endpoint unavailable'
+        labels:
+          severity: critical
+          component: web_api
+          impact: high
+        isPaused: false
+
+      # Alert 6: Advisor Integrity Failed
+      - uid: g6_advisor_integrity_failed
+        title: Advisor Integrity Failed
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: '${DS_INFINITY}'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: '${DS_INFINITY}'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: ''
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/health/metrics'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                      - 0
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: Alerting
+        execErrState: Alerting
+        for: 2m
+        annotations:
+          description: 'Advisor endpoints integrity failed (advisor_integrity_ok={{ $values.B.advisor_integrity_ok }}). Universal advisor routes are missing or stale.'
+          summary: 'High: Advisor integrity failing'
+        labels:
+          severity: high
+          component: advisor
+          impact: medium
+        isPaused: false
+
+      # Alert 7: Advisor Data Stale
+      - uid: g6_advisor_age_stale
+        title: Advisor Data Stale (>5m)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: '${DS_INFINITY}'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: '${DS_INFINITY}'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: ''
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/health/metrics'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          description: 'Advisor report freshness degraded: age={{ $values.B.advisor_age_minutes }} minutes (>5m). Check live prediction exporter and advisor generation pipeline.'
+          summary: 'Medium: Advisor data stale'
+        labels:
+          severity: medium
+          component: advisor
+          impact: low
+        isPaused: false

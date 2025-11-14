@@ -1,0 +1,38 @@
+{
+  "NIFTY": {
+    "retrieval_60_k10": {
+      "speedup_avg": 0.9004,
+      "prune_ratio_avg": 0.8333,
+      "q50_mad_avg": 0.0
+    },
+    "retrieval_120_k10": {
+      "speedup_avg": 0.8894,
+      "prune_ratio_avg": 0.8696,
+      "q50_mad_avg": 0.0
+    }
+  },
+  "BANKNIFTY": {
+    "retrieval_60_k10": {
+      "speedup_avg": 0.0039,
+      "prune_ratio_avg": 1.0,
+      "q50_mad_avg": 0.0
+    },
+    "retrieval_120_k10": {
+      "speedup_avg": 0.0063,
+      "prune_ratio_avg": 1.0,
+      "q50_mad_avg": 0.0
+    }
+  },
+  "SENSEX": {
+    "retrieval_60_k10": {
+      "speedup_avg": 0.0,
+      "prune_ratio_avg": 0.0,
+      "q50_mad_avg": 0.0
+    },
+    "retrieval_120_k10": {
+      "speedup_avg": 0.0,
+      "prune_ratio_avg": 0.0,
+      "q50_mad_avg": 0.0
+    }
+  }
+}

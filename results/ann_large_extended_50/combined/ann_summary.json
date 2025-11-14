@@ -1,0 +1,40 @@
+{
+  "rows": 696,
+  "speedup_avg": 0.9418808070574728,
+  "speedup_p95": 1.3333333333333333,
+  "q50_mad_avg": 0.0,
+  "prune_ratio_avg": 1.0,
+  "build_ms_avg": 7.860632183908046,
+  "latency_ms_avg": 26.201149425287355,
+  "baseline_latency_ms_avg": 2.6767241379310347,
+  "mode_breakdown": {
+    "retrieval": {
+      "rows": 232,
+      "speedup_avg": 0.9343621046652865,
+      "prune_ratio_avg": 1.0,
+      "latency_ms_avg": 25.41810344827586,
+      "baseline_latency_ms_avg": 1.8836206896551724,
+      "q50_mad_avg": 0.0
+    },
+    "auto": {
+      "rows": 232,
+      "speedup_avg": 0.9423463733029833,
+      "prune_ratio_avg": 1.0,
+      "latency_ms_avg": 26.689655172413794,
+      "baseline_latency_ms_avg": 3.146551724137931,
+      "q50_mad_avg": 0.0
+    },
+    "hybrid": {
+      "rows": 232,
+      "speedup_avg": 0.9489339432041485,
+      "prune_ratio_avg": 1.0,
+      "latency_ms_avg": 26.495689655172413,
+      "baseline_latency_ms_avg": 3.0,
+      "q50_mad_avg": 0.0
+    }
+  },
+  "recommendations": [
+    "Prune ratio ~1.0: increase historical corpus or tighten ANN distance to gain pruning.",
+    "Speedup <1.2: consider larger window set, reducing ann_max_candidates, or pre-filtering low-variance days."
+  ]
+}

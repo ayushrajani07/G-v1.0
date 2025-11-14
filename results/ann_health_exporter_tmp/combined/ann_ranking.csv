@@ -1,0 +1,3 @@
+index,expiry_tag,offset,horizon,window,k,mode,rows,speedup_avg,prune_ratio_avg,q50_mad_avg,latency_ms_avg,baseline_latency_ms_avg,effectiveness_score,effectiveness_score_adjusted,ann_guard_trigger_rate,score
+NIFTY,this_week,0,60,120,10,retrieval,3,0.8699,0.7143,0.0,244.67,6.67,0.24854,0.0,0.0,0.8738
+NIFTY,this_week,0,60,60,10,retrieval,3,0.8355,0.6897,0.0,314.67,5.33,0.259284,0.0,0.0,0.7801

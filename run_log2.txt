@@ -1,0 +1,28 @@
+C:\Users\Asus\Desktop\g6_reorganized\src\metrics\__init__.py:198: DeprecationWarning: Importing 'src.metrics.metrics' directly is deprecated; import from 'src.metrics' facade instead.
+  from .metrics import (
+Kite token present in environment; proceeding without interactive auth
+[startup] Expiry Matrix:
+INDEX      | next_month | next_week  | this_month | this_week 
+-----------+------------+------------+------------+-----------
+BANKNIFTY  | 2025-12-30 |            | 2025-11-25 |           
+FINNIFTY   | 2025-12-30 |            | 2025-11-25 |           
+NIFTY      | 2025-12-30 | 2025-11-25 | 2025-11-25 | 2025-11-18
+SENSEX     | 2025-12-24 | 2025-11-20 | 2025-11-27 | 2025-11-13
+[startup] Inside market hours; collectors will start
+[collect] Unified collectors starting (batch) indices=4
+Instrument coverage low for FINNIFTY next_month 2025-12-30: 0.5454545454545454 (realized=6 requested=11)
+Low option field coverage FINNIFTY next_month 2025-12-30: 0.0% (full=0/12)
+Low option field coverage SENSEX next_month 2025-12-24: 23.809523809523807% (full=10/42)
+CSV_EXPIRY_DIAGNOSTIC monthly_mismatch index=SENSEX tag=next_month date=2025-12-24 expected_anchor=2025-12-31
+CSV_EXPIRY_CORRECTED monthly_anchor index=SENSEX tag=next_month corrected_date=2025-12-31
+[collect] Unified collectors completed (batch)
+[CYCLE] Collection cycle SUCCESS | indices=4 | elapsed=26.20s | at 2025-11-13 06:13:11Z
+CYCLE SUMMARY 2025-11-13 06:13:11Z — SUCCESS
+  API: 0 ms | Success: 0.0% | Collection: 100.0% | CSV errors(cycle): 0
+Index     Options Success% Attempts Failures ATM  
+NIFTY     104     100.0%   4        0        25950
+BANKNIFTY 84      100.0%   2        0        58600
+FINNIFTY  34      100.0%   2        0        27450
+SENSEX    168     100.0%   4        0        84700
+
+Cardinality guard action=disable series=1714 limit=0 disabled=False

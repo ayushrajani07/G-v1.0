@@ -1,0 +1,170 @@
+{
+  "title": "G6 Analytics – Infinity Smoke",
+  "uid": "g6-analytics-smoke",
+  "schemaVersion": 38,
+  "version": 1,
+  "time": {
+    "from": "now-2d",
+    "to": "now"
+  },
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "NIFTY Index Price (Infinity)",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "infinity",
+          "queryType": "json",
+          "parser": "backend",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv",
+          "url_options": {
+            "method": "GET"
+          },
+          "params": [
+            {
+              "key": "index",
+              "value": "NIFTY"
+            },
+            {
+              "key": "expiry_tag",
+              "value": "this_week"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            },
+            {
+              "key": "limit",
+              "value": "2000"
+            },
+            {
+              "key": "include_index",
+              "value": "1"
+            }
+          ],
+          "json_options": {
+            "root_is_not_array": false
+          },
+          "columns": []
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {
+              "time_str": 0,
+              "index_price": 1
+            },
+            "includeByName": {
+              "time_str": true,
+              "index_price": true
+            },
+            "renameByName": {
+              "index_price": "NIFTY Index"
+            }
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Raw frame (debug)",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 10
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "infinity",
+          "queryType": "json",
+          "parser": "backend",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv",
+          "url_options": {
+            "method": "GET"
+          },
+          "params": [
+            {
+              "key": "index",
+              "value": "NIFTY"
+            },
+            {
+              "key": "expiry_tag",
+              "value": "this_week"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            },
+            {
+              "key": "limit",
+              "value": "2000"
+            },
+            {
+              "key": "include_index",
+              "value": "1"
+            }
+          ],
+          "json_options": {
+            "root_is_not_array": false
+          },
+          "columns": []
+        }
+      ]
+    }
+  ],
+  "timezone": "Asia/Kolkata"
+}

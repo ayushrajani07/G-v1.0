@@ -1,0 +1,8 @@
+horizon,window,k,mode,scale,distance_metric,weight_mode,recent_gamma,regime_tolerance,regime_penalty,ann_use,ann_space,ann_max_candidates,n,coverage_avg,band_width_avg,mae_avg,bias_avg,samples_avg,ann_total_windows_avg,ann_shortlisted_avg,latency_ms_avg,baseline_latency_ms_avg,ann_speedup_avg,ann_q50_mad_avg,ann_build_ms_avg,ann_index_mem_bytes_avg,ann_prune_ratio_avg,ann_effectiveness_avg
+60,60,15,retrieval,1.0,l2,none,0.9,nan,1.25,1,cosine,20,1,nan,nan,nan,nan,0.0,19.0,19.0,304.0,2.0,0.006578947368421052,0.0,301.0,4560.0,1.0,0.0
+60,60,15,retrieval,1.0,l2,none,0.9,nan,1.25,1,cosine,20,1,nan,nan,11.138654329255106,11.138654329255106,60.0,0.0,24.0,2.0,1.0,0.5,0.0,0.0,4560.0,0.0,0.0
+60,60,15,retrieval,1.0,l2,none,0.9,nan,1.25,1,cosine,20,1,nan,nan,4.013523557730821,2.1031936255361567,60.0,0.0,24.0,1.0,1.0,1.0,0.0,0.0,4560.0,0.0,0.0
+60,60,15,retrieval,1.0,l2,none,0.9,nan,1.25,1,cosine,20,1,nan,nan,1.0222665957705743,0.005799386720909183,32.0,0.0,24.0,1.0,1.0,1.0,0.0,0.0,4560.0,0.0,0.0
+60,60,15,retrieval,1.0,l2,none,0.9,nan,1.25,1,cosine,20,1,nan,nan,1.4297145695490594,-0.44120174133489765,57.0,0.0,24.0,1.0,1.0,1.0,0.0,0.0,4560.0,0.0,0.0
+60,60,15,retrieval,1.0,l2,none,0.9,nan,1.25,1,cosine,20,1,nan,nan,6.038080672454522,5.792176330489673,38.0,0.0,24.0,2.0,2.0,1.0,0.0,0.0,4560.0,0.0,0.0
+60,60,15,retrieval,1.0,l2,none,0.9,nan,1.25,1,cosine,20,1,nan,nan,2.4370015533971707,2.0613106348187906,60.0,0.0,24.0,1.0,2.0,2.0,0.0,0.0,4560.0,0.0,0.0

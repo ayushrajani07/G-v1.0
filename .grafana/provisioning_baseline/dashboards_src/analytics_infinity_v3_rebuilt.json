@@ -1,0 +1,1615 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "graphTooltip": 2,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "panels": [],
+      "title": "Index prices",
+      "type": "row"
+    },
+    {
+      "id": 101,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "type": "timeseries",
+      "title": "NIFTY + SENSEX – Index Price",
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "refId": "NS1",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "NS2",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "type": "timeseries",
+      "title": "BANKNIFTY + FINNIFTY – Index Price",
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "refId": "BF1",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "BF2",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 200,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "type": "row",
+      "title": "Implied Volatility (IV)"
+    },
+    {
+      "id": 201,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "type": "timeseries",
+      "title": "NIFTY + SENSEX | IV (CE/PE)",
+      "targets": [
+        {
+          "refId": "NS3",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "NS4",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 202,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "type": "timeseries",
+      "title": "BANKNIFTY + FINNIFTY | IV (CE/PE)",
+      "targets": [
+        {
+          "refId": "BF3",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "BF4",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 300,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "type": "row",
+      "title": "Greeks – NS pair"
+    },
+    {
+      "id": 301,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "type": "timeseries",
+      "title": "NIFTY + SENSEX | Δ - Delta (CE/PE)",
+      "targets": [
+        {
+          "refId": "NS5",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "NS6",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 302,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "type": "timeseries",
+      "title": "NIFTY + SENSEX | Θ - Theta (CE/PE)",
+      "targets": [
+        {
+          "refId": "NS7",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "NS8",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 303,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 25
+      },
+      "type": "timeseries",
+      "title": "NIFTY + SENSEX | Γ - Gamma (CE/PE)",
+      "targets": [
+        {
+          "refId": "NS9",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "NS10",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 304,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 25
+      },
+      "type": "timeseries",
+      "title": "NIFTY + SENSEX | ν - Vega (CE/PE)",
+      "targets": [
+        {
+          "refId": "NS11",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "NS12",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 400,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "type": "row",
+      "title": "Greeks – BF pair"
+    },
+    {
+      "id": 401,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "type": "timeseries",
+      "title": "BANKNIFTY + FINNIFTY | Δ - Delta (CE/PE)",
+      "targets": [
+        {
+          "refId": "BF5",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "BF6",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 402,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "type": "timeseries",
+      "title": "BANKNIFTY + FINNIFTY | Θ - Theta (CE/PE)",
+      "targets": [
+        {
+          "refId": "BF7",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "BF8",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 403,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "type": "timeseries",
+      "title": "BANKNIFTY + FINNIFTY | Γ - Gamma (CE/PE)",
+      "targets": [
+        {
+          "refId": "BF9",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "BF10",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "id": 404,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 38
+      },
+      "type": "timeseries",
+      "title": "BANKNIFTY + FINNIFTY | ν - Vega (CE/PE)",
+      "targets": [
+        {
+          "refId": "BF11",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "refId": "BF12",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "type": "json",
+          "queryType": "json",
+          "source": "url",
+          "method": "GET",
+          "format": "table",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "columns": [],
+          "json_options": {
+            "root_is_array": true
+          },
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    }
+  ],
+  "preload": false,
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": [
+    "g6",
+    "analytics",
+    "infinity",
+    "v3-rebuilt"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "0",
+          "value": "0"
+        },
+        "label": "Offset",
+        "name": "offset",
+        "options": [
+          {
+            "selected": true,
+            "text": "0",
+            "value": "0"
+          },
+          {
+            "selected": false,
+            "text": "+100",
+            "value": "+100"
+          },
+          {
+            "selected": false,
+            "text": "-100",
+            "value": "-100"
+          },
+          {
+            "selected": false,
+            "text": "+200",
+            "value": "+200"
+          },
+          {
+            "selected": false,
+            "text": "-200",
+            "value": "-200"
+          }
+        ],
+        "query": "0,+100,-100,+200,-200",
+        "type": "custom"
+      },
+      {
+        "current": {
+          "text": "this_week",
+          "value": "this_week"
+        },
+        "label": "Expiry (NIFTY/SENSEX)",
+        "name": "expiry_ns",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_week",
+            "value": "this_week"
+          },
+          {
+            "selected": false,
+            "text": "next_week",
+            "value": "next_week"
+          },
+          {
+            "selected": false,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_week,next_week,this_month,next_month",
+        "type": "custom"
+      },
+      {
+        "current": {
+          "text": "this_month",
+          "value": "this_month"
+        },
+        "label": "Expiry (BANK/FIN)",
+        "name": "expiry_bf",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_month,next_month",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-3h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "Asia/Kolkata",
+  "title": "G6 Analytics – Infinity v3 (rebuilt)",
+  "uid": "g6-analytics-infinity-v3r",
+  "version": 1
+}

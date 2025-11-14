@@ -1,0 +1,195 @@
+{
+  "__inputs": [],
+  "__requires": [
+    { "id": "prometheus", "name": "Prometheus", "type": "prometheus", "version": "1.0.0" }
+  ],
+  "title": "ANN Health",
+  "uid": "g6-ann_health",
+  "timezone": "Asia/Kolkata",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "tags": ["g6", "ann", "health"],
+  "g6_meta": {
+    "description": "ANN retrieval health vs baseline (speedup, prune, MAD, rows, deltas, regressions)",
+    "families": ["ann", "health"],
+    "generator_version": "manual-seed-1"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "index",
+        "type": "query",
+        "query": "label_values(ann_health_speedup, index)",
+        "datasource": "Prometheus",
+        "refresh": 2,
+        "hide": 0,
+        "current": { "text": "NIFTY", "value": "NIFTY" }
+      },
+      {
+        "name": "window",
+        "type": "custom",
+        "query": "60,120",
+        "hide": 0,
+        "current": { "text": ["60","120"], "value": ["60","120"] },
+        "multi": true,
+        "includeAll": false
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Regressions (count)",
+      "id": 1,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "ann_health_regression_total", "refId": "A" } ]
+    },
+    {
+      "type": "stat",
+      "title": "Last Run (s since epoch)",
+      "id": 2,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "ann_health_last_run_timestamp_seconds", "refId": "A" } ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Speedup by window",
+      "id": 10,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        { "expr": "sum by (window) (ann_health_speedup{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Speedup Δ vs baseline",
+      "id": 11,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        { "expr": "sum by (window) (ann_health_speedup_delta{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "q50 MAD by window",
+      "id": 12,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] },
+      "targets": [
+        { "expr": "sum by (window) (ann_health_q50_mad{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Prune Ratio",
+      "id": 13,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum by (window) (ann_health_prune_ratio{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Rows contributing",
+      "id": 14,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 20 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum by (window) (ann_health_rows{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "MAD Δ vs baseline",
+      "id": 15,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "sum by (window) (ann_health_q50_mad_delta{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    }
+    ,
+    {
+      "type": "timeseries",
+      "title": "Adjusted Effectiveness",
+      "id": 16,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 28 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green" }, { "color": "orange", "value": 0.05 }, { "color": "red", "value": 0.02 } ] } },
+        "overrides": []
+      },
+      "targets": [
+        { "expr": "sum by (window) (ann_health_effectiveness_adjusted{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    }
+    ,
+    {
+      "type": "timeseries",
+      "title": "Guard Trigger Rate",
+      "id": 17,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+        "overrides": []
+      },
+      "targets": [
+        { "expr": "sum by (window) (ann_health_guard_trigger_rate{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    }
+    ,
+    {
+      "type": "timeseries",
+      "title": "Effectiveness (30m MA)",
+      "id": 19,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 36 },
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        { "expr": "sum by (window) (ann_health_effectiveness_adjusted_mean_30m{index=\"$index\",window=~\"$window\"})", "refId": "A" }
+      ]
+    }
+    ,
+    {
+      "type": "stat",
+      "title": "Regression Active (5m)",
+      "id": 18,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 36 },
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "ann_health_regression_active", "refId": "A" } ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "red", "value": 1 } ] }
+        },
+        "overrides": []
+      }
+    }
+    ,
+    {
+      "type": "stat",
+      "title": "Effectiveness (15m avg)",
+      "id": 20,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 44 },
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "avg_over_time(ann_health_effectiveness_adjusted{index=\"$index\",window=~\"$window\"}[15m])", "refId": "A" } ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "orange", "value": 0.02 }, { "color": "green", "value": 0.05 } ] }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

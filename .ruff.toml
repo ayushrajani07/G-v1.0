@@ -1,0 +1,51 @@
+line-length = 120
+indent-width = 4
+
+# Target Python version
+target-version = "py312"
+
+[lint]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "W",   # warnings
+  "I",   # isort
+  "B",   # flake8-bugbear
+  "UP",  # pyupgrade
+  "SIM", # flake8-simplify
+]
+
+ignore = [
+  # Keep pragmatic for now; allow longer test names and some expressive code
+]
+
+[lint.isort]
+combine-as-imports = true
+force-single-line = false
+force-sort-within-sections = true
+known-first-party = ["src"]
+
+[format]
+quote-style = "preserve"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[lint.per-file-ignores]
+"tests/**" = [
+  # Tests often use reassignments/fixtures/dynamic constructs; keep lenient initially
+]
+
+[exclude]
+extend = [
+  ".git",
+  ".venv",
+  "venv",
+  "dist",
+  "build",
+  "data",
+  "dashboards",
+  "results",
+  "models",
+  "node_modules",
+]

@@ -1,0 +1,48 @@
+.........................................................s.............. [  2%]
+................s....................................................... [  5%]
+............................ss.......................................... [  8%]
+.................s..............X....................................... [ 11%]
+........................................................................ [ 14%]
+........................................................................ [ 17%]
+........................................................................ [ 20%]
+......ss................................................................ [ 23%]
+..........sss..............s............................................ [ 26%]
+..........................................................s............. [ 29%]
+.............................................................s.......... [ 32%]
+.................s...................................................... [ 35%]
+.............ss..s...................................................... [ 38%]
+...................................................F
+================================== FAILURES ===================================
+_______________________ test_cardinality_guard_ok_path ________________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000027CF2DCC980>
+
+    def test_cardinality_guard_ok_path(monkeypatch):
+        # Baseline = current (no offenders) scenario
+        snap_fd, snap_path = tempfile.mkstemp(prefix='card_snap_', suffix='.json')
+        os.close(snap_fd)
+        # Create snapshot & baseline simultaneously
+        monkeypatch.setenv('G6_CARDINALITY_SNAPSHOT', snap_path)
+        reg = fresh_metrics()
+        assert reg is not None
+        # Use same file as baseline (identical mapping)
+        monkeypatch.setenv('G6_CARDINALITY_BASELINE', snap_path)
+        monkeypatch.delenv('G6_CARDINALITY_SNAPSHOT', raising=False)
+        monkeypatch.setenv('G6_FORCE_NEW_REGISTRY', '1')
+        reg2 = fresh_metrics()
+        summary = getattr(reg2, '_cardinality_guard_summary', None)
+        assert summary is not None
+>       assert not summary.get('offenders'), 'Should have zero offenders when baseline matches current'
+E       AssertionError: Should have zero offenders when baseline matches current
+E       assert not [{'baseline': 5, 'current': 10, 'group': 'greeks', 'growth_percent': 100.0}]
+E        +  where [{'baseline': 5, 'current': 10, 'group': 'greeks', 'growth_percent': 100.0}] = <built-in method get of dict object at 0x0000027CF3020200>('offenders')
+E        +    where <built-in method get of dict object at 0x0000027CF3020200> = {'allowed_growth_percent': 10.0, 'baseline_path': 'C:\\Users\\Asus\\AppData\\Local\\Temp\\card_snap_mkrh6mcx.json', 'evaluated_groups': 11, 'new_groups': ['iv_estimation', 'panel_diff'], ...}.get
+
+C:\Users\Asus\Desktop\g6_reorganized\tests\test_metrics_cardinality_guard.py:75: AssertionError
+---------------------------- Captured stdout call -----------------------------
+metrics.cardinality.guard offenders=1 allow=10.00
+------------------------------ Captured log call ------------------------------
+WARNING  src.metrics.cardinality_guard:cardinality_guard.py:238 metrics.cardinality.guard offenders=1 allow=10.00
+=========================== short test summary info ===========================
+FAILED tests/test_metrics_cardinality_guard.py::test_cardinality_guard_ok_path
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!

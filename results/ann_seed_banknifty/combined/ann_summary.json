@@ -1,0 +1,18 @@
+{
+  "rows": 0,
+  "speedup_avg": null,
+  "speedup_p95": null,
+  "q50_mad_avg": null,
+  "prune_ratio_avg": null,
+  "build_ms_avg": null,
+  "latency_ms_avg": null,
+  "baseline_latency_ms_avg": null,
+  "speedup_avg_adjusted": null,
+  "q50_mad_avg_adjusted": null,
+  "prune_ratio_avg_adjusted": null,
+  "latency_ms_avg_adjusted": null,
+  "ann_guard_triggered_count": 0,
+  "ann_guard_triggered_rate": 0.0,
+  "mode_breakdown": {},
+  "recommendations": []
+}

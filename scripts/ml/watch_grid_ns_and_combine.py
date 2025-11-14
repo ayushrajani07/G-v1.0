@@ -1,0 +1,128 @@
+#!/usr/bin/env python
+from __future__ import annotations
+import csv
+import subprocess
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+import os
+
+ROOT = Path(__file__).resolve().parents[2]
+RESULTS = ROOT / "results" / "grid"
+OUT_DIR = RESULTS / "COMBINED_NS" / "this_week" / "0"
+INDICES = ["NIFTY", "SENSEX"]
+TAG = "this_week"
+OFFSET = "0"
+POLL_SECS = 20
+LOG = OUT_DIR / "watch.log"
+DONE = OUT_DIR / "STATUS_DONE.txt"
+LOCK = OUT_DIR / "watch.lock"
+
+
+def read_summary(path: Path):
+    rows = []
+    if not path.exists():
+        return rows
+    with path.open("r", encoding="utf-8", newline="") as f:
+        r = csv.DictReader(f)
+        for row in r:
+            rows.append(row)
+    return rows
+
+
+def to_float(x):
+    try:
+        return float(x)
+    except Exception:
+        return float("nan")
+
+
+def has_valid_metrics(rows: list[dict]) -> bool:
+    if not rows:
+        return False
+    samples_pos = 0
+    metrics_rows = 0
+    for r in rows:
+        s = to_float(r.get("samples_avg")) if "samples_avg" in r else float("nan")
+        cov = to_float(r.get("coverage_avg"))
+        bw = to_float(r.get("band_width_avg"))
+        mae = to_float(r.get("mae_avg"))
+        if s == s and s > 0:
+            samples_pos += 1
+        if cov == cov and bw == bw and mae == mae:
+            metrics_rows += 1
+    return samples_pos > 0 and metrics_rows > 0
+
+
+def log(msg: str):
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().isoformat(timespec="seconds")  # local-ok
+    with LOG.open("a", encoding="utf-8") as f:
+        f.write(f"[{ts}] {msg}\n")
+
+
+def main():
+    # rotate log daily
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    if LOG.exists():
+        try:
+            mtime = datetime.fromtimestamp(LOG.stat().st_mtime)
+            today = datetime.now().date()  # local-ok
+            if mtime.date() != today:
+                ts = mtime.strftime("%Y%m%d-%H%M%S")
+                LOG.rename(LOG.with_name(f"watch-{ts}.log"))
+        except Exception:
+            pass
+
+    # simple PID guard: if another recent watcher is active, exit quietly
+    try:
+        if LOCK.exists():
+            age = time.time() - LOCK.stat().st_mtime
+            if age < 300:  # 5 minutes freshness window
+                log("another watcher appears active; exiting")
+                return
+    except Exception:
+        pass
+    try:
+                with LOCK.open("w", encoding="utf-8") as f:
+                    f.write(f"{os.getpid()}\n{datetime.now().isoformat(timespec='seconds')}\n")  # local-ok
+    except Exception:
+        pass
+
+    log("watcher (NS) started")
+    while True:
+        all_ready = True
+        for idx in INDICES:
+            summ = RESULTS / idx / TAG / OFFSET / "summary.csv"
+            if not summ.exists():
+                log(f"{idx}: summary missing at {summ}")
+                all_ready = False
+                continue
+            rows = read_summary(summ)
+            if not has_valid_metrics(rows):
+                log(f"{idx}: metrics not ready yet (rows={len(rows)})")
+                all_ready = False
+                continue
+            log(f"{idx}: OK (rows={len(rows)})")
+        if all_ready:
+            log("NIFTY+SENSEX ready; running NS combiner")
+            cmd = [sys.executable, str(ROOT / "scripts" / "ml" / "combine_grid_eval_ns.py")]
+            try:
+                subprocess.run(cmd, cwd=str(ROOT), check=True)
+                with DONE.open("w", encoding="utf-8") as f:
+                    f.write(datetime.now().isoformat(timespec="seconds"))  # local-ok
+                log("NS combiner completed; STATUS_DONE written")
+            except Exception as e:
+                log(f"NS combiner failed: {e}")
+            try:
+                if LOCK.exists():
+                    LOCK.unlink()
+            except Exception:
+                pass
+            break
+        time.sleep(POLL_SECS)
+
+
+if __name__ == "__main__":
+    main()

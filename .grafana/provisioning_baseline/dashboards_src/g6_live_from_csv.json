@@ -1,0 +1,243 @@
+﻿{
+  "uid": "g6-live-csv-infinity",
+  "title": "G6 Overlays â€“ Live from CSV (Infinity)",
+  "editable": true,
+  "schemaVersion": 39,
+  "refresh": "15s",
+  "tags": ["g6", "overlay", "infinity", "csv"],
+  "g6_meta": {"families": ["overlay"], "description": "Directly projects today's CSV via Infinity (tp, avg_tp)", "explorer": true},
+  "time": {"from": "now-12h", "to": "now+6h"},
+  "timezone": "Asia/Kolkata",
+  "templating": {
+    "list": [
+      {"name": "offset", "type": "custom", "query": "0,+100,-100,+200,-200", "current": {"text": "0", "value": "0"}, "label": "Offset"},
+      {"name": "expiry_ns", "type": "custom", "query": "this_week,next_week,this_month,next_month", "current": {"text": "this_week", "value": "this_week"}, "label": "Expiry (NIFTY/SENSEX)"},
+      {"name": "expiry_bf", "type": "custom", "query": "this_month,next_month", "current": {"text": "this_month", "value": "this_month"}, "label": "Expiry (BANK/FIN)"},
+  {"name": "show_avg", "type": "custom", "query": "1,0", "current": {"text": "1", "value": "1"}, "label": "Show avg_tp"},
+  {"name": "show_op",  "type": "custom", "query": "1,0", "current": {"text": "0", "value": "0"}, "label": "Show CE + PE"}
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+  "title": "NIFTY | $expiry_ns | $offset â€“ CSV (tp + Index Price)",
+      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 0},
+      "options": {"legend": {"showLegend": true, "placement": "bottom"}},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Index Price"},
+         "properties": [
+           {"id": "custom.axisPlacement", "value": "hidden"},
+           {"id": "unit", "value": "none"},
+           {"id": "color", "value": {"mode": "palette-classic"}}
+         ]}
+      ]},
+      "targets": [
+        {"refId": "A", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "from_ms", "value": "${__from}"},
+           {"key": "to_ms", "value": "${__to}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "tp", "text": "tp", "type": "number"}
+         ]},
+        {"refId": "B", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "include_avg", "value": "${show_avg}"},
+           {"key": "from_ms", "value": "${__from}"},
+           {"key": "to_ms", "value": "${__to}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "avg_tp", "text": "avg_tp", "type": "number"}
+         ]},
+        {"refId": "IDX", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "include_index", "value": "1"},
+           {"key": "from_ms", "value": "${__from}"},
+           {"key": "to_ms", "value": "${__to}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "index_price", "text": "Index Price", "type": "number"}
+         ]}
+      ]
+    },
+    {
+      "type": "timeseries",
+  "title": "SENSEX | $expiry_ns | $offset â€“ CSV (tp + Index Price)",
+      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 14},
+      "options": {"legend": {"showLegend": true, "placement": "bottom"}},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Index Price"},
+         "properties": [
+           {"id": "custom.axisPlacement", "value": "hidden"},
+           {"id": "unit", "value": "none"},
+           {"id": "color", "value": {"mode": "palette-classic"}}
+         ]}
+      ]},
+      "targets": [
+        {"refId": "A", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "from_ms", "value": "${__from}"},
+           {"key": "to_ms", "value": "${__to}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "tp", "text": "tp", "type": "number"}
+         ]},
+        {"refId": "B", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "include_avg", "value": "${show_avg}"},
+           {"key": "from_ms", "value": "${__from}"},
+           {"key": "to_ms", "value": "${__to}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "avg_tp", "text": "avg_tp", "type": "number"}
+         ]},
+        {"refId": "IDX", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "include_index", "value": "1"},
+           {"key": "from_ms", "value": "${__from}"},
+           {"key": "to_ms", "value": "${__to}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "index_price", "text": "Index Price", "type": "number"}
+         ]}
+      ]
+    },
+    {
+      "type": "timeseries",
+  "title": "BANKNIFTY | $expiry_bf | $offset â€“ CSV (tp + Index Price)",
+      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 28},
+      "options": {"legend": {"showLegend": true, "placement": "bottom"}},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Index Price"},
+         "properties": [
+           {"id": "custom.axisPlacement", "value": "hidden"},
+           {"id": "unit", "value": "none"},
+           {"id": "color", "value": {"mode": "palette-classic"}}
+         ]}
+      ]},
+      "targets": [
+        {"refId": "A", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "from_ms", "value": "${__from}"},
+           {"key": "to_ms", "value": "${__to}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "tp", "text": "tp", "type": "number"}
+         ]},
+        {"refId": "B", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "include_avg", "value": "${show_avg}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "avg_tp", "text": "avg_tp", "type": "number"}
+         ]},
+        {"refId": "IDX", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "include_index", "value": "1"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "index_price", "text": "Index Price", "type": "number"}
+         ]}
+      ]
+    },
+    {
+      "type": "timeseries",
+  "title": "FINNIFTY | $expiry_bf | $offset â€“ CSV (tp + Index Price)",
+      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 42},
+      "options": {"legend": {"showLegend": true, "placement": "bottom"}},
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Index Price"},
+         "properties": [
+           {"id": "custom.axisPlacement", "value": "hidden"},
+           {"id": "unit", "value": "none"},
+           {"id": "color", "value": {"mode": "palette-classic"}}
+         ]}
+      ]},
+      "targets": [
+        {"refId": "A", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "tp", "text": "tp", "type": "number"}
+         ]},
+        {"refId": "B", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "include_avg", "value": "${show_avg}"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "avg_tp", "text": "avg_tp", "type": "number"}
+         ]},
+        {"refId": "IDX", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
+         "url_options": {"method": "GET", "params": [
+           {"key": "limit", "value": "2000"},
+           {"key": "include_index", "value": "1"},
+           {"key": "cb", "value": "${__unixEpochMs}"}
+         ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+         "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "json_options": {"root_is_array": true},
+         "columns": [
+           {"selector": "time_str", "text": "time", "type": "timestamp"},
+           {"selector": "index_price", "text": "Index Price", "type": "number"}
+         ]}
+      ]
+    }
+  ],
+  "timepicker": {"refresh_intervals": ["15s", "30s", "1m", "2m", "5m"]}
+}
+
+

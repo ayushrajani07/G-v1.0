@@ -1,0 +1,46 @@
+{
+  "rows": 696,
+  "speedup_avg": 0.916135078772599,
+  "speedup_p95": 1.25,
+  "q50_mad_avg": 0.0,
+  "prune_ratio_avg": 1.0,
+  "build_ms_avg": 7.900862068965517,
+  "latency_ms_avg": 26.2816091954023,
+  "baseline_latency_ms_avg": 2.67816091954023,
+  "speedup_avg_adjusted": 0.9833590534979424,
+  "q50_mad_avg_adjusted": 0.0,
+  "prune_ratio_avg_adjusted": 1.0,
+  "latency_ms_avg_adjusted": 2.7237654320987654,
+  "ann_guard_triggered_count": 0,
+  "ann_guard_triggered_rate": 0.0,
+  "mode_breakdown": {
+    "retrieval": {
+      "rows": 232,
+      "speedup_avg": 0.9114560772801276,
+      "prune_ratio_avg": 1.0,
+      "latency_ms_avg": 25.58189655172414,
+      "baseline_latency_ms_avg": 1.9094827586206897,
+      "q50_mad_avg": 0.0
+    },
+    "auto": {
+      "rows": 232,
+      "speedup_avg": 0.9133716376374382,
+      "prune_ratio_avg": 1.0,
+      "latency_ms_avg": 26.45689655172414,
+      "baseline_latency_ms_avg": 2.956896551724138,
+      "q50_mad_avg": 0.0
+    },
+    "hybrid": {
+      "rows": 232,
+      "speedup_avg": 0.9235775214002314,
+      "prune_ratio_avg": 1.0,
+      "latency_ms_avg": 26.80603448275862,
+      "baseline_latency_ms_avg": 3.168103448275862,
+      "q50_mad_avg": 0.0
+    }
+  },
+  "recommendations": [
+    "Prune ratio ~1.0: increase historical corpus or tighten ANN distance to gain pruning.",
+    "Speedup <1.2: consider larger window set, reducing ann_max_candidates, or pre-filtering low-variance days."
+  ]
+}

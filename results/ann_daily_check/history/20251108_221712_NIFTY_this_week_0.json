@@ -1,0 +1,37 @@
+{
+  "timestamp": "2025-11-08 22:17:12",
+  "params": {
+    "index": "NIFTY",
+    "tag": "this_week",
+    "offset": "0",
+    "start": "2025-11-06",
+    "end": "2025-11-08",
+    "speedup_min_drop": 0.05,
+    "mad_max": 0.05,
+    "prune_max": 0.9,
+    "min_rows": 5
+  },
+  "baseline_keys": [
+    "retrieval_60_k10",
+    "retrieval_120_k10"
+  ],
+  "live": {
+    "retrieval_60_k10": {
+      "speedup_avg": 0.5043,
+      "prune_ratio_avg": 0.8333,
+      "q50_mad_avg": 0.0,
+      "rows": 2
+    },
+    "retrieval_120_k10": {
+      "speedup_avg": 0.5028,
+      "prune_ratio_avg": 0.8696,
+      "q50_mad_avg": 0.0,
+      "rows": 2
+    }
+  },
+  "skipped": [
+    "retrieval_60_k10",
+    "retrieval_120_k10"
+  ],
+  "regressions": []
+}

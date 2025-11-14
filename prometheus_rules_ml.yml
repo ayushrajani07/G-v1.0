@@ -1,0 +1,181 @@
+groups:
+  - name: ml_conformal_recording
+    interval: 15s
+    rules:
+      - record: ml:conformal:coverage_avg_5m
+        expr: avg_over_time(g6_ml_conformal_coverage_estimate[5m])
+      - record: ml:conformal:coverage_avg_15m
+        expr: avg_over_time(g6_ml_conformal_coverage_estimate[15m])
+      - record: ml:conformal:band_width
+        expr: 2 * g6_ml_conformal_radius
+      - record: ml:conformal:under_coverage_15m
+        expr: clamp_min(0.8 - ml:conformal:coverage_avg_15m, 0)
+  - name: ml_conformal_alerts
+    interval: 15s
+    rules:
+      - alert: MLConformalUnderCoverage15m
+        expr: (ml:conformal:coverage_avg_15m < 0.75)
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ML Conformal coverage below threshold (15m)"
+          description: "Average coverage over 15m = {{ $value | printf \"%.2f\" }}, below 0.75. Investigate model drift or widen bands."
+      - alert: MLConformalPersistentUnderCoverage
+        expr: (ml:conformal:coverage_avg_15m < 0.7)
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Persistent under-coverage by conformal bands (15m)"
+          description: "Average coverage over 15m persisted below 0.70 for 30m. Consider raising coverage target or resetting residual window."
+
+  - name: ml_hybrid_recording
+    interval: 15s
+    rules:
+      - record: ml:hybrid:residual_avg_15m
+        expr: abs(avg_over_time(g6_ml_hybrid_residual[15m]))
+
+  - name: ml_hybrid_alerts
+    interval: 15s
+    rules:
+      - alert: MLHybridResidualSpike
+        expr: ml:hybrid:residual_avg_15m > 20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hybrid residual magnitude elevated (15m avg)"
+          description: "Avg |residual| over 15m is {{ $value | printf \"%.2f\" }} (> 20). Check model drift or baseline scaling."
+
+  - name: ml_kalman_shock_recording
+    interval: 15s
+    rules:
+      - record: ml:tp:shock_p95_15m
+        expr: quantile_over_time(0.95, g6_ml_tp_shock_score[15m])
+      - record: ml:tp:shock_avg_5m
+        expr: avg_over_time(g6_ml_tp_shock_score[5m])
+
+  - name: ml_kalman_shock_alerts
+    interval: 15s
+    rules:
+      - alert: MLTPShockElevated
+        expr: ml:tp:shock_p95_15m > 3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TP shock score elevated (p95 over 15m > 3)"
+          description: "Shock score p95 over 15m is {{ $value | printf \"%.2f\" }} (> 3). Market turbulence or data issues possible."
+      - alert: MLTPShockSevere
+        expr: ml:tp:shock_p95_15m > 4
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "TP shock score severe (p95 over 15m > 4)"
+          description: "Shock score p95 over 15m is {{ $value | printf \"%.2f\" }} (> 4). Consider widening bands or damping predictions."
+
+  - name: ml_move_recording
+    interval: 15s
+    rules:
+      - record: ml:move:prob_avg_15m
+        expr: avg_over_time(g6_ml_move_probability[15m])
+      - record: ml:move:prob_p95_15m
+        expr: quantile_over_time(0.95, g6_ml_move_probability[15m])
+      - record: ml:move:conditional_mag_p90_60m
+        expr: quantile_over_time(0.90, g6_ml_move_conditional_magnitude[60m])
+
+  - name: ml_move_alerts
+    interval: 15s
+    rules:
+      - alert: MLMoveProbPersistentlyHigh
+        expr: ml:move:prob_avg_15m > 0.65
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Move probability elevated (15m avg > 0.65)"
+          description: "Average move probability over 15m is {{ $value | printf \"%.2f\" }} (> 0.65). Potential regime shift or threshold miscalibration."
+      - alert: MLMoveProbSurge
+        expr: ml:move:prob_p95_15m > 0.85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Move probability surge (p95 over 15m > 0.85)"
+          description: "95th percentile move probability over 15m is {{ $value | printf \"%.2f\" }} (> 0.85). Investigate feature shifts or volatility spike."
+      - alert: MLMoveConditionalMagnitudeHigh
+        expr: ml:move:conditional_mag_p90_60m > 50
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "Conditional move magnitude high (p90 > 50)"
+          description: "90th percentile conditional magnitude over 60m is {{ $value | printf \"%.2f\" }} (> 50). Review scaling or label threshold calibration."
+  - name: ml_ensemble_recording
+    interval: 15s
+    rules:
+      - record: ml:ensemble:disagreement_avg_15m
+        expr: avg_over_time(g6_ml_ensemble_disagreement[15m])
+      - record: ml:ensemble:disagreement_p95_15m
+        expr: quantile_over_time(0.95, g6_ml_ensemble_disagreement[15m])
+      - record: ml:ensemble:models_count_min_15m
+        expr: min_over_time(g6_ml_ensemble_models_count[15m])
+      - record: ml:ensemble:residual_mean_avg_30m
+        expr: avg by (index,horizon,model) (avg_over_time(g6_ml_ensemble_model_residual_mean[30m]))
+      - record: ml:ensemble:residual_std_avg_30m
+        expr: avg by (index,horizon,model) (avg_over_time(g6_ml_ensemble_model_residual_std[30m]))
+      - record: ml:ensemble:residual_ks_p95_60m
+        expr: quantile_over_time(0.95, g6_ml_ensemble_model_residual_ks[60m])
+  - name: ml_ensemble_alerts
+    interval: 15s
+    rules:
+      - alert: MLEnsembleDisagreementHigh
+        expr: ml:ensemble:disagreement_avg_15m > 25
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ensemble disagreement elevated (15m avg)"
+          description: "Average model disagreement (std) over 15m is {{ $value | printf \"%.2f\" }} (> 25). Check model drift or outlier member."
+      - alert: MLEnsembleDisagreementSurge
+        expr: ml:ensemble:disagreement_p95_15m > 40
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Ensemble disagreement surge (p95 over 15m)"
+          description: "95th percentile model disagreement (std) over 15m is {{ $value | printf \"%.2f\" }} (> 40). Investigate feature shifts or retrain members."
+      - alert: MLEnsembleTooFewModels
+        expr: ml:ensemble:models_count_min_15m < 2
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Ensemble degraded: fewer than 2 models contributing"
+          description: "Minimum contributing models over 15m dropped below 2. A member exporter may be down."
+      - alert: MLModelResidualBiasShift
+        expr: ml:ensemble:residual_mean_avg_30m > 5 or ml:ensemble:residual_mean_avg_30m < -5
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Per-model residual mean drift (30m avg)"
+          description: "Residual mean indicates bias shift for {{ $labels.model }} ({{ $labels.index }},h={{ $labels.horizon }}). Investigate features or retrain."
+      - alert: MLModelResidualVarianceRise
+        expr: ml:ensemble:residual_std_avg_30m > 25
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Per-model residual variance increased (30m avg)"
+          description: "Residual std increased for {{ $labels.model }} ({{ $labels.index }},h={{ $labels.horizon }}). Possible volatility or model instability."
+      - alert: MLModelResidualKSSurge
+        expr: ml:ensemble:residual_ks_p95_60m > 0.5
+        for: 30m
+        labels:
+          severity: info
+        annotations:
+          summary: "Residual distribution shift (KS p95 over 60m)"
+          description: "KS statistic indicates residual distribution change for {{ $labels.model }}. Review recent data and training window."

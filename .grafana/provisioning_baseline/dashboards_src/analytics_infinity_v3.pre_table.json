@@ -1,0 +1,3606 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 2,
+  "id": 504,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "panels": [],
+      "title": "Index prices",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SENSEX Index"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "NS1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "NS2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX – Index Price",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "FINNIFTY Index"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "BF1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "BF2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY – Index Price",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "panels": [],
+      "title": "Implied Volatility (IV)",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "B",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – IV (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "C",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "D",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_iv",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – IV (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 7,
+      "panels": [],
+      "title": "Greeks – NS pair",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "A1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "B1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Delta (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "A2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "B2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Theta (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 25
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "A3",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "B3",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Vega (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 25
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "A4",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "B4",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Gamma (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 25
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "A5",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "B5",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Rho (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 13,
+      "panels": [],
+      "title": "Greeks – BF pair",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "C1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "D1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Delta (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "C2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "D2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Theta (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 38
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "C3",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "D3",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Vega (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 38
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "C4",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "D4",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Gamma (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 38
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.1.1",
+      "targets": [
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "C5",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        },
+        {
+          "columns": [],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "timeseries",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "queryType": "json",
+          "refId": "D5",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          },
+          "jsonOptions": {
+            "root_is_array": true
+          },
+          "urlOptions": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_greeks",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Rho (CE/PE)",
+      "type": "timeseries",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time_str",
+                "destinationType": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "timeField": "time_str"
+          }
+        }
+      ]
+    }
+  ],
+  "preload": false,
+  "refresh": "15s",
+  "schemaVersion": 41,
+  "tags": [
+    "g6",
+    "analytics",
+    "infinity",
+    "v3"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "0",
+          "value": "0"
+        },
+        "label": "Offset",
+        "name": "offset",
+        "options": [
+          {
+            "selected": true,
+            "text": "0",
+            "value": "0"
+          },
+          {
+            "selected": false,
+            "text": "+100",
+            "value": "+100"
+          },
+          {
+            "selected": false,
+            "text": "-100",
+            "value": "-100"
+          },
+          {
+            "selected": false,
+            "text": "+200",
+            "value": "+200"
+          },
+          {
+            "selected": false,
+            "text": "-200",
+            "value": "-200"
+          }
+        ],
+        "query": "0,+100,-100,+200,-200",
+        "type": "custom"
+      },
+      {
+        "current": {
+          "text": "this_week",
+          "value": "this_week"
+        },
+        "label": "Expiry (NIFTY/SENSEX)",
+        "name": "expiry_ns",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_week",
+            "value": "this_week"
+          },
+          {
+            "selected": false,
+            "text": "next_week",
+            "value": "next_week"
+          },
+          {
+            "selected": false,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_week,next_week,this_month,next_month",
+        "type": "custom"
+      },
+      {
+        "current": {
+          "text": "this_month",
+          "value": "this_month"
+        },
+        "label": "Expiry (BANK/FIN)",
+        "name": "expiry_bf",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_month,next_month",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "Asia/Kolkata",
+  "title": "G6 Analytics – Infinity v3",
+  "uid": "g6-analytics-infinity-v3",
+  "version": 2
+}

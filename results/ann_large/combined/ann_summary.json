@@ -1,0 +1,14 @@
+{
+  "rows": 14,
+  "speedup_avg": 0.6194368755676657,
+  "speedup_p95": 0.6666666666666666,
+  "q50_mad_avg": 0.0,
+  "prune_ratio_avg": 1.0,
+  "build_ms_avg": 26.642857142857142,
+  "latency_ms_avg": 29.0,
+  "baseline_latency_ms_avg": 2.0,
+  "recommendations": [
+    "Prune ratio ~1.0: increase historical corpus or tighten ANN distance to gain pruning.",
+    "Speedup <1.2: consider larger window set, reducing ann_max_candidates, or pre-filtering low-variance days."
+  ]
+}

@@ -1,0 +1,14 @@
+# ML and plotting extras (no Torch included here by default)
+# Includes core runtime via -r reference
+
+-r requirements.core.txt
+
+scipy==1.16.3
+scikit-learn==1.7.2
+joblib==1.5.2
+xgboost==3.1.1
+plotly==6.4.0
+kaleido==1.2.0
+
+# Torch CPU build (install using the official index; uncomment to pin via pip)
+# torch==2.9.0+cpu  # install with: pip install --index-url https://download.pytorch.org/whl/cpu torch==2.9.0+cpu

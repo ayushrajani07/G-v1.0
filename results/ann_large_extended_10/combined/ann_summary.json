@@ -1,0 +1,39 @@
+{
+  "rows": 696,
+  "speedup_avg": 0.929137063141957,
+  "speedup_p95": 1.3333333333333333,
+  "q50_mad_avg": 0.650827398205235,
+  "prune_ratio_avg": 0.4766672115070284,
+  "build_ms_avg": 7.795977011494253,
+  "latency_ms_avg": 26.221264367816094,
+  "baseline_latency_ms_avg": 2.6982758620689653,
+  "mode_breakdown": {
+    "retrieval": {
+      "rows": 232,
+      "speedup_avg": 0.9185482656389715,
+      "prune_ratio_avg": 0.47752987541317055,
+      "latency_ms_avg": 25.146551724137932,
+      "baseline_latency_ms_avg": 1.831896551724138,
+      "q50_mad_avg": 0.05012485423510858
+    },
+    "auto": {
+      "rows": 232,
+      "speedup_avg": 0.9407642147944121,
+      "prune_ratio_avg": 0.4760202135774218,
+      "latency_ms_avg": 27.038793103448278,
+      "baseline_latency_ms_avg": 3.2198275862068964,
+      "q50_mad_avg": 0.9511786701902983
+    },
+    "hybrid": {
+      "rows": 232,
+      "speedup_avg": 0.9280987089924875,
+      "prune_ratio_avg": 0.4760202135774218,
+      "latency_ms_avg": 26.478448275862068,
+      "baseline_latency_ms_avg": 3.043103448275862,
+      "q50_mad_avg": 0.9511786701902983
+    }
+  },
+  "recommendations": [
+    "Speedup <1.2: consider larger window set, reducing ann_max_candidates, or pre-filtering low-variance days."
+  ]
+}

@@ -1,0 +1,483 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "id": "prometheus",
+      "name": "Prometheus",
+      "type": "prometheus",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "g6_meta": {
+    "description": "",
+    "families": [
+      "core"
+    ],
+    "spec_hash": "b1fb37bf991f1a94"
+  },
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "counter",
+        "metric": "g6_collection_cycles",
+        "panel_uuid": "2b6e2278b0fc7946",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 728638072,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_collection_cycles[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_collection_cycles Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "summary",
+        "metric": "g6_collection_duration_seconds",
+        "panel_uuid": "d2e89d2f4ed96fc8",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3538459951,
+      "targets": [
+        {
+          "expr": "g6_collection_duration_seconds",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_collection_duration_seconds (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "counter",
+        "metric": "g6_collection_errors",
+        "panel_uuid": "c37f076195a9c7f3",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3279882081,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_collection_errors[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_collection_errors Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "counter",
+        "metric": "g6_config_deprecated_keys",
+        "panel_uuid": "8629b79794c88848",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 2250880919,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_config_deprecated_keys[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_config_deprecated_keys Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_index_atm_strike",
+        "panel_uuid": "55325936789c1cdd",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 1429362998,
+      "targets": [
+        {
+          "expr": "g6_index_atm_strike",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_index_atm_strike (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_index_price",
+        "panel_uuid": "8026d2c68a37434a",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 2150027974,
+      "targets": [
+        {
+          "expr": "g6_index_price",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_index_price (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_option_iv",
+        "panel_uuid": "5e674db7c6e62348",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 1583828407,
+      "targets": [
+        {
+          "expr": "g6_option_iv",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_option_iv (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_option_oi",
+        "panel_uuid": "bbff73132cbbf8a5",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 3154080531,
+      "targets": [
+        {
+          "expr": "g6_option_oi",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_option_oi (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_option_price",
+        "panel_uuid": "82228077cbb2f6b0",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 2183299191,
+      "targets": [
+        {
+          "expr": "g6_option_price",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_option_price (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_option_volume",
+        "panel_uuid": "65330024a05843f0",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 1697841188,
+      "targets": [
+        {
+          "expr": "g6_option_volume",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_option_volume (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_options_collected",
+        "panel_uuid": "7cf2b692036eb7a9",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 2096281234,
+      "targets": [
+        {
+          "expr": "g6_options_collected",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_options_collected (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_provider_mode",
+        "panel_uuid": "a4a643a386a0d8cb",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 2762359715,
+      "targets": [
+        {
+          "expr": "g6_provider_mode",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_provider_mode (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_put_call_ratio",
+        "panel_uuid": "5920e53e67690f3b",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "id": 1495328062,
+      "targets": [
+        {
+          "expr": "g6_put_call_ratio",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_put_call_ratio (auto)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "core",
+    "g6",
+    "generated"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Core Overview",
+  "uid": "g6-core_overview",
+  "version": 1
+}

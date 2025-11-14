@@ -1,0 +1,39 @@
+{
+  "rows": 21,
+  "speedup_avg": 0.9009703262045627,
+  "speedup_p95": 1.0,
+  "q50_mad_avg": 0.0,
+  "prune_ratio_avg": 0.8055555555555555,
+  "build_ms_avg": 17.38095238095238,
+  "latency_ms_avg": 36.76190476190476,
+  "baseline_latency_ms_avg": 2.7142857142857144,
+  "mode_breakdown": {
+    "retrieval": {
+      "rows": 7,
+      "speedup_avg": 1.0,
+      "prune_ratio_avg": 0.4166666666666667,
+      "latency_ms_avg": 2.0,
+      "baseline_latency_ms_avg": 2.0,
+      "q50_mad_avg": 0.0
+    },
+    "auto": {
+      "rows": 7,
+      "speedup_avg": 0.8587345801830482,
+      "prune_ratio_avg": 1.0,
+      "latency_ms_avg": 53.857142857142854,
+      "baseline_latency_ms_avg": 3.142857142857143,
+      "q50_mad_avg": 0.0
+    },
+    "hybrid": {
+      "rows": 7,
+      "speedup_avg": 0.858323494687131,
+      "prune_ratio_avg": 1.0,
+      "latency_ms_avg": 54.42857142857143,
+      "baseline_latency_ms_avg": 3.0,
+      "q50_mad_avg": 0.0
+    }
+  },
+  "recommendations": [
+    "Speedup <1.2: consider larger window set, reducing ann_max_candidates, or pre-filtering low-variance days."
+  ]
+}

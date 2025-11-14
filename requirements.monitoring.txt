@@ -1,0 +1,7 @@
+# Monitoring/observability extras
+# Includes core runtime via -r reference
+
+-r requirements.core.txt
+
+prometheus_client==0.23.1
+rich==14.2.0

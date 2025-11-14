@@ -1,0 +1,39 @@
+{
+  "model_type": "sk_gbr_quantile",
+  "description": "NIFTY TP forecast quantile regression (q10,q50,q90) using GradientBoostingRegressor",
+  "index": "NIFTY",
+  "target": "tp",
+  "horizon": 1,
+  "quantiles": [0.1, 0.5, 0.9],
+  "feature_source": "live_csv", 
+  "features": [
+    "index_price", "tp", "ce_iv", "pe_iv", "ce_vol", "pe_vol",
+    "ce_oi", "pe_oi", "pcr"
+  ],
+  "feature_engineering": {
+    "lags": [1, 2, 4, 8],
+    "lag_columns": ["tp", "index_price"],
+    "roll_windows": [3, 6, 12],
+    "add_time": true,
+    "add_moneyness": false,
+    "normalize_by": {
+      "keys": ["index_price"],
+      "columns": ["tp"]
+    },
+    "forecast_horizon": 1
+  },
+  "train": {
+    "split": 0.8,
+    "shuffle": false,
+    "seed": 42
+  },
+  "params": {
+    "n_estimators": 300,
+    "max_depth": 3,
+    "learning_rate": 0.05,
+    "subsample": 1.0
+  },
+  "artifact_base": "models/nifty_tp_forecast_skgbr_quantile",
+  "metrics": ["mae", "rmse", "pinball_avg"],
+  "prediction_type": "quantile"
+}

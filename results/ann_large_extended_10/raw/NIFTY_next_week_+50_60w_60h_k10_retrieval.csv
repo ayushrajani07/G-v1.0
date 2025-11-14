@@ -1,0 +1,15 @@
+date,index,expiry_tag,offset,horizon,window,k,mode,scale,bucket_ms,distance_metric,weight_mode,recent_gamma,regime_tolerance,regime_penalty,at,ann_use,ann_space,ann_max_candidates,ann_enabled,ann_total_windows,ann_shortlisted,ann_build_ms,ann_index_mem_bytes,ann_prune_ratio,ann_effectiveness,latency_ms,baseline_latency_ms,ann_speedup,ann_q50_mad,samples,coverage,band_width,mae,bias
+2025-09-30,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,19,10,307,4560,0.5263157894736842,,309,2,0.006472491909385114,0.23233422471098966,19.0,nan,nan,0.6130760464422331,0.3259673548947298
+2025-10-01,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,1,1.0,0.0,59.0,nan,nan,3.371487976166527,-3.2042405406882475
+2025-10-03,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,2,2,1.0,0.0,60.0,nan,nan,2.146981845563732,0.21106717103747505
+2025-10-07,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,1,1.0,0.0,60.0,nan,nan,6.381461262010123,6.219957320029274
+2025-10-08,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,1,1.0,0.0,60.0,nan,nan,4.461908673434877,3.7002579270406435
+2025-10-10,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,2,1,0.5,0.0,60.0,nan,nan,2.652997481097332,-2.575005689622707
+2025-10-24,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,1,1.0,0.0,0,nan,nan,nan,nan
+2025-10-28,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,1,1.0,0.0,60.0,nan,nan,11.326075817820772,11.326075817820772
+2025-10-29,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,2,2,1.0,0.0,60.0,nan,nan,3.9406836499657762,2.567907079438301
+2025-10-30,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,2,2,1.0,0.0,32.0,nan,nan,0.9000889210569483,-0.05067864068212913
+2025-10-31,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,2,2.0,0.0,57.0,nan,nan,1.5504260337976807,-0.6611927911482517
+2025-11-03,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,1,1.0,0.0,38.0,nan,nan,5.759810798106746,5.50456840561445
+2025-11-04,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,1,1.0,0.0,60.0,nan,nan,2.260492160662347,1.8628373245646657
+2025-11-06,NIFTY,next_week,+50,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,10,1,0,24,0,4560,,,1,1,1.0,0.0,60.0,nan,nan,2.4560373787695484,1.7147179638459817

@@ -1,0 +1,44 @@
+﻿apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    uid: PROM
+    url: 'http://127.0.0.1:9091'
+    isDefault: true
+    jsonData:
+      httpMethod: POST
+      timeInterval: 5s
+    editable: true
+  - name: Infinity
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    uid: INFINITY
+    isDefault: false
+    jsonData:
+      allowedHosts:
+        - 'http://127.0.0.1:9500'
+        - 'http://localhost:9500'
+        - '127.0.0.1:9500'
+        - 'localhost:9500'
+        - 'http://127.0.0.1:8003'
+        - 'http://localhost:8003'
+        - '127.0.0.1:8003'
+        - 'localhost:8003'
+    editable: true
+  - name: G6 Infinity
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    uid: G6_INFINITY
+    isDefault: false
+    jsonData:
+      allowedHosts:
+        - 'http://127.0.0.1:9500'
+        - 'http://localhost:9500'
+        - '127.0.0.1:9500'
+        - 'localhost:9500'
+        - 'http://127.0.0.1:8003'
+        - 'http://localhost:8003'
+        - '127.0.0.1:8003'
+        - 'localhost:8003'
+    editable: true

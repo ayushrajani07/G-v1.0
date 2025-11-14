@@ -1,0 +1,29 @@
+{
+  "rows": 4,
+  "speedup_avg": 0.503531746031746,
+  "speedup_p95": 1.0,
+  "q50_mad_avg": 0.0,
+  "prune_ratio_avg": 0.8514492753623188,
+  "build_ms_avg": 175.75,
+  "latency_ms_avg": 178.5,
+  "baseline_latency_ms_avg": 2.25,
+  "speedup_avg_adjusted": 1.0,
+  "q50_mad_avg_adjusted": 0.0,
+  "prune_ratio_avg_adjusted": null,
+  "latency_ms_avg_adjusted": 2.0,
+  "ann_guard_triggered_count": 0,
+  "ann_guard_triggered_rate": 0.0,
+  "mode_breakdown": {
+    "retrieval": {
+      "rows": 4,
+      "speedup_avg": 0.503531746031746,
+      "prune_ratio_avg": 0.8514492753623188,
+      "latency_ms_avg": 178.5,
+      "baseline_latency_ms_avg": 2.25,
+      "q50_mad_avg": 0.0
+    }
+  },
+  "recommendations": [
+    "Speedup <1.2: consider larger window set, reducing ann_max_candidates, or pre-filtering low-variance days."
+  ]
+}

@@ -1,0 +1,6 @@
+{"ts_ist": "12-11-2025 09:15:00", "iso_time": "2025-11-12T09:15:00+05:30", "time_ms": 1762919100000, "index": "NIFTY", "expiry_code": "this_week", "reason": "preopen", "cutoff": "09:15:30"}
+{"ts_ist": "12-11-2025 09:15:00", "iso_time": "2025-11-12T09:15:00+05:30", "time_ms": 1762919100000, "index": "NIFTY", "expiry_code": "next_week", "reason": "preopen", "cutoff": "09:15:30"}
+{"ts_ist": "12-11-2025 09:15:00", "iso_time": "2025-11-12T09:15:00+05:30", "time_ms": 1762919100000, "index": "NIFTY", "expiry_code": "this_month", "reason": "preopen", "cutoff": "09:15:30"}
+{"ts_ist": "12-11-2025 09:15:00", "iso_time": "2025-11-12T09:15:00+05:30", "time_ms": 1762919100000, "index": "NIFTY", "expiry_code": "next_month", "reason": "preopen", "cutoff": "09:15:30"}
+{"ts_ist": "12-11-2025 09:15:00", "iso_time": "2025-11-12T09:15:00+05:30", "time_ms": 1762919100000, "index": "BANKNIFTY", "expiry_code": "this_month", "reason": "preopen", "cutoff": "09:15:30"}
+{"ts_ist": "12-11-2025 09:15:00", "iso_time": "2025-11-12T09:15:00+05:30", "time_ms": 1762919100000, "index": "BANKNIFTY", "expiry_code": "next_month", "reason": "preopen", "cutoff": "09:15:30"}
