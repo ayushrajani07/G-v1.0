@@ -9,7 +9,7 @@ import tempfile
 import time
 from typing import Any, Iterable, Optional
 
-from ...csv_writer_helper import CsvWriterHelper
+# CsvWriterHelper not used in atomic backend directly
 from src.utils.backoff import backoff_delays, sleep_ms
 
 # Lightweight, optional Prometheus metrics (no hard dependency at import time)
@@ -163,13 +163,6 @@ def append_one(
     log = _get_logger(logger)
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
-    helper = CsvWriterHelper(
-        logger=log,
-        base_dir=base_dir or "",
-        writer=writer,
-        metrics=metrics,
-    )
-
     # Serialize concurrent writers using a simple lock file to avoid lost updates
     lock_path = filepath + '.lock'
     lock_acquired = False
@@ -281,13 +274,6 @@ def append_many(
         return
     log = _get_logger(logger)
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-
-    helper = CsvWriterHelper(
-        logger=log,
-        base_dir=base_dir or "",
-        writer=writer,
-        metrics=metrics,
-    )
 
     # Serialize concurrent writers using a simple lock file to avoid lost updates
     lock_path = filepath + '.lock'

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import csv
 import logging
+import os
+from pathlib import Path
 from typing import Any, Iterable, Optional
-
-from ...csv_writer_helper import CsvWriterHelper
 
 
 def _get_logger(logger: Optional[logging.Logger]) -> logging.Logger:
@@ -34,13 +35,8 @@ def append_one(
         # Fall back to sync write on any error
         pass
     
-    helper = CsvWriterHelper(
-        logger=_get_logger(logger),
-        base_dir=base_dir or "",
-        writer=writer,
-        metrics=metrics,
-    )
-    helper.append_csv_row(filepath, row, header)
+    # Direct append write (original behavior)
+    _write_csv_append(filepath, [row], header, _get_logger(logger))
 
 
 def append_many(
@@ -69,10 +65,40 @@ def append_many(
         # Fall back to sync write on any error
         pass
     
-    helper = CsvWriterHelper(
-        logger=_get_logger(logger),
-        base_dir=base_dir or "",
-        writer=writer,
-        metrics=metrics,
-    )
-    helper.append_many_csv_rows(filepath, rows_list, header)
+    # Direct append write (original behavior)
+    _write_csv_append(filepath, rows_list, header, _get_logger(logger))
+
+
+def _write_csv_append(
+    filepath: str,
+    rows: list[list[Any]],
+    header: Optional[list[str]],
+    logger: logging.Logger
+) -> None:
+    """Write rows to CSV file in append mode.
+    
+    Args:
+        filepath: Absolute path to CSV file
+        rows: Rows to write
+        header: Optional header (written only if file doesn't exist)
+        logger: Logger instance
+    """
+    # Ensure directory exists
+    Path(filepath).parent.mkdir(parents=True, exist_ok=True)
+    
+    # Check if file exists (for header logic)
+    file_exists = os.path.exists(filepath)
+    
+    try:
+        # Open in append mode
+        with open(filepath, 'a', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            
+            # Write header only if file is new and header provided
+            if not file_exists and header:
+                writer.writerow(header)
+            
+            # Write all rows
+            writer.writerows(rows)
+    except Exception as e:
+        logger.error("Failed to write CSV to %s: %s", filepath, e)
