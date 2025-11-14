@@ -1,0 +1,282 @@
+{
+  "dashboard": {
+    "title": "Cycle Performance Analysis",
+    "uid": "cycle-perf-analysis",
+    "tags": ["performance", "cycles", "g6"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Average Fetch Time by Index (15m rolling)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(g6_cycle_fetch_time_seconds_sum[15m]) / increase(g6_cycle_fetch_time_seconds_count[15m])",
+            "legendFormat": "{{index}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Fetch Time (seconds)",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ],
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "legend": {
+          "show": true,
+          "alignAsTable": true,
+          "avg": true,
+          "max": true,
+          "min": true,
+          "rightSide": false
+        }
+      },
+      {
+        "id": 2,
+        "title": "Average Process Time by Index (15m rolling)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "increase(g6_cycle_process_time_seconds_sum[15m]) / increase(g6_cycle_process_time_seconds_count[15m])",
+            "legendFormat": "{{index}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Process Time (seconds)",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ],
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "legend": {
+          "show": true,
+          "alignAsTable": true,
+          "avg": true,
+          "max": true,
+          "min": true,
+          "rightSide": false
+        }
+      },
+      {
+        "id": 3,
+        "title": "Average Write Time by Index (15m rolling)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "increase(g6_cycle_write_time_seconds_sum[15m]) / increase(g6_cycle_write_time_seconds_count[15m])",
+            "legendFormat": "{{index}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Write Time (seconds)",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ],
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "legend": {
+          "show": true,
+          "alignAsTable": true,
+          "avg": true,
+          "max": true,
+          "min": true,
+          "rightSide": false
+        }
+      },
+      {
+        "id": 4,
+        "title": "Phase Time Distribution (p50/p95/p99)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, rate(g6_cycle_fetch_time_seconds_bucket[15m]))",
+            "legendFormat": "fetch p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(g6_cycle_fetch_time_seconds_bucket[15m]))",
+            "legendFormat": "fetch p95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(g6_cycle_fetch_time_seconds_bucket[15m]))",
+            "legendFormat": "fetch p99",
+            "refId": "C"
+          },
+          {
+            "expr": "histogram_quantile(0.5, rate(g6_cycle_write_time_seconds_bucket[15m]))",
+            "legendFormat": "write p50",
+            "refId": "D"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(g6_cycle_write_time_seconds_bucket[15m]))",
+            "legendFormat": "write p95",
+            "refId": "E"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Duration (seconds)",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ],
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        }
+      },
+      {
+        "id": 5,
+        "title": "Write Throughput (bytes/s)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(g6_write_bytes_total[5m])",
+            "legendFormat": "{{index}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "Bps",
+            "label": "Bytes per second",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ],
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Write Throughput (rows/s)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(g6_write_rows_total[5m])",
+            "legendFormat": "{{index}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Rows per second",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ],
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        }
+      },
+      {
+        "id": 7,
+        "title": "Fetch Retries by Reason",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "rate(g6_fetch_retries_total[5m])",
+            "legendFormat": "{{index}} - {{reason}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Retries per second",
+            "logBase": 1,
+            "show": true
+          },
+          {
+            "format": "short",
+            "logBase": 1,
+            "show": false
+          }
+        ],
+        "tooltip": {
+          "shared": true,
+          "sort": 2,
+          "value_type": "individual"
+        },
+        "legend": {
+          "show": true,
+          "alignAsTable": true,
+          "avg": false,
+          "max": false,
+          "min": false,
+          "rightSide": true
+        }
+      }
+    ]
+  }
+}
