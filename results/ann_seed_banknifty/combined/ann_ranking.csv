@@ -1,1 +1,0 @@
-index,expiry_tag,offset,horizon,window,k,mode,rows,speedup_avg,prune_ratio_avg,q50_mad_avg,latency_ms_avg,baseline_latency_ms_avg,effectiveness_score,effectiveness_score_adjusted,ann_guard_trigger_rate,score

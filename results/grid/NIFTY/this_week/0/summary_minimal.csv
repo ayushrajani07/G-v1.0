@@ -1,2 +1,0 @@
-horizon,window,k,mode,scale,distance_metric,weight_mode,recent_gamma,regime_tolerance,regime_penalty,ann_use,ann_space,ann_max_candidates,n,coverage_avg,band_width_avg,mae_avg,bias_avg,samples_avg,ann_total_windows_avg,ann_shortlisted_avg,latency_ms_avg,baseline_latency_ms_avg,ann_speedup_avg,ann_q50_mad_avg,ann_build_ms_avg,ann_index_mem_bytes_avg,ann_prune_ratio_avg,ann_effectiveness_avg
-60,60,10,auto,1.0,l2,none,0.9,nan,1.25,0,cosine,,1,nan,nan,15.53392897745318,-15.53392897745318,60.0,0.0,0.0,360.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0

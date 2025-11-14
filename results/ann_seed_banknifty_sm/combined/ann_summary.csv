@@ -1,3 +1,0 @@
-date,index,expiry_tag,offset,horizon,window,k,mode,latency_ms,baseline_latency_ms,ann_speedup,ann_q50_mad,ann_total_windows,ann_shortlisted,ann_prune_ratio,ann_build_ms,ann_index_mem_bytes,ann_guard_triggered,ann_guard_original_mad
-2025-11-06,BANKNIFTY,this_month,0,60,60,10,retrieval,510,2,0.00392156862745098,0.0,19,19,1.0,508,4560,0,
-2025-11-06,BANKNIFTY,this_month,0,60,120,10,retrieval,319,2,0.006269592476489028,0.0,19,19,1.0,316,9120,0,

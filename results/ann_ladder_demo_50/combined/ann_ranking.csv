@@ -1,4 +1,0 @@
-index,expiry_tag,offset,horizon,window,k,mode,rows,speedup_avg,prune_ratio_avg,q50_mad_avg,latency_ms_avg,baseline_latency_ms_avg,score
-NIFTY,this_week,0,60,60,15,retrieval,7,1.0,0.4167,0.0,2.0,2.0,1.5813
-NIFTY,this_week,0,60,60,15,auto,7,0.8587,1.0,0.0,53.86,3.14,0.8049
-NIFTY,this_week,0,60,60,15,hybrid,7,0.8583,1.0,0.0,54.43,3.0,0.8039

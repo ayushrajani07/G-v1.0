@@ -21,6 +21,7 @@ pip-wheel-metadata/
 # --- Virtual environments ---
 .env
 .venv/
+.venv-ml/
 venv/
 env/
 
@@ -90,6 +91,14 @@ data/queries.active
 data/*/_wal/
 data/*/_series/
 data/*/_tmp/
+
+# --- Large data and result directories ---
+_tmp/
+artifacts/
+data/ml/
+results/
+models/
+scratch/
 
 # --- Security: never commit tokens (pattern safeguard) ---
 *token*.json

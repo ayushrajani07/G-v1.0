@@ -1,8 +1,0 @@
-date,index,expiry_tag,offset,horizon,window,k,mode,scale,bucket_ms,distance_metric,weight_mode,recent_gamma,regime_tolerance,regime_penalty,at,ann_use,ann_space,ann_max_candidates,ann_enabled,ann_total_windows,ann_shortlisted,ann_build_ms,ann_index_mem_bytes,ann_prune_ratio,ann_effectiveness,latency_ms,baseline_latency_ms,ann_speedup,ann_q50_mad,ann_guard_triggered,ann_guard_original_mad,samples,coverage,band_width,mae,bias
-2025-10-24,NIFTY,next_week,0,60,120,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,19,19,298,9120,1.0,,301,2,0.006644518272425249,0.0,0,,0,nan,nan,nan,nan
-2025-10-28,NIFTY,next_week,0,60,120,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,60.0,nan,nan,11.002370882925808,10.627895002042358
-2025-10-29,NIFTY,next_week,0,60,120,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,60.0,nan,nan,5.0470154670147025,0.7862707905305276
-2025-10-30,NIFTY,next_week,0,60,120,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,32.0,nan,nan,3.3136407712620795,-3.3136407712620795
-2025-10-31,NIFTY,next_week,0,60,120,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,19,19,0,8512,1.0,,3,2,0.6666666666666666,0.0,0,,57.0,nan,nan,1.7335284281569872,-1.0765720872956068
-2025-11-03,NIFTY,next_week,0,60,120,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,38.0,nan,nan,6.4502454784627945,5.5582015149033435
-2025-11-04,NIFTY,next_week,0,60,120,10,retrieval,1.0,60000,l2,none,0.9,,1.25,mid,1,cosine,20,1,0,24,0,9120,,,2,2,1.0,0.0,0,,60.0,nan,nan,2.8689406181355914,-0.5099973480908223

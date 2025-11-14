@@ -1,5 +1,0 @@
-date,index,expiry_tag,offset,horizon,window,k,mode,latency_ms,baseline_latency_ms,ann_speedup,ann_q50_mad,ann_total_windows,ann_shortlisted,ann_prune_ratio,ann_build_ms,ann_index_mem_bytes,ann_guard_triggered,ann_guard_original_mad
-2025-11-06,NIFTY,this_week,0,60,60,10,retrieval,350,3,0.008571428571428572,0.0,24,20,0.8333333333333334,347,5760,0,
-2025-11-07,NIFTY,this_week,0,60,60,10,retrieval,2,2,1.0,0.0,0,24,,0,5760,0,
-2025-11-06,NIFTY,this_week,0,60,120,10,retrieval,360,2,0.005555555555555556,0.0,23,20,0.8695652173913043,356,11040,0,
-2025-11-07,NIFTY,this_week,0,60,120,10,retrieval,2,2,1.0,0.0,0,24,,0,11040,0,

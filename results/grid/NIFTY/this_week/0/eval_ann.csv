@@ -1,2 +1,0 @@
-date,index,expiry_tag,offset,horizon,window,k,mode,scale,bucket_ms,distance_metric,weight_mode,recent_gamma,regime_tolerance,regime_penalty,at,ann_use,ann_space,ann_max_candidates,ann_enabled,ann_total_windows,ann_shortlisted,ann_build_ms,ann_index_mem_bytes,ann_prune_ratio,latency_ms,baseline_latency_ms,ann_speedup,ann_q50_mad,samples,coverage,band_width,mae,bias
-2025-11-06,NIFTY,this_week,0,60,60,10,retrieval,1.0,60000,l2,none,0.9,,1.25,end,1,cosine,25,1,24,24,359,5760,1.0,362,2,0.0055248618784530384,0.0,0,nan,nan,nan,nan
