@@ -37,8 +37,7 @@ try:
     from src.collectors.env_adapter import (
         get_str as _env_str,
     )
-except (ImportError, AttributeError, TypeError) as e:  # pragma: no cover - defensive fallback
-    logger.debug(f"env_adapter import failed, using fallback: {e}")
+except Exception:  # pragma: no cover - defensive
     _env_bool = lambda k, d=False: (os.getenv(k, '1' if d else '').strip().lower() in {'1','true','yes','on'})
     _env_int = lambda k, d=0: int(os.getenv(k, str(d)) or d)
     _env_float = lambda k, d=0.0: float(os.getenv(k, str(d)) or d)
@@ -94,8 +93,8 @@ if _is_truthy_env('G6_QUIET_LOGS') or 'G6_QUIET_LOGS' not in os.environ:
     if not any(isinstance(f, _NoiseFilter) for f in getattr(root, 'filters', [])):
         try:
             root.addFilter(_NoiseFilter())
-        except (AttributeError, TypeError, ValueError) as e:
-            logger.debug(f"Failed to add noise filter: {e}")
+        except Exception:
+            pass
 
 # Sentinel of metric names created to avoid duplicate registration if metrics module
 # is re-imported inside the same process (e.g., during gating tests spawning subprocesses
@@ -113,8 +112,8 @@ if not _suppress_legacy and _import_ctx != 'facade':
             DeprecationWarning,
             stacklevel=2,
         )
-    except (TypeError, ValueError, AttributeError) as e:  # pragma: no cover
-        logger.debug(f"Failed to emit deprecation warning: {e}")
+    except Exception:  # pragma: no cover
+        pass
 
 # ----------------------------------------------------------------------------
 # Singleton / Idempotency Guards
@@ -151,8 +150,7 @@ _METRICS_META: dict | None = None
 try:  # pragma: no cover - defensive import wrapper
     from .groups import ALWAYS_ON as _ALWAYS_ON_ENUM  # type: ignore
     ALWAYS_ON_GROUPS: set[str] = {g.value for g in _ALWAYS_ON_ENUM}
-except (ImportError, AttributeError, TypeError) as e:  # fallback if groups import fails extremely early
-    logger.debug(f"Failed to import ALWAYS_ON groups, using fallback: {e}")
+except Exception:  # fallback if groups import fails extremely early
     ALWAYS_ON_GROUPS: set[str] = {
         'expiry_remediation',
         'provider_failover',
@@ -168,7 +166,7 @@ class MetricsRegistry:
     def __getattr__(self, name: str):  # type: ignore[override]
         try:
             return self.__dict__[name]
-        except (KeyError, AttributeError):
+        except Exception:
             # Defer to default behavior for special attributes
             raise AttributeError(name)
 
@@ -187,13 +185,13 @@ class MetricsRegistry:
         try:
             from .registration import maybe_register as _mr  # type: ignore
             return _mr(self, group, attr, metric_cls, name, documentation, labels, **ctor_kwargs)
-        except (ImportError, AttributeError, TypeError, ValueError, KeyError) as e:  # pragma: no cover - defensive
+        except Exception as e:  # pragma: no cover - defensive
             if strict:
                 raise
             try:
                 logger.error("_maybe_register suppressed error for %s/%s: %s", group, name, e)
-            except (AttributeError, TypeError, ValueError) as log_err:
-                logger.debug(f"Failed to log _maybe_register error: {log_err}")
+            except Exception:
+                pass
             return None
 
     def __init__(self):
@@ -210,8 +208,8 @@ class MetricsRegistry:
                     dt = (_prof_time.perf_counter() - started_at) * 1000.0
                     self._init_profile['phases_ms'][label] = dt  # type: ignore[index]
                     self._init_profile['total_ms'] = (_prof_time.perf_counter() - _prof_start) * 1000.0  # type: ignore[index]
-                except (AttributeError, TypeError, KeyError, ValueError) as e:
-                    logger.debug(f"Failed to mark profile phase {label}: {e}")
+                except Exception:
+                    pass
         else:
             _prof_time = None  # type: ignore
             _prof_start = 0.0  # type: ignore
@@ -223,8 +221,8 @@ class MetricsRegistry:
             try:
                 extra = ' '.join(f"{k}={v}" for k,v in kw.items()) if kw else ''
                 print(f"[metrics-init-basic] {label}{(' ' + extra) if extra else ''}", flush=True)
-            except (AttributeError, TypeError, ValueError, IOError, OSError) as e:
-                logger.debug(f"Failed to print trace for {label}: {e}")
+            except Exception:
+                pass
         _pt('begin')
         _trace_enabled = _is_truthy_env('G6_METRICS_INIT_TRACE')
         # Initialization step trace records (each entry: {'step': str, 'ok': bool, 'dt': float, ...extra})
@@ -238,8 +236,8 @@ class MetricsRegistry:
             def _end(ok: bool = True, **info):
                 try:
                     self._init_trace.append({'step': label, 'ok': ok, 'dt': round(_t.time()-start, 6), **info})
-                except (AttributeError, TypeError, ValueError, KeyError) as e:
-                    logger.debug(f"Failed to record init trace for {label}: {e}")
+                except Exception:
+                    pass
             return _end
 
         # Group tracking & filters (added in modularization Phase 3)
@@ -266,8 +264,7 @@ class MetricsRegistry:
                 def group_allowed(name: str) -> bool:  # type: ignore
                     try:
                         return bool(self._group_allowed(name))  # type: ignore[attr-defined]
-                    except (AttributeError, TypeError, KeyError, ValueError) as e:
-                        logger.debug(f"group_allowed check failed for {name}, defaulting to True: {e}")
+                    except Exception:
                         return True
                 self.group_allowed = group_allowed  # type: ignore[attr-defined]
             self._group_allowed = self._group_allowed  # ensure alias stability
@@ -275,14 +272,12 @@ class MetricsRegistry:
             _pt('group_gating_ok', groups=len(CONTROLLED_GROUPS))
             if _prof_enabled:
                 _prof_mark('group_gating', _prof_t)
-        except (ImportError, AttributeError, TypeError, ValueError, KeyError) as _e:
+        except Exception as _e:
             # Fallback uses canonical exported copy to avoid duplicated literal.
-            logger.debug(f"Group gating configuration failed: {_e}")
             try:
                 from .gating import CONTROLLED_GROUPS_FALLBACK as _CGF  # type: ignore
                 CONTROLLED_GROUPS = set(_CGF)
-            except (ImportError, AttributeError, TypeError) as fallback_err:
-                logger.debug(f"Fallback groups import failed: {fallback_err}")
+            except Exception:
                 CONTROLLED_GROUPS = set()  # last-resort empty set
             enabled_set = None
             disabled_set = set()
@@ -305,8 +300,8 @@ class MetricsRegistry:
                 os.environ['G6_METRICS_SKIP_PROVIDER_MODE_SEED'] = '1'
                 if _trace_simple:
                     _pt('auto_skip_provider_mode_seed_enabled')
-        except (KeyError, AttributeError, TypeError, ValueError) as e:
-            logger.debug(f"Failed to set auto test-mode skip for provider seed: {e}")
+        except Exception:
+            pass
 
         # 3. Register declarative spec metrics FIRST (core invariants)
         _pt('spec_registration_start')
@@ -318,39 +313,39 @@ class MetricsRegistry:
             for _spec in METRIC_SPECS:
                 try:
                     _spec.register(self); scount += 1
-                except (AttributeError, TypeError, ValueError, KeyError) as e:
-                    logger.debug(f"Failed to register metric spec: {e}")
+                except Exception:
+                    pass
             for _spec in GROUPED_METRIC_SPECS:
                 try:
                     _spec.register(self); scount += 1
-                except (AttributeError, TypeError, ValueError, KeyError) as e:
-                    logger.debug(f"Failed to register grouped metric spec: {e}")
+                except Exception:
+                    pass
             _end(ok=True, count=scount)
             _pt('spec_registration_ok', count=scount)
             if _prof_enabled:
                 _prof_mark('spec_registration', _prof_t)
-        except (ImportError, AttributeError, TypeError, ValueError, KeyError) as _e:  # pragma: no cover
+        except Exception as _e:  # pragma: no cover
             _end(ok=False, error=str(_e))
             _pt('spec_registration_fail', error=str(_e))
             try:
                 logger.debug("Spec metric registration failed", exc_info=True)
-            except (AttributeError, TypeError, ValueError) as log_err:
-                logger.debug(f"Failed to log spec registration error: {log_err}")
+            except Exception:
+                pass
             if _prof_enabled:
                 _prof_mark('spec_registration', _prof_t)
         # Post-spec debug segmentation (fine-grained tracing)
         if _trace_simple:
             try:
                 _pt('post_spec_segment_enter')
-            except (AttributeError, TypeError, ValueError) as e:
-                logger.debug(f"Failed to emit post-spec trace: {e}")
+            except Exception:
+                pass
         # Structured gating log now emitted (deduplicated) in gating.configure_registry_groups and facade fallback.
         # Retain sentinel attribute for backward compatibility; do not emit here to reduce spam.
         if not hasattr(self, '_group_filters_log_emitted'):
             try:
                 self._group_filters_log_emitted = False  # type: ignore[attr-defined]
-            except (AttributeError, TypeError) as e:
-                logger.debug(f"Failed to set _group_filters_log_emitted: {e}")
+            except Exception:
+                pass
         # Fallback: guarantee provider_mode exists for one-hot setter & tests (skippable)
         _force_provider_seed = _is_truthy_env('G6_METRICS_FORCE_PROVIDER_MODE_SEED')
         _skip_provider_seed = _is_truthy_env('G6_METRICS_SKIP_PROVIDER_MODE_SEED') and not _force_provider_seed
@@ -365,8 +360,7 @@ class MetricsRegistry:
                 if not hasattr(self, 'provider_mode'):
                     try:
                         self.provider_mode = Gauge('g6_provider_mode', 'Current provider mode (one-hot gauge)', ['mode'])  # type: ignore[attr-defined]
-                    except (ValueError, TypeError, AttributeError) as e:
-                        logger.debug(f"Failed to create provider_mode gauge: {e}")
+                    except Exception:
                         self.provider_mode = None  # type: ignore[attr-defined]
                 g = getattr(self, 'provider_mode', None)
                 if g is not None and hasattr(g, 'labels'):
@@ -376,23 +370,23 @@ class MetricsRegistry:
                         for child in list(child_map.values()):
                             try:
                                 child.set(0)  # type: ignore[attr-defined]
-                            except (AttributeError, TypeError, ValueError) as e:
-                                logger.debug(f"Failed to zero provider_mode child: {e}")
-                    except (AttributeError, TypeError, KeyError) as e:
-                        logger.debug(f"Failed to access provider_mode child_map: {e}")
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
                     # Create primary label sample
                     try:
                         g.labels(mode='primary').set(1)  # type: ignore[attr-defined]
-                    except (AttributeError, TypeError, ValueError, KeyError) as e:
-                        logger.debug(f"Failed to set primary provider_mode label: {e}")
+                    except Exception:
+                        pass
                 # Deadline enforcement (soft): emit trace marker if exceeded; we do not raise
                 if _t.time() > seed_deadline and _trace_simple:
                     try:
                         print('[metrics-init-basic] provider_mode_seed_slow', flush=True)
-                    except (IOError, OSError, AttributeError) as e:
-                        logger.debug(f"Failed to print slow seed trace: {e}")
-            except (AttributeError, TypeError, ValueError, ImportError) as e:
-                logger.debug(f"Provider mode seeding failed: {e}")
+                    except Exception:
+                        pass
+            except Exception:
+                pass
         if _trace_simple:
             _pt('provider_mode_seed_done', skipped=_skip_provider_seed)
         if _prof_enabled and not _skip_provider_seed:
@@ -405,8 +399,8 @@ class MetricsRegistry:
         try:
             from .aliases import ensure_canonical_counters as _early_ecc  # type: ignore
             _early_ecc(self)
-        except (ImportError, AttributeError, TypeError, ValueError) as e:
-            logger.debug(f"Failed to canonicalize counter aliases: {e}")
+        except Exception:
+            pass
         if _trace_simple:
             _pt('aliases_canonicalize_done')
         if _prof_enabled:
@@ -418,14 +412,13 @@ class MetricsRegistry:
                 fam_count = -1
                 try:
                     fam_count = len(list(REGISTRY.collect()))
-                except (AttributeError, TypeError, ValueError) as e:
-                    logger.debug(f"Failed to count registry families: {e}")
+                except Exception:
+                    pass
                 profile_total = None
                 try:
                     if hasattr(self, '_init_profile'):
                         profile_total = round(float(self._init_profile.get('total_ms', 0.0)), 2)  # type: ignore
-                except (AttributeError, TypeError, ValueError, KeyError) as e:
-                    logger.debug(f"Failed to extract profile total: {e}")
+                except Exception:
                     profile_total = None
                 logger.info(
                     "metrics.registry.summary families=%s always_on_groups=%s prof_total_ms=%s strict=%s",
@@ -436,8 +429,8 @@ class MetricsRegistry:
                 try:
                     if _register_or_note_summary_import:
                         _register_or_note_summary_import('metrics.registry', emitted=True)
-                except (AttributeError, TypeError, ValueError) as e:
-                    logger.debug(f"Failed to register summary note (first): {e}")
+                except Exception:
+                    pass
                 # JSON variant
                 try:
                     if _is_truthy_env('G6_METRICS_SUMMARY_JSON'):
@@ -452,8 +445,8 @@ class MetricsRegistry:
                             ],
                             logger_override=logger
                         )
-                except (AttributeError, TypeError, ValueError, KeyError) as e:
-                    logger.debug(f"Failed to emit JSON summary: {e}")
+                except Exception:
+                    pass
                 if _is_truthy_env('G6_METRICS_SUMMARY_HUMAN'):
                     try:
                         if _emit_human_summary_import:
@@ -467,17 +460,17 @@ class MetricsRegistry:
                             ],
                             logger
                         )
-                    except (AttributeError, TypeError, ValueError, KeyError) as e:
-                        logger.debug(f"Failed to emit human summary: {e}")
+                    except Exception:
+                        pass
                     else:
                         # Ensure dispatcher registration even if summary emitted earlier (e.g., before integration test attached handler)
                         try:
                             if _register_or_note_summary_import:
                                 _register_or_note_summary_import('metrics.registry', emitted=True)
-                        except (AttributeError, TypeError, ValueError) as e:
-                            logger.debug(f"Failed to register summary note (second): {e}")
-        except (AttributeError, TypeError, ValueError, KeyError, ImportError) as e:
-            logger.debug(f"Failed to emit metrics summary: {e}")
+                        except Exception:
+                            pass
+        except Exception:
+            pass
 
         # Early deterministic rebind of panel diff metrics (ensures correct labels before spec tests enumerate).
         try:  # pragma: no cover - logic verified via downstream tests
@@ -498,14 +491,13 @@ class MetricsRegistry:
                         current = list(getattr(existing, '_labelnames', []) or [])  # type: ignore[attr-defined]
                         if current != labels:
                             recreate = True
-                    except (AttributeError, TypeError, ValueError) as e:
-                        logger.debug(f"Failed to check existing panel metric labels: {e}")
+                    except Exception:
                         recreate = True
                 if recreate:
                     try:
                         _R.unregister(existing)  # type: ignore[arg-type]
-                    except (AttributeError, TypeError, ValueError, KeyError) as e:
-                        logger.debug(f"Failed to unregister panel metric: {e}")
+                    except Exception:
+                        pass
                 if recreate or existing is None:
                     try:
                         metric_obj = ctor(prom_name, doc, labels)
@@ -514,26 +506,23 @@ class MetricsRegistry:
                             metric_obj.labels(**{l: '_seed' for l in labels})
                         setattr(self, attr, metric_obj)
                         try: self._metric_groups[attr] = 'panel_diff'  # type: ignore[attr-defined]
-                        except (AttributeError, TypeError, KeyError) as e: 
-                            logger.debug(f"Failed to set metric group for {attr}: {e}")
+                        except Exception: pass
                     except ValueError:
                         # Race recreate; bind whatever exists now
                         metric_obj = getattr(_R, '_names_to_collectors', {}).get(prom_name)
                         if metric_obj is not None:
                             try: setattr(self, attr, metric_obj)
-                            except (AttributeError, TypeError) as e:
-                                logger.debug(f"Failed to bind existing panel metric {attr}: {e}")
+                            except Exception: pass
                 else:
                     if not hasattr(self, attr):
                         try: setattr(self, attr, existing)
-                        except (AttributeError, TypeError) as e:
-                            logger.debug(f"Failed to set existing panel metric {attr}: {e}")
+                        except Exception: pass
             _force_panel_metric('panel_diff_writes', 'g6_panel_diff_writes_total', _PCounter, ['type'], 'Panel diff snapshots written')
             _force_panel_metric('panel_diff_truncated', 'g6_panel_diff_truncated_total', _PCounter, ['reason'], 'Panel diff truncation events')
             _force_panel_metric('panel_diff_bytes_total', 'g6_panel_diff_bytes_total', _PCounter, ['type'], 'Total bytes of diff JSON written')
             _force_panel_metric('panel_diff_bytes_last', 'g6_panel_diff_bytes_last', _PGauge, ['type'], 'Bytes of last diff JSON written')
-        except (ImportError, AttributeError, TypeError, ValueError, KeyError, RuntimeError) as e:
-            logger.debug(f"Failed to initialize panel diff metrics: {e}")
+        except Exception:
+            pass
 
         # Fallback: guarantee core spec metrics exist (defensive against earlier registration exceptions)
         if _trace_simple:
@@ -558,8 +547,8 @@ class MetricsRegistry:
                         setattr(self, attr, ctor(name, doc, labels))  # type: ignore[arg-type]
                     else:
                         setattr(self, attr, ctor(name, doc))  # type: ignore[arg-type]
-                except (ValueError, TypeError, AttributeError) as e:
-                    logger.debug(f"Failed to create core fallback metric {attr}: {e}")
+                except Exception:
+                    pass
 
         # Legacy _register shim removed. Use _maybe_register/core helpers instead.
 
@@ -569,8 +558,7 @@ class MetricsRegistry:
         try:
             from .index_aggregate import init_index_aggregate_metrics as _idx  # type: ignore
             _idx(self); _end()
-        except (ImportError, AttributeError, TypeError, ValueError) as _e:
-            logger.debug(f"Index aggregate metrics initialization failed: {_e}")
+        except Exception as _e:
             _end(ok=False, error=str(_e))
         _pt('index_aggregate_done')
         # If index aggregate path failed to create metric_group_state (e.g., import error), create it directly now
@@ -578,8 +566,8 @@ class MetricsRegistry:
             try:
                 from prometheus_client import Gauge as _Gmgs
                 self.metric_group_state = _Gmgs('g6_metric_group_state', 'Metric group activation flag', ['group'])  # type: ignore[attr-defined]
-            except (ImportError, ValueError, TypeError, AttributeError) as e:
-                logger.debug(f"Failed to create metric_group_state gauge: {e}")
+            except Exception:
+                pass
 
         # 5. Always-on placeholders (may set metric_group_state labels)
         try:
@@ -588,49 +576,47 @@ class MetricsRegistry:
             try:
                 from .sla import init_sla_placeholders as _init_sla  # type: ignore
                 _init_sla(self, self._group_allowed)
-            except (ImportError, AttributeError, TypeError, ValueError) as e:
-                logger.debug(f"Failed to initialize SLA placeholders: {e}")
+            except Exception:
+                pass
             # Initialize fault budget tracker immediately after SLA placeholder if enabled (ensures availability for early tests)
             try:
                 from .fault_budget import init_fault_budget as _ifb  # type: ignore
                 _ifb(self)
-            except (ImportError, AttributeError, TypeError, ValueError) as e:
-                logger.debug(f"Failed to initialize fault budget: {e}")
+            except Exception:
+                pass
             try:
                 from .provider_failover import init_provider_failover_placeholders as _init_pf  # type: ignore
                 _init_pf(self, self._group_allowed)
-            except (ImportError, AttributeError, TypeError, ValueError) as e:
-                logger.debug(f"Failed to initialize provider failover placeholders: {e}")
+            except Exception:
+                pass
             try:
                 from .scheduler import init_scheduler_placeholders as _init_sched  # type: ignore
                 _init_sched(self, self._group_allowed)
-            except (ImportError, AttributeError, TypeError, ValueError) as e:
-                logger.debug(f"Failed to initialize scheduler placeholders: {e}")
+            except Exception:
+                pass
             try:
                 from .adaptive import init_adaptive_placeholders as _init_adap  # type: ignore
                 _init_adap(self, self._group_allowed)
-            except (ImportError, AttributeError, TypeError, ValueError) as e:
-                logger.debug(f"Failed to initialize adaptive placeholders: {e}")
-        except (ImportError, AttributeError, TypeError, ValueError) as e:  # pragma: no cover
+            except Exception:
+                pass
+        except Exception:  # pragma: no cover
             try:
-                logger.debug(f"init_always_on_placeholders failed: {e}", exc_info=True)
-            except (AttributeError, TypeError, ValueError) as log_err:
-                logger.debug(f"Failed to log placeholder init error: {log_err}")
+                logger.debug("init_always_on_placeholders failed", exc_info=True)
+            except Exception:
+                pass
 
         # 6. Category initialization (performance, api, resources, cache...)
         _end = _step('perf_metrics')
         try:
             from .performance import init_performance_metrics as _perf  # type: ignore
             _perf(self); _end()
-        except (ImportError, AttributeError, TypeError, ValueError) as _e:
-            logger.debug(f"Performance metrics initialization failed: {_e}")
+        except Exception as _e:
             _end(ok=False, error=str(_e))
         _end = _step('api_metrics')
         try:
             from .api_call import init_api_call_metrics as _init_api  # type: ignore
             _init_api(self); _end()
-        except (ImportError, AttributeError, TypeError, ValueError) as _e:
-            logger.debug(f"API call metrics initialization failed: {_e}")
+        except Exception as _e:
             _end(ok=False, error=str(_e))
         # Early fallback for API metrics if init_api_call_metrics path failed (ensures presence before pruning)
         try:
@@ -643,18 +629,18 @@ class MetricsRegistry:
                     self.api_success_rate = _Gf('g6_api_success_rate_percent', 'Successful API call percentage (rolling window)')  # type: ignore[attr-defined]
                 if not hasattr(self, 'api_response_latency'):
                     self.api_response_latency = _Hf('g6_api_response_latency_ms', 'Upstream API response latency distribution (ms)', buckets=[5,10,20,50,100,200,400,800,1600,3200])  # type: ignore[attr-defined]
-        except (ImportError, ValueError, TypeError, AttributeError) as e:
-            logger.debug(f"Failed to create API fallback metrics: {e}")
+        except Exception:
+            pass
         try:
             from .resource_category import init_resource_metrics as _res  # type: ignore
             _res(self)
-        except (ImportError, AttributeError, TypeError, ValueError) as e:
-            logger.debug(f"Failed to initialize resource metrics: {e}")
+        except Exception:
+            pass
         try:
             from .cache_error import init_cache_error_metrics as _cache  # type: ignore
             _cache(self)
-        except (ImportError, AttributeError, TypeError, ValueError) as e:
-            logger.debug(f"Failed to initialize cache error metrics: {e}")
+        except Exception:
+            pass
         try:
             from .storage_category import init_storage_metrics as _stor  # type: ignore
             _stor(self)
