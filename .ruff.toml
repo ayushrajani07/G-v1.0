@@ -36,8 +36,7 @@ line-ending = "auto"
   # Tests often use reassignments/fixtures/dynamic constructs; keep lenient initially
 ]
 
-[exclude]
-extend = [
+exclude = [
   ".git",
   ".venv",
   "venv",
