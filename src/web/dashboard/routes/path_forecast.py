@@ -151,7 +151,11 @@ def _save_calibration(index: str, band_scale: float, prev: float, target: float,
     }
     # write JSON
     try:
-        (cal_dir / f"{idx}.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        # Use centralized safe_write_json for consistency with FILE_IO hygiene.
+        from src.error_handling import safe_write_json  # type: ignore
+        ok = safe_write_json(cal_dir / f"{idx}.json", payload, function_name='path_forecast_save_calibration')
+        if not ok:
+            raise RuntimeError('calibration_write_failed')
     except Exception as e:
         logger.warning("path_forecast: failed to write calibration snapshot json", extra={"index": idx, "error": str(e)})
         try:

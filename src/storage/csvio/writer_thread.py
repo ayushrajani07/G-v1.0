@@ -205,13 +205,36 @@ class CsvWriterThread:
         
         # Check if file exists (for header logic)
         file_exists = os.path.exists(filepath)
+        needs_header = False
+        if header:
+            if not file_exists:
+                needs_header = True
+            else:
+                # Defensive: verify first line contains comma-joined header; if truncated externally, rewrite header.
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as rf:
+                        first_line = rf.readline().strip()
+                    expected = ','.join(header)
+                    if first_line.lower() != expected.lower():  # case-insensitive compare
+                        # Insert header if file appears truncated or missing header
+                        needs_header = True
+                        # If file non-empty and missing header, we prepend by rewriting file (cheap for small test files).
+                        if first_line:
+                            existing = Path(filepath).read_text(encoding='utf-8')
+                            # Avoid duplicate header if it already appears further down
+                            if not existing.lower().startswith(expected.lower()):
+                                Path(filepath).write_text(expected + '\n' + existing, encoding='utf-8')
+                            needs_header = False  # header already inserted by rewrite
+                except Exception:
+                    # On any read failure, attempt to write header before rows
+                    needs_header = True
         
         # Open in append mode
         with open(filepath, 'a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             
             # Write header only if file is new and header provided
-            if not file_exists and header:
+            if needs_header and header:
                 writer.writerow(header)
             
             # Write all rows

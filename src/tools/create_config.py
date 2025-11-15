@@ -6,6 +6,7 @@ Create default configuration file for G6 Platform
 import json
 import sys
 from pathlib import Path
+from src.error_handling import safe_write_json
 
 
 def main():
@@ -49,8 +50,9 @@ def main():
 
     # Write config file
     config_file = config_dir / "g6_config.json"
-    with open(config_file, 'w') as f:
-        json.dump(config, f, indent=2)
+    # Adopt centralized safe JSON write wrapper
+    if not safe_write_json(config_file, config, indent=2, sort_keys=False):  # pragma: no cover - failure logged centrally
+        print(f"Failed to write configuration file (safe_write_json) at: {config_file}")
 
     print(f"Configuration file created at: {config_file.absolute()}")
     return 0

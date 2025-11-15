@@ -2,7 +2,7 @@ import csv
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, UTC
 
 import pytest
 
@@ -28,7 +28,7 @@ def test_atomic_backend_concurrent_append(tmp_path, monkeypatch):
         for i in range(n):
             csvio_api.append_one(
                 str(out_file),
-                [tid, i, int(datetime.utcnow().timestamp())],
+                [tid, i, int(datetime.now(UTC).timestamp())],
                 header=None,  # header already present
             )
 

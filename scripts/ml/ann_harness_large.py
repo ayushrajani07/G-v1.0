@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+from src.error_handling import safe_write_json  # type: ignore
 import subprocess
 import sys
 from pathlib import Path
@@ -331,7 +332,7 @@ def write_outputs(out_root: Path, stacked: List[Dict[str, Any]], summary: Dict[s
             for r in stacked:
                 w.writerow({k: r.get(k) for k in keep})
     json_path = combined_dir / 'ann_summary.json'
-    json_path.write_text(json.dumps(summary, indent=2), encoding='utf-8')
+    safe_write_json(json_path, summary, function_name='ann_harness_summary_write')
     print(f'[write] {csv_path}')
     print(f'[write] {json_path}')
 

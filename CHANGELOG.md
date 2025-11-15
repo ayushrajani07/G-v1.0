@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file. Dates use I
 
 ## [Unreleased]
 
+### Reliability & UTC Modernization (2025-11-15)
+- Ensemble exporter reliability: `scripts/ml/ensemble_consensus_exporter.py` now prefers a monkeypatched project root, and when absent, uses the subprocess working directory if it contains a `data/` folder. This fixes subprocess tests that run under a tmp root and ensures deterministic artifact locations. Additionally, one-shot runs always guarantee the ensemble CSV header and a placeholder row when no predictions are emitted.
+- Timezone-aware UTC: Replaced deprecated `datetime.utcnow()` usage with `datetime.now(datetime.UTC)` in `src/storage/csv_sink.py`, and updated the related test `tests/storage/test_atomic_concurrency.py` to use timezone-aware timestamps. This removes deprecation warnings and standardizes UTC handling.
+
 ### Provider Expiry Resolution (2025-10-27)
 - Unified provider expiry discovery behind a thin wrapper (`src/provider/expiries.py`) that prefers provider-supplied candidate lists and falls back to instrument scanning when unavailable.
 - Discovery paths no longer fabricate weekday-based expiries; upstream selection uses the universal selector in `src.utils.expiry_dates` with strict index policies (e.g., BANKNIFTY/FINNIFTY monthly-only).

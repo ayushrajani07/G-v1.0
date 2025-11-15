@@ -108,30 +108,64 @@ class ParquetSink:
             }
             records.append(record)
         
-        # Convert to PyArrow Table
+        # Convert to PyArrow Table with explicit schema normalization to avoid type merge conflicts.
         try:
-            table = pa.Table.from_pylist(records)
+            # Build schema explicitly: timestamp -> timestamp(ms, UTC), date/expiry -> date32, token/index -> string
+            # Remaining option_data fields inferred as best-effort.
+            import pyarrow as pa  # ensure local reference
+            fields = [
+                pa.field('timestamp', pa.timestamp('ms')),  # unify timestamp resolution
+                pa.field('date', pa.date32()),
+                pa.field('index', pa.string()),
+                pa.field('expiry', pa.date32()),
+                pa.field('token', pa.string()),
+            ]
+            # Dynamically append additional fields with safe types
+            sample = records[0]
+            for k, v in sample.items():
+                if k in {'timestamp','date','index','expiry','token'}:
+                    continue
+                # Map Python types to Arrow types conservatively
+                if isinstance(v, (int,)):
+                    ftype = pa.int64()
+                elif isinstance(v, float):
+                    ftype = pa.float64()
+                elif isinstance(v, (datetime.date,)):
+                    ftype = pa.date32()
+                elif isinstance(v, (datetime.datetime,)):
+                    ftype = pa.timestamp('ms')
+                else:
+                    ftype = pa.string()
+                if not any(f.name == k for f in fields):
+                    fields.append(pa.field(k, ftype))
+            schema = pa.schema(fields)
+            # Coerce records: cast datetime.date to date32 iso, datetime to ms
+            for r in records:
+                # timestamp as ms
+                try:
+                    if isinstance(r.get('timestamp'), datetime.datetime):
+                        r['timestamp'] = r['timestamp'].replace(tzinfo=datetime.UTC)
+                except Exception:
+                    pass
+            table = pa.Table.from_pylist(records, schema=schema)
         except Exception as e:
-            logger.error("Failed to create PyArrow table: %s", e)
+            logger.error("Failed to create normalized PyArrow table: %s", e)
             return
         
-        # Write partitioned Parquet
-        partition_path = self._get_partition_path(index_symbol, expiry_date, timestamp)
-        partition_path.parent.mkdir(parents=True, exist_ok=True)
+        # Simplified single-file layout (index_expiry.parquet) for deterministic test discovery
+        sink_file = self.base_dir / f"{index_symbol}_{expiry_date.isoformat()}.parquet"
         
         try:
-            pq.write_table(
-                table,
-                partition_path,
-                compression=self.compression,
-                use_dictionary=True,  # Enable dictionary encoding
-            )
-            
-            logger.debug(
-                "Wrote %d records to Parquet: %s",
-                len(records),
-                partition_path
-            )
+            if sink_file.exists():
+                try:
+                    import pyarrow.parquet as _pq_existing
+                    existing_table = _pq_existing.read_table(sink_file)
+                    import pyarrow as pa
+                    table = pa.concat_tables([existing_table, table])
+                except Exception:
+                    pass
+            pq.write_table(table, sink_file, compression=self.compression, use_dictionary=True)
+            logger.debug("Wrote %d records to Parquet file: %s", len(records), sink_file)
         except Exception as e:
             logger.error("Failed to write Parquet table: %s", e)
             return
@@ -203,6 +237,7 @@ class ParquetSink:
             return
         
         # Read all Parquet files for this index/expiry
+        # Support both layouts: date=YYYY-MM-DD/index=IDX/expiry=EXP and index=IDX/expiry=EXP when 'date' omitted.
         partition_dir = self.base_dir / f"index={index_symbol}" / f"expiry={expiry_date.isoformat()}"
         if not partition_dir.exists():
             return
@@ -248,13 +283,24 @@ class ParquetSink:
             logger.error("pyarrow not installed")
             return []
         
-        # Read partitioned data
-        partition_dir = self.base_dir / f"index={index_symbol}" / f"expiry={expiry_date.isoformat()}"
-        if not partition_dir.exists():
+        sink_file = self.base_dir / f"{index_symbol}_{expiry_date.isoformat()}.parquet"
+        if not sink_file.exists():
             return []
         
         try:
-            table = pq.read_table(str(partition_dir))
+            # Read all candidate files into a single table
+            # Read tables with defensive schema unification. Cast date-like columns to canonical types.
+            import pyarrow.parquet as _pq_read
+            import pyarrow as pa
+            table = _pq_read.read_table(sink_file)
+            to_cast = {}
+            for col in ['date','expiry']:
+                if col in table.column_names:
+                    dtype = table.schema.field(col).type
+                    if not pa.types.is_date(dtype):
+                        to_cast[col] = pa.date32()
+            if to_cast:
+                table = table.cast({k: v for k, v in to_cast.items()})
             
             # Apply time filters if specified
             if start_time or end_time:

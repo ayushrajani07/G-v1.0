@@ -4,6 +4,12 @@
 
 Successfully implemented all phases (0-4) of the Cycle Performance Roadmap to optimize collection cycle performance. This comprehensive implementation targets a **30-50% reduction in cycle times** while improving observability, robustness, and scalability.
 
+## New Reference Artifacts (Post-Roadmap)
+
+- Ensemble K calibration & governance guide: `CALIBRATION_K_GUIDE.md` (raw vs smooth selection, overrides, forecast inflation, auto-revert logic).
+- Parquet pilot readiness script: `scripts/dev/check_parquet_pilot.py` (verifies `pyarrow`, flag enablement, partition layout, storage stats).
+- Safe file I/O wrappers adoption (error visibility): `src/error_handling.py` (`safe_write_text`, `safe_append_line`, `safe_read_json`) now used across exporters & watch scripts.
+
 ## Completed Phases
 
 ### ✅ Phase 0: Diagnostic Metrics

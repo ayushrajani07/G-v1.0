@@ -31,7 +31,7 @@ _METRICS: dict[str, Any] = {}  # name -> metric instance
 
 def _get(name: str): return _METRICS.get(name)
 
-SPEC_HASH = '86045faad187462f'  # short sha256 of spec file
+SPEC_HASH = '0533405d11f9f66e'  # short sha256 of spec file (regenerated)
 
 def m_api_calls_total():
     if 'g6_api_calls_total' not in _METRICS:

@@ -12,6 +12,7 @@ These metrics support Grafana panels showing:
 from __future__ import annotations
 
 import logging
+import time  # Needed for __exit__ timing; was missing causing NameError
 from typing import TYPE_CHECKING
 
 from prometheus_client import Histogram
@@ -129,7 +130,7 @@ class PhaseTimer:
         self._start = None
     
     def __enter__(self):
-        import time
+        # Local start capture (module-level import ensures availability in __exit__)
         self._start = time.time()
         return self
     

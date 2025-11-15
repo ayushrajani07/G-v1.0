@@ -24,6 +24,7 @@ import time as _t
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
 
 _METRICS_DIR = Path(__file__).resolve().parent
 _SRC_ROOT = _METRICS_DIR.parent
@@ -81,8 +82,22 @@ def maybe_dump_introspection(registry: Any) -> None:
             out_path = flag
             if flag.lower() == "temp":
                 out_path = os.path.join(tempfile.gettempdir(), "g6_metrics_introspection.json")
-            with open(out_path, "w", encoding="utf-8") as fh:  # pragma: no cover
-                json.dump(payload, fh, indent=2, sort_keys=True)
+            try:
+                with open(out_path, "w", encoding="utf-8") as fh:  # pragma: no cover
+                    json.dump(payload, fh, indent=2, sort_keys=True)
+            except Exception as e:  # pragma: no cover
+                try:
+                    get_error_handler().handle_error(
+                        e,
+                        category=ErrorCategory.FILE_IO,
+                        severity=ErrorSeverity.LOW,
+                        component="introspection_dump",
+                        function_name="maybe_dump_introspection",
+                        message="introspection_write_failed",
+                        context={"path": out_path},
+                    )
+                except Exception:
+                    pass
             logger.info(
                 "Metrics introspection written to %s (%d metrics)",
                 out_path,
@@ -132,8 +147,22 @@ def maybe_dump_init_trace(registry: Any) -> None:
                 out_path = os.path.join(
                     tempfile.gettempdir(), f"g6_metrics_init_trace_{int(_t.time())}.json"
                 )
-            with open(out_path, "w", encoding="utf-8") as fh:  # pragma: no cover
-                json.dump(tdump, fh, indent=2, sort_keys=True)
+            try:
+                with open(out_path, "w", encoding="utf-8") as fh:  # pragma: no cover
+                    json.dump(tdump, fh, indent=2, sort_keys=True)
+            except Exception as e:  # pragma: no cover
+                try:
+                    get_error_handler().handle_error(
+                        e,
+                        category=ErrorCategory.FILE_IO,
+                        severity=ErrorSeverity.LOW,
+                        component="introspection_dump",
+                        function_name="maybe_dump_init_trace",
+                        message="init_trace_write_failed",
+                        context={"path": out_path},
+                    )
+                except Exception:
+                    pass
             logger.info(
                 "Metrics init trace written to %s (%d steps)", out_path, len(trace)
             )

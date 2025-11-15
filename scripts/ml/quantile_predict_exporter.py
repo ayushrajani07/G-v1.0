@@ -41,6 +41,7 @@ from src.analytics.ml.quantile import QuantileRegressor  # type: ignore
 from src.analytics.ml.conformal import ConformalBand  # type: ignore
 from src.web.dashboard.core.csv_io import find_live_csv, load_csv_rows_full  # type: ignore
 from src.web.dashboard.core.paths import project_root  # type: ignore
+from src.error_handling import safe_write_text, safe_append_line  # type: ignore
 
 
 MODEL_NAME = "sk_gbr_quantile"
@@ -73,14 +74,14 @@ def ensure_pred_csv(index: str) -> Path:
     base.mkdir(parents=True, exist_ok=True)
     fp = base / f"{index.upper()}.csv"
     if not fp.exists():
-        fp.write_text("timestamp,prediction,model,index,horizon,p10,p50,p90\n", encoding="utf-8")
+        safe_write_text(fp, "timestamp,prediction,model,index,horizon,p10,p50,p90\n")
     return fp
 
 
 def ensure_residual_store(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        path.write_text("timestamp,index,horizon,model,prediction,actual,residual\n", encoding="utf-8")
+        safe_write_text(path, "timestamp,index,horizon,model,prediction,actual,residual\n")
     return path
 
 
@@ -120,8 +121,7 @@ def append_residual(path: Path, ts_iso: str, index: str, horizon: str, model: st
     except Exception as e:  # pragma: no cover - facade failure path
         # Fallback to direct append if facade unavailable
         try:
-            with path.open("a", encoding="utf-8") as f:
-                f.write(f"{ts_iso},{index},{horizon},{model},{pred},{actual},{resid}\n")
+            safe_append_line(path, f"{ts_iso},{index},{horizon},{model},{pred},{actual},{resid}")
         except Exception as fe:  # pragma: no cover - rare file append failure
             logger.debug("residual append fallback failed", extra={"error": str(fe), "path": str(path)})
         else:
@@ -140,9 +140,8 @@ def append_prediction(fp: Path, ts_iso: str, pred: float, index: str, horizon: s
         _csvio_api.append_one(str(fp), row, header)
     except Exception as e:  # pragma: no cover - facade failure path
         try:
-            line = f"{ts_iso},{pred},{MODEL_NAME},{index},{horizon},{p10},{p50},{p90}\n"
-            with fp.open("a", encoding="utf-8") as f:
-                f.write(line)
+            line = f"{ts_iso},{pred},{MODEL_NAME},{index},{horizon},{p10},{p50},{p90}"
+            safe_append_line(fp, line)
         except Exception as fe:  # pragma: no cover - rare file append failure
             logger.debug("prediction append fallback failed", extra={"error": str(fe), "path": str(fp)})
         else:

@@ -11,6 +11,7 @@ import threading
 import time
 from collections.abc import Callable
 from typing import Any
+from src.error_handling import safe_write_json
 
 from src.utils.color import FG_GREEN, FG_RED, colorize
 
@@ -254,13 +255,10 @@ class HealthMonitor:
 
         # Save to file
         health_file = f"data/health/status_{datetime.datetime.now().strftime('%Y-%m-%d')}.json"  # local-ok
-        try:
-            with open(health_file, 'w') as f:
-                json.dump(status, f, indent=2)
-        except Exception as e:
+        if not safe_write_json(health_file, status, indent=2, sort_keys=False):  # pragma: no cover - failure path
             try:
                 get_error_handler().handle_error(
-                    e,
+                    Exception("health_status_write_failed"),
                     category=ErrorCategory.FILE_IO,
                     severity=ErrorSeverity.MEDIUM,
                     component="health.monitor",
@@ -270,7 +268,7 @@ class HealthMonitor:
                 )
             except Exception:
                 pass
-            self.logger.error("Error saving health status: %s", e)
+            self.logger.error("Error saving health status (safe_write_json returned False)")
 
         # Update last status
         self.last_status = status

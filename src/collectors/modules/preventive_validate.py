@@ -101,8 +101,22 @@ def run_preventive_validation(
             head = list(enriched.items())[:500]
             with open(snap_root / f'{ts_key}_02_enriched_head.json','w', encoding='utf-8') as f:
                 json.dump({'index': index_symbol,'expiry_rule': rule,'sample_count': len(head),'records': [{k:v} for k,v in head]}, f, indent=2)
-        except Exception:
+        except Exception as e:
             logger.debug('preventive_snapshot_failed', exc_info=True)
+            # Route snapshot write failure as FILE_IO LOW per test expectations
+            try:
+                from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
+                get_error_handler().handle_error(
+                    e,
+                    category=ErrorCategory.FILE_IO,
+                    severity=ErrorSeverity.LOW,
+                    component='collectors',
+                    function_name='run_preventive_validation',
+                    message='preventive snapshot write failed',
+                    context={'index': index_symbol, 'rule': rule, 'path': str(snap_root) if snap_root else None}
+                )
+            except Exception:
+                pass
     try:
         cleaned_data, report = _preventive_validation_stage(index_symbol, rule, expiry_date, instruments, enriched, index_price)
     except Exception:

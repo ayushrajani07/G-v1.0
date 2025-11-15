@@ -23,6 +23,7 @@ import json
 import os
 from dataclasses import dataclass
 from typing import Any
+from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
 
 from src.config.env_config import EnvConfig
 from src.metrics import get_metrics  # Module import (moved from late imports)
@@ -71,8 +72,21 @@ def _publish_event(event_type: str, payload: dict[str, Any], *, coalesce_key: st
         return
     try:
         _BUS.publish(event_type, payload, coalesce_key=coalesce_key)
-    except Exception:
-        pass
+    except Exception as e:
+        try:
+            # Use PANEL_DISPLAY if available (UI emission), fallback to CONFIGURATION
+            cat = getattr(ErrorCategory, 'PANEL_DISPLAY', ErrorCategory.CONFIGURATION)
+            get_error_handler().handle_error(
+                e,
+                category=cat,
+                severity=ErrorSeverity.LOW,
+                component="panel_diffs",
+                function_name="_publish_event",
+                message="event bus publish failed",
+                context={"event_type": event_type},
+            )
+        except Exception:
+            pass
 
 def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
     """Emit panel diff & periodic full snapshots with optional recursive depth.
@@ -106,8 +120,22 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
         _state = _DiffState(last_snapshot=status, status_path=status_path, counter=0)
         try:
             full_payload = _copy_jsonable(status)
-            with open(os.path.join(base_dir, base_name + '.full.json'), 'w', encoding='utf-8') as f:
-                json.dump(full_payload, f)
+            try:
+                with open(os.path.join(base_dir, base_name + '.full.json'), 'w', encoding='utf-8') as f:
+                    json.dump(full_payload, f)
+            except Exception as e:  # pragma: no cover - hygiene tests patch this path
+                try:
+                    get_error_handler().handle_error(
+                        e,
+                        category=ErrorCategory.FILE_IO,
+                        severity=ErrorSeverity.LOW,
+                        component="panel_diffs",
+                        function_name="bootstrap_full_snapshot",
+                        message="initial full snapshot write failed",
+                        context={"path": os.path.join(base_dir, base_name + '.full.json')},
+                    )
+                except Exception:
+                    pass
             try:
                 m = get_metrics()
                 # Dynamic metric families: guarded by hasattr, add type ignores for static checker
@@ -212,8 +240,23 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
     diff_path = os.path.join(base_dir, base_name + f'.{_state.counter}.diff.json')
     try:
         diff_payload = _copy_jsonable(diff)
-        with open(diff_path, 'w', encoding='utf-8') as f:
-            json.dump(diff_payload, f)
+        try:
+            with open(diff_path, 'w', encoding='utf-8') as f:
+                json.dump(diff_payload, f)
+        except Exception as e:  # pragma: no cover - hygiene tests patch this path
+            try:
+                get_error_handler().handle_error(
+                    e,
+                    category=ErrorCategory.FILE_IO,
+                    severity=ErrorSeverity.LOW,
+                    component="panel_diffs",
+                    function_name="emit_panel_artifacts",
+                    message="panel diff write failed",
+                    context={"path": diff_path},
+                )
+            except Exception:
+                pass
+            return
         try:
             m = get_metrics()
             if hasattr(m, 'panel_diff_writes'):
@@ -250,8 +293,23 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
         full_path = os.path.join(base_dir, base_name + f'.{_state.counter}.full.json')
         try:
             full_payload = _copy_jsonable(status)
-            with open(full_path, 'w', encoding='utf-8') as f:
-                json.dump(full_payload, f)
+            try:
+                with open(full_path, 'w', encoding='utf-8') as f:
+                    json.dump(full_payload, f)
+            except Exception as e:  # pragma: no cover - hygiene tests patch this path
+                try:
+                    get_error_handler().handle_error(
+                        e,
+                        category=ErrorCategory.FILE_IO,
+                        severity=ErrorSeverity.LOW,
+                        component="panel_diffs",
+                        function_name="emit_panel_artifacts",
+                        message="panel full snapshot write failed",
+                        context={"path": full_path},
+                    )
+                except Exception:
+                    pass
+                return
             try:
                 m = get_metrics()
                 if hasattr(m, 'panel_diff_writes'):

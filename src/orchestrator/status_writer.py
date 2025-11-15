@@ -423,16 +423,39 @@ def write_runtime_status(
                 try:
                     from .catalog import emit_catalog  # local import to avoid circular at startup
                     emit_catalog(runtime_status_path=path)
-                except Exception:
+                except Exception as ce:
                     logger.debug("status_writer: catalog emission failed", exc_info=True)
+                    try:
+                        get_error_handler().handle_error(
+                            ce,
+                            category=ErrorCategory.FILE_IO,
+                            severity=ErrorSeverity.LOW,
+                            component="status_writer",
+                            function_name="write_runtime_status",
+                            message="catalog emission failed",
+                            context={"path": path},
+                        )
+                    except Exception:
+                        pass
         except Exception:
             pass
         # Diagnostic marker to confirm status_writer executed (development only)
         try:
             with open(path + '.marker', 'w', encoding='utf-8') as _mf:
                 _mf.write('status_writer_executed')
-        except Exception:
-            pass
+        except Exception as me:
+            try:
+                get_error_handler().handle_error(
+                    me,
+                    category=ErrorCategory.FILE_IO,
+                    severity=ErrorSeverity.LOW,
+                    component="status_writer",
+                    function_name="write_runtime_status",
+                    message="marker write failed",
+                    context={"path": path + '.marker'},
+                )
+            except Exception:
+                pass
         if metrics and hasattr(metrics, 'runtime_status_writes'):
             try:
                 metrics.runtime_status_writes.inc()
@@ -447,8 +470,20 @@ def write_runtime_status(
         try:
             from .panel_diffs import emit_panel_artifacts
             emit_panel_artifacts(status, status_path=path)
-        except Exception:
+        except Exception as pe:
             logger.debug("panel diff emission failed", exc_info=True)
+            try:
+                get_error_handler().handle_error(
+                    pe,
+                    category=ErrorCategory.FILE_IO,
+                    severity=ErrorSeverity.LOW,
+                    component="status_writer",
+                    function_name="write_runtime_status",
+                    message="panel diff emission failed",
+                    context={"path": path},
+                )
+            except Exception:
+                pass
     except Exception as e:  # pragma: no cover
         try:
             get_error_handler().handle_error(

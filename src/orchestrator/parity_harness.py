@@ -38,6 +38,7 @@ import glob
 import json
 import os
 from typing import Any
+from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
 
 from .context import RuntimeContext  # type: ignore
 from .cycle import run_cycle  # type: ignore
@@ -168,8 +169,22 @@ def run_parity_cycle(config, use_enhanced: bool = False) -> dict[str, Any]:
 def write_parity_report(config, path: str) -> str:
     """Helper to run parity and write JSON report to path (used for golden regen)."""
     data = run_parity_cycle(config)
-    with open(path, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, sort_keys=True)
+    try:
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, sort_keys=True)
+    except Exception as e:  # pragma: no cover
+        try:
+            get_error_handler().handle_error(
+                e,
+                category=ErrorCategory.FILE_IO,
+                severity=ErrorSeverity.LOW,
+                component="parity_harness",
+                function_name="write_parity_report",
+                message="parity_report_write_failed",
+                context={"path": path},
+            )
+        except Exception:
+            pass
     return path
 
 __all__ = ["run_parity_cycle", "write_parity_report"]

@@ -131,7 +131,8 @@ class SSEClient(threading.Thread):  # pragma: no cover - network/UI side effects
         self._base_reconnect_delay = reconnect_delay
         self._timeout = timeout
         self._debug = debug
-        self._stop = threading.Event()
+        # Rename internal stop event to avoid shadowing Thread._stop (join conflict)
+        self._stop_event = threading.Event()
         self._max_backoff = max_backoff
         # Backoff state
         self._attempt = 0
@@ -183,12 +184,12 @@ class SSEClient(threading.Thread):  # pragma: no cover - network/UI side effects
             pass
 
     def stop(self) -> None:
-        self._stop.set()
+        self._stop_event.set()
 
     def run(self) -> None:  # noqa: D401
         parsed = urllib.parse.urlparse(self._url)
         scheme = parsed.scheme or 'http'
-        while not self._stop.is_set():
+        while not self._stop_event.is_set():
             try:
                 conn_cls = http.client.HTTPSConnection if scheme == 'https' else http.client.HTTPConnection
                 host = parsed.hostname or parsed.netloc or ''
@@ -218,7 +219,7 @@ class SSEClient(threading.Thread):  # pragma: no cover - network/UI side effects
                 buf = io.TextIOWrapper(resp, encoding='utf-8')  # type: ignore[arg-type]
                 event_data_lines: list[str] = []
                 for line in buf:
-                    if self._stop.is_set():
+                    if self._stop_event.is_set():
                         break
                     line = line.rstrip('\n')
                     if line.startswith(':'):  # comment/heartbeat
@@ -232,7 +233,7 @@ class SSEClient(threading.Thread):  # pragma: no cover - network/UI side effects
                         event_data_lines.append(line[5:].strip())
                 conn.close()
                 # Treat normal loop exit (EOF) as reconnect attempt
-                if not self._stop.is_set():
+                if not self._stop_event.is_set():
                     self._inc_reconnect("eof")
                     delay = self._next_backoff()
                     self._record_backoff(delay)

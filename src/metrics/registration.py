@@ -108,6 +108,7 @@ def maybe_register(registry: Any, group: str, attr: str, metric_cls: Callable,
             collector = getattr(registry, attr, None)
     except Exception as e:  # unexpected
         logger.error("maybe_register unexpected error creating %s (%s): %s", attr, name, e, exc_info=True)
+        # Strict mode: propagate original exception for governance test
         if strict:
             raise
         return None

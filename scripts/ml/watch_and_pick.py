@@ -3,9 +3,10 @@ from __future__ import annotations
 import csv
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import subprocess
+from src.error_handling import safe_write_text, safe_append_line  # type: ignore
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results" / "grid"
@@ -59,8 +60,8 @@ def main():
     done = out_dir / "PICKS_DONE.txt"
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    with log.open("a", encoding="utf-8") as f:
-        f.write(f"[{datetime.now().isoformat(timespec='seconds')}] watch_and_pick started for {index}/{tag}/{offset}\n")  # local-ok
+    # TZ_AWARE: use UTC for governance test compliance
+    safe_append_line(log, f"[{datetime.now(timezone.utc).isoformat(timespec='seconds')}] watch_and_pick started for {index}/{tag}/{offset}")
 
     # mtime reference
     prev_mtime = summ.stat().st_mtime if summ.exists() else 0
@@ -72,19 +73,16 @@ def main():
             cmd = [sys.executable, str(ROOT / "scripts" / "ml" / "analyze_summary_pick.py"), index, tag, offset, str(target), str(topn)]
             try:
                 subprocess.run(cmd, cwd=str(ROOT), check=True)
-                with done.open("w", encoding="utf-8") as f:
-                    f.write(datetime.now().isoformat(timespec='seconds'))  # local-ok
-                with log.open("a", encoding="utf-8") as f:
-                    f.write(f"[{datetime.now().isoformat(timespec='seconds')}] picks computed and done written\n")  # local-ok
+                ts = datetime.now(timezone.utc).isoformat(timespec='seconds')
+                safe_write_text(done, ts)
+                safe_append_line(log, f"[{ts}] picks computed and done written")
             except Exception as e:
-                with log.open("a", encoding="utf-8") as f:
-                    f.write(f"[{datetime.now().isoformat(timespec='seconds')}] analyzer failed: {e}\n")  # local-ok
+                safe_append_line(log, f"[{datetime.now(timezone.utc).isoformat(timespec='seconds')}] analyzer failed: {e}")
             break
         # wait for changes
         cur_mtime = summ.stat().st_mtime if summ.exists() else 0
         if cur_mtime != prev_mtime:
-            with log.open("a", encoding="utf-8") as f:
-                f.write(f"[{datetime.now().isoformat(timespec='seconds')}] summary changed; rows={len(rows)}\n")  # local-ok
+            safe_append_line(log, f"[{datetime.now(timezone.utc).isoformat(timespec='seconds')}] summary changed; rows={len(rows)}")
             prev_mtime = cur_mtime
         time.sleep(POLL_SECS)
 

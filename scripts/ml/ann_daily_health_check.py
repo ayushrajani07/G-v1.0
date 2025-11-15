@@ -22,6 +22,7 @@ Usage example:
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys, datetime
+from src.error_handling import safe_write_json, safe_read_json, safe_write_text  # type: ignore
 from pathlib import Path
 from typing import Dict, Any
 
@@ -111,7 +112,7 @@ def main():
         print('[error] baseline file missing:', baseline_path)
         sys.exit(3)
     # Support flat and nested (multi-index) baseline documents.
-    baseline_doc = json.loads(baseline_path.read_text(encoding='utf-8'))
+    baseline_doc = safe_read_json(baseline_path, default={}, function_name='ann_daily_baseline_read')
     if isinstance(baseline_doc, dict) and baseline_doc and any(k.startswith('retrieval_') for k in baseline_doc.keys()):
         baseline = baseline_doc
         is_nested = False
@@ -171,7 +172,7 @@ def main():
         try:
             hist_dir.mkdir(parents=True, exist_ok=True)
             fname = f"{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d_%H%M%S')}_{ns.index}_{ns.tag}_{ns.offset}.json"
-            (hist_dir / fname).write_text(json.dumps(history_payload, indent=2), encoding='utf-8')
+            safe_write_json(hist_dir / fname, history_payload, function_name='ann_daily_history_write')
         except Exception as e:
             print('[warn] failed to write history:', e)
 
@@ -193,7 +194,7 @@ def main():
                 backup_dir.mkdir(parents=True, exist_ok=True)
                 backup_name = f"{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d_%H%M%S')}_baseline_backup.json"
                 # Backup the full document to preserve other indices
-                (backup_dir / backup_name).write_text(json.dumps(baseline_doc, indent=2), encoding='utf-8')
+                safe_write_json(backup_dir / backup_name, baseline_doc, function_name='ann_daily_baseline_backup_write')
                 # Build refreshed baseline dict from live for matching keys
                 new_baseline = {}
                 for k in baseline.keys():
@@ -207,9 +208,9 @@ def main():
                 if is_nested:
                     updated_doc = dict(baseline_doc)
                     updated_doc[ns.index] = new_baseline
-                    baseline_path.write_text(json.dumps(updated_doc, indent=2), encoding='utf-8')
+                    safe_write_json(baseline_path, updated_doc, function_name='ann_daily_baseline_refresh_nested')
                 else:
-                    baseline_path.write_text(json.dumps(new_baseline, indent=2), encoding='utf-8')
+                    safe_write_json(baseline_path, new_baseline, function_name='ann_daily_baseline_refresh_flat')
                 print('[baseline] refreshed from live metrics')
             except Exception as e:
                 print('[warn] failed to refresh baseline:', e)

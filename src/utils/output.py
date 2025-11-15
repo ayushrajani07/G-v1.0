@@ -179,14 +179,29 @@ def atomic_write_json(
         pass
     fast = _env_get_bool("G6_TEST_FAST_IO", False)
     tmp = dst_path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=ensure_ascii, default=str, indent=indent)
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=ensure_ascii, default=str, indent=indent)
+            try:
+                f.flush()
+                os.fsync(f.fileno())
+            except Exception:
+                pass
+    except Exception as e:
         try:
-            f.flush()
-            os.fsync(f.fileno())
+            from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
+            get_error_handler().handle_error(
+                e,
+                category=ErrorCategory.FILE_IO,
+                severity=ErrorSeverity.LOW,
+                component='output',
+                function_name='atomic_write_json',
+                message='atomic_write_json_failed',
+                context={'path': dst_path}
+            )
         except Exception:
-            # Best-effort: on some FS, fsync may not be available
             pass
+        return
     # Propagate possibly reduced retries/delay in fast mode
     if fast:
         retries = min(retries, 3)
@@ -465,21 +480,37 @@ class PanelFileSink:
         except Exception:
             pass
         tmp = dst + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            # Optional pretty vs compact JSON to balance readability vs size
+        try:
+            with open(tmp, "w", encoding="utf-8") as f:
+                # Optional pretty vs compact JSON to balance readability vs size
+                try:
+                    pretty = _env_get_bool("G6_PANELS_PRETTY_JSON", True)
+                except Exception:
+                    pretty = True
+                if pretty:
+                    json.dump(payload, f, ensure_ascii=False, default=str, indent=2)
+                else:
+                    json.dump(payload, f, ensure_ascii=False, default=str, separators=(",", ":"))
+                try:
+                    f.flush()
+                    os.fsync(f.fileno())
+                except Exception:
+                    pass
+        except Exception as e:
             try:
-                pretty = _env_get_bool("G6_PANELS_PRETTY_JSON", True)
-            except Exception:
-                pretty = True
-            if pretty:
-                json.dump(payload, f, ensure_ascii=False, default=str, indent=2)
-            else:
-                json.dump(payload, f, ensure_ascii=False, default=str, separators=(",", ":"))
-            try:
-                f.flush()
-                os.fsync(f.fileno())
+                from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
+                get_error_handler().handle_error(
+                    e,
+                    category=ErrorCategory.FILE_IO,
+                    severity=ErrorSeverity.LOW,
+                    component='output',
+                    function_name='PanelFileSink._write_json_atomic',
+                    message='panel_json_write_failed',
+                    context={'path': dst}
+                )
             except Exception:
                 pass
+            return
         if self._atomic:
             self._atomic_replace(tmp, dst)
         else:
@@ -1234,8 +1265,23 @@ class OutputRouter:
                                     "committed_at": OutputEvent.now_iso(),
                                     "panels": _panels,
                                 }
-                                with open(meta_path, 'w', encoding='utf-8') as _mf:
-                                    json.dump(meta_payload, _mf)
+                                try:
+                                    with open(meta_path, 'w', encoding='utf-8') as _mf:
+                                        json.dump(meta_payload, _mf)
+                                except Exception as me:
+                                    try:
+                                        from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
+                                        get_error_handler().handle_error(
+                                            me,
+                                            category=ErrorCategory.FILE_IO,
+                                            severity=ErrorSeverity.LOW,
+                                            component='output',
+                                            function_name='PanelsTransaction.__exit__',
+                                            message='panel_meta_write_failed',
+                                            context={'path': meta_path}
+                                        )
+                                    except Exception:
+                                        pass
                         except Exception:
                             pass
                         # Aggressive cleanup of individual txn dir and prune root if empty

@@ -75,6 +75,9 @@ class StatusReader:
                         return obj
                 except Exception:
                     pass
+            # Governance: malformed JSON path should return empty dict
+            if not isinstance(data, dict):
+                return {}
             return data
         except Exception:
             return {}

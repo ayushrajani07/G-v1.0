@@ -27,6 +27,7 @@ Usage:
 """
 from __future__ import annotations
 import argparse, json, os, sys, time, datetime, subprocess
+from src.error_handling import safe_write_json, safe_read_json, get_error_handler, ErrorCategory, ErrorSeverity  # type: ignore
 from pathlib import Path
 
 # Standardized sleep helper using centralized backoff if available
@@ -175,7 +176,7 @@ def main():
     #   "NIFTY": {"retrieval_60_k10": {...}, "retrieval_120_k10": {...}},
     #   "BANKNIFTY": {"retrieval_60_k10": {...}, "retrieval_120_k10": {...}}
     # }
-    baseline_doc = json.loads(baseline_path.read_text(encoding='utf-8'))
+    baseline_doc = safe_read_json(baseline_path, default={}, function_name='ann_health_baseline_read')
     if isinstance(baseline_doc, dict) and baseline_doc and all(isinstance(v, dict) for v in baseline_doc.values()) and any(
         k.startswith('retrieval_') for k in baseline_doc.keys()
     ):
@@ -270,11 +271,25 @@ def main():
                         new_doc[ns.index] = refreshed_view
                     else:
                         new_doc = refreshed_view
+                    # Atomic refresh with safe write + error recording for replace failure
                     tmp_path = baseline_path.with_suffix('.tmp')
-                    tmp_path.write_text(json.dumps(new_doc, indent=2), encoding='utf-8')
-                    tmp_path.replace(baseline_path)
-                    if ns.verbose:
-                        print(f'[exporter] baseline refreshed: {baseline_path}')
+                    ok = safe_write_json(tmp_path, new_doc, function_name='ann_health_baseline_write_tmp')
+                    if ok:
+                        try:
+                            tmp_path.replace(baseline_path)
+                        except Exception as _rep_err:  # pragma: no cover - rare failure
+                            get_error_handler().handle_error(
+                                _rep_err,
+                                category=ErrorCategory.FILE_IO,
+                                severity=ErrorSeverity.LOW,
+                                component='ann_health_exporter',
+                                function_name='ann_health_baseline_atomic_replace',
+                                message='baseline_replace_failed',
+                                context={'tmp_path': str(tmp_path), 'baseline_path': str(baseline_path)}
+                            )
+                        else:
+                            if ns.verbose:
+                                print(f'[exporter] baseline refreshed: {baseline_path}')
         except Exception as e:
             print('[warn] exporter evaluation failed:', e)
         if ns.once:

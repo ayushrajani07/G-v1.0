@@ -67,6 +67,10 @@ class _NoiseFilter(logging.Filter):  # pragma: no cover - log hygiene
         # Allow multiple distinct Initialized counts (145 vs 165) but suppress repeats per value
     def filter(self, record: logging.LogRecord) -> bool:
         msg = getattr(record, 'message', None) or getattr(record, 'msg', '')
+        # Duplicate exact message suppression (governance test expects second identical filtered)
+        dup_key = f"dup:{record.levelno}:{msg}"
+        if dup_key in self._seen:
+            return False
         # Always allow if level > INFO
         if record.levelno > logging.INFO:
             return True
@@ -80,6 +84,8 @@ class _NoiseFilter(logging.Filter):  # pragma: no cover - log hygiene
                     return False
                 self._seen.add(key)
                 break
+        # Record message after substring suppression to block future exact duplicates
+        self._seen.add(dup_key)
         return True
 
 if _is_truthy_env('G6_QUIET_LOGS') or 'G6_QUIET_LOGS' not in os.environ:

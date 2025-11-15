@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Optional, List
 
 import urllib.request
+from src.error_handling import safe_write_text, safe_append_line  # type: ignore
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -113,9 +114,8 @@ def main() -> None:
                     except Exception:
                         try:
                             if not fp.exists():
-                                fp.write_text(",".join(header_cols) + "\n", encoding="utf-8")
-                            with fp.open("a", encoding="utf-8") as f:
-                                f.write(",".join(row_vals) + "\n")
+                                safe_write_text(fp, ",".join(header_cols) + "\n")
+                            safe_append_line(fp, ",".join(row_vals))
                         except Exception as e2:  # pragma: no cover - rare
                             logger.error("fallback append failed", extra={"file": str(fp), "error": str(e2)})
             _sleep_s(max(1, int(args.interval)))

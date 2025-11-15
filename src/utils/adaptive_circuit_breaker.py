@@ -18,6 +18,7 @@ from enum import Enum
 from typing import Any
 from pathlib import Path
 from src.utils.csv_cache import read_json_cached
+from src.error_handling import safe_write_json, safe_read_json, get_error_handler, ErrorCategory, ErrorSeverity
 
 
 class CircuitState(Enum):
@@ -152,31 +153,53 @@ class AdaptiveCircuitBreaker:
     def _persist(self) -> None:
         if not self._pfile:
             return
+        data = {
+            "state": self._state.value,
+            "failures": self._failures,
+            "opened_at": self._opened_at,
+            "current_timeout": self._current_timeout,
+            "recent_errors": self._recent_errors_ts[-20:],
+            "ts": time.time(),
+        }
+        # Write to temp file first then atomic replace; record FILE_IO errors centrally.
+        tmp = f"{self._pfile}.tmp"
+        ok = safe_write_json(tmp, data, function_name='adaptive_cb_persist')
+        if not ok:
+            return
         try:
-            data = {
-                "state": self._state.value,
-                "failures": self._failures,
-                "opened_at": self._opened_at,
-                "current_timeout": self._current_timeout,
-                "recent_errors": self._recent_errors_ts[-20:],
-                "ts": time.time(),
-            }
-            tmp = f"{self._pfile}.tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                json.dump(data, f)
             os.replace(tmp, self._pfile)
-        except Exception:
-            pass
+        except Exception as e:  # pragma: no cover - defensive
+            try:
+                get_error_handler().handle_error(
+                    e,
+                    category=ErrorCategory.FILE_IO,
+                    severity=ErrorSeverity.LOW,
+                    component='adaptive_circuit_breaker',
+                    function_name='adaptive_cb_atomic_replace',
+                    message='persist_replace_failed',
+                    context={'path': self._pfile}
+                )
+            except Exception:
+                pass
 
     def _load(self) -> None:
-        try:
-            if self._pfile and os.path.exists(self._pfile):
+        if not self._pfile or not os.path.exists(self._pfile):
+            return
+        # Prefer safe_read_json for FILE_IO error recording; fallback to read_json_cached if parsing fails.
+        data = safe_read_json(self._pfile, default=None, function_name='adaptive_cb_load')
+        if data is None:
+            try:
                 data = read_json_cached(Path(self._pfile))
-                self._state = CircuitState(data.get("state", "CLOSED"))
-                self._failures = int(data.get("failures", 0))
-                self._opened_at = data.get("opened_at")
-                self._current_timeout = float(data.get("current_timeout", self.cfg.min_reset_timeout))
-                self._recent_errors_ts = list(data.get("recent_errors", []))
+            except Exception:
+                return
+        if not isinstance(data, dict):
+            return
+        try:
+            self._state = CircuitState(data.get("state", "CLOSED"))
+            self._failures = int(data.get("failures", 0))
+            self._opened_at = data.get("opened_at")
+            self._current_timeout = float(data.get("current_timeout", self.cfg.min_reset_timeout))
+            self._recent_errors_ts = list(data.get("recent_errors", []))
         except Exception:
             pass
 

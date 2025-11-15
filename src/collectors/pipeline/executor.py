@@ -471,8 +471,26 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             except Exception:
                                 pass
                         export_path = os.path.join(panels_dir, 'pipeline_errors_summary.json')
-                        with open(export_path, 'w', encoding='utf-8') as fh:
-                            _json2.dump(export, fh, separators=(',',':'))
+                        try:
+                            with open(export_path, 'w', encoding='utf-8') as fh:
+                                _json2.dump(export, fh, separators=(',',':'))
+                        except Exception as e:
+                            # Route panel export write failure
+                            try:
+                                from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
+                                get_error_handler().handle_error(
+                                    e,
+                                    category=ErrorCategory.FILE_IO,
+                                    severity=ErrorSeverity.LOW,
+                                    component='pipeline',
+                                    function_name='execute_phases',
+                                    message='pipeline panel export write failed',
+                                    context={'path': export_path}
+                                )
+                            except Exception:
+                                pass
+                            # Skip further history/trends processing on failure
+                            history_enabled = False
                         # Optional rolling history: write timestamped file and prune, plus index
                         if history_enabled:
                             ts = export['exported_at']
@@ -574,8 +592,25 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                     'phase_errors_total': total_phase_errors,
                                     'phases_total': total_phases,
                                 }
-                                with open(trend_path, 'w', encoding='utf-8') as _tfw:
-                                    _json_tr.dump(trend_doc, _tfw, separators=(',',':'))
+                                try:
+                                    with open(trend_path, 'w', encoding='utf-8') as _tfw:
+                                        _json_tr.dump(trend_doc, _tfw, separators=(',',':'))
+                                except Exception as e_tr:
+                                    try:
+                                        from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
+                                        get_error_handler().handle_error(
+                                            e_tr,
+                                            category=ErrorCategory.FILE_IO,
+                                            severity=ErrorSeverity.LOW,
+                                            component='pipeline',
+                                            function_name='execute_phases',
+                                            message='pipeline trends write failed',
+                                            context={'path': trend_path}
+                                        )
+                                    except Exception:
+                                        pass
+                                    # Abort further trend processing (no loop to continue; just skip)
+                                    pass
                             except Exception:
                                 pass
                     except Exception:

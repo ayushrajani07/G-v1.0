@@ -6,6 +6,7 @@ import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from src.error_handling import safe_write_json  # type: ignore
 
 @dataclass
 class Pick:
@@ -101,8 +102,7 @@ def write_picks(out_dir: Path, picks: list[Pick]):
             for r in rows:
                 w.writerow(r)
     # JSON
-    with (out_dir / "picks.json").open("w", encoding="utf-8") as f:
-        json.dump(rows, f, indent=2)
+    safe_write_json(out_dir / "picks.json", rows, function_name='analyze_summary_picks_write')
 
 
 def main():

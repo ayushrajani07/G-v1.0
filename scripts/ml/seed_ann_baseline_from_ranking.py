@@ -15,6 +15,7 @@ Usage examples:
 """
 from __future__ import annotations
 import argparse, csv, json, sys
+from src.error_handling import safe_read_json, safe_write_json, get_error_handler, ErrorCategory, ErrorSeverity  # type: ignore
 from pathlib import Path
 import datetime
 
@@ -81,7 +82,7 @@ def main():
     if not baseline_path.exists():
         print('[error] baseline not found:', baseline_path)
         sys.exit(2)
-    doc = json.loads(baseline_path.read_text(encoding='utf-8'))
+    doc = safe_read_json(baseline_path, default={}, function_name='seed_ann_baseline_read')
 
     # Normalize to nested structure if flat
     if isinstance(doc, dict) and any(k.startswith('retrieval_') for k in doc.keys()):
@@ -104,7 +105,7 @@ def main():
     backups.mkdir(parents=True, exist_ok=True)
     # Use timezone-aware UTC timestamp for backup filename determinism
     ts = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d_%H%M%S')
-    (backups / f'{ts}_baseline_backup.json').write_text(json.dumps(doc, indent=2), encoding='utf-8')
+    safe_write_json(backups / f'{ts}_baseline_backup.json', doc, function_name='seed_ann_baseline_backup_write')
 
     # Merge and write
     if not isinstance(doc, dict):
@@ -113,9 +114,24 @@ def main():
     new_doc = dict(doc)
     new_doc[ns.index] = branch
     tmp = baseline_path.with_suffix('.tmp')
-    tmp.write_text(json.dumps(new_doc, indent=2), encoding='utf-8')
-    tmp.replace(baseline_path)
-    print(f'[seed] updated baseline for index {ns.index}:', baseline_path)
+    ok = safe_write_json(tmp, new_doc, function_name='seed_ann_baseline_write_tmp')
+    if ok:
+        try:
+            tmp.replace(baseline_path)
+        except Exception as _e:
+            get_error_handler().handle_error(
+                _e,
+                category=ErrorCategory.FILE_IO,
+                severity=ErrorSeverity.LOW,
+                component='seed_ann_baseline_from_ranking',
+                function_name='seed_ann_baseline_atomic_replace',
+                message='baseline_replace_failed',
+                context={'tmp_path': str(tmp), 'baseline_path': str(baseline_path)}
+            )
+        else:
+            print(f'[seed] updated baseline for index {ns.index}:', baseline_path)
+    else:
+        print('[seed] failed to write tmp baseline; abort replace')
 
 if __name__ == '__main__':
     main()

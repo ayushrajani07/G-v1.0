@@ -28,11 +28,11 @@ def test_inventory_csv_and_jsonl(tmp_path):
         assert field in rows[0], f'missing field {field}'
     # JSONL
     jsonl_path = tmp_path / 'inv.jsonl'
-    code, out, err = run([str(SCRIPT), '--dir', str(OUT_DIR), '--out', str(jsonl_path), '--format', 'jsonl', '--filter-source', 'spec'])
+    code, out, err = run([str(SCRIPT), '--dir', str(OUT_DIR), '--out', str(jsonl_path), '--format', 'jsonl', '--filter-source', 'auto'])
     assert code == 0, f'jsonl export failed: {err}'
     lines = jsonl_path.read_text().strip().splitlines()
     assert lines, 'no jsonl lines exported'
     sample = json.loads(lines[0])
     for k in ['slug','title','metric','source','panel_uuid']:
         assert k in sample
-    assert sample['source'] == 'spec', 'filter-source not applied'
+    assert sample['source'] == 'auto', 'filter-source not applied'

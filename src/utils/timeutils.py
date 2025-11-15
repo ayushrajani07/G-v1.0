@@ -66,6 +66,18 @@ def isoformat_z(dt: datetime) -> str:
         return dt.replace(tzinfo=UTC).isoformat().replace('+00:00','Z')
     return dt.astimezone(UTC).isoformat().replace('+00:00','Z')
 
+def utc_now_z() -> str:  # Compatibility shim for legacy callers
+    """Return current UTC time in ISO8601 with 'Z' suffix.
+
+    Restores removed helper used across legacy routes/tests. Prefer using
+    ``isoformat_z(utc_now())`` directly in new code; retain this for
+    backward compatibility and minimal churn in existing modules.
+    """
+    # Delegate strictly through aware helpers (avoid datetime.utcnow fallback).
+    # Tests assert absence of direct naive UTC usage.
+    dt = utc_now()
+    return isoformat_z(dt)
+
 def ensure_utc_helpers() -> tuple[Callable[[], datetime], Callable[[datetime], str]]:
     """Return (utc_now_fn, isoformat_z_fn) always available.
 
@@ -395,7 +407,7 @@ def format_any_to_ist_dt_30s(ts: datetime | float | int | str, strategy: str = '
 
 __all__ = [
     'IST','UTC','MARKET_OPEN','MARKET_CLOSE','PRE_MARKET_START','POST_MARKET_END',
-    'get_ist_now','get_utc_now','utc_now','isoformat_z','ensure_utc_helpers','ist_to_utc','utc_to_ist',
+    'get_ist_now','get_utc_now','utc_now','isoformat_z','utc_now_z','ensure_utc_helpers','ist_to_utc','utc_to_ist',
     'is_market_open','market_hours_check','next_market_open','time_until_market_open','format_ist_time',
     'get_market_session_bounds','compute_weekly_expiry','compute_next_weekly_expiry','compute_monthly_expiry',
     'compute_next_monthly_expiry','round_timestamp','format_rounded_timestamp','round_to_30s_ist','format_ist_hms_30s',

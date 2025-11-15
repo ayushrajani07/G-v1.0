@@ -5,6 +5,14 @@ from collections import OrderedDict
 from datetime import date, datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
+try:
+    from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity, safe_read_csv_rows
+except Exception:  # pragma: no cover
+    get_error_handler = None  # type: ignore
+    ErrorCategory = None  # type: ignore
+    ErrorSeverity = None  # type: ignore
+    def safe_read_csv_rows(path, **kwargs):  # type: ignore
+        return []
 
 from .config import CSV_CACHE_MAX
 
@@ -251,7 +259,23 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
             rows.sort(key=lambda r: _ts_key_val(r.get('ts')))
         except Exception:
             pass
-    except Exception:
+    except Exception as e:
+        # Record error via centralized handler; fallback if handler unavailable
+        try:
+            if get_error_handler and ErrorCategory and ErrorSeverity:
+                get_error_handler().handle_error(
+                    e,
+                    category=ErrorCategory.FILE_IO,
+                    severity=ErrorSeverity.LOW,
+                    component='csv_io',
+                    function_name='load_csv_rows_full',
+                    message='csv read failed',
+                    context={'path': str(path)}
+                )
+            else:
+                safe_read_csv_rows(path)  # will record if handler wired
+        except Exception:
+            pass
         rows = []
     try:
         # evict if needed then cache

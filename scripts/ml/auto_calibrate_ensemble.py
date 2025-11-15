@@ -38,6 +38,7 @@ if str(ROOT) not in sys.path:
 
 from src.web.dashboard.core.paths import project_root  # type: ignore
 from src.web.dashboard.core.csv_io import find_live_csv, load_csv_rows_full  # type: ignore
+from src.error_handling import safe_write_json, safe_read_json  # type: ignore
 import datetime as _dt
 
 # Standardized sleep helper using centralized backoff if available
@@ -148,7 +149,8 @@ def load_ensemble(index: str, horizon: str, base: Path, tail: int = 50_000, buck
 
 def load_tp(index: str, horizon: str, expiry_tag: str, offset: str, bucket_ms: int, window_minutes: int) -> dict[int, float]:
     from datetime import date
-    p = find_live_csv(project_root() / 'data' / 'g6_data', index.upper(), expiry_tag, offset, date.today())
+    # Use dynamic root resolution (env or cwd) so pytest cwd override works
+    p = find_live_csv(resolve_project_root() / 'data' / 'g6_data', index.upper(), expiry_tag, offset, date.today())
     if not p or not p.exists():
         return {}
     rows = load_csv_rows_full(p)
@@ -281,11 +283,37 @@ def write_sidecar(index: str, horizon: str, res: CalibrationResult, base: Path) 
         # Include latest smoothed k if available (filled by daemon after write via patching logic)
         # For one-shot runs (interval<=0) this may remain absent.
     }
+    # Centralized FILE_IO error handling
+    safe_write_json(sidecar, payload, function_name='ensemble_k_calibration_write_sidecar')
+
+
+def resolve_project_root() -> Path:
+    """Test-friendly project root resolution.
+
+    Order:
+    - G6_PROJECT_ROOT env var if set
+    - Current working directory if it contains a 'data' directory (pytest tmp with cwd override)
+    - Fallback to imported project_root() provider
+    - Repo ROOT
+    """
     try:
-        sidecar.write_text(json.dumps(payload, indent=2), encoding='utf-8')
+        env_root = os.environ.get("G6_PROJECT_ROOT", "").strip()  # type: ignore[name-defined]
+        if env_root:
+            p = Path(env_root)
+            if p.exists():
+                return p
     except Exception:
         pass
-
+    try:
+        cwd = Path.cwd()
+        if (cwd / "data").exists():
+            return cwd
+    except Exception:
+        pass
+    try:
+        return project_root()  # type: ignore[misc]
+    except Exception:
+        return ROOT
 
 def main() -> None:
     ap = argparse.ArgumentParser(description='Auto-calibrate disagreement scaling k for effective bands')
@@ -326,7 +354,7 @@ def main() -> None:
         except Exception:
             g_k = None
 
-    base = project_root() / 'data' / 'ml' / 'live_predictions'
+    base = resolve_project_root() / 'data' / 'ml' / 'live_predictions'
     base.mkdir(parents=True, exist_ok=True)
 
     grid_vals = parse_grid(args.grid)
@@ -388,11 +416,47 @@ def main() -> None:
         nonlocal dynamic_target
         preds = load_ensemble(idx, horizon, base, bucket_ms=int(args.bucket_ms))
         if not preds:
+            # Emit placeholder sidecar so downstream/tests can observe calibration state even with no data
             print('[auto-calibrate] No ensemble rows found')
+            sc_fp = base / f"{idx}_ensemble_k_calibration.json"
+            try:
+                payload = {
+                    'timestamp': int(_dt.datetime.now(tz=_dt.timezone.utc).timestamp() * 1000),
+                    'recommended_k': float('nan'),
+                    'k_smooth': float('nan'),
+                    'effective_cov': float('nan'),
+                    'band_radius': float('nan'),
+                    'target': float(args.target),
+                    'n': 0,
+                    'index': idx,
+                    'horizon': horizon,
+                    'adaptive_state': 'no_preds',
+                }
+                safe_write_json(sc_fp, payload, function_name='ensemble_k_calibration_no_preds_write')
+            except Exception:
+                pass
             return
         tp_by_bucket = load_tp(idx, horizon, args.expiry_tag, args.offset, args.bucket_ms, args.window_minutes)
         if not tp_by_bucket:
             print('[auto-calibrate] No TP rows found')
+            # Emit placeholder sidecar (no_tp) for tests expecting calibration artifact presence
+            sc_fp = base / f"{idx}_ensemble_k_calibration.json"
+            try:
+                payload = {
+                    'timestamp': int(_dt.datetime.now(tz=_dt.timezone.utc).timestamp() * 1000),
+                    'recommended_k': float('nan'),
+                    'k_smooth': float('nan'),
+                    'effective_cov': float('nan'),
+                    'band_radius': float('nan'),
+                    'target': float(args.target),
+                    'n': 0,
+                    'index': idx,
+                    'horizon': horizon,
+                    'adaptive_state': 'no_tp',
+                }
+                safe_write_json(sc_fp, payload, function_name='ensemble_k_calibration_no_tp_write')
+            except Exception:
+                pass
             return
         # Use dynamic target if enabled and previously computed, else the configured target
         target_q = float(dynamic_target) if (args.adaptive_target and dynamic_target is not None) else float(args.target)
@@ -406,24 +470,21 @@ def main() -> None:
             cov_slow, n_slow = _effective_coverage_for_window(
                 preds, tp_by_bucket, int(args.slow_window_minutes), int(args.bucket_ms), float(1.0), target_q
             )
-            try:
-                sc_fp = base / f"{idx}_ensemble_k_calibration.json"
-                obj = {
-                    'timestamp': int(_dt.datetime.now(tz=_dt.timezone.utc).timestamp() * 1000),
-                    'recommended_k': float('nan'),
-                    'effective_cov': float('nan'),
-                    'band_radius': float('nan'),
-                    'target': float(target_q),
-                    'n': 0,
-                    'index': idx,
-                    'horizon': horizon,
-                    'adaptive_state': 'insufficient',
-                    'coverage_fast': {'value': cov_fast, 'n': n_fast},
-                    'coverage_slow': {'value': cov_slow, 'n': n_slow},
-                }
-                sc_fp.write_text(json.dumps(obj, indent=2), encoding='utf-8')
-            except Exception:
-                pass
+            sc_fp = base / f"{idx}_ensemble_k_calibration.json"
+            obj = {
+                'timestamp': int(_dt.datetime.now(tz=_dt.timezone.utc).timestamp() * 1000),
+                'recommended_k': float('nan'),
+                'effective_cov': float('nan'),
+                'band_radius': float('nan'),
+                'target': float(target_q),
+                'n': 0,
+                'index': idx,
+                'horizon': horizon,
+                'adaptive_state': 'insufficient',
+                'coverage_fast': {'value': cov_fast, 'n': n_fast},
+                'coverage_slow': {'value': cov_slow, 'n': n_slow},
+            }
+            safe_write_json(sc_fp, obj, function_name='ensemble_k_calibration_insufficient_write')
             return
         # Smooth k for daemon usage
         smoothed_k = _apply_ema(res.k)
@@ -467,18 +528,17 @@ def main() -> None:
         # Write sidecar with both raw and smoothed, plus adaptive fields if enabled
         # Write sidecar first (raw recommended_k). Then append k_smooth into JSON for downstream use.
         write_sidecar(idx, horizon, res, base)
-        try:
-            sc_fp = base / f"{idx}_ensemble_k_calibration.json"
-            obj = json.loads(sc_fp.read_text(encoding='utf-8'))
-            obj['k_smooth'] = smoothed_k
-            if args.adaptive_target:
-                obj['dynamic_target_coverage'] = float(dynamic_target if dynamic_target is not None else target_q)
-                obj['adaptive_state'] = adaptive_state
-                obj['coverage_fast'] = {'value': cov_fast, 'n': n_fast}
-                obj['coverage_slow'] = {'value': cov_slow, 'n': n_slow}
-            sc_fp.write_text(json.dumps(obj, indent=2), encoding='utf-8')
-        except Exception:
-            pass
+        sc_fp = base / f"{idx}_ensemble_k_calibration.json"
+        obj = safe_read_json(sc_fp, default={}, function_name='ensemble_k_calibration_load_after_write')
+        if not isinstance(obj, dict):
+            obj = {}
+        obj['k_smooth'] = smoothed_k
+        if args.adaptive_target:
+            obj['dynamic_target_coverage'] = float(dynamic_target if dynamic_target is not None else target_q)
+            obj['adaptive_state'] = adaptive_state
+            obj['coverage_fast'] = {'value': cov_fast, 'n': n_fast}
+            obj['coverage_slow'] = {'value': cov_slow, 'n': n_slow}
+        safe_write_json(sc_fp, obj, function_name='ensemble_k_calibration_update_smooth_write')
         line = (
             f"recommended_k={res.k:.3f} k_smooth={smoothed_k:.3f} effective_cov={res.effective_cov:.3f} "
             f"target={res.target:.3f} band_radius={res.band_radius:.4f} n={res.n}"

@@ -18,6 +18,7 @@ Outputs a JSON mapping and prints a suggested CLI snippet.
 """
 from __future__ import annotations
 import argparse, csv, json, math
+from src.error_handling import safe_write_json, safe_write_text  # type: ignore
 from pathlib import Path
 
 
@@ -157,13 +158,13 @@ def main():
         }
     out_path = Path(ns.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(suggestion, indent=2), encoding='utf-8')
+    safe_write_json(out_path, suggestion, function_name='ann_auto_tune_suggestion_write')
     print('[auto-tune] suggestion written to', out_path)
     cli_str = f"--ann-max-candidates-per-mode retrieval={suggestion['retrieval']},auto={suggestion['auto']},hybrid={suggestion['hybrid']}"
     print('[auto-tune] per-mode overrides CLI: ' + cli_str)
     if bool(getattr(ns, 'emit_overrides', False)):
         ov_path = out_path.with_suffix('.txt')
-        ov_path.write_text(cli_str + '\n', encoding='utf-8')
+        safe_write_text(ov_path, cli_str + '\n', function_name='ann_auto_tune_overrides_write')
         print('[auto-tune] overrides written to', ov_path)
 
 if __name__ == '__main__':

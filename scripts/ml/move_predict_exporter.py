@@ -35,6 +35,7 @@ if str(ROOT) not in sys.path:
 
 from src.web.dashboard.core.csv_io import find_live_csv, load_csv_rows_full  # type: ignore
 from src.web.dashboard.core.paths import project_root  # type: ignore
+from src.error_handling import safe_write_text, safe_append_line  # type: ignore
 
 CLASSIFIER_NAME = "tp_move_classifier"
 REGRESSOR_NAME = "tp_move_conditional"
@@ -52,7 +53,7 @@ def ensure_out_csv(index: str) -> Path:
     base.mkdir(parents=True, exist_ok=True)
     fp = base / f"{index.upper()}_move.csv"
     if not fp.exists():
-        fp.write_text("timestamp,move_prob,move_label_pred,conditional_magnitude,model,index,horizon\n", encoding="utf-8")
+        safe_write_text(fp, "timestamp,move_prob,move_label_pred,conditional_magnitude,model,index,horizon\n")
     return fp
 
 
@@ -80,6 +81,7 @@ def main() -> None:
     ap.add_argument("--expiry-tag", default="this_week")
     ap.add_argument("--offset", default="0")
     ap.add_argument("--port", type=int, default=None, help="Prometheus metrics port")
+    ap.add_argument("--once", action="store_true", help="Run a single iteration and exit (test helper)")
     args = ap.parse_args()
 
     import json
@@ -131,6 +133,7 @@ def main() -> None:
     # Prepare flat fallback path if nested structure not present (tests may write directly)
     flat_name = f"{idx}_{args.expiry_tag}_{args.offset}.csv"
     candidate = project_root() / "data" / "g6_data" / flat_name
+    iteration_count = 0
     while True:
         try:
             live_fp = find_live_csv(project_root() / "data" / "g6_data", idx, args.expiry_tag, args.offset, date.today())
@@ -170,20 +173,18 @@ def main() -> None:
                     pass
 
             ts_iso = datetime.now(tz=timezone.utc).replace(microsecond=0).isoformat()
-            line = f"{ts_iso},{move_prob:.6f},{move_label_pred},{conditional_mag:.6f},{CLASSIFIER_NAME}+{REGRESSOR_NAME},{idx},{horizon}\n"
-            with out_fp.open("a", encoding="utf-8") as f:
-                f.write(line)
+            line = f"{ts_iso},{move_prob:.6f},{move_label_pred},{conditional_mag:.6f},{CLASSIFIER_NAME}+{REGRESSOR_NAME},{idx},{horizon}"
+            safe_append_line(out_fp, line)
             # Daily snapshot persistence for historical trend analysis
             try:
                 day_str = _dt.datetime.now(tz=_dt.timezone.utc).strftime("%Y-%m-%d")
                 snap_fp = snap_dir / f"{idx}_move_{day_str}.csv"
                 if not snap_fp.exists():
-                    snap_fp.write_text(
+                    safe_write_text(
+                        snap_fp,
                         "timestamp,move_prob,move_label_pred,conditional_magnitude,model,index,horizon\n",
-                        encoding="utf-8",
                     )
-                with snap_fp.open("a", encoding="utf-8") as sf:
-                    sf.write(line)
+                safe_append_line(snap_fp, line)
             except Exception:
                 pass
             # Apply flat fallback path after main write loop logic (if nested path missing)
@@ -197,6 +198,9 @@ def main() -> None:
                         g_mag.labels(index=idx, horizon=horizon, model=REGRESSOR_NAME).set(conditional_mag)
                 except Exception:
                     pass
+            iteration_count += 1
+            if args.once:
+                break
         except KeyboardInterrupt:
             break
         except Exception as e:

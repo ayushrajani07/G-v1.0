@@ -25,6 +25,12 @@ Additional keys observed in code (not in primary schema but allowed):
 - `kite.instrument_ttl_hours`
 - `kite.max_retries`
 - `kite.rate_limit_per_sec`
+- `kite.pool_size`  
+- `kite.keepalive`  
+- `kite.timeout`  
+- `pool_size`  
+- `keepalive`  
+- `timeout`  
 - `max_strike_deviation_pct`
 - `max_zero_volume_ratio`
 - `min_required_strikes`

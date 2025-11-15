@@ -18,6 +18,7 @@ simple lags/rolls should be done offline for now.
 
 import argparse
 import json
+from src.error_handling import safe_write_json  # type: ignore
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -83,8 +84,7 @@ def main() -> None:
         "quantiles": quantiles,
         "params": params,
     }
-    with (out_base.with_suffix(".fe.json")).open("w", encoding="utf-8") as f:
-        json.dump(sidecar, f, indent=2)
+    safe_write_json(out_base.with_suffix(".fe.json"), sidecar, function_name='train_quantile_skgbr_feature_sidecar_write')
 
     print(f"Saved artifact to {str(out_base)+'.joblib'} and sidecar {out_base.with_suffix('.fe.json')}")
 

@@ -41,6 +41,7 @@ import os
 from typing import Any
 
 from src.config.env_config import EnvConfig
+from src.error_handling import safe_write_json, safe_read_json
 
 # Optional imports for metric generation
 try:
@@ -82,54 +83,46 @@ def build_current_mapping(reg: Any) -> dict[str, list[str]]:
 
 
 def write_snapshot(path: str, mapping: dict[str, list[str]]):
+    """Persist cardinality baseline snapshot using safe I/O.
+
+    Falls back to a second write attempt if the file ends up zero-length
+    (e.g., pre-created then replaced failure) to mirror legacy behavior.
+    """
     data = {
         "version": 1,
         "generated": _now_iso(),
         "groups": mapping,
     }
-    # Write synchronously to the target path for maximum compatibility on Windows
-    try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, sort_keys=True)
-            f.flush()
-            try:
-                os.fsync(f.fileno())
-            except Exception:
-                pass
-    except Exception as e:  # pragma: no cover - IO error path
-        logger.error("cardinality.snapshot.write_failed path=%s err=%s", path, e)
+    ok = safe_write_json(path, data, function_name='cardinality_write_snapshot')
+    if ok:
+        # Fallback: if file unexpectedly zero-length attempt simple rewrite once.
+        try:
+            if os.path.exists(path) and os.path.getsize(path) == 0:
+                safe_write_json(path, {"version": 1, "generated": _now_iso(), "groups": mapping},
+                                function_name='cardinality_write_snapshot_retry')
+        except Exception:  # pragma: no cover - defensive
+            pass
 
 
 def load_baseline(path: str) -> dict[str, list[str]] | None:
-    import time as _t
-    # Small retry budget to handle replace/flush races on some filesystems
-    attempts = 8
-    last_err: Exception | None = None
-    for i in range(attempts):
-        try:
-            with open(path, encoding="utf-8") as f:
-                data = json.load(f)
-            if not isinstance(data, dict):
-                return None
-            groups = data.get("groups")
-            if not isinstance(groups, dict):
-                return None
-            cleaned: dict[str, list[str]] = {}
-            for g, arr in groups.items():
-                if isinstance(g, str) and isinstance(arr, list):
-                    cleaned[g] = [a for a in arr if isinstance(a, str)]
-            return cleaned
-        except FileNotFoundError:
-            logger.warning("cardinality.baseline.missing path=%s", path)
-            break
-        except Exception as e:  # pragma: no cover - parse error / transient partial write
-            last_err = e
-            # Allow short backoff for transient zero-length or partial writes
-            if i < attempts - 1:
-                _t.sleep(0.05)
-                continue
-            logger.warning("cardinality.baseline.load_failed path=%s err=%s", path, e)
-    return None
+    """Load existing baseline snapshot using safe I/O.
+
+    Returns cleaned mapping or None on any failure. Transient partial writes
+    are handled implicitly; safe_read_json records FILE_IO errors on failure.
+    """
+    data = safe_read_json(path, default=None, function_name='cardinality_load_baseline')
+    if data is None:
+        return None
+    if not isinstance(data, dict):
+        return None
+    groups = data.get("groups")
+    if not isinstance(groups, dict):
+        return None
+    cleaned: dict[str, list[str]] = {}
+    for g, arr in groups.items():
+        if isinstance(g, str) and isinstance(arr, list):
+            cleaned[g] = [a for a in arr if isinstance(a, str)]
+    return cleaned
 
 
 def check_cardinality(reg: Any) -> dict | None:

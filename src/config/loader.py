@@ -29,6 +29,7 @@ from src.config.env_config import EnvConfig
 
 from .config_wrapper import ConfigWrapper  # canonical wrapper for normalized access
 from .validation import ConfigValidationError, validate_config_file
+from src.error_handling import safe_write_json
 
 
 class ConfigError(ConfigValidationError):  # backward compatibility alias
@@ -95,12 +96,9 @@ def create_default_config() -> dict[str, Any]:
 
 
 def _emit_normalized(cfg: dict[str, Any]) -> None:
-    try:
-        NORMALIZED_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with NORMALIZED_PATH.open('w', encoding='utf-8') as fh:
-            json.dump(cfg, fh, indent=2, sort_keys=True)
-    except Exception:  # pragma: no cover - best effort
-        logger.warning("Failed to write normalized config", exc_info=True)
+    # Best-effort emission using centralized safe wrapper.
+    if not safe_write_json(NORMALIZED_PATH, cfg):  # pragma: no cover - failure path logged centrally
+        logger.warning("Failed to write normalized config (safe_write_json returned False)")
 
 
 def _increment_deprecated_metrics(cfg: dict[str, Any], metrics: Any) -> None:
@@ -169,13 +167,11 @@ def load_and_validate_config(path: str | os.PathLike[str], *, metrics: Any = Non
                 return default_config
             
             # Write default config file
-            try:
-                with path_obj.open('w', encoding='utf-8') as f:
-                    json.dump(default_config, f, indent=2)
+            # Write default config file via safe wrapper
+            if safe_write_json(path_obj, default_config):
                 logger.info("Created default configuration at %s", path)
-            except Exception as e:
-                logger.error("Failed to write default config: %s", e)
-                # Return default even if write fails
+            else:  # pragma: no cover - failure logged centrally
+                logger.error("Failed to write default config (safe_write_json returned False)")
                 return default_config
             
             return default_config

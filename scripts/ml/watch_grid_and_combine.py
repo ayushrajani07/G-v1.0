@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 import os
+from src.error_handling import safe_write_text, safe_append_line
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS = ROOT / "results" / "grid"
@@ -64,8 +65,9 @@ def has_valid_metrics(rows: list[dict]) -> bool:
 def log(msg: str):
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ts = datetime.now().isoformat(timespec="seconds")  # local-ok
-    with LOG.open("a", encoding="utf-8") as f:
-        f.write(f"[{ts}] {msg}\n")
+    if not LOG.exists():
+        safe_write_text(LOG, "")
+    safe_append_line(LOG, f"[{ts}] {msg}")
 
 
 def main():
@@ -91,8 +93,7 @@ def main():
     except Exception:
         pass
     try:
-        with LOCK.open("w", encoding="utf-8") as f:
-            f.write(f"{os.getpid()}\n{datetime.now().isoformat(timespec='seconds')}\n")  # local-ok
+        safe_write_text(LOCK, f"{os.getpid()}\n{datetime.now().isoformat(timespec='seconds')}\n")  # local-ok
     except Exception:
         pass
 
@@ -119,8 +120,7 @@ def main():
             try:
                 subprocess.run(cmd, cwd=str(ROOT), check=True)
                 OUT_DIR.mkdir(parents=True, exist_ok=True)
-                with DONE.open("w", encoding="utf-8") as f:
-                    f.write(datetime.now().isoformat(timespec="seconds"))  # local-ok
+                safe_write_text(DONE, datetime.now().isoformat(timespec="seconds"))  # local-ok
                 log("combiner completed; status done written")
             except Exception as e:
                 log(f"combiner failed: {e}")

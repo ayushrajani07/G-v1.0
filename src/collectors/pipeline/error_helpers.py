@@ -73,17 +73,48 @@ def add_phase_error(state: ExpiryState, phase: str, classification: str, message
                     extra['trace'] = exc_tb[-800:]
                 except Exception:
                     pass
-        # Basic structured record
-        rec = PhaseErrorRecord(
-            phase=phase,
-            classification=classification,
-            message=redacted_message,
-            detail=detail,
-            attempt=attempt,
-            outcome_token=built,
-            extra=extra,
-        )
-        state.error_records.append(rec)
+        # Basic structured record (dedup: avoid multiple entries for same phase+classification+message)
+        try:
+            for existing in state.error_records:
+                if (
+                    existing.phase == phase and
+                    existing.classification == classification and
+                    existing.message == redacted_message
+                ):
+                    # Update attempt to highest seen; keep earliest record only
+                    try:
+                        if attempt > existing.attempt:
+                            existing.attempt = attempt  # type: ignore[attr-defined]
+                    except Exception:
+                        pass
+                    rec = None  # signal skip append
+                    break
+            else:
+                rec = PhaseErrorRecord(
+                    phase=phase,
+                    classification=classification,
+                    message=redacted_message,
+                    detail=detail,
+                    attempt=attempt,
+                    outcome_token=built,
+                    extra=extra,
+                )
+                state.error_records.append(rec)
+        except Exception:
+            # Fallback without dedup if inspection failed
+            try:
+                rec = PhaseErrorRecord(
+                    phase=phase,
+                    classification=classification,
+                    message=redacted_message,
+                    detail=detail,
+                    attempt=attempt,
+                    outcome_token=built,
+                    extra=extra,
+                )
+                state.error_records.append(rec)
+            except Exception:
+                pass
         # Conditional metrics increment
         if EnvConfig.get_bool('G6_PIPELINE_STRUCT_ERROR_METRIC', False) and get_metrics is not None:
             try:

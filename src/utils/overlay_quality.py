@@ -11,6 +11,11 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 from src.utils.csv_cache import read_json_cached
+from src.error_handling import (
+    get_error_handler,
+    ErrorCategory,
+    ErrorSeverity,
+)
 
 
 def validate_csv_header(path: Path | str, required_columns: Sequence[str]) -> tuple[bool, Sequence[str]]:
@@ -103,5 +108,21 @@ def write_quality_report(
 
     payload.setdefault("runs", []).append(run_summary)
 
-    report_path.write_text(json.dumps(payload, indent=2), encoding='utf-8')
+    try:
+        report_path.write_text(json.dumps(payload, indent=2), encoding='utf-8')
+    except Exception as e:
+        # Route write failure instead of surfacing raw OSError; test expects FILE_IO LOW record
+        try:
+            get_error_handler().handle_error(
+                e,
+                category=ErrorCategory.FILE_IO,
+                severity=ErrorSeverity.LOW,
+                component='overlay_quality',
+                function_name='write_quality_report',
+                message='overlay quality write failed',
+                context={'path': str(report_path)}
+            )
+        except Exception:
+            # Defensive: never propagate secondary errors
+            pass
     return report_path

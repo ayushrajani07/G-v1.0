@@ -37,6 +37,7 @@ if str(ROOT) not in sys.path:
 from src.analytics.ml.baseline import baseline_tp  # type: ignore
 from src.web.dashboard.core.csv_io import find_live_csv, load_csv_rows_full  # type: ignore
 from src.web.dashboard.core.paths import project_root  # type: ignore
+from src.error_handling import safe_write_text, safe_append_line  # type: ignore
 
 MODEL_NAME = "sk_hgb_residual"
 
@@ -71,7 +72,7 @@ def ensure_pred_csv(index: str) -> Path:
     base.mkdir(parents=True, exist_ok=True)
     fp = base / f"{index.upper()}_hybrid.csv"
     if not fp.exists():
-        fp.write_text("timestamp,prediction,baseline,residual,model,index,horizon\n", encoding="utf-8")
+        safe_write_text(fp, "timestamp,prediction,baseline,residual,model,index,horizon\n")
     return fp
 
 
@@ -87,13 +88,11 @@ def append_prediction(fp: Path, ts_iso: str, pred: float, baseline: float, resid
         _csvio_api.append_one(str(fp), row, header)
     except Exception as e:  # pragma: no cover - facade failure path
         try:
-            line = f"{ts_iso},{pred},{baseline},{residual},{MODEL_NAME},{index},{horizon}\n"
-            with fp.open("a", encoding="utf-8") as f:
-                f.write(line)
+            line = f"{ts_iso},{pred},{baseline},{residual},{MODEL_NAME},{index},{horizon}"
+            safe_append_line(fp, line)
+            logger.debug("hybrid prediction append via fallback", extra={"error": str(e), "path": str(fp)})
         except Exception as fe:  # pragma: no cover - rare file append failure
             logger.debug("hybrid prediction append fallback failed", extra={"error": str(fe), "path": str(fp)})
-        else:
-            logger.debug("hybrid prediction append via fallback", extra={"error": str(e), "path": str(fp)})
 
 
 def main() -> None:

@@ -105,3 +105,35 @@ python scripts/run_orchestrator_loop.py --cycles 1
 
 ---
 Maintainers: Update this file when introducing new G6_* flags affecting human log surface area.
+
+## I/O & Storage Performance Flags
+
+- G6_CSVIO_WRITER_THREAD
+  Enable the asynchronous CSV writer thread with micro-batching. When active, individual row appends are queued and flushed in batches either when `G6_CSVIO_BATCH` is reached or the `G6_CSVIO_FLUSH_MS` interval elapses. Reduces per-append open/fsync overhead and smooths write latency spikes. Automatically defaults to enabled (1) when the CSVIO facade is in use; can be disabled by setting to 0/false. Safe to toggle at process start; do not disable mid-session.
+
+- G6_CSVIO_FLUSH_MS
+  Flush interval in milliseconds for the writer thread. Pending batches are written when this duration passes since last flush. Default: 500.
+
+- G6_CSVIO_BATCH
+  Maximum accumulated rows per file before forcing an immediate flush regardless of time window. Default: 2000.
+
+- G6_PARQUET_PILOT
+  Enable the Parquet pilot sink for columnar storage (write + optional periodic CSV export). When set (1/true/on) option chain snapshots are written as partitioned Parquet (date/index/expiry) providing improved write throughput and disk compression. Default: 0 (disabled). Requires `pyarrow` installed. Recommended to evaluate in isolated runs before enabling broadly.
+
+- G6_PARQUET_INDEX / G6_PARQUET_PARTITION_BY / G6_PARQUET_COMPRESSION / G6_PARQUET_CSV_EXPORT_INTERVAL
+  Tuning knobs for the Parquet pilot: target index symbol (default NIFTY), partition column list (default `date,index,expiry`), compression codec (default `snappy`), and periodic CSV export interval in seconds (default 3600). Only honored when `G6_PARQUET_PILOT=1`.
+  See `scripts/dev/check_parquet_pilot.py` for a readiness/health check script.
+
+## Ensemble Calibration & Disagreement Flags
+
+- G6_USE_RAW_K
+  Force use of the raw `recommended_k` from calibration sidecar instead of the smoothed `k_smooth` value when computing applied disagreement radius. Truthy values (1/true/on) bypass smoothing logic; falsy (unset/0/false) uses `k_smooth` when present. Falls back to raw when smoothing absent. Useful for A/B comparisons or during initial calibration windows when smoothing may lag rapid regime shifts.
+  Detailed calibration & governance reference: `CALIBRATION_K_GUIDE.md`.
+
+### Interaction Notes (New Sections)
+
+1. When both writer thread and Parquet pilot are enabled the CSV writer thread still services legacy CSV sinks; Parquet writes are independent and not batched by the thread.
+2. Disabling `G6_CSVIO_WRITER_THREAD` reverts to immediate synchronous appends; expect higher variance in per-write latency under heavy emission.
+3. `G6_USE_RAW_K` only influences consensus exporter applied K when no manual override is active; overrides always take precedence until removed or auto-reverted.
+4. Parquet pilot does not retro-migrate existing CSV archives; enable early in the session to capture a full trading day.
+

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from src.error_handling import safe_write_json  # type: ignore
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -109,11 +110,7 @@ def main() -> None:
     joblib.dump(artifact, out_path)
     # Feature sidecar
     fe_out = Path(args.artifact).with_suffix(".fe.json")
-    try:
-        with fe_out.open("w", encoding="utf-8") as f:
-            json.dump({"features": features, "baseline": base_cfg}, f, indent=2)
-    except Exception:
-        pass
+    safe_write_json(fe_out, {"features": features, "baseline": base_cfg}, function_name='train_hybrid_residual_feature_sidecar_write')
 
 
 if __name__ == "__main__":

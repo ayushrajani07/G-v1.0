@@ -28,6 +28,7 @@ if str(ROOT) not in sys.path:
 from src.analytics.ml.kalman import Kalman1D  # type: ignore
 from src.web.dashboard.core.csv_io import find_live_csv, load_csv_rows_full  # type: ignore
 from src.web.dashboard.core.paths import project_root  # type: ignore
+from src.error_handling import safe_write_text, safe_append_line  # type: ignore
 
 MODEL_NAME = "kalman_smooth"
 
@@ -38,7 +39,7 @@ def ensure_out_csv(index: str) -> Path:
     fp = base / f"{index.upper()}_smooth.csv"
     if not fp.exists():
         # Include shock_score column (may start blank) for downstream dashboards
-        fp.write_text("timestamp,prediction,raw_tp,shock_score,model,index,horizon\n", encoding="utf-8")
+        safe_write_text(fp, "timestamp,prediction,raw_tp,shock_score,model,index,horizon\n")
     return fp
 
 
@@ -114,8 +115,7 @@ def main() -> None:
                         shock_score = abs(resid) / std_r
                 ts_iso = datetime.now(tz=timezone.utc).replace(microsecond=0).isoformat()
                 line = f"{ts_iso},{smooth:.6f},{tp_val:.6f},{(shock_score if shock_score == shock_score else float('nan')):.6f},{MODEL_NAME},{idx},{horizon}\n"
-                with out_fp.open("a", encoding="utf-8") as f:
-                    f.write(line)
+                safe_append_line(out_fp, line.rstrip("\n"))
                 if METRICS_ENABLED:
                     try:
                         if g_smooth is not None:

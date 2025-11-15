@@ -634,6 +634,117 @@ def handle_data_collection_error(
         component=component, context=collection_context
     )
 
+# ----------------------- Safe File I/O Convenience Wrappers -----------------------
+def safe_write_text(path: str | Path, content: str, *, category: ErrorCategory = ErrorCategory.FILE_IO,
+                    severity: ErrorSeverity = ErrorSeverity.LOW,
+                    component: str = 'file_io', function_name: str = 'safe_write_text') -> bool:
+    """Write text to file with centralized error handling.
+
+    Returns True on success, False on failure.
+    """
+    fp = Path(path)
+    try:
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        fp.write_text(content, encoding='utf-8')
+        return True
+    except Exception as e:  # pragma: no cover - defensive
+        get_error_handler().handle_error(
+            e, category=category, severity=severity, component=component,
+            function_name=function_name, message='write_text_failed',
+            context={'path': str(fp), 'size': len(content)}
+        )
+        return False
+
+def safe_append_line(path: str | Path, line: str, *, category: ErrorCategory = ErrorCategory.FILE_IO,
+                     severity: ErrorSeverity = ErrorSeverity.LOW,
+                     component: str = 'file_io', function_name: str = 'safe_append_line') -> bool:
+    """Append single line (with trailing newline) to file safely."""
+    fp = Path(path)
+    try:
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        with fp.open('a', encoding='utf-8') as f:
+            if not line.endswith('\n'):
+                line = line + '\n'
+            f.write(line)
+        return True
+    except Exception as e:  # pragma: no cover
+        get_error_handler().handle_error(
+            e, category=category, severity=severity, component=component,
+            function_name=function_name, message='append_line_failed',
+            context={'path': str(fp), 'line_prefix': line[:64]}
+        )
+        return False
+
+def safe_read_json(path: str | Path, *, default: Any = None, category: ErrorCategory = ErrorCategory.FILE_IO,
+                   severity: ErrorSeverity = ErrorSeverity.LOW,
+                   component: str = 'file_io', function_name: str = 'safe_read_json') -> Any:
+    """Read JSON file returning parsed object or default on failure."""
+    fp = Path(path)
+    try:
+        import json as _json
+        return _json.loads(fp.read_text(encoding='utf-8'))
+    except Exception as e:  # pragma: no cover
+        get_error_handler().handle_error(
+            e, category=category, severity=severity, component=component,
+            function_name=function_name, message='read_json_failed',
+            context={'path': str(fp)}
+        )
+        return default
+
+def safe_write_json(path: str | Path, data: Any, *, indent: int = 2, sort_keys: bool = True,
+                    category: ErrorCategory = ErrorCategory.FILE_IO,
+                    severity: ErrorSeverity = ErrorSeverity.LOW,
+                    component: str = 'file_io', function_name: str = 'safe_write_json') -> bool:
+    """Serialize object to JSON and write via safe_write_text.
+
+    Returns True on success, False on failure.
+    """
+    try:
+        import json as _json
+        text = _json.dumps(data, indent=indent, sort_keys=sort_keys)
+    except Exception as e:  # pragma: no cover - serialization failure
+        get_error_handler().handle_error(
+            e, category=category, severity=severity, component=component,
+            function_name=function_name, message='json_serialize_failed',
+            context={'type': type(data).__name__}
+        )
+        return False
+    return safe_write_text(path, text, category=category, severity=severity,
+                           component=component, function_name=function_name)
+
+def safe_read_csv_rows(path: str | Path, *,
+                       category: ErrorCategory = ErrorCategory.FILE_IO,
+                       severity: ErrorSeverity = ErrorSeverity.LOW,
+                       component: str = 'file_io',
+                       function_name: str = 'safe_read_csv_rows') -> list[dict[str, Any]]:
+    """Minimal CSV DictReader wrapper that records FILE_IO errors on failure.
+
+    Returns list of dict rows or empty list if any exception occurs.
+    """
+    fp = Path(path)
+    rows: list[dict[str, Any]] = []
+    try:
+        import csv as _csv
+        with fp.open('r', newline='', encoding='utf-8') as f:
+            reader = _csv.DictReader(f)
+            for r in reader:
+                try:
+                    rows.append(dict(r))
+                except Exception:
+                    rows.append({})
+    except Exception as e:  # pragma: no cover
+        get_error_handler().handle_error(
+            e,
+            category=category,
+            severity=severity,
+            component=component,
+            function_name=function_name,
+            message='read_csv_failed',
+            context={'path': str(fp)}
+        )
+        return []
+    return rows
+
 
 if __name__ == "__main__":
     # Example usage and testing

@@ -1,0 +1,2342 @@
+{
+  "summary": {
+    "total_matches": 388,
+    "by_pattern": {
+      "open_write": 126,
+      "json_load": 74,
+      "path_open_write": 29,
+      "json_dump": 71,
+      "path_write_text": 88
+    }
+  },
+  "matches": [
+    {
+      "file": "src\\direct_collect.py",
+      "line": 237,
+      "pattern": "open_write",
+      "code": "with open(sentinel, \"w\") as fh:"
+    },
+    {
+      "file": "src\\analytics\\risk_agg.py",
+      "line": 520,
+      "pattern": "open_write",
+      "code": "with open(path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\analytics\\vol_surface.py",
+      "line": 427,
+      "pattern": "open_write",
+      "code": "with open(path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\broker\\kite_instruments.py",
+      "line": 21,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "src\\collectors\\parallel_collector.py",
+      "line": 105,
+      "pattern": "open_write",
+      "code": "with open(placeholder, 'w', newline='') as f:"
+    },
+    {
+      "file": "src\\collectors\\parallel_collector.py",
+      "line": 402,
+      "pattern": "open_write",
+      "code": "with open(placeholder, 'w', newline='') as f:"
+    },
+    {
+      "file": "src\\config\\loader.py",
+      "line": 100,
+      "pattern": "open_write",
+      "code": "with NORMALIZED_PATH.open('w', encoding='utf-8') as fh:"
+    },
+    {
+      "file": "src\\config\\loader.py",
+      "line": 100,
+      "pattern": "path_open_write",
+      "code": "with NORMALIZED_PATH.open('w', encoding='utf-8') as fh:"
+    },
+    {
+      "file": "src\\config\\loader.py",
+      "line": 101,
+      "pattern": "json_dump",
+      "code": "json.dump(cfg, fh, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "src\\config\\loader.py",
+      "line": 173,
+      "pattern": "open_write",
+      "code": "with path_obj.open('w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\config\\loader.py",
+      "line": 173,
+      "pattern": "path_open_write",
+      "code": "with path_obj.open('w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\config\\loader.py",
+      "line": 174,
+      "pattern": "json_dump",
+      "code": "json.dump(default_config, f, indent=2)"
+    },
+    {
+      "file": "src\\config\\loader.py",
+      "line": 202,
+      "pattern": "json_load",
+      "code": "raw = json.load(fh)"
+    },
+    {
+      "file": "src\\config\\loader.py",
+      "line": 226,
+      "pattern": "json_load",
+      "code": "raw2 = json.load(fh)"
+    },
+    {
+      "file": "src\\config\\validation.py",
+      "line": 69,
+      "pattern": "path_write_text",
+      "code": "SCHEMA_PATH.write_text(json.dumps(minimal, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "src\\config\\validation.py",
+      "line": 74,
+      "pattern": "json_load",
+      "code": "return json.load(fh)"
+    },
+    {
+      "file": "src\\config\\validation.py",
+      "line": 184,
+      "pattern": "json_load",
+      "code": "cfg = json.load(fh)"
+    },
+    {
+      "file": "src\\console\\terminal.py",
+      "line": 38,
+      "pattern": "json_load",
+      "code": "raw = json.load(f)"
+    },
+    {
+      "file": "src\\console\\terminal.py",
+      "line": 72,
+      "pattern": "json_load",
+      "code": "self.status_snapshot = json.load(f)"
+    },
+    {
+      "file": "src\\console\\ws_service.py",
+      "line": 92,
+      "pattern": "json_load",
+      "code": "payload = json.load(f)"
+    },
+    {
+      "file": "src\\console\\ws_service.py",
+      "line": 112,
+      "pattern": "json_load",
+      "code": "payload = json.load(f)"
+    },
+    {
+      "file": "src\\data_access\\unified_source.py",
+      "line": 229,
+      "pattern": "json_load",
+      "code": "obj = json.load(f)"
+    },
+    {
+      "file": "src\\data_access\\unified_source.py",
+      "line": 248,
+      "pattern": "json_load",
+      "code": "obj = json.load(f)"
+    },
+    {
+      "file": "src\\data_access\\unified_source.py",
+      "line": 271,
+      "pattern": "json_load",
+      "code": "obj = json.load(f)"
+    },
+    {
+      "file": "src\\events\\event_log.py",
+      "line": 140,
+      "pattern": "open_write",
+      "code": "with open(path, \"a\", encoding=\"utf-8\") as fh:"
+    },
+    {
+      "file": "src\\health\\monitor.py",
+      "line": 258,
+      "pattern": "open_write",
+      "code": "with open(health_file, 'w') as f:"
+    },
+    {
+      "file": "src\\health\\monitor.py",
+      "line": 259,
+      "pattern": "json_dump",
+      "code": "json.dump(status, f, indent=2)"
+    },
+    {
+      "file": "src\\metrics\\cardinality_guard.py",
+      "line": 92,
+      "pattern": "open_write",
+      "code": "with open(path, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "src\\metrics\\cardinality_guard.py",
+      "line": 93,
+      "pattern": "json_dump",
+      "code": "json.dump(data, f, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "src\\metrics\\cardinality_guard.py",
+      "line": 111,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "src\\metrics\\cardinality_guard.py",
+      "line": 174,
+      "pattern": "open_write",
+      "code": "with open(snap_path, 'w', encoding='utf-8') as _fw:"
+    },
+    {
+      "file": "src\\metrics\\cardinality_guard.py",
+      "line": 175,
+      "pattern": "json_dump",
+      "code": "json.dump({\"version\":1, \"generated\": _now_iso(), \"groups\": mapping}, _fw, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "src\\metrics\\introspection_dump.py",
+      "line": 84,
+      "pattern": "open_write",
+      "code": "with open(out_path, \"w\", encoding=\"utf-8\") as fh:  # pragma: no cover"
+    },
+    {
+      "file": "src\\metrics\\introspection_dump.py",
+      "line": 85,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, fh, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "src\\metrics\\introspection_dump.py",
+      "line": 135,
+      "pattern": "open_write",
+      "code": "with open(out_path, \"w\", encoding=\"utf-8\") as fh:  # pragma: no cover"
+    },
+    {
+      "file": "src\\metrics\\introspection_dump.py",
+      "line": 136,
+      "pattern": "json_dump",
+      "code": "json.dump(tdump, fh, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "src\\metrics\\__init__.py",
+      "line": 142,
+      "pattern": "path_write_text",
+      "code": "_spec.write_text("
+    },
+    {
+      "file": "src\\metrics\\__init__.py",
+      "line": 148,
+      "pattern": "path_write_text",
+      "code": "_env.write_text("
+    },
+    {
+      "file": "src\\metrics\\__init__.py",
+      "line": 154,
+      "pattern": "path_write_text",
+      "code": "_depr.write_text("
+    },
+    {
+      "file": "src\\orchestrator\\catalog.py",
+      "line": 141,
+      "pattern": "json_load",
+      "code": "status = json.load(fh)"
+    },
+    {
+      "file": "src\\orchestrator\\catalog.py",
+      "line": 281,
+      "pattern": "open_write",
+      "code": "with open(tmp, 'w', encoding='utf-8') as fh:"
+    },
+    {
+      "file": "src\\orchestrator\\catalog.py",
+      "line": 282,
+      "pattern": "json_dump",
+      "code": "json.dump(cat, fh, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "src\\orchestrator\\cycle.py",
+      "line": 770,
+      "pattern": "open_write",
+      "code": "with open(out_path,'w',encoding='utf-8') as _f:"
+    },
+    {
+      "file": "src\\orchestrator\\cycle.py",
+      "line": 771,
+      "pattern": "json_dump",
+      "code": "json.dump(parsed, _f)"
+    },
+    {
+      "file": "src\\orchestrator\\cycle.py",
+      "line": 780,
+      "pattern": "json_load",
+      "code": "_data = json.load(_f)"
+    },
+    {
+      "file": "src\\orchestrator\\cycle.py",
+      "line": 783,
+      "pattern": "open_write",
+      "code": "with open(out_path,'w',encoding='utf-8') as _f:"
+    },
+    {
+      "file": "src\\orchestrator\\cycle.py",
+      "line": 784,
+      "pattern": "json_dump",
+      "code": "json.dump(_data, _f)"
+    },
+    {
+      "file": "src\\orchestrator\\panel_diffs.py",
+      "line": 110,
+      "pattern": "json_dump",
+      "code": "json.dump(full_payload, f)"
+    },
+    {
+      "file": "src\\orchestrator\\panel_diffs.py",
+      "line": 215,
+      "pattern": "open_write",
+      "code": "with open(diff_path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\orchestrator\\panel_diffs.py",
+      "line": 216,
+      "pattern": "json_dump",
+      "code": "json.dump(diff_payload, f)"
+    },
+    {
+      "file": "src\\orchestrator\\panel_diffs.py",
+      "line": 253,
+      "pattern": "open_write",
+      "code": "with open(full_path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\orchestrator\\panel_diffs.py",
+      "line": 254,
+      "pattern": "json_dump",
+      "code": "json.dump(full_payload, f)"
+    },
+    {
+      "file": "src\\orchestrator\\parity_harness.py",
+      "line": 171,
+      "pattern": "open_write",
+      "code": "with open(path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\orchestrator\\parity_harness.py",
+      "line": 172,
+      "pattern": "json_dump",
+      "code": "json.dump(data, f, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "src\\orchestrator\\startup_sequence.py",
+      "line": 60,
+      "pattern": "open_write",
+      "code": "with open(test_file, 'w') as f:"
+    },
+    {
+      "file": "src\\orchestrator\\status_writer.py",
+      "line": 417,
+      "pattern": "open_write",
+      "code": "with open(tmp_path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\orchestrator\\status_writer.py",
+      "line": 418,
+      "pattern": "json_dump",
+      "code": "json.dump(status, f)"
+    },
+    {
+      "file": "src\\orchestrator\\status_writer.py",
+      "line": 432,
+      "pattern": "open_write",
+      "code": "with open(path + '.marker', 'w', encoding='utf-8') as _mf:"
+    },
+    {
+      "file": "src\\panels\\validate.py",
+      "line": 41,
+      "pattern": "json_load",
+      "code": "schemas[name] = json.load(f)"
+    },
+    {
+      "file": "src\\panels\\validate.py",
+      "line": 57,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "src\\panels\\validate.py",
+      "line": 99,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "src\\panels\\validate.py",
+      "line": 119,
+      "pattern": "json_load",
+      "code": "mf = json.load(f)"
+    },
+    {
+      "file": "src\\panels\\validate.py",
+      "line": 178,
+      "pattern": "json_load",
+      "code": "manifest = json.load(f)"
+    },
+    {
+      "file": "src\\panels\\validate.py",
+      "line": 192,
+      "pattern": "json_load",
+      "code": "obj = json.load(pf)"
+    },
+    {
+      "file": "src\\path_forecast\\archive.py",
+      "line": 59,
+      "pattern": "open_write",
+      "code": "with fpath.open(\"a\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "src\\path_forecast\\archive.py",
+      "line": 59,
+      "pattern": "path_open_write",
+      "code": "with fpath.open(\"a\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "src\\path_forecast\\archive.py",
+      "line": 144,
+      "pattern": "open_write",
+      "code": "with fpath.open(\"a\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "src\\path_forecast\\archive.py",
+      "line": 144,
+      "pattern": "path_open_write",
+      "code": "with fpath.open(\"a\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "src\\services\\calibration.py",
+      "line": 30,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "src\\storage\\csv_aggregator.py",
+      "line": 211,
+      "pattern": "open_write",
+      "code": "with open(overview_file, 'a' if file_exists else 'w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_batcher.py",
+      "line": 261,
+      "pattern": "open_write",
+      "code": "with open(filepath, 'a', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_expiry.py",
+      "line": 214,
+      "pattern": "json_load",
+      "code": "self._config_cache = json.load(_cf)"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 348,
+      "pattern": "json_load",
+      "code": "self._config_cache = json.load(_cf)"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 600,
+      "pattern": "open_write",
+      "code": "with open(debug_file, 'w') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 601,
+      "pattern": "json_dump",
+      "code": "json.dump({"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 799,
+      "pattern": "json_load",
+      "code": "self._config_cache = json.load(_cf)"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 1311,
+      "pattern": "open_write",
+      "code": "with open(qfile, 'a', encoding='utf-8') as qf:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 1566,
+      "pattern": "open_write",
+      "code": "with open(lock_path, 'x') as _lf:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 1572,
+      "pattern": "open_write",
+      "code": "with open(filepath, 'a' if file_exists else 'w', newline='') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 1620,
+      "pattern": "open_write",
+      "code": "with open(lock_path, 'x') as _lf:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 1626,
+      "pattern": "open_write",
+      "code": "with open(filepath, 'a' if file_exists else 'w', newline='') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 1876,
+      "pattern": "open_write",
+      "code": "with open(overview_file, 'a' if file_exists else 'w', newline='') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 1960,
+      "pattern": "open_write",
+      "code": "with open(overview_file, 'a' if file_exists else 'w', newline='') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 2199,
+      "pattern": "open_write",
+      "code": "with open(test_file, 'w') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_sink.py",
+      "line": 2449,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "src\\storage\\csv_writer.py",
+      "line": 50,
+      "pattern": "open_write",
+      "code": "with open(full_path, 'a', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\storage\\csv_writer.py",
+      "line": 85,
+      "pattern": "open_write",
+      "code": "with open(full_path, 'a', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\tools\\create_config.py",
+      "line": 52,
+      "pattern": "open_write",
+      "code": "with open(config_file, 'w') as f:"
+    },
+    {
+      "file": "src\\tools\\create_config.py",
+      "line": 53,
+      "pattern": "json_dump",
+      "code": "json.dump(config, f, indent=2)"
+    },
+    {
+      "file": "src\\tools\\refresh_kite_token.py",
+      "line": 80,
+      "pattern": "open_write",
+      "code": "with open(env_file, \"w\") as f:"
+    },
+    {
+      "file": "src\\tools\\token_manager.py",
+      "line": 265,
+      "pattern": "open_write",
+      "code": "with open(env_file, \"w\") as f:"
+    },
+    {
+      "file": "src\\utils\\adaptive_circuit_breaker.py",
+      "line": 165,
+      "pattern": "open_write",
+      "code": "with open(tmp, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "src\\utils\\adaptive_circuit_breaker.py",
+      "line": 166,
+      "pattern": "json_dump",
+      "code": "json.dump(data, f)"
+    },
+    {
+      "file": "src\\utils\\memory_trace.py",
+      "line": 120,
+      "pattern": "open_write",
+      "code": "with open(fname, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\utils\\output.py",
+      "line": 182,
+      "pattern": "open_write",
+      "code": "with open(tmp, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "src\\utils\\output.py",
+      "line": 183,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, ensure_ascii=ensure_ascii, default=str, indent=indent)"
+    },
+    {
+      "file": "src\\utils\\output.py",
+      "line": 393,
+      "pattern": "open_write",
+      "code": "with open(self._path, \"a\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "src\\utils\\output.py",
+      "line": 468,
+      "pattern": "open_write",
+      "code": "with open(tmp, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "src\\utils\\output.py",
+      "line": 475,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, ensure_ascii=False, default=str, indent=2)"
+    },
+    {
+      "file": "src\\utils\\output.py",
+      "line": 477,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, ensure_ascii=False, default=str, separators=(\",\", \":\"))"
+    },
+    {
+      "file": "src\\utils\\output.py",
+      "line": 1237,
+      "pattern": "open_write",
+      "code": "with open(meta_path, 'w', encoding='utf-8') as _mf:"
+    },
+    {
+      "file": "src\\utils\\output.py",
+      "line": 1238,
+      "pattern": "json_dump",
+      "code": "json.dump(meta_payload, _mf)"
+    },
+    {
+      "file": "src\\utils\\overlay_quality.py",
+      "line": 106,
+      "pattern": "path_write_text",
+      "code": "report_path.write_text(json.dumps(payload, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "src\\broker\\scripts\\run_orchestrator_loop.py",
+      "line": 15,
+      "pattern": "open_write",
+      "code": "with open(status_path,'w',encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\broker\\scripts\\run_orchestrator_loop.py",
+      "line": 16,
+      "pattern": "json_dump",
+      "code": "json.dump({'timestamp': now, 'cycles': args.cycles}, f)"
+    },
+    {
+      "file": "src\\broker\\kite\\scripts\\run_orchestrator_loop.py",
+      "line": 15,
+      "pattern": "open_write",
+      "code": "with open(status_path,'w',encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\broker\\kite\\scripts\\run_orchestrator_loop.py",
+      "line": 16,
+      "pattern": "json_dump",
+      "code": "json.dump({'timestamp': now, 'cycles': args.cycles}, f)"
+    },
+    {
+      "file": "src\\collectors\\modules\\benchmark_bridge.py",
+      "line": 122,
+      "pattern": "json_load",
+      "code": "data = json.load(fh)"
+    },
+    {
+      "file": "src\\collectors\\modules\\benchmark_bridge.py",
+      "line": 125,
+      "pattern": "json_load",
+      "code": "data = json.load(fh)"
+    },
+    {
+      "file": "src\\collectors\\modules\\benchmark_bridge.py",
+      "line": 221,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, indent=2, ensure_ascii=False)"
+    },
+    {
+      "file": "src\\collectors\\modules\\benchmark_bridge.py",
+      "line": 223,
+      "pattern": "open_write",
+      "code": "with open(out_file, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\collectors\\modules\\benchmark_bridge.py",
+      "line": 224,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, indent=2, ensure_ascii=False)"
+    },
+    {
+      "file": "src\\collectors\\modules\\index_processor.py",
+      "line": 563,
+      "pattern": "json_load",
+      "code": "_cfg = json.load(_cf)"
+    },
+    {
+      "file": "src\\collectors\\modules\\preventive_validate.py",
+      "line": 99,
+      "pattern": "open_write",
+      "code": "with open(snap_root / f'{ts_key}_01_instruments.json','w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\collectors\\modules\\preventive_validate.py",
+      "line": 100,
+      "pattern": "json_dump",
+      "code": "json.dump({'index': index_symbol,'expiry_rule': rule,'expiry_date': str(expiry_date),'count': len(instruments),'records': instruments[:500]}, f, indent=2)"
+    },
+    {
+      "file": "src\\collectors\\modules\\preventive_validate.py",
+      "line": 102,
+      "pattern": "open_write",
+      "code": "with open(snap_root / f'{ts_key}_02_enriched_head.json','w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\collectors\\modules\\preventive_validate.py",
+      "line": 103,
+      "pattern": "json_dump",
+      "code": "json.dump({'index': index_symbol,'expiry_rule': rule,'sample_count': len(head),'records': [{k:v} for k,v in head]}, f, indent=2)"
+    },
+    {
+      "file": "src\\collectors\\pipeline\\executor.py",
+      "line": 474,
+      "pattern": "open_write",
+      "code": "with open(export_path, 'w', encoding='utf-8') as fh:"
+    },
+    {
+      "file": "src\\collectors\\pipeline\\executor.py",
+      "line": 490,
+      "pattern": "open_write",
+      "code": "with open(hist_path, 'w', encoding='utf-8') as fh2:"
+    },
+    {
+      "file": "src\\collectors\\pipeline\\executor.py",
+      "line": 577,
+      "pattern": "open_write",
+      "code": "with open(trend_path, 'w', encoding='utf-8') as _tfw:"
+    },
+    {
+      "file": "src\\collectors\\scripts\\run_orchestrator_loop.py",
+      "line": 15,
+      "pattern": "open_write",
+      "code": "with open(status_path,'w',encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\collectors\\scripts\\run_orchestrator_loop.py",
+      "line": 16,
+      "pattern": "json_dump",
+      "code": "json.dump({'timestamp': now, 'cycles': args.cycles}, f)"
+    },
+    {
+      "file": "src\\collectors\\helpers\\scripts\\run_orchestrator_loop.py",
+      "line": 15,
+      "pattern": "open_write",
+      "code": "with open(status_path,'w',encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\collectors\\helpers\\scripts\\run_orchestrator_loop.py",
+      "line": 16,
+      "pattern": "json_dump",
+      "code": "json.dump({'timestamp': now, 'cycles': args.cycles}, f)"
+    },
+    {
+      "file": "src\\collectors\\modules\\scripts\\run_orchestrator_loop.py",
+      "line": 15,
+      "pattern": "open_write",
+      "code": "with open(status_path,'w',encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\collectors\\modules\\scripts\\run_orchestrator_loop.py",
+      "line": 16,
+      "pattern": "json_dump",
+      "code": "json.dump({'timestamp': now, 'cycles': args.cycles}, f)"
+    },
+    {
+      "file": "src\\collectors\\pipeline\\scripts\\run_orchestrator_loop.py",
+      "line": 15,
+      "pattern": "open_write",
+      "code": "with open(status_path,'w',encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\collectors\\pipeline\\scripts\\run_orchestrator_loop.py",
+      "line": 16,
+      "pattern": "json_dump",
+      "code": "json.dump({'timestamp': now, 'cycles': args.cycles}, f)"
+    },
+    {
+      "file": "src\\events\\scripts\\run_orchestrator_loop.py",
+      "line": 15,
+      "pattern": "open_write",
+      "code": "with open(status_path,'w',encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\events\\scripts\\run_orchestrator_loop.py",
+      "line": 16,
+      "pattern": "json_dump",
+      "code": "json.dump({'timestamp': now, 'cycles': args.cycles}, f)"
+    },
+    {
+      "file": "src\\health\\alerts\\alert_manager.py",
+      "line": 407,
+      "pattern": "json_dump",
+      "code": "json.dump({k: v.to_dict() for k, v in self.active.items()}, f, indent=2)"
+    },
+    {
+      "file": "src\\health\\alerts\\alert_manager.py",
+      "line": 409,
+      "pattern": "json_dump",
+      "code": "json.dump([a.to_dict() for a in self.history[-200:]], f, indent=2)"
+    },
+    {
+      "file": "src\\storage\\csvio\\writer_thread.py",
+      "line": 226,
+      "pattern": "path_write_text",
+      "code": "Path(filepath).write_text(expected + '\\n' + existing, encoding='utf-8')"
+    },
+    {
+      "file": "src\\storage\\csvio\\writer_thread.py",
+      "line": 233,
+      "pattern": "open_write",
+      "code": "with open(filepath, 'a', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\storage\\csvio\\backends\\atomic_fs.py",
+      "line": 232,
+      "pattern": "open_write",
+      "code": "with open(tmp_path, 'w', newline='') as wf:"
+    },
+    {
+      "file": "src\\storage\\csvio\\backends\\atomic_fs.py",
+      "line": 344,
+      "pattern": "open_write",
+      "code": "with open(tmp_path, 'w', newline='') as wf:"
+    },
+    {
+      "file": "src\\storage\\csvio\\backends\\filesystem.py",
+      "line": 94,
+      "pattern": "open_write",
+      "code": "with open(filepath, 'a', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\summary\\unified\\model.py",
+      "line": 141,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "src\\web\\dashboard\\app.py",
+      "line": 930,
+      "pattern": "open_write",
+      "code": "with log_fp.open('a', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\web\\dashboard\\app.py",
+      "line": 930,
+      "pattern": "path_open_write",
+      "code": "with log_fp.open('a', encoding='utf-8') as f:"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\ml.py",
+      "line": 759,
+      "pattern": "path_write_text",
+      "code": "fp.write_text(_json.dumps(obj, indent=2), encoding=\"utf-8\")"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\ml.py",
+      "line": 778,
+      "pattern": "open_write",
+      "code": "with log_fp.open(\"a\", encoding=\"utf-8\") as lf:"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\ml.py",
+      "line": 778,
+      "pattern": "path_open_write",
+      "code": "with log_fp.open(\"a\", encoding=\"utf-8\") as lf:"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "line": 98,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "line": 128,
+      "pattern": "json_load",
+      "code": "data = _json.load(f)"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "line": 154,
+      "pattern": "path_write_text",
+      "code": "(cal_dir / f\"{idx}.json\").write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding=\"utf-8\")"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "line": 186,
+      "pattern": "open_write",
+      "code": "with test_path.open(\"a\", encoding=\"utf-8\", newline=\"\") as _f:"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "line": 186,
+      "pattern": "path_open_write",
+      "code": "with test_path.open(\"a\", encoding=\"utf-8\", newline=\"\") as _f:"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "line": 216,
+      "pattern": "open_write",
+      "code": "with hist_path.open(\"a\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "line": 216,
+      "pattern": "path_open_write",
+      "code": "with hist_path.open(\"a\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "src\\web\\dashboard\\services\\forecast_core.py",
+      "line": 52,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\audit_csv_repository.py",
+      "line": 227,
+      "pattern": "open_write",
+      "code": "with out_json.open('w', encoding='utf-8') as jf:"
+    },
+    {
+      "file": "scripts\\audit_csv_repository.py",
+      "line": 227,
+      "pattern": "path_open_write",
+      "code": "with out_json.open('w', encoding='utf-8') as jf:"
+    },
+    {
+      "file": "scripts\\audit_csv_repository.py",
+      "line": 238,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, jf, indent=2)"
+    },
+    {
+      "file": "scripts\\audit_csv_repository.py",
+      "line": 241,
+      "pattern": "open_write",
+      "code": "with out_csv.open('w', newline='', encoding='utf-8') as cf:"
+    },
+    {
+      "file": "scripts\\audit_csv_repository.py",
+      "line": 241,
+      "pattern": "path_open_write",
+      "code": "with out_csv.open('w', newline='', encoding='utf-8') as cf:"
+    },
+    {
+      "file": "scripts\\batch_migrate_imports.py",
+      "line": 89,
+      "pattern": "path_write_text",
+      "code": "file_path.write_text(content, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\bench_delta.py",
+      "line": 142,
+      "pattern": "open_write",
+      "code": "with open(args.out, 'w', encoding='utf-8') as fh:"
+    },
+    {
+      "file": "scripts\\bench_delta.py",
+      "line": 143,
+      "pattern": "json_dump",
+      "code": "json.dump(wrapped, fh, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "scripts\\bench_panels.py",
+      "line": 115,
+      "pattern": "open_write",
+      "code": "with open(args.output, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\bench_panels.py",
+      "line": 116,
+      "pattern": "json_dump",
+      "code": "json.dump(report, f, indent=2)"
+    },
+    {
+      "file": "scripts\\bench_perf_smoke.py",
+      "line": 155,
+      "pattern": "open_write",
+      "code": "with open(args.output, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\bench_perf_smoke.py",
+      "line": 156,
+      "pattern": "json_dump",
+      "code": "json.dump(report, f, indent=2)"
+    },
+    {
+      "file": "scripts\\bench_report.py",
+      "line": 52,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\bench_report.py",
+      "line": 55,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\bench_report.py",
+      "line": 229,
+      "pattern": "open_write",
+      "code": "with open(args.json_out,'w',encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\bench_report.py",
+      "line": 230,
+      "pattern": "json_dump",
+      "code": "json.dump(report,f,indent=2)"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 38,
+      "pattern": "json_load",
+      "code": "return cast(Artifact, json.load(f))"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 40,
+      "pattern": "json_load",
+      "code": "return cast(Artifact, json.load(f))"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 163,
+      "pattern": "path_write_text",
+      "code": "path.write_text(\"\\n\".join(lines) + \"\\n\", encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 186,
+      "pattern": "json_load",
+      "code": "return cast(Artifact, json.load(f))"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 188,
+      "pattern": "json_load",
+      "code": "return cast(Artifact, json.load(f))"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 279,
+      "pattern": "json_load",
+      "code": "return cast(Artifact, json.load(f))"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 281,
+      "pattern": "json_load",
+      "code": "return cast(Artifact, json.load(f))"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 329,
+      "pattern": "open_write",
+      "code": "with open(json_report, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 330,
+      "pattern": "json_dump",
+      "code": "json.dump(report, f, indent=2, ensure_ascii=False)"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 379,
+      "pattern": "open_write",
+      "code": "out_fh = open(out_path, 'w', encoding='utf-8', newline='')"
+    },
+    {
+      "file": "scripts\\bench_tools.py",
+      "line": 392,
+      "pattern": "path_write_text",
+      "code": "pathlib.Path(args.stats_out).write_text(json.dumps(stats, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\bench_trend.py",
+      "line": 82,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\bench_trend.py",
+      "line": 85,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\build_analytics_dashboard.py",
+      "line": 176,
+      "pattern": "json_load",
+      "code": "dashboard = json.load(f)"
+    },
+    {
+      "file": "scripts\\build_analytics_dashboard.py",
+      "line": 404,
+      "pattern": "open_write",
+      "code": "with open(output_path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\build_analytics_dashboard.py",
+      "line": 405,
+      "pattern": "json_dump",
+      "code": "json.dump(dashboard, f, indent=2)"
+    },
+    {
+      "file": "scripts\\ci_dashboards_gate.py",
+      "line": 70,
+      "pattern": "path_write_text",
+      "code": "dest.write_text(show.stdout, encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\coverage_hotspots.py",
+      "line": 174,
+      "pattern": "json_load",
+      "code": "data = json.load(fh)"
+    },
+    {
+      "file": "scripts\\create_overlays_dashboard.py",
+      "line": 246,
+      "pattern": "open_write",
+      "code": "with open(output_path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\create_overlays_dashboard.py",
+      "line": 247,
+      "pattern": "json_dump",
+      "code": "json.dump(dashboard, f, indent=2)"
+    },
+    {
+      "file": "scripts\\csv_audit.py",
+      "line": 65,
+      "pattern": "json_load",
+      "code": "raw = json.load(f)"
+    },
+    {
+      "file": "scripts\\csv_backfill.py",
+      "line": 75,
+      "pattern": "json_load",
+      "code": "cfg = json.load(f)"
+    },
+    {
+      "file": "scripts\\csv_backfill.py",
+      "line": 96,
+      "pattern": "open_write",
+      "code": "with open(path, 'w', encoding='utf-8', newline='') as f:"
+    },
+    {
+      "file": "scripts\\dashboard_diff.py",
+      "line": 142,
+      "pattern": "path_write_text",
+      "code": "changelog.write_text(section + existing, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\dedup_env_doc.py",
+      "line": 111,
+      "pattern": "path_write_text",
+      "code": "tmp.write_text(new_text, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\dedup_env_doc.py",
+      "line": 112,
+      "pattern": "path_write_text",
+      "code": "DOC.write_text(new_text, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\dev_mypy_inventory.py",
+      "line": 58,
+      "pattern": "path_write_text",
+      "code": "INVENTORY_PATH.write_text(json.dumps(summary, indent=2))"
+    },
+    {
+      "file": "scripts\\dev_smoke.py",
+      "line": 149,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\diff_dashboard_inventory.py",
+      "line": 122,
+      "pattern": "path_write_text",
+      "code": "args.json_out.write_text("
+    },
+    {
+      "file": "scripts\\diff_dashboard_inventory.py",
+      "line": 146,
+      "pattern": "path_write_text",
+      "code": "args.json_out.write_text("
+    },
+    {
+      "file": "scripts\\eod_weekday_master.py",
+      "line": 158,
+      "pattern": "open_write",
+      "code": "with open(report_path, 'w') as f:"
+    },
+    {
+      "file": "scripts\\eod_weekday_master.py",
+      "line": 159,
+      "pattern": "json_dump",
+      "code": "json.dump(report, f, indent=2)"
+    },
+    {
+      "file": "scripts\\export_dashboard_inventory.py",
+      "line": 83,
+      "pattern": "open_write",
+      "code": "out_fh = open(args.out, 'w', newline='', encoding='utf-8') if args.out else sys.stdout"
+    },
+    {
+      "file": "scripts\\export_dashboard_inventory.py",
+      "line": 95,
+      "pattern": "open_write",
+      "code": "out_fh = open(args.out, 'w', encoding='utf-8') if args.out else sys.stdout"
+    },
+    {
+      "file": "scripts\\fix_dashboard_urls.py",
+      "line": 13,
+      "pattern": "json_load",
+      "code": "dashboard = json.load(f)"
+    },
+    {
+      "file": "scripts\\fix_dashboard_urls.py",
+      "line": 42,
+      "pattern": "open_write",
+      "code": "with open(output_file, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\fix_dashboard_urls.py",
+      "line": 43,
+      "pattern": "json_dump",
+      "code": "json.dump(dashboard, f, indent=2)"
+    },
+    {
+      "file": "scripts\\fix_lazy_logging.py",
+      "line": 247,
+      "pattern": "path_write_text",
+      "code": "filepath.write_text(''.join(lines), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\generate_mock_option_universe.py",
+      "line": 175,
+      "pattern": "json_dump",
+      "code": "json.dump({'index': index, 'expiry_tag': tag, **data}, f, indent=2)"
+    },
+    {
+      "file": "scripts\\generate_mock_option_universe.py",
+      "line": 177,
+      "pattern": "json_dump",
+      "code": "json.dump({'index': index, 'expiry_tag': tag, 'quotes': data['quotes']}, f, indent=2)"
+    },
+    {
+      "file": "scripts\\generate_mock_option_universe.py",
+      "line": 189,
+      "pattern": "json_dump",
+      "code": "json.dump({'index': index, 'expiry_tag': tag, 'records': merged}, f, indent=2)"
+    },
+    {
+      "file": "scripts\\gen_alert_suggestions.py",
+      "line": 196,
+      "pattern": "path_write_text",
+      "code": "args.output.write_text(new_text)"
+    },
+    {
+      "file": "scripts\\gen_dashboards.py",
+      "line": 202,
+      "pattern": "path_write_text",
+      "code": "path.write_text(json.dumps(opt, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_dashboards.py",
+      "line": 206,
+      "pattern": "path_write_text",
+      "code": "gp.write_text(json.dumps(gov, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_dashboards_modular_recovery.py",
+      "line": 554,
+      "pattern": "path_write_text",
+      "code": "path.write_text(json.dumps(data, indent=2, sort_keys=True))"
+    },
+    {
+      "file": "scripts\\gen_dashboards_modular_recovery.py",
+      "line": 560,
+      "pattern": "path_write_text",
+      "code": "manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True))"
+    },
+    {
+      "file": "scripts\\gen_dashboard_from_spec.py",
+      "line": 213,
+      "pattern": "open_write",
+      "code": "with open(out_path, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\gen_dashboard_from_spec.py",
+      "line": 214,
+      "pattern": "json_dump",
+      "code": "json.dump(dash, f, indent=2)"
+    },
+    {
+      "file": "scripts\\gen_env_dict_from_auto.py",
+      "line": 16,
+      "pattern": "path_write_text",
+      "code": "out.write_text('\\n'.join(lines)+\"\\n\", encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_env_docs.py",
+      "line": 54,
+      "pattern": "open_write",
+      "code": "with open(out_file, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\gen_env_inventory.py",
+      "line": 182,
+      "pattern": "json_dump",
+      "code": "json.dump(json_payload, tf, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "scripts\\gen_metrics.py",
+      "line": 107,
+      "pattern": "path_write_text",
+      "code": "OUT_MODULE.write_text(gen_module(spec, spec_hash), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_metrics.py",
+      "line": 108,
+      "pattern": "path_write_text",
+      "code": "OUT_CATALOG.write_text(gen_catalog(spec), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_metrics_catalog.py",
+      "line": 103,
+      "pattern": "path_write_text",
+      "code": "OUT.write_text(content, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_metrics_glossary.py",
+      "line": 93,
+      "pattern": "path_write_text",
+      "code": "README_FILE.write_text(content, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_prometheus_alerts.py",
+      "line": 97,
+      "pattern": "open_write",
+      "code": "with open(out_path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\gen_provenance.py",
+      "line": 170,
+      "pattern": "path_write_text",
+      "code": "out_path.write_text(json.dumps(provenance, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_recording_rules.py",
+      "line": 245,
+      "pattern": "path_write_text",
+      "code": "args.output.write_text(new_text)"
+    },
+    {
+      "file": "scripts\\gen_rules_catalog.py",
+      "line": 70,
+      "pattern": "path_write_text",
+      "code": "OUT.write_text('\\n'.join(lines) + '\\n', encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\gen_sbom.py",
+      "line": 150,
+      "pattern": "open_write",
+      "code": "with open(args.output, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\gen_sbom.py",
+      "line": 151,
+      "pattern": "json_dump",
+      "code": "json.dump(data, f, indent=2)"
+    },
+    {
+      "file": "scripts\\package_dashboards.py",
+      "line": 122,
+      "pattern": "path_write_text",
+      "code": "cs.write_text(f\"{digest}  {archive.name}\\n\", encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\package_dashboards.py",
+      "line": 142,
+      "pattern": "path_write_text",
+      "code": "manifest_path.write_text(json.dumps(manifest, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\parity_fatal_gate.py",
+      "line": 31,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\parity_snapshot_cli.py",
+      "line": 48,
+      "pattern": "json_load",
+      "code": "obj: Any = json.load(f)"
+    },
+    {
+      "file": "scripts\\parity_snapshot_cli.py",
+      "line": 202,
+      "pattern": "path_write_text",
+      "code": "Path(args.output).write_text(text + ('\\n' if not text.endswith('\\n') else ''), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\parity_weight_study.py",
+      "line": 299,
+      "pattern": "path_write_text",
+      "code": "Path(args.apply_out).write_text(env_line + '\\n', encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\parity_weight_study.py",
+      "line": 316,
+      "pattern": "path_write_text",
+      "code": "Path(args.out).write_text(text + ('\\n' if not text.endswith('\\n') else ''), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\plot_weekday_overlays.py",
+      "line": 268,
+      "pattern": "path_write_text",
+      "code": "Path(args.output).write_text(final_html, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\plot_weekday_overlays.py",
+      "line": 436,
+      "pattern": "path_write_text",
+      "code": "Path(args.output).write_text(html_full, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\plot_weekday_overlays.py",
+      "line": 486,
+      "pattern": "path_write_text",
+      "code": "Path(args.output).write_text(html_full, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\plot_weekday_overlays.py",
+      "line": 537,
+      "pattern": "path_write_text",
+      "code": "Path(args.output).write_text(html_full, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\plot_weekday_overlays.py",
+      "line": 556,
+      "pattern": "path_write_text",
+      "code": "Path(args.output).write_text(html_full, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\plot_weekday_overlays.py",
+      "line": 578,
+      "pattern": "path_write_text",
+      "code": "(Path(args.output).parent / 'weekday_overlays_meta.json').write_text(json.dumps(meta, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\print_audit_snapshots.py",
+      "line": 9,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\repair_csv_alignment.py",
+      "line": 131,
+      "pattern": "open_write",
+      "code": "with open(path, 'w', newline='', encoding='utf-8') as wf:"
+    },
+    {
+      "file": "scripts\\rollback_drill.py",
+      "line": 56,
+      "pattern": "json_load",
+      "code": "legacy = json.load(fh)"
+    },
+    {
+      "file": "scripts\\rollback_drill.py",
+      "line": 58,
+      "pattern": "json_load",
+      "code": "pipe = json.load(fh)"
+    },
+    {
+      "file": "scripts\\rollback_drill.py",
+      "line": 90,
+      "pattern": "open_write",
+      "code": "with open(path,'w',encoding='utf-8') as fh:"
+    },
+    {
+      "file": "scripts\\rollback_drill.py",
+      "line": 91,
+      "pattern": "json_dump",
+      "code": "json.dump(data, fh, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "scripts\\set_dashboard_timezone.py",
+      "line": 32,
+      "pattern": "path_write_text",
+      "code": "file_path.write_text(new_content, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\sign_dashboards.py",
+      "line": 144,
+      "pattern": "path_write_text",
+      "code": "sig_path.write_text(meta['signature_b64'] + '\\n', encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\stability_loop.py",
+      "line": 157,
+      "pattern": "open_write",
+      "code": "with open(args.out, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\stability_loop.py",
+      "line": 158,
+      "pattern": "json_dump",
+      "code": "json.dump(report, f, indent=2)"
+    },
+    {
+      "file": "scripts\\status_simulator.py",
+      "line": 169,
+      "pattern": "open_write",
+      "code": "with dst.open(\"w\", encoding=\"utf-8\") as wf:"
+    },
+    {
+      "file": "scripts\\status_simulator.py",
+      "line": 169,
+      "pattern": "path_open_write",
+      "code": "with dst.open(\"w\", encoding=\"utf-8\") as wf:"
+    },
+    {
+      "file": "scripts\\status_simulator.py",
+      "line": 187,
+      "pattern": "open_write",
+      "code": "with tmp.open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\status_simulator.py",
+      "line": 187,
+      "pattern": "path_open_write",
+      "code": "with tmp.open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\tmp_debug_weighted.py",
+      "line": 10,
+      "pattern": "open_write",
+      "code": "with p.open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\tmp_debug_weighted.py",
+      "line": 10,
+      "pattern": "path_open_write",
+      "code": "with p.open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\weekday_master_realtime.py",
+      "line": 66,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\weekday_overlay.py",
+      "line": 140,
+      "pattern": "open_write",
+      "code": "with path.open(\"w\", newline=\"\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\weekday_overlay.py",
+      "line": 140,
+      "pattern": "path_open_write",
+      "code": "with path.open(\"w\", newline=\"\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\analysis\\correlation_study.py",
+      "line": 166,
+      "pattern": "path_write_text",
+      "code": "long_path.write_text(long_csv, encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\analysis\\correlation_study.py",
+      "line": 167,
+      "pattern": "path_write_text",
+      "code": "wide_path.write_text(wide_csv, encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\benchmarks\\provider_parity.py",
+      "line": 158,
+      "pattern": "open_write",
+      "code": "with open('benchmarks/last_run.json','w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\benchmarks\\provider_parity.py",
+      "line": 159,
+      "pattern": "json_dump",
+      "code": "json.dump(result, f, indent=2)"
+    },
+    {
+      "file": "scripts\\cleanup\\dead_code_scan.py",
+      "line": 121,
+      "pattern": "path_write_text",
+      "code": "ALLOWLIST_PATH.write_text(json.dumps(data, indent=2, sort_keys=True), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\dead_code_scan.py",
+      "line": 130,
+      "pattern": "path_write_text",
+      "code": "REPORT_JSON.write_text(json.dumps({"
+    },
+    {
+      "file": "scripts\\cleanup\\dead_code_scan.py",
+      "line": 151,
+      "pattern": "path_write_text",
+      "code": "REPORT_MD.write_text(\"\\n\".join(lines) + \"\\n\", encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\dead_code_scan.py",
+      "line": 185,
+      "pattern": "path_write_text",
+      "code": "extra_path.write_text(json.dumps({'total': len(exploratory_items), 'items': [i.__dict__ for i in exploratory_items]}, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\env_scan.py",
+      "line": 34,
+      "pattern": "path_write_text",
+      "code": "JSON_OUT.write_text(json.dumps({'env_vars': vars_list}, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\env_scan.py",
+      "line": 51,
+      "pattern": "path_write_text",
+      "code": "DOC_OUT.write_text('\\n'.join(lines) + '\\n', encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\generate_final_report.py",
+      "line": 124,
+      "pattern": "path_write_text",
+      "code": "ORPHAN_JSON.write_text('[]\\n', encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\generate_final_report.py",
+      "line": 129,
+      "pattern": "path_write_text",
+      "code": "ORPHAN_JSON.write_text(json.dumps(data, indent=2) + '\\n', encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\generate_final_report.py",
+      "line": 161,
+      "pattern": "path_write_text",
+      "code": "INV_BASELINE.write_text(json.dumps(cur, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\generate_final_report.py",
+      "line": 242,
+      "pattern": "path_write_text",
+      "code": "REPORT.write_text(new_text, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\cleanup\\gen_inventory.py",
+      "line": 154,
+      "pattern": "open_write",
+      "code": "with OUT_FILE.open('w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\cleanup\\gen_inventory.py",
+      "line": 154,
+      "pattern": "path_open_write",
+      "code": "with OUT_FILE.open('w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\cleanup\\gen_inventory.py",
+      "line": 155,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, indent=2)"
+    },
+    {
+      "file": "scripts\\cleanup\\orphan_tests.py",
+      "line": 117,
+      "pattern": "json_dump",
+      "code": "json.dump(orphans, sys.stdout, indent=2)"
+    },
+    {
+      "file": "scripts\\cleanup\\validate_cleanup.py",
+      "line": 80,
+      "pattern": "path_write_text",
+      "code": "baseline_path.write_text(json.dumps({'line_coverage_pct': current_cov}, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\dev\\generate_complexity_report.py",
+      "line": 107,
+      "pattern": "path_write_text",
+      "code": "out_path.write_text(\"\".join(lines), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\dev\\run_core_pytest.py",
+      "line": 90,
+      "pattern": "open_write",
+      "code": "with open(out_path, \"w\", encoding=\"utf-8\", buffering=1) as f, ExitStack() as stack:"
+    },
+    {
+      "file": "scripts\\dev\\safe_io_adoption_inventory.py",
+      "line": 9,
+      "pattern": "path_write_text",
+      "code": "- Path.write_text("
+    },
+    {
+      "file": "scripts\\dev\\safe_io_adoption_inventory.py",
+      "line": 11,
+      "pattern": "json_dump",
+      "code": "- json.dump("
+    },
+    {
+      "file": "scripts\\dev\\safe_io_adoption_inventory.py",
+      "line": 139,
+      "pattern": "path_write_text",
+      "code": "out_path.write_text(json.dumps(report, indent=2), encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\ml\\analyze_summary_pick.py",
+      "line": 98,
+      "pattern": "open_write",
+      "code": "with (out_dir / \"picks.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\analyze_summary_pick.py",
+      "line": 98,
+      "pattern": "path_open_write",
+      "code": "with (out_dir / \"picks.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\analyze_summary_pick.py",
+      "line": 104,
+      "pattern": "open_write",
+      "code": "with (out_dir / \"picks.json\").open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\analyze_summary_pick.py",
+      "line": 104,
+      "pattern": "path_open_write",
+      "code": "with (out_dir / \"picks.json\").open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\analyze_summary_pick.py",
+      "line": 105,
+      "pattern": "json_dump",
+      "code": "json.dump(rows, f, indent=2)"
+    },
+    {
+      "file": "scripts\\ml\\ann_auto_tune_candidates.py",
+      "line": 160,
+      "pattern": "path_write_text",
+      "code": "out_path.write_text(json.dumps(suggestion, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_auto_tune_candidates.py",
+      "line": 166,
+      "pattern": "path_write_text",
+      "code": "ov_path.write_text(cli_str + '\\n', encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_benchmark_matrix.py",
+      "line": 206,
+      "pattern": "open_write",
+      "code": "with open(out_path, \"w\", newline=\"\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_compare_tuned_vs_extended.py",
+      "line": 90,
+      "pattern": "open_write",
+      "code": "with diff_csv.open('w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_compare_tuned_vs_extended.py",
+      "line": 90,
+      "pattern": "path_open_write",
+      "code": "with diff_csv.open('w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_compare_tuned_vs_extended.py",
+      "line": 124,
+      "pattern": "path_write_text",
+      "code": "md_path.write_text('\\n'.join(lines), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_daily_health_check.py",
+      "line": 174,
+      "pattern": "path_write_text",
+      "code": "(hist_dir / fname).write_text(json.dumps(history_payload, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_daily_health_check.py",
+      "line": 196,
+      "pattern": "path_write_text",
+      "code": "(backup_dir / backup_name).write_text(json.dumps(baseline_doc, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_daily_health_check.py",
+      "line": 210,
+      "pattern": "path_write_text",
+      "code": "baseline_path.write_text(json.dumps(updated_doc, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_daily_health_check.py",
+      "line": 212,
+      "pattern": "path_write_text",
+      "code": "baseline_path.write_text(json.dumps(new_baseline, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_diagnostic_advisor.py",
+      "line": 235,
+      "pattern": "path_write_text",
+      "code": "Path(ns.output).write_text(text, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_harness_large.py",
+      "line": 328,
+      "pattern": "open_write",
+      "code": "with csv_path.open('w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_harness_large.py",
+      "line": 328,
+      "pattern": "path_open_write",
+      "code": "with csv_path.open('w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_harness_large.py",
+      "line": 334,
+      "pattern": "path_write_text",
+      "code": "json_path.write_text(json.dumps(summary, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_harness_large.py",
+      "line": 473,
+      "pattern": "open_write",
+      "code": "with csv_path.open('w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_harness_large.py",
+      "line": 473,
+      "pattern": "path_open_write",
+      "code": "with csv_path.open('w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_harness_large.py",
+      "line": 556,
+      "pattern": "open_write",
+      "code": "with comp_csv.open('w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_harness_large.py",
+      "line": 556,
+      "pattern": "path_open_write",
+      "code": "with comp_csv.open('w', newline='', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\ml\\ann_health_exporter.py",
+      "line": 274,
+      "pattern": "path_write_text",
+      "code": "tmp_path.write_text(json.dumps(new_doc, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\ann_ranking_report.py",
+      "line": 97,
+      "pattern": "path_write_text",
+      "code": "out_path.write_text('\\n'.join(lines), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\auto_calibrate_ensemble.py",
+      "line": 285,
+      "pattern": "path_write_text",
+      "code": "sidecar.write_text(json.dumps(payload, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\auto_calibrate_ensemble.py",
+      "line": 424,
+      "pattern": "path_write_text",
+      "code": "sc_fp.write_text(json.dumps(obj, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\auto_calibrate_ensemble.py",
+      "line": 479,
+      "pattern": "path_write_text",
+      "code": "sc_fp.write_text(json.dumps(obj, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\combine_grid_eval.py",
+      "line": 45,
+      "pattern": "open_write",
+      "code": "with (OUT_DIR / \"eval_concat.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\combine_grid_eval.py",
+      "line": 45,
+      "pattern": "path_open_write",
+      "code": "with (OUT_DIR / \"eval_concat.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\combine_grid_eval.py",
+      "line": 179,
+      "pattern": "open_write",
+      "code": "with (OUT_DIR / \"summary.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\combine_grid_eval.py",
+      "line": 179,
+      "pattern": "path_open_write",
+      "code": "with (OUT_DIR / \"summary.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\combine_grid_eval_ns.py",
+      "line": 38,
+      "pattern": "open_write",
+      "code": "with (OUT_DIR / \"eval_concat.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\combine_grid_eval_ns.py",
+      "line": 38,
+      "pattern": "path_open_write",
+      "code": "with (OUT_DIR / \"eval_concat.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\combine_grid_eval_ns.py",
+      "line": 141,
+      "pattern": "open_write",
+      "code": "with (OUT_DIR / \"summary.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\combine_grid_eval_ns.py",
+      "line": 141,
+      "pattern": "path_open_write",
+      "code": "with (OUT_DIR / \"summary.csv\").open(\"w\", encoding=\"utf-8\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\hybrid_predict_exporter.py",
+      "line": 47,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\ml\\path_forecast_grid_eval.py",
+      "line": 567,
+      "pattern": "open_write",
+      "code": "with cfg.out.open(\"w\", newline=\"\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\path_forecast_grid_eval.py",
+      "line": 567,
+      "pattern": "path_open_write",
+      "code": "with cfg.out.open(\"w\", newline=\"\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\path_forecast_grid_eval.py",
+      "line": 652,
+      "pattern": "open_write",
+      "code": "with cfg.summary.open(\"w\", newline=\"\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\path_forecast_grid_eval.py",
+      "line": 652,
+      "pattern": "path_open_write",
+      "code": "with cfg.summary.open(\"w\", newline=\"\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\quantile_predict_exporter.py",
+      "line": 52,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\ml\\seed_ann_baseline_from_ranking.py",
+      "line": 107,
+      "pattern": "path_write_text",
+      "code": "(backups / f'{ts}_baseline_backup.json').write_text(json.dumps(doc, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\seed_ann_baseline_from_ranking.py",
+      "line": 116,
+      "pattern": "path_write_text",
+      "code": "tmp.write_text(json.dumps(new_doc, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_hybrid_residual.py",
+      "line": 18,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_hybrid_residual.py",
+      "line": 113,
+      "pattern": "open_write",
+      "code": "with fe_out.open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_hybrid_residual.py",
+      "line": 113,
+      "pattern": "path_open_write",
+      "code": "with fe_out.open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_hybrid_residual.py",
+      "line": 114,
+      "pattern": "json_dump",
+      "code": "json.dump({\"features\": features, \"baseline\": base_cfg}, f, indent=2)"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_move_classifier.py",
+      "line": 16,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_move_conditional.py",
+      "line": 14,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_quantile_skgbr.py",
+      "line": 32,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_quantile_skgbr.py",
+      "line": 86,
+      "pattern": "open_write",
+      "code": "with (out_base.with_suffix(\".fe.json\")).open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_quantile_skgbr.py",
+      "line": 86,
+      "pattern": "path_open_write",
+      "code": "with (out_base.with_suffix(\".fe.json\")).open(\"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\ml\\train_tp_quantile_skgbr.py",
+      "line": 87,
+      "pattern": "json_dump",
+      "code": "json.dump(sidecar, f, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\app.py",
+      "line": 60,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\summary\\app.py",
+      "line": 332,
+      "pattern": "open_write",
+      "code": "with open(tmp, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\summary\\app.py",
+      "line": 333,
+      "pattern": "json_dump",
+      "code": "json.dump(model_snap.to_dict(), f, ensure_ascii=False, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\app.py",
+      "line": 784,
+      "pattern": "open_write",
+      "code": "with open(_tmp_dp, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\summary\\app.py",
+      "line": 785,
+      "pattern": "json_dump",
+      "code": "json.dump(model_loop.to_dict(), f, ensure_ascii=False, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\bridge_detection.py",
+      "line": 44,
+      "pattern": "path_write_text",
+      "code": "sp.write_text(\"unified_loop_active\\n\", encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\summary\\data_source.py",
+      "line": 85,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 163,
+      "pattern": "json_load",
+      "code": "return json.load(f)"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 299,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 325,
+      "pattern": "json_load",
+      "code": "_ = json.load(_vf)"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 341,
+      "pattern": "open_write",
+      "code": "with os.fdopen(fd, 'w', encoding='utf-8') as fh:"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 342,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, fh, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 355,
+      "pattern": "json_load",
+      "code": "_ = json.load(_vf2)"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 358,
+      "pattern": "open_write",
+      "code": "with open(log_path, 'w', encoding='utf-8') as _fw2:"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 359,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, _fw2, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 365,
+      "pattern": "open_write",
+      "code": "with open(log_path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\summary\\snapshot_builder.py",
+      "line": 366,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\sse_shared.py",
+      "line": 285,
+      "pattern": "open_write",
+      "code": "with open(debug_log_path, 'a', encoding='utf-8') as _df:"
+    },
+    {
+      "file": "scripts\\summary\\unified_http.py",
+      "line": 349,
+      "pattern": "open_write",
+      "code": "with open(f\".unified_http_started_{port}\", 'w', encoding='utf-8') as _f:"
+    },
+    {
+      "file": "scripts\\summary\\unified_loop.py",
+      "line": 115,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\tools\\add_v3_transforms.py",
+      "line": 76,
+      "pattern": "path_write_text",
+      "code": "backup.write_text(raw, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\tools\\add_v3_transforms.py",
+      "line": 77,
+      "pattern": "path_write_text",
+      "code": "dash.write_text(json.dumps(obj, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\tools\\force_infinity_targets_to_table.py",
+      "line": 46,
+      "pattern": "path_write_text",
+      "code": "backup.write_text(raw, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\tools\\force_infinity_targets_to_table.py",
+      "line": 47,
+      "pattern": "path_write_text",
+      "code": "dash.write_text(json.dumps(obj, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\tools\\grafana_ds_patch.py",
+      "line": 197,
+      "pattern": "path_write_text",
+      "code": "path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + \"\\n\", encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\tools\\patch_dashboard_infinity_columns.py",
+      "line": 53,
+      "pattern": "path_write_text",
+      "code": "backup.write_text(raw, encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\tools\\patch_dashboard_infinity_columns.py",
+      "line": 56,
+      "pattern": "path_write_text",
+      "code": "dash_path.write_text(json.dumps(data, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "scripts\\tools\\patch_dashboard_uid.py",
+      "line": 87,
+      "pattern": "path_write_text",
+      "code": "out.write_text(json.dumps(data, ensure_ascii=False, indent=2) + \"\\n\", encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\tools\\patch_v3_organize_alias.py",
+      "line": 75,
+      "pattern": "path_write_text",
+      "code": "BACKUP_PATH.write_text(json.dumps(data, indent=2), encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\tools\\patch_v3_organize_alias.py",
+      "line": 100,
+      "pattern": "path_write_text",
+      "code": "V3_PATH.write_text(json.dumps(data, indent=2), encoding=\"utf-8\")"
+    },
+    {
+      "file": "scripts\\tools\\purge_outside_market_hours.py",
+      "line": 91,
+      "pattern": "open_write",
+      "code": "with open(tmp, \"w\", newline=\"\") as f:"
+    },
+    {
+      "file": "scripts\\tools\\sanitize_prom_rules.py",
+      "line": 26,
+      "pattern": "open_write",
+      "code": "with open(path, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\summary\\panels\\alerts.py",
+      "line": 44,
+      "pattern": "json_load",
+      "code": "data = json.load(f)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\base.py",
+      "line": 433,
+      "pattern": "json_load",
+      "code": "obj = _json.load(_f)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\base.py",
+      "line": 527,
+      "pattern": "open_write",
+      "code": "with open(path, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\base.py",
+      "line": 528,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\dossier.py",
+      "line": 120,
+      "pattern": "open_write",
+      "code": "with os.fdopen(fd, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\dossier.py",
+      "line": 121,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, ensure_ascii=False, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\dossier.py",
+      "line": 137,
+      "pattern": "open_write",
+      "code": "with open(path, \"w\", encoding=\"utf-8\") as f:"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\dossier.py",
+      "line": 138,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f, ensure_ascii=False, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 142,
+      "pattern": "json_load",
+      "code": "obj = json.load(f)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 171,
+      "pattern": "open_write",
+      "code": "with open(tmp, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 172,
+      "pattern": "json_dump",
+      "code": "json.dump(payload, f)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 383,
+      "pattern": "json_load",
+      "code": "arr = json.load(f)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 409,
+      "pattern": "json_load",
+      "code": "obj = json.load(f)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 425,
+      "pattern": "open_write",
+      "code": "with open(tmp, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 426,
+      "pattern": "json_dump",
+      "code": "json.dump(existing, f, ensure_ascii=False, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 430,
+      "pattern": "open_write",
+      "code": "with open(path, 'w', encoding='utf-8') as f:"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 431,
+      "pattern": "json_dump",
+      "code": "json.dump(existing, f, ensure_ascii=False, indent=2)"
+    },
+    {
+      "file": "scripts\\summary\\plugins\\stream_gater.py",
+      "line": 441,
+      "pattern": "json_load",
+      "code": "obj = json.load(f)"
+    }
+  ]
+}
