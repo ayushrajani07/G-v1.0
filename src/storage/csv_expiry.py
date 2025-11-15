@@ -82,11 +82,11 @@ class CsvExpiryResolver:
                 expiry if isinstance(expiry, datetime.date)
                 else datetime.datetime.strptime(str(expiry), '%Y-%m-%d').date()
             )
-        except Exception:
+        except (ValueError, TypeError, AttributeError) as e:
             # Fallback: treat unparsable expiry as today (should be rare) to avoid crash
             try:
-                self.logger.warning("CSV_EXPIRY_PARSE_FALLBACK index=%s raw=%s", index, expiry)
-            except Exception:
+                self.logger.warning("CSV_EXPIRY_PARSE_FALLBACK index=%s raw=%s error=%s", index, expiry, e)
+            except (AttributeError, TypeError):
                 pass
             exp_date = datetime.date.today()
         
@@ -103,7 +103,7 @@ class CsvExpiryResolver:
                     "CSV_EXPIRY_TAG_RAW_DATE index=%s tag=%s -> falling back to heuristic classification", index, supplied_tag
                     "-> falling back to heuristic classification"
                 )
-            except Exception:
+            except (AttributeError, TypeError):
                 pass
             supplied_tag = None
         
@@ -129,10 +129,10 @@ class CsvExpiryResolver:
                             "CSV_EXPIRY_CORRECTED monthly_anchor index=%s tag=%s corrected_date=%s",
                             index, supplied_tag, expiry_str
                         )
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+                    except (AttributeError, TypeError, KeyError) as e:
+                        self.logger.debug("CSV_EXPIRY_CORRECTION_ERROR error=%s", e)
+        except (AttributeError, TypeError, KeyError, ValueError) as e:
+            self.logger.debug("CSV_EXPIRY_MONTHLY_ANCHOR_ERROR error=%s", e)
         
         return exp_date, expiry_code, supplied_tag, expiry_str
     
@@ -233,8 +233,8 @@ class CsvExpiryResolver:
                         "Advisory: Not all configured expiries observed for %s today. Seen=%s Missing=%s", index, sorted(seen), sorted(missing)
                         f"Seen={sorted(seen)} Missing={sorted(missing)}"
                     )
-        except Exception:  # pragma: no cover
-            pass
+        except (IOError, OSError, json.JSONDecodeError, KeyError, AttributeError, TypeError, ValueError) as e:  # pragma: no cover
+            self.logger.debug("CSV_EXPIRY_ADVISORY_ERROR error=%s", e)
     
     def handle_expiry_misclassification(
         self,
@@ -297,8 +297,8 @@ class CsvExpiryResolver:
                             f"classified={expiry_code} days_away={days_to_expiry} "
                             f"exp_date={expiry_str} -> reclassifying to {new_code}"
                         )
-                except Exception:
-                    pass
+                except (AttributeError, TypeError) as e:
+                    self.logger.debug("CSV_EXPIRY_MISCLASS_LOG_ERROR error=%s", e)
                 
                 # Emit metric
                 try:
@@ -313,14 +313,15 @@ class CsvExpiryResolver:
                                 'offset': str(offset)
                             }
                         )
-                except Exception:
-                    pass
+                except (AttributeError, TypeError, KeyError) as e:
+                    self.logger.debug("CSV_EXPIRY_RECLASSIFIED_METRICS_ERROR error=%s", e)
                 
                 return new_code, False  # Don't skip row, just reclassify
             
             return expiry_code, False
-        except Exception:
+        except (ValueError, TypeError, IndexError, AttributeError) as e:
             # Failed to parse dates → don't reclassify
+            self.logger.debug("CSV_EXPIRY_MISCLASS_PARSE_ERROR error=%s", e)
             return expiry_code, False
     
     # Private helper methods
@@ -369,5 +370,6 @@ class CsvExpiryResolver:
                 return last_weekday
             
             return exp_date
-        except Exception:
+        except (ValueError, AttributeError, TypeError) as e:
+            self.logger.debug("CSV_EXPIRY_MONTHLY_VALIDATION_ERROR error=%s", e)
             return exp_date
