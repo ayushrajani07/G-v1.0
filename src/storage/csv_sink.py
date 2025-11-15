@@ -1600,16 +1600,16 @@ class CsvSink:
                         m.labels(index=index, expiry=expiry_label, strike=strike_label, type='CE').set(ce_val)
                         # PE side
                         m.labels(index=index, expiry=expiry_label, strike=strike_label, type='PE').set(pe_val)
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError, ValueError):
+                        pass  # Metrics not available or invalid value
                 _set('delta', ce_delta, pe_delta)
                 _set('theta', ce_theta, pe_theta)
                 _set('gamma', ce_gamma, pe_gamma)
                 _set('vega', ce_vega, pe_vega)
                 _set('rho', ce_rho, pe_rho)
                 _set('iv', ce_iv, pe_iv)
-        except Exception:
-            pass
+        except (AttributeError, KeyError, TypeError) as e:
+            self.logger.debug(f"Error publishing option metrics: {e}")
         return row, header
 
     def _append_csv_row(self, filepath: str, row: list[Any], header: list[str] | None) -> None:
@@ -1658,14 +1658,14 @@ class CsvSink:
                 try:
                     if self.metrics and hasattr(self.metrics, 'csv_files_created'):
                         self.metrics.csv_files_created.inc()  # type: ignore[call-arg]
-                except Exception:
-                    pass
+                except (AttributeError, TypeError):
+                    pass  # Metrics not available
         finally:
             if lock_created:
                 try:
                     os.remove(lock_path)
-                except Exception:
-                    pass
+                except (IOError, OSError, FileNotFoundError):
+                    pass  # Lock file cleanup failed
 
     def _append_many_csv_rows(self, filepath: str, rows: list[list[Any]], header: list[str] | None) -> None:
         if not rows:
@@ -1699,8 +1699,8 @@ class CsvSink:
                 with open(lock_path, 'x') as _lf:
                     _lf.write(str(os.getpid()))
                 lock_created = True
-            except Exception:
-                pass
+            except (IOError, OSError, FileExistsError):
+                pass  # Lock already exists or I/O error
         try:
             with open(filepath, 'a' if file_exists else 'w', newline='') as f:
                 writer = csv.writer(f)
@@ -1712,14 +1712,14 @@ class CsvSink:
                 try:
                     if self.metrics and hasattr(self.metrics, 'csv_files_created'):
                         self.metrics.csv_files_created.inc()  # type: ignore[call-arg]
-                except Exception:
-                    pass
+                except (AttributeError, TypeError):
+                    pass  # Metrics not available
         finally:
             if lock_created:
                 try:
                     os.remove(lock_path)
-                except Exception:
-                    pass
+                except (IOError, OSError, FileNotFoundError):
+                    pass  # Lock file cleanup failed
 
     # ---------------- Aggregation Support -----------------
     def _update_aggregation_state(
@@ -1748,16 +1748,16 @@ class CsvSink:
                     day_width=day_width,
                     timestamp=timestamp,
                 )
-        except Exception:
-            pass
+        except (AttributeError, TypeError) as e:
+            self.logger.debug(f"Aggregator update failed: {e}")
 
     def _maybe_write_aggregated_overview(self, index: str, timestamp: datetime.datetime) -> None:
         # Prefer delegating to aggregator if configured
         try:
             if self.aggregator and self.aggregator.maybe_write_aggregated_overview(index=index, timestamp=timestamp):
                 return
-        except Exception:
-            pass
+        except (AttributeError, TypeError, IOError, OSError) as e:
+            self.logger.debug(f"Aggregator write overview failed: {e}")
         last = self._agg_last_write.get(index)
         if not last:
             self._agg_last_write[index] = timestamp
