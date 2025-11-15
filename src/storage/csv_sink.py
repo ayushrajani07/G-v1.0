@@ -1474,15 +1474,17 @@ class CsvSink:
                             continue
                         try:
                             prev_tp = float(last.get('tp', '') or 0.0)
-                        except Exception:
+                        except (ValueError, TypeError):
                             prev_tp = None
                         if prev_tp is not None:
                             self._tp_prev_close_by_key[key] = prev_tp
                             break
-                except Exception:
+                except (IOError, OSError, csv.Error) as e:
+                    self.logger.debug(f"Error reading prev close CSV: {e}")
                     continue
             self._tp_prev_loaded_date_by_key[key] = date_key
-        except Exception:
+        except (KeyError, TypeError) as e:
+            self.logger.debug(f"Error loading prev close, using fallback key: {e}")
             fallback_key = (index, expiry_code, int(offset))
             self._tp_prev_loaded_date_by_key[fallback_key] = date_key
 
@@ -1504,12 +1506,12 @@ class CsvSink:
         def f(d: dict[str, Any] | None, k: str, default: float = 0.0) -> float:
             try:
                 return float(d.get(k, default)) if d else default
-            except Exception:
+            except (ValueError, TypeError):
                 return default
         def i(d: dict[str, Any] | None, k: str, default: int = 0) -> int:
             try:
                 return int(d.get(k, default)) if d else default
-            except Exception:
+            except (ValueError, TypeError):
                 return default
         ce_price = f(call_data, 'last_price')
         ce_avg = f(call_data, 'avg_price')
@@ -1551,12 +1553,12 @@ class CsvSink:
             # Use the date part from ts_str_rounded (dd-mm-YYYY) to derive date_key
             d,m,y = ts_str_rounded.split(' ')[0].split('-')
             date_key = f"{y}-{m}-{d}"
-        except Exception:
+        except (ValueError, IndexError, AttributeError):
             date_key = datetime.date.today().isoformat()
         try:
             self._ensure_tp_prev_close_for_key(index=index, expiry_code=expiry_code, offset=offset, date_key=date_key)
-        except Exception:
-            pass
+        except (IOError, OSError, KeyError, TypeError) as e:
+            self.logger.debug(f"Could not load prev close: {e}")
         series_key = (index, expiry_code, int(offset))
         # Initialize per-day open if needed
         if self._tp_open_date_by_key.get(series_key) != date_key:
