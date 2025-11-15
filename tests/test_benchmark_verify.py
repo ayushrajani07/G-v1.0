@@ -1,6 +1,11 @@
 import os, json, gzip, pathlib
 from src.collectors.unified_collectors import run_unified_collectors
-from scripts.bench_verify import main as verify_main
+from scripts.bench_tools import main as bench_main
+
+
+def verify_main(args):
+    """Wrapper to match old API."""
+    return bench_main(['verify'] + args)
 
 class _Csv:  # noop
     def write_options_data(self,*a,**k): return None

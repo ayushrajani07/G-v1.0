@@ -66,7 +66,7 @@ STATUS_SIM = _path("scripts", "status_simulator.py")
 DEV_TOOLS = _path("scripts", "dev_tools.py")
 CSV_AUDIT = _path("scripts", "csv_audit.py")
 CSV_BACKFILL = _path("scripts", "csv_backfill.py")
-PANELS_BRIDGE = _path("scripts", "status_to_panels.py")  # legacy / bridge for panels artifacts
+# PANELS_BRIDGE removed - panels are handled by unified summary app
 
 
 def _python_exe() -> str:
@@ -133,7 +133,7 @@ def _stop_background_processes() -> int:
     """Stop typical background processes started for demo flows.
 
     Targets:
-    - (legacy) status_to_panels.py (removed; panels handled by unified summary)
+    - Legacy status_to_panels.py removed; panels handled by unified summary
       - scripts/dev_tools.py simulate-status (simulator)
       - scripts/status_simulator.py (if running in loop)
 
