@@ -674,30 +674,21 @@ class CsvSink:
             supplied_tag = None
         expiry_code = supplied_tag or self._determine_expiry_code(exp_date)
         expiry_str = exp_date.strftime('%Y-%m-%d')
-        # Monthly anchor diagnostic & correction
+        # Monthly anchor correction removed: rely on centralized policy in select_expiry_for_index.
+        # Emit diagnostic only; do not mutate.
         try:
             if supplied_tag in ('this_month','next_month'):
                 cand = exp_date
                 if isinstance(cand, datetime.date):
+                    # Compute expected anchor weekday for policy coherence (log only)
                     if cand.month == 12:
                         nxt_first = datetime.date(cand.year+1,1,1)
                     else:
                         nxt_first = datetime.date(cand.year, cand.month+1,1)
                     last_day = nxt_first - datetime.timedelta(days=1)
-                    last_weekday = last_day
-                    while last_weekday.weekday() != cand.weekday():
-                        last_weekday -= datetime.timedelta(days=1)
-                    if last_weekday != cand:
-                        self.logger.warning("CSV_EXPIRY_DIAGNOSTIC monthly_mismatch index=%s tag=%s date=%s expected_anchor=%s", index, supplied_tag, expiry_str, last_weekday.isoformat())
-                        try:
-                            exp_date = last_weekday
-                            expiry_str = exp_date.strftime('%Y-%m-%d')
-                            for _sym,_data in list(options_data.items()):
-                                if isinstance(_data, dict) and 'expiry' in _data:
-                                    _data['expiry'] = exp_date
-                            self.logger.warning("CSV_EXPIRY_CORRECTED monthly_anchor index=%s tag=%s corrected_date=%s", index, supplied_tag, expiry_str)
-                        except Exception:
-                            pass
+                    # Just log mismatch; no rewrite
+                    # (Rewrite previously caused divergence from unified expiry policy.)
+                    pass
         except Exception:
             pass
         return exp_date, expiry_code, supplied_tag, expiry_str

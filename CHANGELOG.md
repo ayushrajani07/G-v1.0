@@ -9,6 +9,15 @@ All notable changes to this project will be documented in this file. Dates use I
 - Ensemble exporter reliability: `scripts/ml/ensemble_consensus_exporter.py` now prefers a monkeypatched project root, and when absent, uses the subprocess working directory if it contains a `data/` folder. This fixes subprocess tests that run under a tmp root and ensures deterministic artifact locations. Additionally, one-shot runs always guarantee the ensemble CSV header and a placeholder row when no predictions are emitted.
 - Timezone-aware UTC: Replaced deprecated `datetime.utcnow()` usage with `datetime.now(datetime.UTC)` in `src/storage/csv_sink.py`, and updated the related test `tests/storage/test_atomic_concurrency.py` to use timezone-aware timestamps. This removes deprecation warnings and standardizes UTC handling.
 
+- Added placeholder tagging (`applied_k_source=placeholder`) and sidecar `placeholder` flags
+- Quarantine logic no longer reinstates fully quarantined models; emits placeholder artifacts instead
+- Override `stable_cycles` no longer persisted during dry-run mode
+- Unified project root resolution across exporter and sink (single provider ordering)
+- Removed monthly anchor in-place correction from `CsvSink`; rely on centralized expiry policy
+- Weights sidecar now includes readiness metadata (weights_ready, points_available, min_points_required)
+- Ensemble endpoints filter placeholder rows by default (opt-in via include_placeholders)
+- Disagreement stddev fallback annotated (`none+no_stddev`) when insufficient data / numpy missing
+- Deprecated legacy `storage.csvio.api` shim with one-time warning (prefer `src.storage.csvio`)
 ### Provider Expiry Resolution (2025-10-27)
 - Unified provider expiry discovery behind a thin wrapper (`src/provider/expiries.py`) that prefers provider-supplied candidate lists and falls back to instrument scanning when unavailable.
 - Discovery paths no longer fabricate weekday-based expiries; upstream selection uses the universal selector in `src.utils.expiry_dates` with strict index policies (e.g., BANKNIFTY/FINNIFTY monthly-only).

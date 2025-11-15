@@ -370,6 +370,7 @@ async def api_ml_ensemble(
     index: str = Query("NIFTY", description="Index name e.g., NIFTY, BANKNIFTY, SENSEX, FINNIFTY"),
     horizon: Optional[str] = Query(None, description="Filter by horizon label (string) if present in CSV"),
     tail: int = Query(600, ge=1, le=20000, description="Return last N rows for small payloads"),
+    include_placeholders: bool = Query(False, description="If false, suppress rows with applied_k_source=placeholder"),
 ) -> PlainTextResponse:
     """Serve ensemble consensus CSV built by exporter.
 
@@ -440,13 +441,26 @@ async def api_ml_ensemble(
             rows = out_lines[1:]
             cols = new_cols
 
-        if horizon:
+        if horizon or (not include_placeholders):
             try:
                 idx_hor = cols.index("horizon")
             except Exception:
                 # if malformed header, just return unfiltered
                 return PlainTextResponse("\n".join([header, *rows]), media_type="text/csv")
-            rows = [r for r in rows if (len(r.split(",")) > idx_hor and r.split(",")[idx_hor] == str(horizon))]
+            filtered = []
+            for r in rows:
+                parts = r.split(",")
+                if horizon and not (len(parts) > idx_hor and parts[idx_hor] == str(horizon)):
+                    continue
+                if not include_placeholders:
+                    try:
+                        src_idx = cols.index("applied_k_source") if "applied_k_source" in cols else -1
+                        if src_idx >= 0 and len(parts) > src_idx and parts[src_idx] == "placeholder":
+                            continue
+                    except Exception:
+                        pass
+                filtered.append(r)
+            rows = filtered
 
         return PlainTextResponse("\n".join([header, *rows]), media_type="text/csv")
     except HTTPException:
@@ -644,6 +658,7 @@ async def api_ml_ensemble_k_applied(
     index: str = Query("NIFTY", description="Index name e.g., NIFTY, BANKNIFTY, SENSEX, FINNIFTY"),
     horizon: Optional[str] = Query(None, description="Horizon label to surface (optional filter)"),
     tail: int = Query(1, ge=1, le=1000, description="How many latest rows to return"),
+    include_placeholders: bool = Query(False, description="Include placeholder rows (applied_k_source=placeholder) if true"),
 ) -> PlainTextResponse:
     """Return latest applied_k values from ensemble CSV.
 
@@ -683,6 +698,13 @@ async def api_ml_ensemble_k_applied(
         out = ["timestamp,applied_k,applied_k_source,scaled_radius,index,horizon"]
         for r in data:
             parts = r.split(",")
+            if not include_placeholders:
+                try:
+                    src_val = parts[src_idx]
+                except Exception:
+                    src_val = ""
+                if src_val == "placeholder":
+                    continue
             out.append(
                 ",".join([
                     parts[ts_idx],

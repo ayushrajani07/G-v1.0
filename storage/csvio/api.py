@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import logging
 from pathlib import Path
 from typing import Iterable, List, Sequence
 import csv
@@ -11,6 +12,8 @@ import csv
 # compute 'atm' when existing header has 'atm' but incoming header omits it (using strike-offset),
 # and preserve existing header ordering.
 
+
+_warned = False
 
 def _detect_backend(passed: str | None) -> str:
     if passed:
@@ -80,6 +83,13 @@ def _align_row(existing_header: Sequence[str], provided_header: Sequence[str], r
 
 
 def append_one(path: str, row: Sequence[str], header: Sequence[str] | None = None, backend: str | None = None) -> None:
+    global _warned
+    if not _warned:
+        try:
+            logging.getLogger(__name__).warning("DEPRECATED csvio shim in 'storage.csvio.api' – prefer 'src.storage.csvio' modules.")
+        except Exception:
+            pass
+        _warned = True
     fp = Path(path)
     be = _detect_backend(backend)
     exists = fp.exists()
@@ -117,6 +127,13 @@ def append_one(path: str, row: Sequence[str], header: Sequence[str] | None = Non
 
 
 def append_many(path: str, rows: Iterable[Sequence[str]], header: Sequence[str] | None = None, backend: str | None = None) -> None:
+    global _warned
+    if not _warned:
+        try:
+            logging.getLogger(__name__).warning("DEPRECATED csvio shim in 'storage.csvio.api' – prefer 'src.storage.csvio' modules.")
+        except Exception:
+            pass
+        _warned = True
     fp = Path(path)
     be = _detect_backend(backend)
     exists = fp.exists()

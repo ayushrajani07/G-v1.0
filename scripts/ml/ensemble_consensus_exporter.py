@@ -40,24 +40,25 @@ except Exception:  # pragma: no cover
 
 
 def resolve_project_root() -> Path:
-    """Resolve project root with test-friendly overrides.
+    """Unified project root resolution.
 
     Order:
     - G6_PROJECT_ROOT env var if set
-    - Static path provider via web_paths.project_root() (monkeypatch-friendly for in-process tests)
-    - Current working directory if it looks like a project root (has 'data/') (subprocess fallback)
+    - web_paths.project_root() (single shared provider; monkeypatch-friendly)
+    - CWD if it looks like a project root (contains 'data/') for subprocess tmp test runs
+    - Module ROOT fallback
     """
     try:
         env_root = os.environ.get("G6_PROJECT_ROOT", "").strip()
         if env_root:
-            return Path(env_root)
+            p = Path(env_root)
+            if p.exists():
+                return p
     except Exception:
         pass
-    # Prefer the path provider early so monkeypatch in tests overrides CWD
     try:
         r = web_paths.project_root()
-        # If dashboard paths resolves to repository ROOT (no test override) but CWD is a tmp test root
-        # containing a data directory, prefer CWD so subprocess tests that set cwd work without monkeypatch.
+        # Subprocess test heuristic: prefer CWD if provider returned repository root but CWD has data/
         try:
             if r == ROOT:
                 cwd = Path.cwd()
@@ -68,14 +69,12 @@ def resolve_project_root() -> Path:
         return r
     except Exception:
         pass
-    # Fallback to CWD heuristic last
     try:
         cwd = Path.cwd()
         if (cwd / "data").exists():
             return cwd
     except Exception:
         pass
-    # Last resort: module root
     return ROOT
 
 # Expose a test-friendly alias that can be monkeypatched by tests
@@ -331,7 +330,8 @@ def main() -> None:
                 continue
             # compute consensus mean and std
             cons = float(sum(vals) / len(vals))
-            dis = float(np.std(vals)) if np is not None else 0.0
+            dis = float(np.std(vals)) if (np is not None and len(vals) >= 2) else 0.0
+            no_stddev_mode = (np is None or len(vals) < 2)
             # One-step-ahead disagreement forecast using EMA
             alpha = float(args.dis_ema_alpha) if 0.0 < float(args.dis_ema_alpha) <= 1.0 else 0.6
             # Prediction for current bucket is last cycle's EMA
@@ -442,9 +442,18 @@ def main() -> None:
                             weights_summary = "|".join(f"{m}:{weights[m]:.3f}" for m in sorted(weights.keys()))
                         # write sidecar JSON
                         try:
+                            side_payload = {
+                                "timestamp": last_bucket,
+                                "weights": weights,
+                                "rmse": rmse_map,
+                                "weights_ready": True,
+                                "points_available": min(len(v) for v in rmse_map.values()) if rmse_map else 0,
+                                "min_points_required": 5,
+                                "placeholder": False,
+                            }
                             safe_write_json(
                                 weights_sidecar_fp,
-                                {"timestamp": last_bucket, "weights": weights, "rmse": rmse_map},
+                                side_payload,
                                 function_name='ensemble_weights_sidecar_write'
                             )
                         except Exception:
@@ -486,6 +495,17 @@ def main() -> None:
                         pass
 
             ts_iso = datetime.fromtimestamp(last_bucket / 1000).replace(microsecond=0).isoformat()
+            # If all models are quarantined (active_pairs emptied earlier) skip emission to preserve quarantine effect
+            if len(active_pairs) == 0 and len(quarantined_now) > 0:
+                if args.once:
+                    try:
+                        _ensure_placeholder_sidecars(idx, out_fp.parent, horizon, models, last_bucket_hint=last_bucket)
+                        _ensure_placeholder_row(out_fp, idx, horizon, last_bucket_hint=last_bucket)
+                    except Exception:
+                        pass
+                    break
+                _sleep_s(args.interval)
+                continue
             # Calibration + overrides
             applied_k_source = "none"
             applied_k = 1.0
@@ -593,10 +613,11 @@ def main() -> None:
                         ov_meta["stable_cycles"] = current_cycles
                         ovs[horizon] = ov_meta
                         o_obj["overrides"] = ovs
-                        try:
-                            safe_write_json(override_fp, o_obj, function_name='ensemble_override_cycles_write')
-                        except Exception:
-                            pass
+                        if not bool(args.dry_run_overrides):
+                            try:
+                                safe_write_json(override_fp, o_obj, function_name='ensemble_override_cycles_write')
+                            except Exception:
+                                pass
                     # If threshold met, log auto-remove intent and optionally remove override
                     if current_cycles >= int(args.override_sustain_cycles) and isinstance(ov_meta, dict):
                         tiso = datetime.fromtimestamp(last_bucket / 1000).replace(microsecond=0).isoformat()
@@ -648,6 +669,8 @@ def main() -> None:
                     applied_k = float(k_after)
                     applied_k_source = f"{applied_k_source}+forecast"
             scaled_radius = dis * applied_k if isinstance(dis, (int, float)) else 0.0
+            if no_stddev_mode and applied_k_source == "none":
+                applied_k_source = "none+no_stddev"
             # Try to get tp for this bucket to assess effective coverage hit
             tp_val_cov: Optional[float] = None
             try:
@@ -801,6 +824,7 @@ def _ensure_placeholder_sidecars(index: str, base: Path, horizon: str, models: L
                 "index": index,
                 "horizon": horizon,
                 "n": 0,
+                "placeholder": True,
             }
             safe_write_json(calib_fp, payload, function_name='ensemble_placeholder_calibration')
         except Exception:
@@ -811,7 +835,16 @@ def _ensure_placeholder_sidecars(index: str, base: Path, horizon: str, models: L
         try:
             weights = {m: 0.0 for m in models}
             rmse = {m: None for m in models}
-            safe_write_json(weights_fp, {"timestamp": ts, "weights": weights, "rmse": rmse}, function_name='ensemble_placeholder_weights')
+            side = {
+                "timestamp": ts,
+                "weights": weights,
+                "rmse": rmse,
+                "weights_ready": False,
+                "points_available": 0,
+                "min_points_required": 5,
+                "placeholder": True,
+            }
+            safe_write_json(weights_fp, side, function_name='ensemble_placeholder_weights')
         except Exception:
             pass
     # Quarantine log touch
@@ -854,10 +887,10 @@ def _ensure_placeholder_row(out_fp: Path, index: str, horizon: str, *, bucket_ms
         ts_iso = datetime.fromtimestamp(b / 1000).replace(microsecond=0).isoformat()
         base_line = f"{ts_iso},0.000000,0.000000,0,,{index.upper()},{horizon}"
         if index.upper() != "ZZZTEST":
-            extended = ",".join([
-                "0.000000","","","0.000000","none","0.000000","0.000000","0.000000"
-            ])
-            base_line = base_line + "," + extended
+                extended = ",".join([
+                    "0.000000","","","0.000000","placeholder","0.000000","0.000000","0.000000"
+                ])
+                base_line = base_line + "," + extended
         safe_append_line(out_fp, base_line)
     except Exception:
         pass
