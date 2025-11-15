@@ -10,13 +10,13 @@ g6_collection_duration_seconds_count 0.0
 g6_collection_duration_seconds_sum 0.0
 # HELP g6_collection_duration_seconds_created Time spent collecting data
 # TYPE g6_collection_duration_seconds_created gauge
-g6_collection_duration_seconds_created 1.7631923630287514e+09
+g6_collection_duration_seconds_created 1.763192823655472e+09
 # HELP g6_collection_cycles_total Number of collection cycles run
 # TYPE g6_collection_cycles_total counter
 g6_collection_cycles_total 0.0
 # HELP g6_collection_cycles_created Number of collection cycles run
 # TYPE g6_collection_cycles_created gauge
-g6_collection_cycles_created 1.763192363028766e+09
+g6_collection_cycles_created 1.7631928236554887e+09
 # HELP g6_collection_errors_total Number of collection errors
 # TYPE g6_collection_errors_total counter
 # HELP g6_index_price Current index price
@@ -36,13 +36,13 @@ g6_collection_cycles_created 1.763192363028766e+09
 g6_sse_apply_full_total_total 0.0
 # HELP g6_sse_apply_full_total_created Count of SSE panel full replacements applied
 # TYPE g6_sse_apply_full_total_created gauge
-g6_sse_apply_full_total_created 1.7631923630288363e+09
+g6_sse_apply_full_total_created 1.7631928236555603e+09
 # HELP g6_sse_apply_diff_total_total Count of SSE panel diff merges applied
 # TYPE g6_sse_apply_diff_total_total counter
 g6_sse_apply_diff_total_total 0.0
 # HELP g6_sse_apply_diff_total_created Count of SSE panel diff merges applied
 # TYPE g6_sse_apply_diff_total_created gauge
-g6_sse_apply_diff_total_created 1.7631923630288467e+09
+g6_sse_apply_diff_total_created 1.7631928236555712e+09
 # HELP g6_sse_reconnects_total_total Number of SSE reconnect attempts (by reason)
 # TYPE g6_sse_reconnects_total_total counter
 # HELP g6_sse_backoff_seconds Backoff sleep duration seconds distribution for SSE reconnect attempts
@@ -66,7 +66,7 @@ g6_sse_backoff_seconds_count 0.0
 g6_sse_backoff_seconds_sum 0.0
 # HELP g6_sse_backoff_seconds_created Backoff sleep duration seconds distribution for SSE reconnect attempts
 # TYPE g6_sse_backoff_seconds_created gauge
-g6_sse_backoff_seconds_created 1.763192363028869e+09
+g6_sse_backoff_seconds_created 1.7631928236555943e+09
 # HELP g6_stream_append_total_total Indices stream append events
 # TYPE g6_stream_append_total_total counter
 # HELP g6_stream_skipped_total_total Indices stream gating skips
@@ -74,19 +74,19 @@ g6_sse_backoff_seconds_created 1.763192363028869e+09
 g6_stream_skipped_total_total{mode="auto",reason="same_cycle"} 2.0
 # HELP g6_stream_skipped_total_created Indices stream gating skips
 # TYPE g6_stream_skipped_total_created gauge
-g6_stream_skipped_total_created{mode="auto",reason="same_cycle"} 1.7631923630394058e+09
+g6_stream_skipped_total_created{mode="auto",reason="same_cycle"} 1.7631928236675763e+09
 # HELP g6_stream_state_persist_errors_total_total State file persistence errors for indices stream gating
 # TYPE g6_stream_state_persist_errors_total_total counter
 g6_stream_state_persist_errors_total_total 0.0
 # HELP g6_stream_state_persist_errors_total_created State file persistence errors for indices stream gating
 # TYPE g6_stream_state_persist_errors_total_created gauge
-g6_stream_state_persist_errors_total_created 1.7631923630289195e+09
+g6_stream_state_persist_errors_total_created 1.7631928236556485e+09
 # HELP g6_stream_conflict_total_total Potential concurrent indices stream writer conflicts detected
 # TYPE g6_stream_conflict_total_total counter
 g6_stream_conflict_total_total 0.0
 # HELP g6_stream_conflict_total_created Potential concurrent indices stream writer conflicts detected
 # TYPE g6_stream_conflict_total_created gauge
-g6_stream_conflict_total_created 1.76319236302893e+09
+g6_stream_conflict_total_created 1.763192823655657e+09
 # HELP g6_option_price Option price
 # TYPE g6_option_price gauge
 # HELP g6_option_volume Option volume
@@ -115,13 +115,13 @@ g6_pipeline_cycle_success 0.0
 g6_pipeline_cycles_total_total 0.0
 # HELP g6_pipeline_cycles_total_created Total pipeline cycles executed (summary produced)
 # TYPE g6_pipeline_cycles_total_created gauge
-g6_pipeline_cycles_total_created 1.763192363029122e+09
+g6_pipeline_cycles_total_created 1.7631928236558511e+09
 # HELP g6_pipeline_cycles_success_total_total Total successful pipeline cycles (no phase errors)
 # TYPE g6_pipeline_cycles_success_total_total counter
 g6_pipeline_cycles_success_total_total 0.0
 # HELP g6_pipeline_cycles_success_total_created Total successful pipeline cycles (no phase errors)
 # TYPE g6_pipeline_cycles_success_total_created gauge
-g6_pipeline_cycles_success_total_created 1.7631923630291305e+09
+g6_pipeline_cycles_success_total_created 1.7631928236558597e+09
 # HELP g6_pipeline_phase_duration_seconds Histogram of individual phase execution wall time in seconds (attempts aggregated)
 # TYPE g6_pipeline_phase_duration_seconds histogram
 # HELP g6_pipeline_cycle_error_ratio Per-cycle phase error ratio (phases_error / phases_total)
@@ -144,19 +144,19 @@ g6_pipeline_trends_cycles 0.0
 g6_panel_diff_writes_total{type="_seed"} 0.0
 # HELP g6_panel_diff_writes_created Panel diff snapshots written
 # TYPE g6_panel_diff_writes_created gauge
-g6_panel_diff_writes_created{type="_seed"} 1.76319236302936e+09
+g6_panel_diff_writes_created{type="_seed"} 1.763192823656091e+09
 # HELP g6_panel_diff_truncated_total Panel diff truncation events
 # TYPE g6_panel_diff_truncated_total counter
 g6_panel_diff_truncated_total{reason="_seed"} 0.0
 # HELP g6_panel_diff_truncated_created Panel diff truncation events
 # TYPE g6_panel_diff_truncated_created gauge
-g6_panel_diff_truncated_created{reason="_seed"} 1.76319236302938e+09
+g6_panel_diff_truncated_created{reason="_seed"} 1.7631928236561115e+09
 # HELP g6_panel_diff_bytes_total Total bytes of diff JSON written
 # TYPE g6_panel_diff_bytes_total counter
 g6_panel_diff_bytes_total{type="_seed"} 0.0
 # HELP g6_panel_diff_bytes_created Total bytes of diff JSON written
 # TYPE g6_panel_diff_bytes_created gauge
-g6_panel_diff_bytes_created{type="_seed"} 1.7631923630293965e+09
+g6_panel_diff_bytes_created{type="_seed"} 1.7631928236561303e+09
 # HELP g6_panel_diff_bytes_last Bytes of last diff JSON written
 # TYPE g6_panel_diff_bytes_last gauge
 g6_panel_diff_bytes_last{type="_seed"} 0.0
@@ -217,19 +217,19 @@ g6_metric_group_state{group="storage"} 0.0
 g6_cycle_sla_breach_total 0.0
 # HELP g6_cycle_sla_breach_created Cycle SLA breach occurrences
 # TYPE g6_cycle_sla_breach_created gauge
-g6_cycle_sla_breach_created 1.7631923630296726e+09
+g6_cycle_sla_breach_created 1.7631928236565182e+09
 # HELP g6_provider_failover_total Provider failover events
 # TYPE g6_provider_failover_total counter
 g6_provider_failover_total 0.0
 # HELP g6_provider_failover_created Provider failover events
 # TYPE g6_provider_failover_created gauge
-g6_provider_failover_created 1.7631923630296884e+09
+g6_provider_failover_created 1.7631928236565344e+09
 # HELP g6_missing_cycles_total Detected missing cycles (scheduler gaps)
 # TYPE g6_missing_cycles_total counter
 g6_missing_cycles_total 0.0
 # HELP g6_missing_cycles_created Detected missing cycles (scheduler gaps)
 # TYPE g6_missing_cycles_created gauge
-g6_missing_cycles_created 1.7631923630297213e+09
+g6_missing_cycles_created 1.763192823656568e+09
 # HELP g6_option_detail_band_rejections_total Option detail band window rejections
 # TYPE g6_option_detail_band_rejections_total counter
 # HELP g6_uptime_seconds Process uptime in seconds
@@ -261,13 +261,13 @@ g6_api_response_latency_ms_count 0.0
 g6_api_response_latency_ms_sum 0.0
 # HELP g6_api_response_latency_ms_created Upstream API response latency distribution (ms)
 # TYPE g6_api_response_latency_ms_created gauge
-g6_api_response_latency_ms_created 1.7631923630298042e+09
+g6_api_response_latency_ms_created 1.76319282365665e+09
 # HELP g6_options_processed_total Total option records processed
 # TYPE g6_options_processed_total counter
 g6_options_processed_total 0.0
 # HELP g6_options_processed_created Total option records processed
 # TYPE g6_options_processed_created gauge
-g6_options_processed_created 1.763192363029833e+09
+g6_options_processed_created 1.763192823656677e+09
 # HELP g6_options_processed_per_minute Throughput of options processed per minute (rolling)
 # TYPE g6_options_processed_per_minute gauge
 g6_options_processed_per_minute 0.0
@@ -295,22 +295,22 @@ g6_collection_cycle_in_progress 0.0
 g6_last_success_cycle_unixtime 0.0
 # HELP g6_memory_usage_mb Resident memory usage in MB
 # TYPE g6_memory_usage_mb gauge
-g6_memory_usage_mb 0.0
+g6_memory_usage_mb 257.32421875
 # HELP g6_cpu_usage_percent Process CPU utilization percent
 # TYPE g6_cpu_usage_percent gauge
 g6_cpu_usage_percent 0.0
 # HELP g6_disk_io_operations_total Disk I/O operation count (increment)
 # TYPE g6_disk_io_operations_total counter
-g6_disk_io_operations_total 0.0
+g6_disk_io_operations_total 46455.0
 # HELP g6_disk_io_operations_created Disk I/O operation count (increment)
 # TYPE g6_disk_io_operations_created gauge
-g6_disk_io_operations_created 1.7631923630300252e+09
+g6_disk_io_operations_created 1.7631928236568043e+09
 # HELP g6_network_bytes_transferred_total Bytes transferred over network (cumulative)
 # TYPE g6_network_bytes_transferred_total counter
-g6_network_bytes_transferred_total 0.0
+g6_network_bytes_transferred_total 2.285880454e+09
 # HELP g6_network_bytes_transferred_created Bytes transferred over network (cumulative)
 # TYPE g6_network_bytes_transferred_created gauge
-g6_network_bytes_transferred_created 1.7631923630300362e+09
+g6_network_bytes_transferred_created 1.763192823656815e+09
 # HELP g6_cache_hit_rate_percent Cache hit rate percent (rolling)
 # TYPE g6_cache_hit_rate_percent gauge
 g6_cache_hit_rate_percent 0.0
@@ -325,7 +325,7 @@ g6_cache_memory_mb 0.0
 g6_cache_evictions_total 0.0
 # HELP g6_cache_evictions_created Total cache evictions
 # TYPE g6_cache_evictions_created gauge
-g6_cache_evictions_created 1.7631923630300887e+09
+g6_cache_evictions_created 1.7631928236568592e+09
 # HELP g6_batch_efficiency_percent Batch efficiency percent vs target size
 # TYPE g6_batch_efficiency_percent gauge
 g6_batch_efficiency_percent 0.0
@@ -340,25 +340,25 @@ g6_batch_processing_time_seconds 0.0
 g6_total_errors_total 0.0
 # HELP g6_total_errors_created Total errors (all categories)
 # TYPE g6_total_errors_created gauge
-g6_total_errors_created 1.763192363030132e+09
+g6_total_errors_created 1.763192823656898e+09
 # HELP g6_api_errors_total API related errors
 # TYPE g6_api_errors_total counter
 g6_api_errors_total 0.0
 # HELP g6_api_errors_created API related errors
 # TYPE g6_api_errors_created gauge
-g6_api_errors_created 1.7631923630301423e+09
+g6_api_errors_created 1.763192823656908e+09
 # HELP g6_network_errors_total Network related errors
 # TYPE g6_network_errors_total counter
 g6_network_errors_total 0.0
 # HELP g6_network_errors_created Network related errors
 # TYPE g6_network_errors_created gauge
-g6_network_errors_created 1.7631923630301516e+09
+g6_network_errors_created 1.7631928236569185e+09
 # HELP g6_data_errors_total Data validation errors
 # TYPE g6_data_errors_total counter
 g6_data_errors_total 0.0
 # HELP g6_data_errors_created Data validation errors
 # TYPE g6_data_errors_created gauge
-g6_data_errors_created 1.7631923630301616e+09
+g6_data_errors_created 1.7631928236569285e+09
 # HELP g6_error_rate_per_hour Error rate per hour (derived)
 # TYPE g6_error_rate_per_hour gauge
 g6_error_rate_per_hour 0.0
@@ -369,19 +369,19 @@ g6_error_rate_per_hour 0.0
 g6_csv_files_created_total 0.0
 # HELP g6_csv_files_created_created CSV files created
 # TYPE g6_csv_files_created_created gauge
-g6_csv_files_created_created 1.7631923630301967e+09
+g6_csv_files_created_created 1.7631928236569633e+09
 # HELP g6_csv_records_written_total CSV records written
 # TYPE g6_csv_records_written_total counter
 g6_csv_records_written_total 0.0
 # HELP g6_csv_records_written_created CSV records written
 # TYPE g6_csv_records_written_created gauge
-g6_csv_records_written_created 1.7631923630302076e+09
+g6_csv_records_written_created 1.7631928236569746e+09
 # HELP g6_csv_write_errors_total CSV write errors
 # TYPE g6_csv_write_errors_total counter
 g6_csv_write_errors_total 0.0
 # HELP g6_csv_write_errors_created CSV write errors
 # TYPE g6_csv_write_errors_created gauge
-g6_csv_write_errors_created 1.7631923630302176e+09
+g6_csv_write_errors_created 1.7631928236569846e+09
 # HELP g6_csv_disk_usage_mb Disk usage attributed to CSV outputs (MB)
 # TYPE g6_csv_disk_usage_mb gauge
 g6_csv_disk_usage_mb 0.0
@@ -400,7 +400,7 @@ g6_csv_disk_usage_mb 0.0
 g6_influxdb_points_written_total 0.0
 # HELP g6_influxdb_points_written_created InfluxDB points written
 # TYPE g6_influxdb_points_written_created gauge
-g6_influxdb_points_written_created 1.7631923630302968e+09
+g6_influxdb_points_written_created 1.7631928236570606e+09
 # HELP g6_influxdb_write_success_rate_percent InfluxDB write success rate percent
 # TYPE g6_influxdb_write_success_rate_percent gauge
 g6_influxdb_write_success_rate_percent 0.0
@@ -415,7 +415,7 @@ g6_influxdb_query_time_ms 0.0
 g6_backup_files_created_total 0.0
 # HELP g6_backup_files_created_created Backup files created
 # TYPE g6_backup_files_created_created gauge
-g6_backup_files_created_created 1.7631923630303388e+09
+g6_backup_files_created_created 1.7631928236571026e+09
 # HELP g6_last_backup_unixtime Timestamp of last backup (unix seconds)
 # TYPE g6_last_backup_unixtime gauge
 g6_last_backup_unixtime 0.0
@@ -487,13 +487,13 @@ g6_tracemalloc_topn_kb 0.0
 g6_root_cache_hits_total 0.0
 # HELP g6_root_cache_hits_created Root symbol cache hits
 # TYPE g6_root_cache_hits_created gauge
-g6_root_cache_hits_created 1.7631923630309134e+09
+g6_root_cache_hits_created 1.7631928236576917e+09
 # HELP g6_root_cache_misses_total Root symbol cache misses
 # TYPE g6_root_cache_misses_total counter
 g6_root_cache_misses_total 0.0
 # HELP g6_root_cache_misses_created Root symbol cache misses
 # TYPE g6_root_cache_misses_created gauge
-g6_root_cache_misses_created 1.7631923630309327e+09
+g6_root_cache_misses_created 1.7631928236577141e+09
 # HELP g6_root_cache_hit_ratio Root symbol cache hit ratio (0-1)
 # TYPE g6_root_cache_hit_ratio gauge
 g6_root_cache_hit_ratio 0.0
@@ -505,10 +505,10 @@ g6_panels_integrity_ok 0.0
 g6_panels_integrity_mismatches_total 0.0
 # HELP g6_panels_integrity_mismatches_created Cumulative panel hash mismatches
 # TYPE g6_panels_integrity_mismatches_created gauge
-g6_panels_integrity_mismatches_created 1.7631923630309706e+09
+g6_panels_integrity_mismatches_created 1.763192823657756e+09
 # HELP g6_events_last_full_unixtime Last events full snapshot unix timestamp (s)
 # TYPE g6_events_last_full_unixtime gauge
-g6_events_last_full_unixtime 1.763192363031112e+09
+g6_events_last_full_unixtime 1.7631928236579025e+09
 # HELP g6_sse_http_active_connections Active SSE HTTP connections
 # TYPE g6_sse_http_active_connections gauge
 g6_sse_http_active_connections 0.0
@@ -517,61 +517,61 @@ g6_sse_http_active_connections 0.0
 g6_sse_http_connections_total 0.0
 # HELP g6_sse_http_connections_created Total accepted SSE HTTP connections
 # TYPE g6_sse_http_connections_created gauge
-g6_sse_http_connections_created 1.7631923630368207e+09
+g6_sse_http_connections_created 1.763192823664826e+09
 # HELP g6_sse_http_disconnects_total Total SSE HTTP disconnects
 # TYPE g6_sse_http_disconnects_total counter
 g6_sse_http_disconnects_total 0.0
 # HELP g6_sse_http_disconnects_created Total SSE HTTP disconnects
 # TYPE g6_sse_http_disconnects_created gauge
-g6_sse_http_disconnects_created 1.7631923630368357e+09
+g6_sse_http_disconnects_created 1.763192823664843e+09
 # HELP g6_sse_http_rejected_connections_total Rejected SSE connections (cap/auth/ip)
 # TYPE g6_sse_http_rejected_connections_total counter
 g6_sse_http_rejected_connections_total 0.0
 # HELP g6_sse_http_rejected_connections_created Rejected SSE connections (cap/auth/ip)
 # TYPE g6_sse_http_rejected_connections_created gauge
-g6_sse_http_rejected_connections_created 1.7631923630368464e+09
+g6_sse_http_rejected_connections_created 1.7631928236648557e+09
 # HELP g6_sse_http_events_sent_total Total SSE events written
 # TYPE g6_sse_http_events_sent_total counter
 g6_sse_http_events_sent_total 0.0
 # HELP g6_sse_http_events_sent_created Total SSE events written
 # TYPE g6_sse_http_events_sent_created gauge
-g6_sse_http_events_sent_created 1.7631923630368567e+09
+g6_sse_http_events_sent_created 1.7631928236648672e+09
 # HELP g6_sse_http_events_dropped_total Events dropped by rate limiter
 # TYPE g6_sse_http_events_dropped_total counter
 g6_sse_http_events_dropped_total 0.0
 # HELP g6_sse_http_events_dropped_created Events dropped by rate limiter
 # TYPE g6_sse_http_events_dropped_created gauge
-g6_sse_http_events_dropped_created 1.763192363036866e+09
+g6_sse_http_events_dropped_created 1.7631928236648781e+09
 # HELP g6_sse_http_security_events_dropped_total Events dropped for security/sanitization reasons
 # TYPE g6_sse_http_security_events_dropped_total counter
 g6_sse_http_security_events_dropped_total 0.0
 # HELP g6_sse_http_security_events_dropped_created Events dropped for security/sanitization reasons
 # TYPE g6_sse_http_security_events_dropped_created gauge
-g6_sse_http_security_events_dropped_created 1.7631923630368755e+09
+g6_sse_http_security_events_dropped_created 1.7631928236648886e+09
 # HELP g6_sse_http_auth_fail_total Authentication failures (bad/missing token)
 # TYPE g6_sse_http_auth_fail_total counter
 g6_sse_http_auth_fail_total 0.0
 # HELP g6_sse_http_auth_fail_created Authentication failures (bad/missing token)
 # TYPE g6_sse_http_auth_fail_created gauge
-g6_sse_http_auth_fail_created 1.7631923630368848e+09
+g6_sse_http_auth_fail_created 1.7631928236648986e+09
 # HELP g6_sse_http_forbidden_ip_total Rejected connections due to IP allow list
 # TYPE g6_sse_http_forbidden_ip_total counter
 g6_sse_http_forbidden_ip_total 0.0
 # HELP g6_sse_http_forbidden_ip_created Rejected connections due to IP allow list
 # TYPE g6_sse_http_forbidden_ip_created gauge
-g6_sse_http_forbidden_ip_created 1.7631923630368946e+09
+g6_sse_http_forbidden_ip_created 1.7631928236649098e+09
 # HELP g6_sse_http_rate_limited_total Connections rejected due to per-IP rate limiting
 # TYPE g6_sse_http_rate_limited_total counter
 g6_sse_http_rate_limited_total 0.0
 # HELP g6_sse_http_rate_limited_created Connections rejected due to per-IP rate limiting
 # TYPE g6_sse_http_rate_limited_created gauge
-g6_sse_http_rate_limited_created 1.7631923630369036e+09
+g6_sse_http_rate_limited_created 1.7631928236649199e+09
 # HELP g6_sse_http_forbidden_ua_total Rejected connections due to User-Agent allow list
 # TYPE g6_sse_http_forbidden_ua_total counter
 g6_sse_http_forbidden_ua_total 0.0
 # HELP g6_sse_http_forbidden_ua_created Rejected connections due to User-Agent allow list
 # TYPE g6_sse_http_forbidden_ua_created gauge
-g6_sse_http_forbidden_ua_created 1.763192363036913e+09
+g6_sse_http_forbidden_ua_created 1.7631928236649296e+09
 # HELP g6_sse_http_event_size_bytes Size of SSE events in bytes
 # TYPE g6_sse_http_event_size_bytes histogram
 g6_sse_http_event_size_bytes_bucket{le="0.005"} 0.0
@@ -593,7 +593,7 @@ g6_sse_http_event_size_bytes_count 0.0
 g6_sse_http_event_size_bytes_sum 0.0
 # HELP g6_sse_http_event_size_bytes_created Size of SSE events in bytes
 # TYPE g6_sse_http_event_size_bytes_created gauge
-g6_sse_http_event_size_bytes_created 1.7631923630369265e+09
+g6_sse_http_event_size_bytes_created 1.7631928236649444e+09
 # HELP g6_sse_http_event_queue_latency_seconds Latency between event enqueue and write
 # TYPE g6_sse_http_event_queue_latency_seconds histogram
 g6_sse_http_event_queue_latency_seconds_bucket{le="0.005"} 0.0
@@ -615,7 +615,7 @@ g6_sse_http_event_queue_latency_seconds_count 0.0
 g6_sse_http_event_queue_latency_seconds_sum 0.0
 # HELP g6_sse_http_event_queue_latency_seconds_created Latency between event enqueue and write
 # TYPE g6_sse_http_event_queue_latency_seconds_created gauge
-g6_sse_http_event_queue_latency_seconds_created 1.7631923630369604e+09
+g6_sse_http_event_queue_latency_seconds_created 1.763192823664984e+09
 # HELP g6_sse_http_connection_duration_seconds SSE connection lifetime (seconds)
 # TYPE g6_sse_http_connection_duration_seconds histogram
 g6_sse_http_connection_duration_seconds_bucket{le="0.005"} 0.0
@@ -637,4 +637,4 @@ g6_sse_http_connection_duration_seconds_count 0.0
 g6_sse_http_connection_duration_seconds_sum 0.0
 # HELP g6_sse_http_connection_duration_seconds_created SSE connection lifetime (seconds)
 # TYPE g6_sse_http_connection_duration_seconds_created gauge
-g6_sse_http_connection_duration_seconds_created 1.7631923630369923e+09
+g6_sse_http_connection_duration_seconds_created 1.7631928236650207e+09
