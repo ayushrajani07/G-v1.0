@@ -23,6 +23,18 @@ This document provides a high-level summary of the comprehensive analysis. For d
 
 ---
 
+## Since Last Analysis (2025-11-15)
+
+- Full pytest (parallel) is green locally: 1462 passed, 539 skipped
+- Eliminated eager f-string logging in storage/influx sinks; style guard passes
+- Ensured event latency gauge (`g6_events_last_full_unixtime`) is present in default registry and set on `panel_full`
+- Shadow pipeline meta now consistently includes `preventive_report`, `coverage`, `iv_phase`, `greeks_phase`, and `persist_sim`
+- Cardinality guard: added safe fast-path when baseline==snapshot within same process to avoid false offender reports
+
+These stabilize observability and test reliability ahead of Phase 1.
+
+---
+
 ## Critical Issues Identified
 
 ### 🔴 Priority 1: Immediate Action Required
@@ -238,12 +250,11 @@ A: Pattern: Catch specific exceptions, log with context, decide (retry/fallback/
 
 ## Next Steps
 
-1. **Review** - Team reviews analysis and action plan
-2. **Approve** - Stakeholder sign-off on priorities and timeline
-3. **Prepare** - Read REMEDIATION_EXECUTION_GUIDE.md for precautions and procedures
-4. **Execute** - Begin Phase 1 (exception handling, legacy removal, CSV consolidation)
-5. **Monitor** - Weekly progress metrics
-6. **Iterate** - Adjust plan based on learnings
+1. Approve Phase 1 owners and milestones
+2. Kick off Exception Handling Audit (baseline counts + storage layer first)
+3. Prepare Legacy Loop Removal (confirm parity; plan code + doc removal and CI updates)
+4. Execute CSV writer consolidation plan validation (facade coverage and deletion list)
+5. Monitor weekly metrics and adjust plan with learnings
 
 ---
 
@@ -277,6 +288,9 @@ grep "Active Deprecations" -A 100 DEPRECATIONS.md | grep '|' | wc -l
 
 ### Validation:
 ```bash
+# Full suite in parallel
+pytest -n auto -q
+
 # Verify legacy loop removed
 grep -r "G6_ENABLE_LEGACY_LOOP" .
 

@@ -40,7 +40,7 @@ def get_last_row_csv(path: Path) -> dict[str, str] | None:
                 last = row
         _last_row_cache[path] = (mtime, last)
         return last
-    except Exception:
+    except (OSError, csv.Error, UnicodeDecodeError, ValueError):
         return None
 
 
@@ -57,7 +57,7 @@ def read_json_cached(path: Path) -> Any:
         data = json.loads(path.read_text(encoding="utf-8"))
         _json_cache[path] = (mtime, data)
         return data
-    except Exception:
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError, ValueError):
         return {}
 
 

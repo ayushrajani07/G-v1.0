@@ -156,13 +156,13 @@ class CsvWriterThread:
                     elif time.time() - self._last_flush >= self.flush_ms / 1000.0:
                         self._flush_all()
             
-            except Exception:
+            except OSError:
                 logger.exception("CSV writer thread error")
         
         # Final flush before exit
         try:
             self._flush_all()
-        except Exception:
+        except OSError:
             logger.exception("CSV writer thread final flush failed")
     
     def _maybe_flush(self) -> None:
@@ -183,7 +183,7 @@ class CsvWriterThread:
                 header = self._headers.get(filepath)
                 try:
                     self._write_batch(filepath, rows, header)
-                except Exception:
+                except OSError:
                     logger.exception("Failed to write batch for %s", filepath)
             
             # Clear batches after successful flush
@@ -225,7 +225,7 @@ class CsvWriterThread:
                             if not existing.lower().startswith(expected.lower()):
                                 Path(filepath).write_text(expected + '\n' + existing, encoding='utf-8')
                             needs_header = False  # header already inserted by rewrite
-                except Exception:
+                except OSError:
                     # On any read failure, attempt to write header before rows
                     needs_header = True
         

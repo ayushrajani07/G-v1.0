@@ -28,7 +28,7 @@ from src.utils.metrics_adapter import get_metrics_adapter
 
 try:
     import requests  # requests stubs present
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     requests = None  # type: ignore[assignment]
 
 
@@ -151,7 +151,7 @@ class UnifiedDataSource:
                 if float(self.config.file_poll_interval) <= 0.0:
                     self._last_stat_check = now
                     return True
-            except Exception:
+            except (TypeError, ValueError):
                 pass
             if now - self._last_stat_check >= float(self.config.file_poll_interval):
                 self._last_stat_check = now
@@ -178,14 +178,14 @@ class UnifiedDataSource:
                 m = getattr(st, 'st_mtime_ns', None)
                 if m is None:
                     m = st.st_mtime  # fall back to seconds resolution
-            except Exception:
+            except (OSError, AttributeError):
                 m = os.path.getmtime(path)
             prev = self._mtimes.get(path)
             if prev is None or m != prev:
                 self._mtimes[path] = m
                 return True
             return False
-        except Exception:
+        except (OSError, AttributeError, ValueError, TypeError):
             # On errors, assume changed to be safe
             return True
 
@@ -228,7 +228,7 @@ class UnifiedDataSource:
                 with open(path, encoding='utf-8') as f:
                     obj = json.load(f)
                 return obj if isinstance(obj, dict) else {}
-        except Exception:
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError, ValueError):
             pass
         return {}
 
@@ -249,7 +249,7 @@ class UnifiedDataSource:
             if isinstance(obj, dict) and 'data' in obj:
                 return obj.get('data') or {}
             return obj if isinstance(obj, dict) else {}
-        except Exception:
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError, ValueError):
             pass
         return {}
 
@@ -270,7 +270,7 @@ class UnifiedDataSource:
                 with open(path, encoding='utf-8') as f:
                     obj = json.load(f)
                 return obj if isinstance(obj, dict) else {}
-        except Exception:
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError, ValueError):
             pass
         return {}
 
@@ -302,7 +302,7 @@ class UnifiedDataSource:
                             'cpu': getattr(perf, 'cpu_usage_percent', None),
                             'memory_mb': getattr(perf, 'memory_usage_mb', None),
                         }
-                except Exception:
+                except (AttributeError, TypeError):
                     pass
                 # Cycle info
                 try:
@@ -312,7 +312,7 @@ class UnifiedDataSource:
                         'elapsed': None,
                         'interval': None,
                     }
-                except Exception:
+                except (AttributeError, TypeError):
                     pass
                 # Indices map
                 try:
@@ -334,7 +334,7 @@ class UnifiedDataSource:
                                     'data_quality_score': getattr(v, 'data_quality_score', None),
                                     'data_quality_issues': getattr(v, 'data_quality_issues', None),
                                 }
-                            except Exception:
+                            except (AttributeError, TypeError):
                                 continue
                         out['indices'] = norm
                 except Exception:
@@ -355,7 +355,7 @@ class UnifiedDataSource:
             resp = requests.get(url, timeout=2.0)
             if resp.status_code == 200:
                 return resp.json()
-        except Exception:
+        except (requests.exceptions.RequestException, ValueError, json.JSONDecodeError):
             pass
         return {}
 
@@ -379,7 +379,7 @@ class UnifiedDataSource:
         try:
             if changed and self._event_bus and self._EV_STATUS:
                 self._event_bus.publish(self._EV_STATUS)
-        except Exception:
+        except (RuntimeError, AttributeError):
             pass
         return v
 
@@ -394,11 +394,8 @@ class UnifiedDataSource:
                 changed = True
                 self.cache.invalidate(key)
                 # Cross-invalidate corresponding raw cache so subsequent get_panel_raw sees the change
-                try:
-                    self.cache.invalidate(f'pr:{name}')
-                except Exception:
-                    pass
-        except Exception:
+                self.cache.invalidate(f'pr:{name}')
+        except (OSError, ValueError, TypeError):
             pass
         v = self.cache.get(key)
         if not changed and v is not None:
@@ -412,7 +409,7 @@ class UnifiedDataSource:
             if isinstance(v, dict) and 'data' in v and isinstance(v.get('data'), dict):
                 v_norm = v.get('data') or {}
                 v = v_norm
-        except Exception:
+        except (AttributeError, TypeError):
             pass
         # Ensure cache stores the normalized shape to avoid stale raw entries on future hits
         try:
@@ -424,7 +421,7 @@ class UnifiedDataSource:
         try:
             if changed and self._event_bus and self._EV_PANEL:
                 self._event_bus.publish(self._EV_PANEL, name)
-        except Exception:
+        except (RuntimeError, AttributeError):
             pass
         return v
 
@@ -443,11 +440,8 @@ class UnifiedDataSource:
                 changed = True
                 self.cache.invalidate(key)
                 # Cross-invalidate corresponding normalized cache so subsequent get_panel_data sees the change
-                try:
-                    self.cache.invalidate(f'p:{name}')
-                except Exception:
-                    pass
-        except Exception:
+                self.cache.invalidate(f'p:{name}')
+        except (OSError, ValueError, TypeError):
             pass
         v = self.cache.get(key)
         if not changed and v is not None:
@@ -461,7 +455,7 @@ class UnifiedDataSource:
         try:
             if changed and self._event_bus and self._EV_PANEL:
                 self._event_bus.publish(self._EV_PANEL, name)
-        except Exception:
+        except (RuntimeError, AttributeError):
             pass
         return v
 
@@ -588,12 +582,12 @@ class UnifiedDataSource:
         try:
             path = self.config.runtime_status_path
             st['runtime_status'] = bool(path and os.path.exists(path))
-        except Exception:
+        except OSError:
             st['runtime_status'] = False
         try:
             base = self.config.panels_dir
             st['panels'] = bool(base and os.path.isdir(base) and any(n.endswith('.json') for n in os.listdir(base)))
-        except Exception:
+        except OSError:
             st['panels'] = False
         if not self.config.metrics_disabled:
             st['metrics'] = bool(self._read_metrics())

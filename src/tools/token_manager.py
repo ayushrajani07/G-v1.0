@@ -64,7 +64,7 @@ def load_env_vars() -> bool:
             except Exception:
                 pass
             logger.warning("Error loading .env via python-dotenv: %s", e)
-    except Exception:
+    except ImportError:
         logger.debug("python-dotenv not installed; attempting manual .env parse")
     # Fallback manual loader if .env present in CWD, or overlay if required keys are still missing
     need_overlay = (EnvConfig.get_str("KITE_API_KEY", "") == "" or EnvConfig.get_str("KITE_API_SECRET", "") == "")
@@ -86,7 +86,7 @@ def load_env_vars() -> bool:
                                 os.environ[k] = v
                 logger.info("Environment variables loaded via fallback .env parser (overlay=%s)", need_overlay)
                 used = True or used
-        except Exception as e:
+        except (OSError, UnicodeDecodeError, ValueError) as e:
             logger.debug("Fallback .env parse failed: %s", e)
     return used
 
@@ -113,7 +113,7 @@ def _to_dict(obj: Any) -> dict[str, Any]:
     if isinstance(obj, Iterable):  # Treat as sequence of pair-likes
         try:
             tentative = dict(cast(Iterable[tuple[Any, Any]], obj))
-        except Exception:
+        except (TypeError, ValueError):
             return {}
         if not tentative:
             return {}
@@ -136,7 +136,7 @@ def _kite_validate_token(api_key: str, access_token: str) -> bool:
         from kiteconnect import KiteConnect  # optional dep
         try:
             from kiteconnect.exceptions import TokenException  # type: ignore
-        except Exception:  # pragma: no cover - older versions or import shape changes
+        except (ImportError, AttributeError):  # pragma: no cover - older versions or import shape changes
             TokenException = Exception  # type: ignore
         kite = KiteConnect(api_key=api_key)
         kite.set_access_token(access_token)
@@ -312,7 +312,7 @@ def run_main_application(extra_args: list[str] | None = None):
         logger.info("Launching orchestrator loop: %s", ' '.join(cmd))
         result = subprocess.run(cmd)
         return int(result.returncode)
-    except Exception as e:  # noqa: BLE001
+    except (OSError, ValueError, subprocess.SubprocessError) as e:  # narrower expected failures
         try:
             handle_critical_error(e, component="token_manager", context={"op": "run_orchestrator"})
         except Exception:
@@ -475,7 +475,7 @@ def flask_login_server(api_key, api_secret, auto_run_app=True):
     # Open browser to login URL
     try:
         webbrowser.open(login_url)
-    except Exception:
+    except (OSError, RuntimeError):
         pass
 
     # Wait for callback to complete

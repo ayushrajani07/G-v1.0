@@ -154,6 +154,8 @@ class EventBus:
         self._m_forced_full_total = None  # Counter labeled by reason (future phase usage)
         # Phase 3: connection duration histogram placeholder
         self._m_conn_duration = None  # Histogram SSE connection duration seconds
+        # Default registry gauge for last_full unixtime (for tests scraping default registry)
+        self._m_last_full_unixtime_default = None  # type: ignore[attr-defined]
         # Coalesced event counts (process lifetime)
         self._coalesce_counts = Counter()
         # Forced full guard bookkeeping (reason -> last forced unixtime) future phase
@@ -391,6 +393,38 @@ class EventBus:
                                 pass
                         except Exception:
                             pass
+                    # Also ensure default REGISTRY has the gauge and set it for tests scraping default
+                    try:
+                        from prometheus_client import REGISTRY as _R
+                        from prometheus_client import Gauge as _Gauge
+                        # If we don't have a cached default-reg gauge or it's not registered in current REGISTRY, (re)create/register it
+                        names_map = getattr(_R, '_names_to_collectors', {})
+                        g_def = getattr(self, '_m_last_full_unixtime_default', None)
+                        if 'g6_events_last_full_unixtime' not in names_map:
+                            # Try to (re)register existing cached gauge; if that fails, construct a fresh one
+                            if g_def is not None:
+                                try:
+                                    _R.register(g_def)  # type: ignore[arg-type]
+                                except Exception:
+                                    g_def = None
+                            if g_def is None:
+                                try:
+                                    g_def = _Gauge('g6_events_last_full_unixtime', 'Unix timestamp of last panel_full event published')
+                                except Exception:
+                                    g_def = getattr(_R, '_names_to_collectors', {}).get('g6_events_last_full_unixtime')
+                            try:
+                                self._m_last_full_unixtime_default = g_def  # type: ignore[attr-defined]
+                            except Exception:
+                                pass
+                        # Set current timestamp on the default-registry gauge (best-effort)
+                        g_def2 = getattr(self, '_m_last_full_unixtime_default', None)
+                        if g_def2 is not None and hasattr(g_def2, 'set'):
+                            try:
+                                g_def2.set(__import__('time').time())
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
                 except Exception:
                     pass
             # Record serialization (shared cache) outside lock after minimal mutation.
@@ -667,6 +701,16 @@ class EventBus:
                 # Backpressure metrics
                 self._m_backpressure_events = _cast(CounterLike, _safe(_Counter, 'events_backpressure_events_total', 'g6_events_backpressure_events_total', 'Backpressure related events (warn/degrade transitions)', ['reason']))
                 self._m_degraded_mode = _cast(GaugeLike, _safe(_Gauge, 'events_degraded_mode', 'g6_events_degraded_mode', 'Degraded mode active (1) or inactive (0)'))
+                # Ensure default REGISTRY also has last_full_unixtime gauge for tests scraping default registry
+                try:
+                    from prometheus_client import Gauge as _Gauge
+                    if getattr(self, '_m_last_full_unixtime_default', None) is None:
+                        try:
+                            self._m_last_full_unixtime_default = _Gauge('g6_events_last_full_unixtime', 'Unix timestamp of last panel_full event published')  # type: ignore[attr-defined]
+                        except Exception:
+                            self._m_last_full_unixtime_default = None  # type: ignore[attr-defined]
+                except Exception:
+                    pass
             # If helper path failed to create the last_full gauge, perform a direct best-effort registration.
             if self._m_last_full_unixtime is None:
                 try:

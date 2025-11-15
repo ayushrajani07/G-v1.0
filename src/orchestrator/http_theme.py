@@ -31,7 +31,7 @@ def theme_ttl_seconds() -> float:
         if val > 2.0:
             val = 2.0
         return val
-    except Exception:
+    except (TypeError, ValueError):
         return 0.0
 
 
@@ -44,7 +44,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
     try:
         if not severity:
             raise ImportError("severity module not available")
-    except Exception:
+    except ImportError:
         return {
             'palette': {
                 'info': env_str('G6_ADAPTIVE_ALERT_COLOR_INFO', '#6BAF92') or '#6BAF92',
@@ -102,7 +102,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
                     if total > 0:
                         tr['warn_ratio'] = have_warn / float(total)
                         payload['trend'] = tr
-                except Exception:
+                except (TypeError, ValueError):
                     pass
             wr3 = tr.get('warn_ratio')
             if (wr3 in (None, 0, 0.0)):
@@ -121,7 +121,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
                         payload['trend'] = tr
                 except Exception:
                     pass
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
     # Enforce env trend window onto payload when present
@@ -139,7 +139,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
                     tw = int(tw_raw)
                     if tw >= 0:
                         payload['trend']['window'] = tw
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         pass
 
     # Per-type state (best-effort)
@@ -156,12 +156,12 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
             wv = trf.get('window')
             try:
                 wvi = int(wv) if wv is not None else 0
-            except Exception:
+            except (TypeError, ValueError):
                 wvi = 0
             if (wrv in (None, 0, 0.0)) and wvi > 0:
                 trf['warn_ratio'] = 1.0
                 payload['trend'] = trf
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
     # Hard enforce trend.window using provided forced_window
@@ -172,7 +172,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
                 tr = {}
             tr['window'] = forced_window
             payload['trend'] = tr
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
     # Test scaffolding: ensure non-zero warn_ratio when window>0 under pytest
@@ -185,7 +185,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
                     wv = tr.get('window')
                     try:
                         wvi = int(wv) if wv is not None else 0
-                    except Exception:
+                    except (TypeError, ValueError):
                         wvi = 0
                     snaps = tr.get('snapshots') if isinstance(tr, dict) else None
                     if (isinstance(snaps, list) and not snaps) and wvi > 0:
@@ -193,7 +193,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
                             ac = payload.get('active_counts') if isinstance(payload, dict) else {}
                             counts = ac if isinstance(ac, dict) else {}
                             tr['snapshots'] = [{'counts': counts}] * wvi
-                        except Exception:
+                        except (TypeError, ValueError):
                             pass
                     if wvi > 0:
                         tr['warn_ratio'] = 1.0

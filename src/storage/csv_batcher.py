@@ -150,7 +150,7 @@ class CsvBatcher:
                             self.logger.debug("Flushed %s rows to %s", len(rows), filepath)
                         except Exception:
                             pass
-                except Exception as e:
+                except OSError as e:
                     # Log error but continue flushing other files
                     try:
                         self.logger.error("Failed to flush batch to %s: %s", filepath, e)
@@ -180,7 +180,7 @@ class CsvBatcher:
             self._batch_counts.pop(batch_key, None)
             
             return True
-        except Exception as e:
+        except OSError as e:
             try:
                 self.logger.error("Batch flush failed for %s: %s", batch_key, e)
             except Exception:

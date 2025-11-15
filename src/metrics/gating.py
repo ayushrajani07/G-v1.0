@@ -22,7 +22,7 @@ from typing import Any
 
 try:
     from src.orchestrator.gating_types import MetricsRegistryLike  # type: ignore
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     class MetricsRegistryLike:  # type: ignore
         pass
 import logging
@@ -131,7 +131,7 @@ def configure_registry_groups(reg: MetricsRegistryLike | Any) -> tuple[set[str],
         reg._enabled_groups = enabled_set  # type: ignore[attr-defined]
         reg._disabled_groups = disabled_set  # type: ignore[attr-defined]
         reg._effective_enabled_groups = effective_enabled  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
     _trace = EnvConfig.get_bool('G6_METRICS_GATING_TRACE', False)
@@ -180,9 +180,9 @@ def configure_registry_groups(reg: MetricsRegistryLike | Any) -> tuple[set[str],
             )
             try:
                 reg._group_filters_structured_emitted = True  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError):
                 pass
-    except Exception:
+    except (Exception,):
         pass
     return CONTROLLED_GROUPS, enabled_set, disabled_set
 
@@ -199,7 +199,7 @@ def apply_pruning(
         # Access Prometheus client registry for unregistration attempts
         try:
             from prometheus_client import REGISTRY as _PROM_REG  # type: ignore
-        except Exception:  # pragma: no cover
+        except ImportError:  # pragma: no cover
             _PROM_REG = None  # type: ignore
         for attr, group in list(metric_groups.items()):
             # Only consider controlled groups and skip ALWAYS_ON safety set
@@ -217,22 +217,22 @@ def apply_pruning(
                         if _PROM_REG is not None and coll is not None:
                             try:
                                 _PROM_REG.unregister(coll)  # type: ignore[arg-type]
-                            except Exception:
+                            except (Exception,):
                                 pass
-                    except Exception:
+                    except (AttributeError, TypeError):
                         pass
                     # Remove attribute from registry instance
                     try:
                         if hasattr(reg, attr):
                             delattr(reg, attr)
-                    except Exception:
+                    except (AttributeError, TypeError):
                         pass
                     # Remove mapping entry
                     try:
                         del metric_groups[attr]
-                    except Exception:
+                    except (KeyError, TypeError):
                         pass
-    except Exception:
+    except (Exception,):
         pass
 
 __all__ = [

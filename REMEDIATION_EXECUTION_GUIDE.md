@@ -6,6 +6,55 @@
 
 ---
 
+## Current Baseline and Next Steps
+
+**Baseline (2025-11-15):** Full test suite green in both parallel and serial runs (observed locally), with extensive skips as expected. Observability and pipeline hygiene are in place (metrics gauge resiliency, cardinality guard fast-path, stable shadow meta, parameterized logging).
+
+**Immediate Next Steps:**
+- Phase 1: Exception Handling Audit — storage, utils, and metrics packages completed. Exceptions narrowed in `src/utils/csv_cache.py`, `src/data_access/unified_source.py` (JSON readers), and metrics modules (`api_call.py`, `emission_batcher.py`, `fault_budget.py`, `gating.py`).
+- Validate via "big diff → parallel test → serial test" cadence: parallel and serial suites both green locally after fixes.
+- Prepare PR plan to remove the legacy orchestration loop (`unified_main.collection_loop`) and related flags (Phase 1 follow-up).
+ - Data access audit note: attempted additional exception narrowing in `src/data_access/unified_source.py` (file watch/metrics adapter paths). This introduced regressions in metrics spec and cache stats tests under parallel runs. Changes were reverted to preserve the green baseline. Future passes will apply micro-changes with targeted tests (one guard at a time).
+ - Tools hardening note: `src/tools/refresh_kite_token.py` updated to optionally load `.env`, narrow import/browse errors, and persist token updates robustly; validated with a full parallel test run remaining green.
+
+**Quick Validation:**
+```powershell
+. .venv\Scripts\Activate.ps1
+python -m pytest -n auto
+```
+
+Recent validation (2025-11-15):
+- Narrowed exceptions in `src/utils/csv_cache.py` and JSON readers in `src/data_access/unified_source.py`.
+- Metrics package big diff applied (`api_call`, `emission_batcher`, `fault_budget`, `gating`) with fixes for indentation and a thread-race in `emission_batcher`.
+- Targeted tests and full suite (parallel and serial) passed locally. A transient `StatusReader` provider-name mismatch was not reproducible after fixes.
+
+Use this guide’s checklists for execution, rollback, and validation.
+
+---
+
+## Phase 1 Completion Snapshot (2025-11-15)
+
+**Scope delivered:**
+- Exceptions narrowed across storage/utils and metrics without altering public APIs.
+- `UnifiedDataSource` file-change detection and cache stats validated.
+- `EmissionBatcher` indentation errors corrected; `_last_flush_end` initialized pre-thread start to eliminate race.
+ - Orchestrator and panels: narrowed exception scopes in `src/orchestrator/hotreload.py`, `src/orchestrator/http_theme.py`, and `src/panels/factory.py` for safer failure modes without changing output shapes.
+
+**Validation:**
+- Parallel run: `python -m pytest -n auto` — green locally.
+- Serial run: `python -m pytest -q` — green locally.
+ - Fixed a rare parallel-only flake: `StatusReader` now prefers provider from the explicitly configured `runtime_status` file to avoid cross-test singleton contamination from panels.
+
+**Notes:**
+- Any remaining flakiness should be tracked with test-level isolation checks; none observed in the above runs.
+
+**Next package targets (Phase 1 follow-ups / Phase 2 feeders):**
+- Orchestrator + panels factory hardening (source precedence, gating hooks).
+- Tools/token_manager exception surfaces and provider capability checks.
+- Data access edges (logs if present) and residual broad catches.
+
+Use this guide’s checklists for execution, rollback, and validation.
+
 ## Document Purpose
 
 This guide provides **actionable execution procedures** for implementing the remediation plan, including:

@@ -56,7 +56,7 @@ def _classify(path: str) -> str:
 def _should_delete(mtime: float, cutoff: float) -> bool:
     try:
         return mtime < cutoff
-    except Exception:
+    except (TypeError, ValueError):
         return False
 
 
@@ -86,7 +86,7 @@ def _scan_and_prune(base_dir: str,
             path = os.path.join(root, f)
             try:
                 mt = os.path.getmtime(path)
-            except Exception:
+            except OSError:
                 continue
             file_mt_pairs.append((path, mt))
         file_mt_pairs.sort(key=lambda x: x[1], reverse=True)
@@ -106,7 +106,7 @@ def _scan_and_prune(base_dir: str,
                         deleted_overview += 1
                     else:
                         deleted_option += 1
-                except Exception as e:
+                except OSError as e:
                     logger.debug("Retention delete failed %s: %s", path, e)
     # Metrics
     try:
@@ -115,7 +115,7 @@ def _scan_and_prune(base_dir: str,
                 metrics.retention_files_deleted.labels(type='option').inc(deleted_option)
             if deleted_overview:
                 metrics.retention_files_deleted.labels(type='overview').inc(deleted_overview)
-    except Exception:
+    except (AttributeError, TypeError):
         pass
     return deleted_option, deleted_overview
 
@@ -153,11 +153,15 @@ def start_retention_worker(base_dir: str,
                 )
                 if opt_del or ov_del:
                     elapsed = ( _dt.datetime.now(_dt.UTC) - started).total_seconds()
-                    logger.info(
-                        "Retention pruned option=%s overview=%s files (took %ss)", opt_del, ov_del, elapsed
-                        f"(took {elapsed:.2f}s)"
-                    )
-            except Exception:
+                    try:
+                        logger.info(
+                            "Retention pruned option=%s overview=%s files (took %.2fs)",
+                            opt_del, ov_del, elapsed
+                        )
+                    except Exception:
+                        # Fall back to a simpler message if formatting fails
+                        logger.info("Retention pruned option=%s overview=%s files", opt_del, ov_del)
+            except OSError:
                 logger.exception("Retention sweep failure (continuing)")
             # Sleep with coarse granularity; allow quick disable by setting
             # retention_days<=0 externally (not implemented yet)

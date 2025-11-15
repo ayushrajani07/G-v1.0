@@ -84,7 +84,7 @@ def build_provider_panel(reader: StatusReader, status: dict[str, Any] | None) ->
                 out["auth"] = auth.get("valid")
                 out["expiry"] = auth.get("expiry")
             out["latency_ms"] = prov.get("latency_ms")
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
     return out
 
@@ -97,14 +97,14 @@ def build_resources_panel(reader: StatusReader, status: dict[str, Any] | None) -
     # Fallback to psutil (matches previous script implementation)
     try:
         import psutil  # optional dependency
-    except Exception:  # pragma: no cover
+    except ImportError:  # pragma: no cover
         psutil = None
     if psutil:
         try:
             out["cpu"] = psutil.cpu_percent(interval=None)
             proc = psutil.Process()
             out["rss"] = proc.memory_info().rss
-        except Exception:
+        except (OSError, AttributeError, RuntimeError, TypeError, ValueError):
             pass
     return out
 
@@ -173,7 +173,7 @@ def build_indices_summary(reader: StatusReader, status: dict[str, Any] | None) -
                             if got:
                                 row["legs"] = s
                                 return True
-                    except Exception:
+                    except (KeyError, TypeError, ValueError):
                         pass
                     # 2) Prefer metrics-derived current_cycle_legs if present
                     v_cyc = src.get("current_cycle_legs")
@@ -200,7 +200,7 @@ def build_indices_summary(reader: StatusReader, status: dict[str, Any] | None) -
                             row["dq_issues"] = dq.get("issues_total")
             _copy_dq(det_primary)
             _copy_dq(det_fallback)
-        except Exception:
+        except (AttributeError, KeyError, TypeError, ValueError):
             pass
         index_metrics[str(idx)] = row
     return cast(IndicesSummaryPanel, index_metrics)
@@ -236,7 +236,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
     cur_cycle = None
     try:
         cur_cycle = cy.get("cycle") if isinstance(cy, dict) else None
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         cur_cycle = None
     success_rate_int: int | None = None
     try:
@@ -250,7 +250,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
                 sr = float(_sr2)
         if sr is not None:
             success_rate_int = int(round(sr))
-    except Exception:
+    except (TypeError, ValueError):
         success_rate_int = None
     avg_sec_default: float | None = None
     try:
@@ -263,7 +263,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
                 _ms = loop.get("avg_cycle_ms")
                 if isinstance(_ms, (int, float)):
                     avg_sec_default = float(_ms) / 1000.0
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         avg_sec_default = None
 
     for idx in indices:
@@ -278,7 +278,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
                 pass
         try:
             item["time"] = datetime.fromtimestamp(now_ts, tz=UTC).isoformat().replace("+00:00", "Z")
-        except Exception:
+        except (OSError, OverflowError, ValueError):
             pass
         try:
             det_primary = indices_detail.get(idx) if isinstance(indices_detail, dict) else None
@@ -300,7 +300,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
                             if got:
                                 item["legs"] = s
                                 return True
-                    except Exception:
+                    except (KeyError, TypeError, ValueError):
                         pass
                     # 2) Prefer metrics-derived current_cycle_legs if present
                     v_cyc = src.get("current_cycle_legs")
@@ -316,7 +316,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
                 return False
             if not _copy_legs(det_primary):
                 _copy_legs(det_fallback)
-        except Exception:
+        except (AttributeError, KeyError, TypeError, ValueError):
             pass
         # Note: avg_sec_default already float if set
         if isinstance(avg_sec_default, (int, float)):
@@ -333,7 +333,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
             item["status"] = st
             if reason:
                 item["status_reason"] = reason
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError):
             pass
         det_primary = None
         det_fallback = None
@@ -361,11 +361,11 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
                                         s = str(s)
                                     cleaned.append(s[:160])
                                 item["dq_labels"] = cleaned
-                            except Exception:
+                            except (TypeError, ValueError):
                                 item["dq_labels"] = labels
             _copy_dq(det_primary)
             _copy_dq(det_fallback)
-        except Exception:
+        except (AttributeError, KeyError, TypeError, ValueError):
             pass
         items.append(item)
     return items
@@ -427,7 +427,7 @@ def build_panels(reader: StatusReader, status: dict[str, Any] | None) -> PanelsD
                         t = a.get("type") or "unknown"
                         try:
                             counts[t] = counts.get(t, 0) + 1
-                        except Exception:
+                        except (TypeError, ValueError):
                             pass
                         # Shallow sanitized copy (truncate message length)
                         msg = a.get("message")
@@ -446,7 +446,7 @@ def build_panels(reader: StatusReader, status: dict[str, Any] | None) -> PanelsD
                             if isinstance(lm, str) and len(lm) > 300:
                                 lm = lm[:300] + "…"
                             last_alert = {"type": lt, "message": lm}
-                    except Exception:
+                    except (TypeError, ValueError):
                         last_alert = None
                     panel_obj = {
                         "total": sum(counts.values()),
@@ -469,7 +469,7 @@ def build_panels(reader: StatusReader, status: dict[str, Any] | None) -> PanelsD
                                 }
                                 for fa in _followups.get_recent_alerts(limit)
                             ]
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError):
                             pass
                     if _severity is not None:
                         try:
@@ -516,7 +516,7 @@ def build_panels(reader: StatusReader, status: dict[str, Any] | None) -> PanelsD
                                                 palette[_lvl] = val
                                         if palette:
                                             meta["palette"] = palette
-                                    except Exception:
+                                    except (AttributeError, TypeError, ValueError):
                                         pass
                                     # Active severity counts snapshot (controller feedback surface)
                                     try:
@@ -546,7 +546,7 @@ def build_panels(reader: StatusReader, status: dict[str, Any] | None) -> PanelsD
                                             lcc = st_state.get("last_change_cycle")
                                             if lcc is not None:
                                                 e["last_change_cycle"] = lcc
-                                    except Exception:
+                                    except (AttributeError, TypeError, ValueError):
                                         pass
                                     enhanced_by_type[_t] = e
                                 panel_obj["by_type_severity"] = enhanced_by_type
@@ -558,13 +558,13 @@ def build_panels(reader: StatusReader, status: dict[str, Any] | None) -> PanelsD
                                             resolved_ct += 1
                                     if resolved_ct:
                                         panel_obj["resolved_total"] = resolved_ct
-                                except Exception:
+                                except (TypeError, ValueError):
                                     pass
                         except Exception:
                             pass
                     panels["adaptive_alerts"] = panel_obj
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 pass
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
     return panels

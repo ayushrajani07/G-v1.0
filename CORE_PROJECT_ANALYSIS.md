@@ -14,21 +14,23 @@ The G6 Platform is a sophisticated, production-grade options market data collect
 ### Key Findings
 
 ✅ **Strengths:**
-- Comprehensive test coverage infrastructure (pytest with parallel execution)
-- Extensive documentation and governance processes
-- Active refactoring and modernization efforts (see INEFFICIENCIES_REPORT.md)
-- Strong observability with Prometheus metrics and Grafana dashboards
 
 ⚠️ **Critical Issues:**
-- **3,244 bare `except Exception:` handlers** creating error masking risks
-- Complex deprecation management with multiple active migration paths
-- Fragmented configuration system despite consolidation efforts
-- Heavy circular dependency risks between core modules
-- Inconsistent error handling patterns across the codebase
 
----
 
-## 1. Architectural Inconsistencies
+## Update Notes (2025-11-15)
+
+These notes capture recent hygiene fixes validated by a green parallel test run and do not change the core recommendations in this analysis.
+
+- Status: Full test suite green in parallel (1462 passed, 539 skipped).
+- Metrics: Default-registry Gauge `g6_events_last_full_unixtime` is recreated if missing and updated on publish, resilient to registry resets.
+- Cardinality Guard: Added in-process snapshot cache and a fast-path for baseline==last snapshot in the same process, avoiding false offenders on the OK path.
+- Shadow Pipeline Meta: Ensured meta defaults include `greeks_phase` and `persist_sim` so downstream consumers/tests see stable keys across phases.
+- Logging Hygiene: Replaced eager f-strings with parameterized logging in storage and influx sinks to meet logging policy and reduce string work when disabled.
+- Docs Sync: `ANALYSIS_INDEX.md` and `ANALYSIS_SUMMARY.md` updated to reflect the green baseline and immediate next steps.
+
+Implications: Observability reliability and test stability improved; proceed with Phase 1 execution as planned (Exception Handling Audit first, and prepare the Legacy Loop removal PR plan).
+
 
 ### 1.1 Module Organization and Import Architecture
 

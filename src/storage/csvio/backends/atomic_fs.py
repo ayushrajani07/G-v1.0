@@ -75,8 +75,8 @@ def _read_existing_header(fp: str) -> list[str] | None:
     except (csv.Error, StopIteration, UnicodeDecodeError):
         # CSV parsing issues - return None
         return None
-    except Exception:
-        # Unexpected errors - return None for safety
+    except OSError:
+        # Unexpected OS/file errors - return None for safety
         return None
     return None
 
@@ -232,7 +232,8 @@ def append_one(
                         if needs_nl:
                             with open(tmp_path, 'ab') as wf:
                                 wf.write(b'\r\n')
-                except Exception:
+                except OSError:
+                    # Ignore newline probe failures (read/seek)
                     pass
                 # Append new row
                 _append_csv_line_binary(tmp_path, row)
@@ -251,20 +252,23 @@ def append_one(
                 try:
                     if metrics and hasattr(metrics, 'csv_files_created'):
                         metrics.csv_files_created.inc()  # type: ignore[call-arg]
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Metrics backend not attached/compatible
                     pass
         finally:
             try:
                 if os.path.exists(tmp_path):
                     os.remove(tmp_path)
-            except Exception:
+            except OSError:
+                # Ignore temp cleanup failure
                 pass
     finally:
         # Release lock
         if lock_acquired:
             try:
                 os.remove(lock_path)
-            except Exception:
+            except OSError:
+                # Ignore lock cleanup failure
                 pass
 
 
@@ -344,7 +348,8 @@ def append_many(
                         if needs_nl:
                             with open(tmp_path, 'ab') as wf:
                                 wf.write(b'\r\n')
-                except Exception:
+                except OSError:
+                    # Ignore newline probe failures (read/seek)
                     pass
                 # Append all rows
                 for r in rows_list:
@@ -360,17 +365,20 @@ def append_many(
                 try:
                     if metrics and hasattr(metrics, 'csv_files_created'):
                         metrics.csv_files_created.inc()  # type: ignore[call-arg]
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Metrics backend not attached/compatible
                     pass
         finally:
             try:
                 if tmp_path and os.path.exists(tmp_path):
                     os.remove(tmp_path)
-            except Exception:
+            except OSError:
+                # Ignore temp cleanup failure
                 pass
     finally:
         if lock_acquired:
             try:
                 os.remove(lock_path)
-            except Exception:
+            except OSError:
+                # Ignore lock cleanup failure
                 pass

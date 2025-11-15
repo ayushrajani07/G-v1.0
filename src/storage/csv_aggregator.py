@@ -140,7 +140,7 @@ class CsvAggregator:
                 day_width=day_width,
                 expected_expiries=list(snapshot.keys())
             )
-        except Exception as e:
+        except OSError as e:
             self.logger.error("Error writing aggregated overview for %s: %s", index, e)
             return False
         
@@ -148,9 +148,6 @@ class CsvAggregator:
         self._agg_last_write[index] = timestamp
         self._agg_pcr_snapshot[index] = {}
         self._agg_day_width[index] = 0.0
-        
-        return True
-    
     def write_overview_snapshot(
         self,
         *,
@@ -195,7 +192,8 @@ class CsvAggregator:
         date_key = timestamp.strftime('%Y-%m-%d')
         try:
             self._ensure_prev_close_loaded(index=index, date_key=date_key)
-        except Exception:
+        except (OSError, IOError, ValueError):
+            # Ignore file/system/parse errors when loading previous close
             pass
         
         # Get index price and compute changes
@@ -395,17 +393,17 @@ class CsvAggregator:
                             # Index price prev close
                             try:
                                 prev_idx_close = float(last_row.get('index_price', '') or 0.0)
-                            except Exception:
+                            except (ValueError, TypeError):
                                 prev_idx_close = None
                             
                             # TP prev close (may be absent on older schema)
                             try:
                                 prev_tp_close = float(last_row.get('tp', '') or 0.0)
-                            except Exception:
+                            except (ValueError, TypeError):
                                 prev_tp_close = None
                             
                             break
-                except Exception:
+                except (OSError, IOError):
                     continue
                 
                 # Found a file with data
@@ -419,6 +417,6 @@ class CsvAggregator:
                 self._tp_prev_close[index] = prev_tp_close
             
             self._prev_close_loaded_date[index] = date_key
-        except Exception:
+        except (OSError, IOError, ValueError):
             # Best-effort; leave unset on failure
             self._prev_close_loaded_date[index] = date_key

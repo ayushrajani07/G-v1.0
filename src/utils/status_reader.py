@@ -65,20 +65,22 @@ class StatusReader:
 
     def get_raw_status(self) -> dict[str, Any]:
         try:
-            data = self._uds.get_runtime_status() or {}
-            if not data and self._path and os.path.exists(self._path):
-                # Defensive direct read fallback to avoid false negatives from cache layers
-                # Use mtime-cached JSON reader to minimize repeated disk I/O under polling.
-                try:
-                    obj = read_json_cached(Path(self._path))
-                    if isinstance(obj, dict):
-                        return obj
-                except Exception:
-                    pass
-            # Governance: malformed JSON path should return empty dict
-            if not isinstance(data, dict):
+            # Strict semantics: when a concrete runtime_status path is configured,
+            # return only the parsed contents of that file. If the file is missing
+            # or malformed, return an empty dict. Do not fall back to other sources
+            # (panels/metrics) for raw status.
+            if self._path:
+                if os.path.exists(self._path):
+                    try:
+                        obj = read_json_cached(Path(self._path))
+                        return obj if isinstance(obj, dict) else {}
+                    except Exception:
+                        return {}
+                # File missing -> empty dict
                 return {}
-            return data
+            # If no path configured (should not happen), fall back to UDS
+            data = self._uds.get_runtime_status() or {}
+            return data if isinstance(data, dict) else {}
         except Exception:
             return {}
 
@@ -112,12 +114,21 @@ class StatusReader:
 
     def get_provider_data(self) -> dict[str, Any]:
         try:
+            # Prefer explicit runtime_status provider when a concrete status path is configured
+            raw = self.get_raw_status()
+            if isinstance(raw, dict):
+                prov = raw.get("provider")
+                if isinstance(prov, dict):
+                    return prov
+        except Exception:
+            pass
+        try:
             d = self._uds.get_provider_data() or {}
             if isinstance(d, dict):
                 return d
         except Exception:
             pass
-        return {}
+        return {"name": None, "auth": {"valid": None}, "latency_ms": None}
 
     def get_health_data(self) -> dict[str, Any]:
         try:

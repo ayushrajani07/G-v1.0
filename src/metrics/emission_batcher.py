@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     from prometheus_client import Counter as PromCounter  # noqa: F401
 try:  # Runtime import (may fail in minimal environments)
     from prometheus_client import Counter  # type: ignore
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     class Counter:  # type: ignore
         def __init__(self, *a, **k): ...
         def inc(self, v=1.0): ...
@@ -91,10 +91,10 @@ class EmissionBatcher:
         self._decay_alpha_idle = EnvConfig.get_float("G6_EMISSION_BATCH_DECAY_ALPHA_IDLE", 0.6)
         self._max_wait = EnvConfig.get_float("G6_EMISSION_BATCH_MAX_WAIT_MS", 750.0) / 1000.0
         self._last_activity = time.time()
+        # Track last flush completion to enforce hard ceiling interval (initialize before thread starts)
+        self._last_flush_end: float = time.time()
         if self._config.enabled:
             self._start_thread()
-        # Track last flush completion to enforce hard ceiling interval
-        self._last_flush_end: float = time.time()
 
     def _start_thread(self) -> None:
         t = threading.Thread(target=self._run, name="g6-metrics-batch", daemon=True)
@@ -111,7 +111,7 @@ class EmissionBatcher:
                     self.flush()
                 else:
                     self.flush()
-            except Exception:
+            except (RuntimeError, ValueError, TypeError):
                 # Swallow exceptions to avoid killing thread; incremental loss acceptable
                 pass
             elapsed = time.time() - start
@@ -132,7 +132,7 @@ class EmissionBatcher:
         # Final flush of residual
         try:
             self.flush()
-        except Exception:
+        except (RuntimeError, ValueError, TypeError):
             pass
 
     def batch_increment(self, counter: PromCounter, value: float = 1.0, labels: Mapping[str, str] | None = None) -> None:
@@ -152,7 +152,7 @@ class EmissionBatcher:
         # Track counter object for dynamic lookup on flush (supports test-created counters not in generated module)
         try:  # pragma: no cover - defensive
             _COUNTERS[counter._name] = counter  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             pass
         key = (counter._name, label_items)  # type: ignore[attr-defined]
         with self._lock:
@@ -178,7 +178,7 @@ class EmissionBatcher:
         if pass_trigger:
             try:
                 self.flush()
-            except Exception:
+            except (RuntimeError, ValueError, TypeError):
                 pass
 
     def flush(self) -> None:
@@ -208,7 +208,7 @@ class EmissionBatcher:
                 else:
                     ctr.inc(delta)
                 applied += 1
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 self._metrics.inc_dropped()
         self._metrics.inc_flush(applied, queue_depth=len(self._pending))
         self._metrics.set_flush_size(applied)
@@ -419,7 +419,7 @@ def register_histogram(name: str, buckets: list[float] | None = None):  # pragma
         h = Histogram(name, f"Registered histogram {name}", buckets=buckets) if buckets else Histogram(name, f"Registered histogram {name}")
         _HISTOGRAMS[name] = h
         return h
-    except Exception:
+    except (ImportError, ValueError, TypeError):
         class _Stub:  # noqa: D401
             def observe(self, *_a, **_k):
                 return None
@@ -431,7 +431,7 @@ def batch_observe(name: str, value: float):  # pragma: no cover - stub
         return
     try:
         h.observe(value)
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
 __all__ = ["get_batcher", "EmissionBatcher", "register_histogram", "batch_observe"]

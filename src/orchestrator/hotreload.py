@@ -28,7 +28,7 @@ def detect_hotreload_trigger(headers: Any = None, path: str | None = None) -> bo
                 hv = headers.get('X-G6-HotReload')
                 if hv and str(hv).strip().lower() in ('1','true','yes','on'):
                     trigger = True
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             pass
         try:
             if path and '?' in path:
@@ -37,7 +37,7 @@ def detect_hotreload_trigger(headers: Any = None, path: str | None = None) -> bo
                 hv = (q.get('hotreload') or q.get('hot') or [''])[0]
                 if hv and str(hv).strip().lower() in ('1','true','yes','on'):
                     trigger = True
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             pass
         return trigger
     except Exception:

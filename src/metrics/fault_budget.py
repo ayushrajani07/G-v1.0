@@ -39,7 +39,7 @@ from dataclasses import dataclass, field
 
 try:
     from prometheus_client import Gauge  # type: ignore
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     Gauge = None  # type: ignore
 
 logger = logging.getLogger(__name__)
@@ -90,9 +90,9 @@ class FaultBudgetTracker:
                             v = val
                         if isinstance(v, (int, float)):
                             total = float(v)
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError):
                         pass
-            except Exception:
+            except (AttributeError, TypeError):
                 pass
             # 2. Fallback: collect first sample value
             if total is None:
@@ -100,7 +100,7 @@ class FaultBudgetTracker:
                     fams = list(counter.collect())  # type: ignore[attr-defined]
                     if fams and fams[0].samples:
                         total = float(fams[0].samples[0].value)
-                except Exception:
+                except (AttributeError, TypeError, ValueError):
                     pass
             # 3. Last resort: attributes count/get
             if total is None:
@@ -111,7 +111,7 @@ class FaultBudgetTracker:
                             v = obj()
                             if isinstance(v, (int,float)):
                                 total = float(v); break
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError):
                         continue
             if total is None:
                 return
@@ -137,13 +137,13 @@ class FaultBudgetTracker:
             # Gauge updates
             if self.g_remaining is not None:
                 try: self.g_remaining.set(remaining)  # type: ignore[attr-defined]
-                except Exception: pass
+                except (AttributeError, TypeError, ValueError): pass
             if self.g_breaches is not None:
                 try: self.g_breaches.set(within)  # type: ignore[attr-defined]
-                except Exception: pass
+                except (AttributeError, TypeError, ValueError): pass
             if self.g_consumed is not None:
                 try: self.g_consumed.set(round(consumed_pct,2))  # type: ignore[attr-defined]
-                except Exception: pass
+                except (AttributeError, TypeError, ValueError): pass
             # Edge detection logs
             if remaining == 0 and not self.exhausted:
                 self.exhausted = True
@@ -155,7 +155,7 @@ class FaultBudgetTracker:
                         'window_sec': self.window_sec,
                         'within': within,
                     })
-                except Exception: pass
+                except (Exception,): pass
             elif remaining > 0 and self.exhausted:
                 self.exhausted = False
                 try:
@@ -164,7 +164,7 @@ class FaultBudgetTracker:
                         'remaining': remaining,
                         'within': within,
                     })
-                except Exception: pass
+                except (Exception,): pass
             elif self.debug:
                 try:
                     logger.debug('metrics.fault_budget.update remaining=%d within=%d consumed=%.2f%%', remaining, within, consumed_pct, extra={
@@ -173,7 +173,7 @@ class FaultBudgetTracker:
                         'within': within,
                         'consumed_percent': consumed_pct,
                     })
-                except Exception: pass
+                except (Exception,): pass
         except Exception:
             # Governance feature must never raise
             pass
@@ -218,7 +218,7 @@ def init_fault_budget(registry) -> None:
         tracker = FaultBudgetTracker(window_sec=window_sec, allowed=allowed, strict=strict, debug=debug,
                                      g_remaining=g_remaining, g_breaches=g_breaches, g_window=g_window, g_consumed=g_consumed)
         registry._fault_budget_tracker = tracker  # type: ignore[attr-defined]
-    except Exception:
+    except (ValueError, TypeError):
         pass
 
 
@@ -227,7 +227,7 @@ def fault_budget_on_cycle(registry) -> None:  # convenience bridging call
         tracker = getattr(registry, '_fault_budget_tracker', None)
         if tracker is not None:
             tracker.on_cycle(registry)
-    except Exception:
+    except (AttributeError, TypeError):
         pass
 
 __all__.append('fault_budget_on_cycle')  # type: ignore

@@ -6,6 +6,22 @@
 
 ---
 
+## Current Baseline and Next Steps
+
+**Baseline (2025-11-15):** Full test suite green in parallel (1462 passed, 539 skipped). Recent hygiene fixes improve observability and stability (resilient metrics gauge, cardinality guard fast-path, stable shadow meta, parameterized logging).
+
+**Immediate Next Steps:**
+- Kick off Phase 1: Exception Handling Audit — start with storage; tighten handlers and add targeted retries.
+- Draft PR plan to remove the legacy orchestration loop and related flags.
+
+**Quick Validation:**
+```powershell
+. .venv\Scripts\Activate.ps1
+python -m pytest -n auto
+```
+
+---
+
 ## Executive Action Items
 
 This document provides a concrete, prioritized action plan to address the fundamental inconsistencies and weak points identified in the core project analysis.

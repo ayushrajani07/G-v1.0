@@ -105,6 +105,12 @@ def run_shadow_pipeline(
                 fn(ctx, state)
             except Exception as inner:  # pragma: no cover - defensive containment
                 state.errors.append(f"phase_secondary:{getattr(fn,'__name__','unknown')}:{inner}")
+        # Ensure observability keys exist even if phases were skipped or no-op
+        state.meta.setdefault('preventive_report', {})
+        state.meta.setdefault('coverage', {'strike': None, 'field': None})
+        state.meta.setdefault('iv_phase', {'attempted': False, 'skipped': True})
+        state.meta.setdefault('greeks_phase', {'attempted': False, 'skipped': True})
+        state.meta.setdefault('persist_sim', {})
     except Exception as e:  # pragma: no cover
         logger.debug('expiry.shadow.pipeline_error index=%s rule=%s err=%s', index, rule, e, exc_info=True)
         return None

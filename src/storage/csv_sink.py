@@ -18,6 +18,9 @@ from pathlib import Path
 
 from src.config.env_config import EnvConfig
 
+# Module-level logger for helper contexts outside instance methods
+logger = logging.getLogger(__name__)
+
 # Module imports (moved from late imports)
 from src.errors.error_routing import route_error
 from src.events import event_log
@@ -47,7 +50,7 @@ class CsvSink:
                  aggregator: Any | None = None) -> None:
         """
         Initialize CSV sink.
-        Args:
+                    self.metrics_tracker = metrics_tracker or CsvMetricsTracker(logger=self.logger)
             base_dir: Base directory for CSV files (relative to project root or absolute)
             writer: Optional CsvWriter instance for low-level I/O
             metrics_tracker: Optional CsvMetricsTracker for metrics emission
@@ -138,35 +141,35 @@ class CsvSink:
         try:
             self.writer = writer or CsvWriter(self.base_dir)
         except (ImportError, TypeError, ValueError, OSError) as e:
-            self.logger.warning(f"Failed to initialize CsvWriter: {e}. Falling back to legacy I/O paths.")
+            self.logger.warning("Failed to initialize CsvWriter: %s. Falling back to legacy I/O paths.", e)
             self.writer = None  # Fallback to legacy inline I/O paths
         except Exception as e:
-            self.logger.error(f"Unexpected error initializing CsvWriter: {e}", exc_info=True)
+            self.logger.error("Unexpected error initializing CsvWriter: %s", e, exc_info=True)
             self.writer = None
         
         try:
             self.metrics_tracker = metrics_tracker or CsvMetricsTracker(None)
         except (ImportError, TypeError) as e:
-            self.logger.warning(f"Failed to initialize CsvMetricsTracker: {e}")
+            self.logger.warning("Failed to initialize CsvMetricsTracker: %s", e)
             self.metrics_tracker = None
         except Exception as e:
-            self.logger.error(f"Unexpected error initializing CsvMetricsTracker: {e}", exc_info=True)
+            self.logger.error("Unexpected error initializing CsvMetricsTracker: %s", e, exc_info=True)
             self.metrics_tracker = None
         
         try:
             self.validator = validator or CsvValidator(logger=self.logger, metrics=self.metrics_tracker, concise_mode=self._concise)
         except (ImportError, TypeError) as e:
-            self.logger.warning(f"Failed to initialize CsvValidator: {e}")
+            self.logger.warning("Failed to initialize CsvValidator: %s", e)
             self.validator = None
         except Exception as e:
-            self.logger.error(f"Unexpected error initializing CsvValidator: {e}", exc_info=True)
+            self.logger.error("Unexpected error initializing CsvValidator: %s", e, exc_info=True)
             self.validator = None
         
         try:
             # Use configured threshold; 0 disables batching
             flush_threshold = int(self._batch_flush_threshold) if getattr(self, '_batch_flush_threshold', 0) else 0
         except (ValueError, TypeError, AttributeError) as e:
-            self.logger.debug(f"Failed to parse batch flush threshold: {e}. Using default 0.")
+            self.logger.debug("Failed to parse batch flush threshold: %s. Using default 0.", e)
             flush_threshold = 0
         
         try:
@@ -177,10 +180,10 @@ class CsvSink:
                 verbose=self.verbose,
             )
         except (ImportError, TypeError) as e:
-            self.logger.warning(f"Failed to initialize CsvBatcher: {e}")
+            self.logger.warning("Failed to initialize CsvBatcher: %s", e)
             self.batcher = None
         except Exception as e:
-            self.logger.error(f"Unexpected error initializing CsvBatcher: {e}", exc_info=True)
+            self.logger.error("Unexpected error initializing CsvBatcher: %s", e, exc_info=True)
             self.batcher = None
         
         try:
@@ -192,10 +195,10 @@ class CsvSink:
                 concise_mode=self._concise,
             )
         except (ImportError, TypeError, OSError) as e:
-            self.logger.warning(f"Failed to initialize CsvAggregator: {e}")
+            self.logger.warning("Failed to initialize CsvAggregator: %s", e)
             self.aggregator = None
         except Exception as e:
-            self.logger.error(f"Unexpected error initializing CsvAggregator: {e}", exc_info=True)
+            self.logger.error("Unexpected error initializing CsvAggregator: %s", e, exc_info=True)
             self.aggregator = None
 
     def attach_metrics(self, metrics_registry: Any) -> None:
@@ -208,25 +211,25 @@ class CsvSink:
             if self.metrics_tracker:
                 self.metrics_tracker.attach_metrics(metrics_registry)
         except (AttributeError, TypeError) as e:
-            self.logger.debug(f"Failed to attach metrics to metrics_tracker: {e}")
+            self.logger.debug("Failed to attach metrics to metrics_tracker: %s", e)
         except Exception as e:
-            self.logger.warning(f"Unexpected error attaching metrics to metrics_tracker: {e}")
+            self.logger.warning("Unexpected error attaching metrics to metrics_tracker: %s", e)
         
         try:
             if self.batcher:
                 self.batcher.metrics = metrics_registry  # type: ignore[attr-defined]
         except (AttributeError, TypeError) as e:
-            self.logger.debug(f"Failed to attach metrics to batcher: {e}")
+            self.logger.debug("Failed to attach metrics to batcher: %s", e)
         except Exception as e:
-            self.logger.warning(f"Unexpected error attaching metrics to batcher: {e}")
+            self.logger.warning("Unexpected error attaching metrics to batcher: %s", e)
         
         try:
             if self.aggregator:
                 self.aggregator.metrics = metrics_registry  # type: ignore[attr-defined]
         except (AttributeError, TypeError) as e:
-            self.logger.debug(f"Failed to attach metrics to aggregator: {e}")
+            self.logger.debug("Failed to attach metrics to aggregator: %s", e)
         except Exception as e:
-            self.logger.warning(f"Unexpected error attaching metrics to aggregator: {e}")
+            self.logger.warning("Unexpected error attaching metrics to aggregator: %s", e)
 
     # ---------------- Metric Wrapper Helpers ----------------
     def _metric_inc(self, name: str, amount: int | float = 1, labels: dict[str, Any] | None = None) -> None:
@@ -243,18 +246,18 @@ class CsvSink:
                 try:
                     metric = metric.labels(**labels)  # type: ignore
                 except (TypeError, KeyError, ValueError) as e:
-                    self.logger.debug(f"Failed to apply labels to metric {name}: {e}")
+                    self.logger.debug("Failed to apply labels to metric %s: %s", name, e)
                     return
             
             try:
                 metric.inc(amount)  # type: ignore
             except (AttributeError, TypeError, ValueError) as e:
-                self.logger.debug(f"Failed to increment metric {name}: {e}")
+                self.logger.debug("Failed to increment metric %s: %s", name, e)
         except AttributeError:
             # Metric doesn't exist - this is expected for optional metrics
             pass
         except Exception as e:
-            self.logger.warning(f"Unexpected error incrementing metric {name}: {e}")
+            self.logger.warning("Unexpected error incrementing metric %s: %s", name, e)
 
     def _metric_set(self, name: str, value: int | float, labels: dict[str, Any] | None = None) -> None:
         """Safely set a gauge metric if it exists."""
@@ -270,18 +273,18 @@ class CsvSink:
                 try:
                     metric = metric.labels(**labels)  # type: ignore
                 except (TypeError, KeyError, ValueError) as e:
-                    self.logger.debug(f"Failed to apply labels to metric {name}: {e}")
+                    self.logger.debug("Failed to apply labels to metric %s: %s", name, e)
                     return
             
             try:
                 metric.set(value)  # type: ignore
             except (AttributeError, TypeError, ValueError) as e:
-                self.logger.debug(f"Failed to set metric {name}: {e}")
+                self.logger.debug("Failed to set metric %s: %s", name, e)
         except AttributeError:
             # Metric doesn't exist - this is expected for optional metrics
             pass
         except Exception as e:
-            self.logger.warning(f"Unexpected error setting metric {name}: {e}")
+            self.logger.warning("Unexpected error setting metric %s: %s", name, e)
 
     # ------------------------------------------------------------------
     # Expiry remediation daily summary helpers
@@ -322,9 +325,9 @@ class CsvSink:
                 })
                 self._last_expiry_summary_emit = now
             except (AttributeError, TypeError, KeyError) as e:
-                self.logger.debug(f"Failed to dispatch expiry summary event: {e}")
+                self.logger.debug("Failed to dispatch expiry summary event: %s", e)
             except Exception as e:
-                self.logger.warning(f"Unexpected error dispatching expiry summary: {e}")
+                self.logger.warning("Unexpected error dispatching expiry summary: %s", e)
 
     def _clean_for_json(self, obj: Any) -> Any:
         """Convert non-serializable objects for JSON.
@@ -337,10 +340,10 @@ class CsvSink:
             try:
                 return obj.to_dict()
             except (AttributeError, TypeError) as e:
-                self.logger.debug(f"Failed to convert object to dict: {e}")
+                self.logger.debug("Failed to convert object to dict: %s", e)
                 return str(obj)
             except Exception as e:
-                self.logger.debug(f"Unexpected error converting to dict: {e}")
+                self.logger.debug("Unexpected error converting to dict: %s", e)
                 return str(obj)
         return obj if isinstance(obj, (str, int, float, bool, list, dict, type(None))) else str(obj)
 
@@ -394,11 +397,8 @@ class CsvSink:
         )
 
         # ---------------- Config-based expiry enforcement (Task 29) ----------------
-        # Only allow writing if the (supplied) expiry_code is within configured expiries for index.
-        # If no config or tag supplied, allow heuristic result (legacy behaviour).
-        if supplied_tag:  # only enforce if caller explicitly passed a tag
+        if supplied_tag:
             try:
-                # Lazy-load config once and cache on class
                 if not hasattr(self, '_config_cache'):
                     proj_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
                     cfg_path = os.path.join(proj_root, 'config', 'g6_config.json')
@@ -408,40 +408,25 @@ class CsvSink:
                 _allowed_raw = indices_cfg.get(index, {}).get('expiries')
                 allowed = _allowed_raw if isinstance(_allowed_raw, list) else []
                 if allowed and expiry_code not in allowed:
-                    # Skip writing disallowed tag
                     if self._concise:
                         self.logger.debug("CSV_SKIPPED_DISALLOWED index=%s tag=%s allowed=%s", index, expiry_code, allowed)
                     else:
                         self.logger.info("Skipping disallowed expiry tag for %s: %s not in %s", index, expiry_code, allowed)
-                    # Metric (migrated to wrapper)
                     self._metric_inc('csv_skipped_disallowed', 1, {'index': index, 'expiry': expiry_code})
-                    return (
-                        {
-                            'expiry_code': expiry_code,
-                            'pcr': 0,
-                            'timestamp': timestamp,
-                            'day_width': 0,
-                            'skipped': True,
-                        }
-                        if return_metrics
-                        else None
-                    )
+                    return ({
+                        'expiry_code': expiry_code,
+                        'pcr': 0,
+                        'timestamp': timestamp,
+                        'day_width': 0,
+                        'skipped': True,
+                    } if return_metrics else None)
             except Exception as cfg_e:  # pragma: no cover
                 self.logger.debug("Config enforcement failed for %s %s: %s", index, expiry_code, cfg_e)
 
-    # Get or calculate index price
+        # Get or calculate index price
         if not index_price:
-            # Use a default value based on index if nothing else is available
-            defaults = {
-                "NIFTY": 24800,
-                "BANKNIFTY": 54200,
-                "FINNIFTY": 25900,
-                "MIDCPNIFTY": 22000,
-                "SENSEX": 80900
-            }
+            defaults = {"NIFTY": 24800, "BANKNIFTY": 54200, "FINNIFTY": 25900, "MIDCPNIFTY": 22000, "SENSEX": 80900}
             index_price = defaults.get(index, 0)
-
-            # Try to find index price in the first option's metadata
             for data in options_data.values():
                 if 'index_price' in data:
                     index_price = float(data['index_price'])
@@ -449,17 +434,14 @@ class CsvSink:
 
         # Calculate ATM strike (factored out)
         atm_strike = self._compute_atm_strike(index, float(index_price))
-
         if concise_mode:
             self.logger.debug("Index %s price: %s, ATM strike: %s", index, index_price, atm_strike)
         else:
             self.logger.info("Index %s price: %s, ATM strike: %s", index, index_price, atm_strike)
 
-    # Calculate PCR for this expiry
-        put_oi = sum(float(data.get('oi', 0)) for data in options_data.values()
-                    if data.get('instrument_type') == 'PE')
-        call_oi = sum(float(data.get('oi', 0)) for data in options_data.values()
-                    if data.get('instrument_type') == 'CE')
+        # Calculate PCR for this expiry
+        put_oi = sum(float(data.get('oi', 0)) for data in options_data.values() if data.get('instrument_type') == 'PE')
+        call_oi = sum(float(data.get('oi', 0)) for data in options_data.values() if data.get('instrument_type') == 'CE')
         pcr = put_oi / call_oi if call_oi > 0 else 0
 
         # ---------------- Allowed expiry_dates validation (Task 39) ----------------
@@ -469,24 +451,18 @@ class CsvSink:
                 if self._concise:
                     self.logger.debug("CSV_SKIP_INVALID_EXPIRY index=%s tag=%s expiry=%s", index, expiry_code, expiry_str)
                 else:
-                    self.logger.warning(
-                        "Skipping write: expiry_date %s not in allowed set for %s (size=%s)", expiry_str, index, len(allowed_set)
-                    )
-                return (
-                    {
-                        'expiry_code': expiry_code,
-                        'pcr': 0,
-                        'timestamp': timestamp,
-                        'day_width': 0,
-                        'skipped_invalid_expiry': True,
-                    }
-                    if return_metrics
-                    else None
-                )
+                    self.logger.warning("Skipping write: expiry_date %s not in allowed set for %s (size=%s)", expiry_str, index, len(allowed_set))
+                return ({
+                    'expiry_code': expiry_code,
+                    'pcr': 0,
+                    'timestamp': timestamp,
+                    'day_width': 0,
+                    'skipped_invalid_expiry': True,
+                } if return_metrics else None)
         except (TypeError, KeyError, AttributeError) as e:
-            self.logger.debug(f"Failed to validate expiry date for {index}: {e}")
+            self.logger.debug("Failed to validate expiry date for %s: %s", index, e)
         except Exception as e:
-            self.logger.warning(f"Unexpected error validating expiry: {e}")
+            self.logger.warning("Unexpected error validating expiry: %s", e)
 
         # Calculate day width if OHLC data is available
         day_width: float = 0.0
@@ -494,7 +470,6 @@ class CsvSink:
             day_width = float(index_ohlc.get('high', 0)) - float(index_ohlc.get('low', 0))
 
         # ---- Compute ATM total premium (tp) for overview, and index/tp changes ----
-        # Derive ATM CE and PE prices from options_data around atm_strike
         def _nearest_price(instrument_type: str) -> float:
             best_diff: float | None = None
             best_price = 0.0
@@ -504,10 +479,10 @@ class CsvSink:
                 try:
                     k = float(od.get('strike', 0) or 0)
                 except (TypeError, ValueError) as e:
-                    self.logger.debug(f"Failed to parse strike value: {e}")
+                    self.logger.debug("Failed to parse strike value: %s", e)
                     continue
                 except Exception as e:
-                    self.logger.debug(f"Unexpected error parsing strike: {e}")
+                    self.logger.debug("Unexpected error parsing strike: %s", e)
                     continue
                 diff = abs(k - atm_strike)
                 if best_diff is None or diff < best_diff:
@@ -515,82 +490,66 @@ class CsvSink:
                         best_price = float(od.get('last_price', 0) or 0)
                         best_diff = diff
                     except (TypeError, ValueError) as e:
-                        self.logger.debug(f"Failed to parse last_price: {e}")
+                        self.logger.debug("Failed to parse last_price: %s", e)
                     except Exception as e:
-                        self.logger.debug(f"Unexpected error parsing price: {e}")
+                        self.logger.debug("Unexpected error parsing price: %s", e)
             return best_price
 
         ce_atm = _nearest_price('CE')
         pe_atm = _nearest_price('PE')
         tp_value = float(ce_atm) + float(pe_atm)
 
-    # Prepare daily open tracking for index/tp and load previous closes
+        # Prepare daily open tracking for index/tp and load previous closes
         date_key = timestamp.strftime('%Y-%m-%d')
-        # Ensure prev close values are available (best-effort)
         try:
             self._ensure_prev_close_loaded(index=index, date_key=date_key)
         except (IOError, OSError, csv.Error, KeyError, ValueError):
             pass
-        # Capture opening values near market open (9:15 AM)
+
         current_time = timestamp.time()
         market_open_time = datetime.time(9, 15)
-        market_open_window = datetime.time(9, 30)  # 15-minute window
-        
+        market_open_window = datetime.time(9, 30)
         if self._index_open_date.get(index) != date_key:
-            # New day - check if we're in market open window
             if market_open_time <= current_time <= market_open_window:
                 self._index_open_date[index] = date_key
                 self._index_open_price[index] = float(index_price or 0.0)
             elif current_time < market_open_time:
-                # Before market open - wait
                 self._index_open_date[index] = date_key
-                self._index_open_price[index] = float(index_price or 0.0)  # Temporary, will update
+                self._index_open_price[index] = float(index_price or 0.0)
             else:
-                # After window - use current as fallback
                 self._index_open_date[index] = date_key
                 self._index_open_price[index] = float(index_price or 0.0)
         elif self._index_open_date.get(index) == date_key and market_open_time <= current_time <= market_open_window:
-            # Update if we're in the opening window (improves accuracy)
             self._index_open_price[index] = float(index_price or 0.0)
-            
+
         if self._tp_open_date.get(index) != date_key:
-            # New day - check if we're in market open window  
             if market_open_time <= current_time <= market_open_window:
                 self._tp_open_date[index] = date_key
                 self._tp_open[index] = float(tp_value)
             elif current_time < market_open_time:
-                # Before market open - wait
                 self._tp_open_date[index] = date_key
-                self._tp_open[index] = float(tp_value)  # Temporary, will update
+                self._tp_open[index] = float(tp_value)
             else:
-                # After window - use current as fallback
                 self._tp_open_date[index] = date_key
                 self._tp_open[index] = float(tp_value)
         elif self._tp_open_date.get(index) == date_key and market_open_time <= current_time <= market_open_window:
-            # Update if we're in the opening window (improves accuracy)
             self._tp_open[index] = float(tp_value)
 
-        # Index price change calculations
         prev_close_idx = self._index_prev_close.get(index)
         index_net_change = float(index_price or 0.0) - float(prev_close_idx) if prev_close_idx is not None else 0.0
         index_day_change = float(index_price or 0.0) - float(self._index_open_price.get(index, index_price or 0.0))
 
-        # TP change calculations
         prev_close_tp = self._tp_prev_close.get(index)
         tp_net_change = float(tp_value) - float(prev_close_tp) if prev_close_tp is not None else 0.0
         tp_day_change = float(tp_value) - float(self._tp_open.get(index, tp_value))
 
-        # ---------------- Mixed-expiry validation (Task 31 / 34) ----------------
         self._prune_mixed_expiry(options_data, exp_date, index=index, expiry_code=expiry_code)
-
-        # ---------------- Expected-expiry presence advisory (Task 35) ----------------
         self._advise_missing_expiries(index=index, expiry_code=expiry_code, timestamp=timestamp)
 
-        # Update the overview file (segregated by index) unless suppressed for aggregation
         if not suppress_overview:
             vix_val = None
             try:
-                vix_val = _extra.get('vix')  # passed by collectors if available
+                vix_val = _extra.get('vix')
             except (AttributeError, KeyError, TypeError):
                 vix_val = None
             self._write_overview_file(
@@ -605,47 +564,35 @@ class CsvSink:
                 except (ValueError, TypeError):
                     pass
 
-        # Update last-seen values after write
         try:
             self._index_last_price[index] = float(index_price or 0.0)
             self._tp_last[index] = float(tp_value)
         except (ValueError, TypeError):
             pass
 
-        # Group options by strike
         strike_data = self._group_by_strike(options_data)
         unique_strikes = len(strike_data)
 
-        # ---------------- Schema Assertions Layer (Task 11) ----------------
         schema_issues = self._validate_schema(index=index, expiry_code=expiry_code, strike_data=strike_data)
         if return_metrics and schema_issues:
-            # When metrics requested, surface schema issue count minimally; continue writing otherwise
             pass
 
-        # Create expiry-specific directory
         expiry_dir = os.path.join(self.base_dir, index, expiry_code)
         os.makedirs(expiry_dir, exist_ok=True)
-
-        # Create debug file
         debug_file = os.path.join(expiry_dir, f"{timestamp.strftime('%Y-%m-%d')}_debug.json")
-
-        # Format timestamp for records - use actual collection time
         ts_str = timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
-        # Unified IST 30s rounding + formatting (Task 12)
         try:
-            ts_str_rounded = format_ist_dt_30s(timestamp)  # dd-mm-YYYY HH:MM:SS in IST
+            ts_str_rounded = format_ist_dt_30s(timestamp)
         except (TypeError, ValueError, AttributeError) as e:
-            # Fallback to previous logic on unexpected failure
-            self.logger.debug(f"Failed to format IST timestamp: {e}. Using fallback.")
+            self.logger.debug("Failed to format IST timestamp: %s. Using fallback.", e)
             rounded_timestamp = round_timestamp(timestamp, step_seconds=30, strategy='nearest')
             ts_str_rounded = rounded_timestamp.strftime('%d-%m-%Y %H:%M:%S')
         except Exception as e:
-            self.logger.warning(f"Unexpected error formatting timestamp: {e}. Using fallback.")
+            self.logger.warning("Unexpected error formatting timestamp: %s. Using fallback.", e)
             rounded_timestamp = round_timestamp(timestamp, step_seconds=30, strategy='nearest')
             ts_str_rounded = rounded_timestamp.strftime('%d-%m-%Y %H:%M:%S')
 
-        # Batching decision & strike processing moved to helper
         batching_enabled = self._batch_flush_threshold > 0
         batch_key = (index, expiry_code, timestamp.strftime('%Y-%m-%d'))
         if batching_enabled and batch_key not in self._batch_buffers:
@@ -665,7 +612,6 @@ class CsvSink:
             batch_key=batch_key,
         )
 
-        # Write debug JSON only when flushed (avoid misleading partial snapshot)
         if flushed:
             try:
                 with open(debug_file, 'w') as f:
@@ -685,23 +631,21 @@ class CsvSink:
                     }, f, indent=2)
             except (IOError, OSError, PermissionError) as e:
                 if self.verbose:
-                    self.logger.debug(f"Failed to write debug file {debug_file}: {e}")
+                    self.logger.debug("Failed to write debug file %s: %s", debug_file, e)
             except (TypeError, ValueError) as e:
-                self.logger.debug(f"Failed to serialize debug data: {e}")
+                self.logger.debug("Failed to serialize debug data: %s", e)
             except Exception as e:
                 if self.verbose:
-                    self.logger.warning(f"Unexpected error writing debug file: {e}", exc_info=True)
+                    self.logger.warning("Unexpected error writing debug file: %s", e, exc_info=True)
 
         if self.verbose and not self._concise:
             self.logger.info("Data written for %s %s (unique_strikes=%s)", index, expiry_code, unique_strikes)
         else:
             self.logger.debug("Data written for %s %s (unique_strikes=%s)", index, expiry_code, unique_strikes)
 
-        # Aggregation snapshot update (only update if not suppressed to avoid skew)
         self._update_aggregation_state(index, expiry_code, pcr, day_width, timestamp)
         self._maybe_write_aggregated_overview(index, timestamp)
 
-        # Optionally return metrics for aggregation mode
         if return_metrics:
             return {
                 'expiry_code': expiry_code,
@@ -735,15 +679,15 @@ class CsvSink:
             exp_date = expiry if isinstance(expiry, datetime.date) else datetime.datetime.strptime(str(expiry), '%Y-%m-%d').date()
         except (ValueError, TypeError, AttributeError) as e:
             # Fallback: treat unparsable expiry as today (should be rare) to avoid crash; logs at warning.
-            self.logger.warning(f"CSV_EXPIRY_PARSE_FALLBACK index={index} raw={expiry}: {e}")
+            self.logger.warning("CSV_EXPIRY_PARSE_FALLBACK index=%s raw=%s: %s", index, expiry, e)
             exp_date = datetime.date.today()
         except Exception as e:
-            self.logger.error(f"Unexpected error parsing expiry for {index}: {e}", exc_info=True)
+            self.logger.error("Unexpected error parsing expiry for %s: %s", index, e, exc_info=True)
             exp_date = datetime.date.today()
         
         supplied_tag = (expiry_rule_tag.strip() if isinstance(expiry_rule_tag, str) and expiry_rule_tag.strip() else None)
         if supplied_tag and re.fullmatch(r"\d{4}-\d{2}-\d{2}", supplied_tag):
-            self.logger.debug(f"CSV_EXPIRY_TAG_RAW_DATE index={index} tag={supplied_tag} -> falling back to heuristic classification")
+            self.logger.debug("CSV_EXPIRY_TAG_RAW_DATE index=%s tag=%s -> falling back to heuristic classification", index, supplied_tag)
             supplied_tag = None
         
         expiry_code = supplied_tag or self._determine_expiry_code(exp_date)
@@ -765,9 +709,9 @@ class CsvSink:
                     # (Rewrite previously caused divergence from unified expiry policy.)
                     pass
         except (ValueError, OverflowError) as e:
-            self.logger.debug(f"Failed to compute monthly anchor for {index}: {e}")
+            self.logger.debug("Failed to compute monthly anchor for %s: %s", index, e)
         except Exception as e:
-            self.logger.warning(f"Unexpected error in monthly anchor diagnostic: {e}")
+            self.logger.warning("Unexpected error in monthly anchor diagnostic: %s", e)
         return exp_date, expiry_code, supplied_tag, expiry_str
 
     def _determine_expiry_code(self, exp_date: datetime.date, today: datetime.date | None = None) -> str:
@@ -906,22 +850,22 @@ class CsvSink:
                             leg_map[leg_type] = None
             except (TypeError, KeyError, AttributeError, ValueError) as e:
                 # Defensive: continue collecting other issues
-                self.logger.debug(f"Error validating strike {strike_key}: {e}")
+                self.logger.debug("Error validating strike %s: %s", strike_key, e)
                 continue
             except Exception as e:
-                self.logger.warning(f"Unexpected error in schema validation for strike {strike_key}: {e}")
+                self.logger.warning("Unexpected error in schema validation for strike %s: %s", strike_key, e)
                 continue
         
         if schema_issues:
             try:
                 route_error('csv.schema.issues', self.logger, self.metrics, index=index, expiry=expiry_code, count=len(schema_issues))
             except (AttributeError, TypeError) as e:
-                self.logger.debug(f"Failed to route schema error: {e}")
+                self.logger.debug("Failed to route schema error: %s", e)
                 self.logger.warning(
                     "CSV_SCHEMA_ISSUES index=%s expiry=%s count=%d issues=%s", index, expiry_code, len(schema_issues), ','.join(schema_issues[:25]) + ("+"+str(len(schema_issues)-25) if len(schema_issues)>25 else "")
                 )
             except Exception as e:
-                self.logger.warning(f"Unexpected error routing schema issues: {e}")
+                self.logger.warning("Unexpected error routing schema issues: %s", e)
             
             # Metrics (migrated to wrapper; preserve capped emission at 50 issues)
             try:
@@ -932,9 +876,9 @@ class CsvSink:
                         'error_type': issue.split(':',1)[0]
                     })
             except (ValueError, IndexError, KeyError) as e:
-                self.logger.debug(f"Failed to emit schema issue metrics: {e}")
+                self.logger.debug("Failed to emit schema issue metrics: %s", e)
             except Exception as e:
-                self.logger.warning(f"Unexpected error emitting schema metrics: {e}")
+                self.logger.warning("Unexpected error emitting schema metrics: %s", e)
         return schema_issues
 
     def _process_strikes_and_maybe_flush(self, *, index: str, expiry_code: str, expiry_str: str,
@@ -972,7 +916,7 @@ class CsvSink:
                             mismatched_meta += 1
                             break
             except (KeyError, TypeError, ValueError, AttributeError) as e:
-                self.logger.debug(f"Error checking expiry metadata for strike {strike}: {e}")
+                self.logger.debug("Error checking expiry metadata for strike %s: %s", strike, e)
             row, header = self._prepare_option_row(index=index,
                                                    expiry_code=expiry_code,
                                                    expiry_date_str=expiry_str,
@@ -996,9 +940,9 @@ class CsvSink:
                     if skip_row:
                         continue
             except (KeyError, TypeError, ValueError, AttributeError) as e:
-                self.logger.debug(f"Error in expiry misclassification handler: {e}")
+                self.logger.debug("Error in expiry misclassification handler: %s", e)
             except Exception as e:
-                self.logger.warning(f"Unexpected error in expiry misclassification: {e}")
+                self.logger.warning("Unexpected error in expiry misclassification: %s", e)
             # Junk filtering (extracted helper); skips row if flagged
             try:
                 if self._maybe_skip_as_junk(index=index,
@@ -1009,9 +953,9 @@ class CsvSink:
                                              row_ts=row[0]):
                     continue
             except (KeyError, TypeError, ValueError, IndexError, AttributeError) as e:
-                self.logger.debug(f"Error in junk filtering: {e}")
+                self.logger.debug("Error in junk filtering: %s", e)
             except Exception as e:
-                self.logger.warning(f"Unexpected error in junk filtering: {e}")
+                self.logger.warning("Unexpected error in junk filtering: %s", e)
             # Zero-row detection (extracted helper)
             try:
                 is_zero_row, skip_zero = self._handle_zero_row(index=index,
@@ -1023,9 +967,9 @@ class CsvSink:
                 if skip_zero:
                     continue
             except (KeyError, TypeError, ValueError, AttributeError) as e:
-                self.logger.debug(f"Error in zero row handler: {e}")
+                self.logger.debug("Error in zero row handler: %s", e)
             except Exception as e:
-                self.logger.warning(f"Unexpected error in zero row handler: {e}")
+                self.logger.warning("Unexpected error in zero row handler: %s", e)
             if not hasattr(self, '_last_row_keys'):
                 self._last_row_keys = {}
             row_sig = (option_file, offset)
@@ -1082,19 +1026,19 @@ class CsvSink:
                         self.logger.debug("Writing zero option row (flag not set to skip) index=%s expiry=%s offset=%s", index, expiry_code, offset)
                     return True, False
         except (AttributeError, TypeError, ValueError) as e:
-            self.logger.debug(f"Error checking zero row condition: {e}")
+            self.logger.debug("Error checking zero row condition: %s", e)
         except Exception as e:
-            self.logger.warning(f"Unexpected error in zero row check: {e}")
+            self.logger.warning("Unexpected error in zero row check: %s", e)
         
         try:
             ce_zero = (not call_data) or all(float(call_data.get(k, 0) or 0) == 0 for k in ('last_price','volume','oi','avg_price'))
             pe_zero = (not put_data) or all(float(put_data.get(k, 0) or 0) == 0 for k in ('last_price','volume','oi','avg_price'))
             is_zero = ce_zero and pe_zero
         except (TypeError, ValueError, KeyError) as e:
-            self.logger.debug(f"Error calculating zero row status: {e}")
+            self.logger.debug("Error calculating zero row status: %s", e)
             return False, False
         except Exception as e:
-            self.logger.warning(f"Unexpected error calculating zero row: {e}")
+            self.logger.warning("Unexpected error calculating zero row: %s", e)
             return False, False
         if not is_zero:
             return False, False
@@ -1145,19 +1089,19 @@ class CsvSink:
                         self.logger.debug("Flushed %s rows to %s", len(rows), path)
                     self._metric_inc('csv_records_written', len(rows))
                 except (IOError, OSError, PermissionError) as e:
-                    self.logger.warning(f"Failed to flush batch to {path}: {e}")
+                    self.logger.warning("Failed to flush batch to %s: %s", path, e)
                     continue
                 except Exception as e:
-                    self.logger.error(f"Unexpected error flushing batch: {e}", exc_info=True)
+                    self.logger.error("Unexpected error flushing batch: %s", e, exc_info=True)
                     continue
             self._batch_buffers.pop(batch_key, None)
             self._batch_counts.pop(batch_key, None)
             return True
         except (KeyError, TypeError, AttributeError) as e:
-            self.logger.debug(f"Error in batch flush: {e}")
+            self.logger.debug("Error in batch flush: %s", e)
             return False
         except Exception as e:
-            self.logger.warning(f"Unexpected error in batch flush: {e}")
+            self.logger.warning("Unexpected error in batch flush: %s", e)
             return False
 
     def _handle_duplicate_write_or_buffer(self, *, index: str, expiry_code: str, offset: int,
@@ -1188,7 +1132,7 @@ class CsvSink:
                         )
                 except (AttributeError, TypeError) as e:
                     # Fall through to legacy mirror buffer update
-                    self.logger.debug(f"Batcher not available, using legacy buffer: {e}")
+                    self.logger.debug("Batcher not available, using legacy buffer: %s", e)
                 # Maintain legacy mirrors for health/backlog helpers
                 buf = self._batch_buffers.setdefault(batch_key, {}).setdefault(option_file, {'header': header, 'rows': []})
                 buf['rows'].append(row)
@@ -1201,15 +1145,15 @@ class CsvSink:
                 self._metric_inc('csv_records_written', 1)
         except (IOError, OSError, PermissionError) as e:
             # I/O errors - fail open to avoid crash
-            self.logger.warning(f"Failed to write row: {e}")
+            self.logger.warning("Failed to write row: %s", e)
             return False
         except (KeyError, IndexError, TypeError, AttributeError) as e:
             # Data structure errors - fail open
-            self.logger.debug(f"Error processing row: {e}")
+            self.logger.debug("Error processing row: %s", e)
             return False
         except Exception as e:
             # Unexpected error - fail open to avoid crash
-            self.logger.error(f"Unexpected error in duplicate handler: {e}", exc_info=True)
+            self.logger.error("Unexpected error in duplicate handler: %s", e, exc_info=True)
             return False
         return False
 
@@ -1271,13 +1215,13 @@ class CsvSink:
                 try:
                     route_error('csv.junk.skip', self.logger, self.metrics, index=index, expiry=expiry_code, offset=offset, category=decision.category)
                 except (AttributeError, TypeError) as e:
-                    self.logger.debug(f"CSV_JUNK_SKIP index={index} expiry={expiry_code} offset={offset} category={decision.category} (route_error failed: {e})")
+                    self.logger.debug("CSV_JUNK_SKIP index=%s expiry=%s offset=%s category=%s (route_error failed: %s)", index, expiry_code, offset, decision.category, e)
             return True
         except (AttributeError, TypeError, KeyError) as e:
-            self.logger.debug(f"Error in junk skip logic: {e}")
+            self.logger.debug("Error in junk skip logic: %s", e)
             return False
         except Exception as e:
-            self.logger.warning(f"Unexpected error in junk skip handler: {e}")
+            self.logger.warning("Unexpected error in junk skip handler: %s", e)
             return False
 
     def _handle_expiry_misclassification(self, *, index: str, expiry_code: str, expiry_str: str,
@@ -1364,7 +1308,7 @@ class CsvSink:
                     try:
                         self._update_expiry_daily_stats('rewritten')
                     except (AttributeError, KeyError) as e:
-                        self.logger.debug(f"Failed to update expiry daily stats: {e}")
+                        self.logger.debug("Failed to update expiry daily stats: %s", e)
                     return expiry_code, False
                 elif policy == 'quarantine':
                     try:
@@ -1393,33 +1337,33 @@ class CsvSink:
                             {'date': iso_date},
                         )
                     except (AttributeError, KeyError, TypeError) as e:
-                        self.logger.debug(f"Failed to update quarantine metrics: {e}")
+                        self.logger.debug("Failed to update quarantine metrics: %s", e)
                     try:
                         self._update_expiry_daily_stats('quarantined')
                     except (AttributeError, KeyError) as e:
-                        self.logger.debug(f"Failed to update expiry daily stats: {e}")
+                        self.logger.debug("Failed to update expiry daily stats: %s", e)
                     return expiry_code, True
                 else:  # reject
                     self._metric_inc('expiry_rejected_total', 1, {'index': index, 'expiry_code': expiry_code})
                     try:
                         self._update_expiry_daily_stats('rejected')
                     except (AttributeError, KeyError) as e:
-                        self.logger.debug(f"Failed to update expiry daily stats: {e}")
+                        self.logger.debug("Failed to update expiry daily stats: %s", e)
                     return expiry_code, True
             except (IOError, OSError, PermissionError) as e:
-                self.logger.warning(f"I/O error in expiry misclassification handler: {e}")
+                self.logger.warning("I/O error in expiry misclassification handler: %s", e)
                 return expiry_code, False
             except (KeyError, AttributeError, TypeError) as e:
-                self.logger.debug(f"Data error in expiry misclassification handler: {e}")
+                self.logger.debug("Data error in expiry misclassification handler: %s", e)
                 return expiry_code, False
             except Exception as e:
-                self.logger.error(f"Unexpected error in expiry misclassification handler: {e}", exc_info=True)
+                self.logger.error("Unexpected error in expiry misclassification handler: %s", e, exc_info=True)
                 return expiry_code, False
         except (KeyError, TypeError, AttributeError) as e:
-            self.logger.debug(f"Error in expiry misclassification: {e}")
+            self.logger.debug("Error in expiry misclassification: %s", e)
             return expiry_code, False
         except Exception as e:
-            self.logger.warning(f"Unexpected error in expiry misclassification: {e}")
+            self.logger.warning("Unexpected error in expiry misclassification: %s", e)
             return expiry_code, False
 
     def _compute_atm_strike(self, index: str, index_price: float) -> float:
@@ -1480,11 +1424,11 @@ class CsvSink:
                             self._tp_prev_close_by_key[key] = prev_tp
                             break
                 except (IOError, OSError, csv.Error) as e:
-                    self.logger.debug(f"Error reading prev close CSV: {e}")
+                    self.logger.debug("Error reading prev close CSV: %s", e)
                     continue
             self._tp_prev_loaded_date_by_key[key] = date_key
         except (KeyError, TypeError) as e:
-            self.logger.debug(f"Error loading prev close, using fallback key: {e}")
+            self.logger.debug("Error loading prev close, using fallback key: %s", e)
             fallback_key = (index, expiry_code, int(offset))
             self._tp_prev_loaded_date_by_key[fallback_key] = date_key
 
@@ -1558,7 +1502,7 @@ class CsvSink:
         try:
             self._ensure_tp_prev_close_for_key(index=index, expiry_code=expiry_code, offset=offset, date_key=date_key)
         except (IOError, OSError, KeyError, TypeError) as e:
-            self.logger.debug(f"Could not load prev close: {e}")
+            self.logger.debug("Could not load prev close: %s", e)
         series_key = (index, expiry_code, int(offset))
         # Initialize per-day open if needed
         if self._tp_open_date_by_key.get(series_key) != date_key:
@@ -1609,7 +1553,7 @@ class CsvSink:
                 _set('rho', ce_rho, pe_rho)
                 _set('iv', ce_iv, pe_iv)
         except (AttributeError, KeyError, TypeError) as e:
-            self.logger.debug(f"Error publishing option metrics: {e}")
+            self.logger.debug("Error publishing option metrics: %s", e)
         return row, header
 
     def _append_csv_row(self, filepath: str, row: list[Any], header: list[str] | None) -> None:
@@ -1621,8 +1565,7 @@ class CsvSink:
                     if os.path.isabs(filepath) and str(filepath).startswith(self.base_dir):
                         rel = os.path.relpath(filepath, self.base_dir)
                 except (ValueError, TypeError, OSError) as e:
-
-                    logger.debug(f'Failed to compute relative path: {e}')
+                    logger.debug('Failed to compute relative path: %s', e)
                 # Best-effort header write if file doesn't exist
                 self.writer.append_row(rel, row, header)  # type: ignore[attr-defined]
                 # Metric (best-effort)
@@ -1750,7 +1693,7 @@ class CsvSink:
                     timestamp=timestamp,
                 )
         except (AttributeError, TypeError) as e:
-            self.logger.debug(f"Aggregator update failed: {e}")
+            self.logger.debug("Aggregator update failed: %s", e)
 
     def _maybe_write_aggregated_overview(self, index: str, timestamp: datetime.datetime) -> None:
         # Prefer delegating to aggregator if configured
@@ -1758,7 +1701,7 @@ class CsvSink:
             if self.aggregator and self.aggregator.maybe_write_aggregated_overview(index=index, timestamp=timestamp):
                 return
         except (AttributeError, TypeError, IOError, OSError) as e:
-            self.logger.debug(f"Aggregator write overview failed: {e}")
+            self.logger.debug("Aggregator write overview failed: %s", e)
         last = self._agg_last_write.get(index)
         if not last:
             self._agg_last_write[index] = timestamp
@@ -2010,7 +1953,7 @@ class CsvSink:
                     if hasattr(self, '_last_vix'):
                         self.aggregator._last_vix = getattr(self, '_last_vix', None)  # type: ignore[attr-defined]
                 except (AttributeError, TypeError) as e:
-                    logger.debug(f'Failed to transfer aggregator state: {e}')
+                    logger.debug('Failed to transfer aggregator state: %s', e)
                 self.aggregator.write_overview_snapshot(
                     index=index,
                     pcr_snapshot=pcr_snapshot,
@@ -2023,7 +1966,7 @@ class CsvSink:
                 self._metric_inc('csv_overview_aggregate_writes', 1, {'index': index})
                 return
         except (IOError, OSError, TypeError, ValueError, KeyError) as e:
-            logger.debug(f'Aggregator overview write failed: {e}')
+            logger.debug('Aggregator overview write failed: %s', e)
         # Unified IST rounding for aggregate snapshot (DRY helper)
         ts_str = self._overview_round_ts(timestamp)
 
@@ -2055,7 +1998,7 @@ class CsvSink:
             try:
                 self._ensure_prev_close_loaded(index=index, date_key=date_key)
             except (IOError, OSError, KeyError, csv.Error) as e:
-                logger.debug(f'Failed to ensure prev close loaded: {e}')
+                logger.debug('Failed to ensure prev close loaded: %s', e)
             idx_price = float(self._index_last_price.get(index, 0.0))
             idx_day_ch = float(idx_price - float(self._index_open_price.get(index, idx_price)))
             idx_prev_close = self._index_prev_close.get(index)
@@ -2334,7 +2277,7 @@ class CsvSink:
                 if disk_free_mb is not None:
                     self._metric_set('csv_sink_disk_free_mb', disk_free_mb, None)
             except (IOError, OSError, csv.Error) as e:
-                logger.debug(f'Exception in csv_sink operation: {e}')
+                logger.debug('Exception in csv_sink operation: %s', e)
             # ---------------- Advanced Diagnostics (opt-in via G6_HEALTH_ADVANCED) ----------------
             issues: list[dict[str, Any]] = []
             health_score = 100 if status_ok else 0
@@ -2405,7 +2348,7 @@ class CsvSink:
                 try:
                     self._metric_set('csv_sink_health_score', health_score, None)
                 except (IOError, OSError, csv.Error) as e:
-                    logger.debug(f'Exception in csv_sink operation: {e}')
+                    logger.debug('Exception in csv_sink operation: %s', e)
                 components.extend(adv_components)
             return {
                 'status': 'healthy' if status_ok else 'unhealthy',
@@ -2448,7 +2391,7 @@ class CsvSink:
                         queued_rows += len(rows)
                         buffer_files += 1
         except (IOError, OSError, csv.Error) as e:
-            logger.debug(f'Exception in csv_sink operation: {e}')
+            logger.debug('Exception in csv_sink operation: %s', e)
         return {'queued_rows': queued_rows, 'buffer_files': buffer_files, 'flush_threshold': flush_threshold}
 
     def _detect_idle(self, now_ts: float) -> dict[str, Any]:
@@ -2500,7 +2443,7 @@ class CsvSink:
                     except (IOError, OSError, csv.Error) as e:
                         continue
         except (IOError, OSError, csv.Error) as e:
-            logger.debug(f'Exception in csv_sink operation: {e}')
+            logger.debug('Exception in csv_sink operation: %s', e)
         return {'total_locks': total, 'stale_count': stale_count, 'stale_threshold_sec': stale_threshold}
 
     def _max_mtime(self, current: float | None, new: float) -> float:
@@ -2642,7 +2585,7 @@ class CsvSink:
             elif market_open_time <= current_time <= market_open_window:
                 self._tp_open[index] = float(tp_value)
         except (ValueError, TypeError) as e:
-            logger.debug(f'Exception in csv_sink operation: {e}')
+            logger.debug('Exception in csv_sink operation: %s', e)
 
     def _is_expiry_disallowed(self, exp_date: datetime.date) -> bool:
         """Return True if configured allowed_expiry_dates excludes exp_date; False otherwise."""
@@ -2653,7 +2596,7 @@ class CsvSink:
             if isinstance(allowed, (set, list, tuple)):
                 return exp_date not in allowed
         except (AttributeError, TypeError, KeyError) as e:
-            logger.debug(f'Exception in csv_sink operation: {e}')
+            logger.debug('Exception in csv_sink operation: %s', e)
         return False
 
     def _resolve_index_price(self, *, index: str, options_data: dict[str, dict[str, Any]], index_price: float | None) -> float:
@@ -2674,7 +2617,7 @@ class CsvSink:
                     resolved = float(data.get('index_price') or resolved)
                     break
         except (ValueError, TypeError) as e:
-            logger.debug(f'Exception in csv_sink operation: {e}')
+            logger.debug('Exception in csv_sink operation: %s', e)
         return float(resolved)
 
     def _compute_day_width(self, ohlc: dict[str, Any] | None) -> float:
@@ -2687,7 +2630,7 @@ class CsvSink:
             if high and low:
                 return high - low if high >= low else 0.0
         except (ValueError, TypeError) as e:
-            logger.debug(f'Exception in csv_sink operation: {e}')
+            logger.debug('Exception in csv_sink operation: %s', e)
         return 0.0
 
     def _resolve_vix(self, extra: dict[str, Any] | None) -> float:
@@ -2705,7 +2648,7 @@ class CsvSink:
                 self._last_vix = val2
                 return val2
         except (ValueError, TypeError) as e:
-            logger.debug(f'Exception in csv_sink operation: {e}')
+            logger.debug('Exception in csv_sink operation: %s', e)
         return 0.0
 
     def _build_return_metrics(self, *, expiry_code: str, pcr: float, timestamp: datetime.datetime, day_width: float, index_price: float, flags: dict[str, bool] | None = None) -> dict[str, Any]:
@@ -2732,7 +2675,7 @@ class CsvSink:
                 self._batch_buffers[key] = {}
                 self._batch_counts[key] = 0
             except (AttributeError, TypeError, KeyError) as e:
-                logger.debug(f'Exception in csv_sink operation: {e}')
+                logger.debug('Exception in csv_sink operation: %s', e)
         return enabled, key
 
     def _compute_change_metrics(self, *, current: float, prev_close: float | None, open_value: float | None) -> tuple[float, float, float, float]:
@@ -2827,7 +2770,7 @@ class CsvSink:
                 new_row.extend([time_val, time_ms_val])
                 return new_header, new_row
         except (AttributeError, TypeError, KeyError) as e:
-            logger.debug(f'Exception in csv_sink operation: {e}')
+            logger.debug('Exception in csv_sink operation: %s', e)
         return header, row
 
     def _is_preopen_and_quarantine(
@@ -2890,7 +2833,7 @@ class CsvSink:
                     qfile.parent.mkdir(parents=True, exist_ok=True)
                     qfile.touch(exist_ok=True)
                 except (IOError, OSError, csv.Error) as e:
-                    logger.debug(f'Exception in csv_sink operation: {e}')
+                    logger.debug('Exception in csv_sink operation: %s', e)
             return True
         return False
         # Fallback simplified lexicographic comparison (unreachable after return statements)
@@ -2922,7 +2865,7 @@ class CsvSink:
                         best_price = float(od.get('last_price', 0) or 0)
                         best_diff = diff
                     except (ValueError, TypeError) as e:
-                        logger.debug(f'Exception in csv_sink operation: {e}')
+                        logger.debug('Exception in csv_sink operation: %s', e)
         except (ValueError, TypeError) as e:
             return 0.0
         return best_price

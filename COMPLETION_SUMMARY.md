@@ -423,3 +423,20 @@ The implementation is ready for integration and testing to achieve the target **
 **Implementation Date**: 2025-11-14
 **Status**: ✅ Complete
 **Next Steps**: Integration, testing, and gradual rollout
+
+---
+
+## Post-Completion Hygiene Updates (2025-11-15)
+
+- Exception handling audit: narrowed broad catches in `src/utils/csv_cache.py` and `src/data_access/unified_source.py` JSON readers; applied big-diff exception narrowing across metrics (`api_call.py`, `emission_batcher.py`, `fault_budget.py`, `gating.py`).
+- Resolved issues from big diff: fixed indentation blocks and initialized `EmissionBatcher._last_flush_end` before starting the background thread to avoid a race.
+- Validation: targeted tests + full suite passed locally in both parallel and serial runs; a transient `StatusReader` provider-name mismatch was not reproducible after fixes.
+- Extended audit: narrowed exception handling in `src/orchestrator/hotreload.py`, `src/orchestrator/http_theme.py`, and `src/panels/factory.py` to specific error classes while preserving behavior.
+- Addressed rare parallel flake: `StatusReader` now prioritizes the provider from the configured `runtime_status` file to avoid stale panel-based overrides across tests.
+- Token manager hardening: narrowed exceptions in `src/tools/token_manager.py` for optional imports (`ImportError`), subprocess launch (`OSError`, `ValueError`, `subprocess.SubprocessError`), web browser open (`OSError`, `RuntimeError`), fallback `.env` parsing (`OSError`, `UnicodeDecodeError`, `ValueError`), and provider interactions. Preserved outer defensive guards only around user-interaction paths.
+- Validation after token manager changes: full parallel pytest suite green via venv interpreter (`.venv\Scripts\python.exe -m pytest -n auto`).
+- Data access audit: reviewed `src/data_access/unified_source.py`. Experimental exception narrowing caused regressions in metrics/spec and cache stats tests; changes were reverted to preserve the green baseline. JSON reader paths remain narrowed where safe.
+- Validation after audit: full parallel pytest suite remains green with current data access behavior.
+ - Tools hardening: `src/tools/refresh_kite_token.py` now treats `python-dotenv` as optional, narrows Kite imports to `ImportError`, guards `webbrowser.open` with (`OSError`, `RuntimeError`), handles stdin absence, and persists the refreshed token robustly (reusing `update_env_file` when available). Behavior preserved with safer failure modes.
+ - Validation after tools update: full parallel pytest suite green via venv interpreter.
+- Next focus: optional minor edges only if needed; baseline remains green.

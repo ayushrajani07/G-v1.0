@@ -130,7 +130,7 @@ class InfluxSink:
                     max_size=_env_int('G6_INFLUX_POOL_MAX_SIZE', pool_max_size),
                 )
             except (TypeError, ValueError, ImportError) as e:
-                logger.debug(f"Failed to initialize InfluxConnectionPool: {e}")
+                logger.debug("Failed to initialize InfluxConnectionPool: %s", e)
                 self._pool = None
             # Buffer manager configured from env overrides when not provided
             eff_batch = _env_int('G6_INFLUX_BATCH_SIZE', batch_size or 500)
@@ -157,7 +157,7 @@ class InfluxSink:
                     if self._health_enabled:
                         health_runtime.set_component('influx_sink', HealthLevel.HEALTHY, HealthState.HEALTHY)
                 except (AttributeError, TypeError) as e:
-                    logger.debug(f"Failed to record success metrics: {e}")
+                    logger.debug("Failed to record success metrics: %s", e)
 
             def _on_failure(e: Exception) -> None:
                 try:
@@ -170,7 +170,7 @@ class InfluxSink:
                         level = HealthLevel.CRITICAL if self._breaker.state == "OPEN" else HealthLevel.WARNING
                         health_runtime.set_component('influx_sink', level, state)
                 except (AttributeError, TypeError) as ex:
-                    logger.debug(f"Failed to record failure metrics: {ex}")
+                    logger.debug("Failed to record failure metrics: %s", ex)
 
             self._buffer = InfluxBufferManager(
                 write_fn=_write_points,
@@ -338,7 +338,7 @@ class InfluxSink:
             try:
                 from src import validation as _validation
                 run_validators = getattr(_validation, 'run_validators', None)
-            except Exception:
+            except ImportError:
                 run_validators = None
             if options_data and callable(run_validators):
                 raw_rows = []
@@ -375,7 +375,7 @@ class InfluxSink:
             # Import Point from canonical path; fall back to tiny stand-in in test contexts
             try:
                 from influxdb_client.client.write.point import Point as _Point
-            except Exception:  # pragma: no cover - env without influxdb_client
+            except ImportError:  # pragma: no cover - env without influxdb_client
                 _Point = _TinyPoint
 
             points: list[Any] = []
@@ -483,7 +483,7 @@ class InfluxSink:
         try:
             try:
                 from influxdb_client.client.write.point import Point as _Point
-            except Exception:
+            except ImportError:
                 _Point = _TinyPoint
             expiry_bit_map = {'this_week':1,'next_week':2,'this_month':4,'next_month':8}
             collected_mask = 0
@@ -572,7 +572,7 @@ class InfluxSink:
         try:
             try:
                 from influxdb_client.client.write.point import Point as _Point
-            except Exception:
+            except ImportError:
                 _Point = _TinyPoint
             if timestamp is None:
                 if ensure_utc_helpers is not None:
