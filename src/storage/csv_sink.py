@@ -296,16 +296,19 @@ class CsvSink:
         """
         try:
             event_log_ref = event_log  # Use module-level import
-        except Exception:
+        except (NameError, AttributeError):
             event_log_ref = None  # type: ignore
+        
         if not hasattr(self, '_expiry_daily_stats'):
             self._expiry_daily_stats = {}
         if not hasattr(self, '_last_expiry_summary_emit'):
             self._last_expiry_summary_emit = 0.0
+        
         today = datetime.date.today().isoformat()
         stats = self._expiry_daily_stats.setdefault(today, {'rewritten':0,'quarantined':0,'rejected':0})
         if kind in stats:
             stats[kind] += 1
+        
         now = time.time()
         interval = getattr(self, '_expiry_summary_interval', 60)
         if event_log_ref and now - self._last_expiry_summary_emit >= interval:
@@ -318,8 +321,10 @@ class CsvSink:
                     'rejected': aggregate.get('rejected',0)
                 })
                 self._last_expiry_summary_emit = now
-            except Exception:
-                pass
+            except (AttributeError, TypeError, KeyError) as e:
+                self.logger.debug(f"Failed to dispatch expiry summary event: {e}")
+            except Exception as e:
+                self.logger.warning(f"Unexpected error dispatching expiry summary: {e}")
 
     def _clean_for_json(self, obj: Any) -> Any:
         """Convert non-serializable objects for JSON.
@@ -331,7 +336,11 @@ class CsvSink:
         if hasattr(obj, 'to_dict'):
             try:
                 return obj.to_dict()
-            except Exception:
+            except (AttributeError, TypeError) as e:
+                self.logger.debug(f"Failed to convert object to dict: {e}")
+                return str(obj)
+            except Exception as e:
+                self.logger.debug(f"Unexpected error converting to dict: {e}")
                 return str(obj)
         return obj if isinstance(obj, (str, int, float, bool, list, dict, type(None))) else str(obj)
 
@@ -474,8 +483,10 @@ class CsvSink:
                     if return_metrics
                     else None
                 )
-        except Exception:
-            pass
+        except (TypeError, KeyError, AttributeError) as e:
+            self.logger.debug(f"Failed to validate expiry date for {index}: {e}")
+        except Exception as e:
+            self.logger.warning(f"Unexpected error validating expiry: {e}")
 
         # Calculate day width if OHLC data is available
         day_width: float = 0.0
@@ -492,15 +503,21 @@ class CsvSink:
                     continue
                 try:
                     k = float(od.get('strike', 0) or 0)
-                except Exception:
+                except (TypeError, ValueError) as e:
+                    self.logger.debug(f"Failed to parse strike value: {e}")
+                    continue
+                except Exception as e:
+                    self.logger.debug(f"Unexpected error parsing strike: {e}")
                     continue
                 diff = abs(k - atm_strike)
                 if best_diff is None or diff < best_diff:
                     try:
                         best_price = float(od.get('last_price', 0) or 0)
                         best_diff = diff
-                    except Exception:
-                        pass
+                    except (TypeError, ValueError) as e:
+                        self.logger.debug(f"Failed to parse last_price: {e}")
+                    except Exception as e:
+                        self.logger.debug(f"Unexpected error parsing price: {e}")
             return best_price
 
         ce_atm = _nearest_price('CE')
@@ -574,7 +591,7 @@ class CsvSink:
             vix_val = None
             try:
                 vix_val = _extra.get('vix')  # passed by collectors if available
-            except Exception:
+            except (AttributeError, KeyError, TypeError):
                 vix_val = None
             self._write_overview_file(
                 index, expiry_code, pcr, day_width, timestamp, index_price,
@@ -618,8 +635,13 @@ class CsvSink:
         # Unified IST 30s rounding + formatting (Task 12)
         try:
             ts_str_rounded = format_ist_dt_30s(timestamp)  # dd-mm-YYYY HH:MM:SS in IST
-        except Exception:
+        except (TypeError, ValueError, AttributeError) as e:
             # Fallback to previous logic on unexpected failure
+            self.logger.debug(f"Failed to format IST timestamp: {e}. Using fallback.")
+            rounded_timestamp = round_timestamp(timestamp, step_seconds=30, strategy='nearest')
+            ts_str_rounded = rounded_timestamp.strftime('%d-%m-%Y %H:%M:%S')
+        except Exception as e:
+            self.logger.warning(f"Unexpected error formatting timestamp: {e}. Using fallback.")
             rounded_timestamp = round_timestamp(timestamp, step_seconds=30, strategy='nearest')
             ts_str_rounded = rounded_timestamp.strftime('%d-%m-%Y %H:%M:%S')
 
