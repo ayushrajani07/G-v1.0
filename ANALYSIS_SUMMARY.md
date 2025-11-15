@@ -191,7 +191,15 @@ Root MD Files:       <10 files (rest organized)
    - Success metrics and monitoring
    - Resource requirements
 
-3. **ANALYSIS_SUMMARY.md** (This document)
+3. **REMEDIATION_EXECUTION_GUIDE.md** (27KB, 735 lines) **← NEW**
+   - Pre-execution checklist
+   - Precautions for each phase
+   - Potential fallout scenarios with mitigation
+   - Cleanup procedures
+   - Rollback procedures (emergency & planned)
+   - Validation checklists
+
+4. **ANALYSIS_SUMMARY.md** (This document)
    - Quick reference guide
    - High-level overview
    - Key metrics and timeline
@@ -232,9 +240,10 @@ A: Pattern: Catch specific exceptions, log with context, decide (retry/fallback/
 
 1. **Review** - Team reviews analysis and action plan
 2. **Approve** - Stakeholder sign-off on priorities and timeline
-3. **Execute** - Begin Phase 1 (exception handling, legacy removal, CSV consolidation)
-4. **Monitor** - Weekly progress metrics
-5. **Iterate** - Adjust plan based on learnings
+3. **Prepare** - Read REMEDIATION_EXECUTION_GUIDE.md for precautions and procedures
+4. **Execute** - Begin Phase 1 (exception handling, legacy removal, CSV consolidation)
+5. **Monitor** - Weekly progress metrics
+6. **Iterate** - Adjust plan based on learnings
 
 ---
 
@@ -243,6 +252,7 @@ A: Pattern: Catch specific exceptions, log with context, decide (retry/fallback/
 For questions about this analysis:
 - Review detailed findings in CORE_PROJECT_ANALYSIS.md
 - Review action plan in ANALYSIS_ACTION_PLAN.md
+- **IMPORTANT:** Read REMEDIATION_EXECUTION_GUIDE.md before starting work
 - Create issue for specific concerns
 - Schedule walkthrough session if needed
 

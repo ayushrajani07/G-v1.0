@@ -80,6 +80,27 @@ Three comprehensive documents have been created to provide:
 
 ---
 
+### ⚠️ Execution Guide: Precautions & Fallout Management
+
+**[REMEDIATION_EXECUTION_GUIDE.md](./REMEDIATION_EXECUTION_GUIDE.md)** (27KB, 40 min read) **← NEW**
+- **Pre-execution checklist** - What to do BEFORE starting
+- **Precautions** for each phase - Safety nets and risk mitigation
+- **Potential fallout scenarios** - What can go wrong and how to handle it
+- **Cleanup steps** - Post-remediation procedures
+- **Rollback procedures** - Emergency and planned rollback paths
+- **Validation checklists** - Phase completion criteria
+
+**Key Sections:**
+- Pre-Execution Checklist (backup, monitoring, team readiness)
+- Phase-by-phase execution with fallout scenarios
+- Universal rollback procedures
+- Post-remediation cleanup
+- Validation and sign-off procedures
+
+**Recommended for:** Anyone executing remediation work - READ BEFORE STARTING
+
+---
+
 ## Key Findings Summary
 
 ### Critical Issues (Immediate Action Required)
@@ -131,9 +152,10 @@ Three comprehensive documents have been created to provide:
 ### For Development Teams:
 1. Read **ANALYSIS_SUMMARY.md** for context
 2. Review relevant sections of **CORE_PROJECT_ANALYSIS.md** for your domain
-3. Follow **ANALYSIS_ACTION_PLAN.md** for your assigned phase
-4. Use code examples and patterns provided
-5. Track progress with provided metrics
+3. **Read REMEDIATION_EXECUTION_GUIDE.md BEFORE starting work** (precautions, fallout scenarios)
+4. Follow **ANALYSIS_ACTION_PLAN.md** for your assigned phase
+5. Use code examples and patterns provided
+6. Track progress with provided metrics
 
 ### For QA Teams:
 1. Read section 3 of **CORE_PROJECT_ANALYSIS.md** (Testing Infrastructure)
@@ -212,8 +234,9 @@ Three comprehensive documents have been created to provide:
 - `README.md` - Main project documentation (1,530 lines)
 
 ### Analysis Documents (New)
-- `CORE_PROJECT_ANALYSIS.md` - This comprehensive analysis
-- `ANALYSIS_ACTION_PLAN.md` - Remediation plan
+- `CORE_PROJECT_ANALYSIS.md` - Comprehensive technical analysis
+- `ANALYSIS_ACTION_PLAN.md` - 4-phase remediation plan
+- `REMEDIATION_EXECUTION_GUIDE.md` - Execution guide with precautions & rollback procedures **← NEW**
 - `ANALYSIS_SUMMARY.md` - Executive summary
 - `ANALYSIS_INDEX.md` - This index (you are here)
 
