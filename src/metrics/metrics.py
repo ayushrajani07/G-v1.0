@@ -658,35 +658,35 @@ class MetricsRegistry:
         try:
             from .storage_category import init_storage_metrics as _stor  # type: ignore
             _stor(self)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to initialize storage metrics: {e}")
         # Lifecycle hygiene metrics (extracted from storage)
         try:
             if self._group_allowed('lifecycle'):
                 from .lifecycle_category import init_lifecycle_metrics as _life  # type: ignore
                 _life(self)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to initialize lifecycle metrics: {e}")
         try:
             from .memory_pressure import init_memory_pressure_metrics as _mem  # type: ignore
             _mem(self)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to initialize memory pressure metrics: {e}")
         try:
             from .atm import init_atm_metrics as _atm  # type: ignore
             _atm(self)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to initialize ATM metrics: {e}")
 
         # 7. Greeks (after core specs & categories)
         try:
             from .greeks import init_greek_metrics as _init_greeks  # type: ignore
             _init_greeks(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
             try:
-                logger.debug("init_greek_metrics external module failed", exc_info=True)
-            except Exception:
-                pass
+                logger.debug(f"init_greek_metrics external module failed: {e}", exc_info=True)
+            except (AttributeError, TypeError) as le:
+                logger.debug(f"Failed to log greek metrics error: {le}")
 
         # 8. Backward compatible group_registry invocation (may add extras)
         try:
@@ -694,40 +694,40 @@ class MetricsRegistry:
             _rgm(self)
             try:
                 logger.debug("group_registry invoked; groups now: %s", sorted(set(self._metric_groups.values())))
-            except Exception:
-                pass
-        except Exception:
+            except (AttributeError, TypeError, KeyError, ValueError) as e:
+                logger.debug(f"Failed to log group registry state: {e}")
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
             try:
-                logger.warning("group_registry invocation failed", exc_info=True)
-            except Exception:
-                pass
+                logger.warning(f"group_registry invocation failed: {e}", exc_info=True)
+            except (AttributeError, TypeError) as le:
+                logger.debug(f"Failed to log group registry warning: {le}")
 
         # 9. Apply pruning (after all registrations)
         try:
             from .gating import apply_pruning as _apply_pruning  # type: ignore
             _apply_pruning(self, CONTROLLED_GROUPS, enabled_set, disabled_set)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
             try:
                 self._apply_group_filters(CONTROLLED_GROUPS, enabled_set, disabled_set)  # type: ignore[attr-defined]
-            except Exception:
-                pass
+            except (AttributeError, TypeError, ValueError) as fe:
+                logger.debug(f"Failed to apply group filters: {fe}")
 
         # 10. Spec minimum / recovery
         try:
             from .spec_fallback import ensure_spec_minimum as _esm  # type: ignore
             _esm(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
             try:
-                logger.debug("ensure_spec_minimum external call failed", exc_info=True)
-            except Exception:
-                pass
+                logger.debug(f"ensure_spec_minimum external call failed: {e}", exc_info=True)
+            except (AttributeError, TypeError) as le:
+                logger.debug(f"Failed to log spec minimum error: {le}")
 
         # Diagnostic warning if no controlled groups survived
         if not any(g in CONTROLLED_GROUPS for g in self._metric_groups.values()):
             try:
                 logger.warning("No controlled metric groups registered; check _maybe_register flow")
-            except Exception:
-                pass
+            except (AttributeError, TypeError) as e:
+                logger.debug(f"Failed to log groups warning: {e}")
 
         # 11. Populate metric_group_state gauge samples
         try:
@@ -739,18 +739,18 @@ class MetricsRegistry:
                         if hasattr(mgs, 'labels'):
                             try:
                                 mgs.labels(group=grp).set(val)  # type: ignore[attr-defined]
-                            except Exception:
-                                pass
+                            except (AttributeError, TypeError, ValueError) as e:
+                                logger.debug(f"Failed to set metric_group_state label for {grp}: {e}")
                         else:
                             if val:
                                 try:
                                     mgs.set(1)
-                                except Exception:
-                                    pass
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+                                except (AttributeError, TypeError, ValueError) as e:
+                                    logger.debug(f"Failed to set metric_group_state for {grp}: {e}")
+                    except (AttributeError, TypeError, KeyError, ValueError) as e:
+                        logger.debug(f"Failed to process metric_group_state for {grp}: {e}")
+        except (AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to populate metric_group_state: {e}")
 
         # Removed safety net re-binding of _maybe_register; instance method is stable
         # and not subject to pruning (only metric attributes tied to groups).
@@ -761,8 +761,8 @@ class MetricsRegistry:
         try:
             from .recovery import post_init_recovery as _post_recover  # type: ignore
             _post_recover(self)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed post-init recovery: {e}")
         # Removed late_bind_lazy_metrics automatic invocation: it bypassed gating by
         # reintroducing grouped metrics (panel_diff, cache, panels_integrity) after pruning,
         # causing enable/disable tests and prune tests to fail. Spec + initial registration
@@ -816,34 +816,34 @@ class MetricsRegistry:
             try:  # pragma: no cover - defensive wrapper
                 from .introspection_dump import run_post_init_dumps as _rp
                 _rp(self)
-            except Exception:
-                pass
+            except (ImportError, AttributeError, TypeError, ValueError) as e:
+                logger.debug(f"Failed to run post-init dumps: {e}")
             # Explicit markers for tests expecting raw lines (in addition to any dump output)
             try:
                 inv = getattr(self, '_metrics_introspection', []) or []
                 logger.info("METRICS_INTROSPECTION: %s", len(inv))
-            except Exception:
+            except (AttributeError, TypeError, ValueError) as e:
                 logger.info("METRICS_INTROSPECTION: 0")
             try:
                 trace = getattr(self, '_init_trace', []) or []
                 logger.info("METRICS_INIT_TRACE: %s steps", len(trace))
-            except Exception:
+            except (AttributeError, TypeError, ValueError) as e:
                 logger.info("METRICS_INIT_TRACE: 0 steps")
         else:  # structured log for observability of suppression
             try:
                 # Emit a deterministic suppression line even if earlier phases bailed out.
                 logger.info("metrics.dumps.suppressed reason=G6_METRICS_SUPPRESS_AUTO_DUMPS env=%s introspection_dump=%s init_trace_dump=%s", _env_str('G6_METRICS_SUPPRESS_AUTO_DUMPS',''), _env_str('G6_METRICS_INTROSPECTION_DUMP',''), _env_str('G6_METRICS_INIT_TRACE_DUMP',''))
-            except Exception:
-                pass
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.debug(f"Failed to log suppression info: {e}")
             try:
                 # Also emit zero-value markers so tests can assert explicit absence of dumps while still seeing markers.
                 logger.info("METRICS_INTROSPECTION: 0")
-            except Exception:
-                pass
+            except (AttributeError, TypeError) as e:
+                logger.debug(f"Failed to log introspection marker: {e}")
             try:
                 logger.info("METRICS_INIT_TRACE: 0 steps")
-            except Exception:
-                pass
+            except (AttributeError, TypeError) as e:
+                logger.debug(f"Failed to log init trace marker: {e}")
 
         # Fallback: ensure a single structured metrics.registry.summary line exists
         # Some import orders/tests may attach handlers after early init blocks; if the
@@ -854,12 +854,12 @@ class MetricsRegistry:
                 try:
                     from prometheus_client import REGISTRY as _R  # type: ignore
                     fam_count = len(list(_R.collect()))
-                except Exception:
-                    pass
+                except (ImportError, AttributeError, TypeError, ValueError) as e:
+                    logger.debug(f"Failed to collect Prometheus families: {e}")
                 profile_total = None
                 try:
                     profile_total = round(float(getattr(self, '_init_profile', {}).get('total_ms', 0.0)), 2)  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError) as e:
                     profile_total = None
                 logger.info(
                     "metrics.registry.summary families=%s always_on_groups=%s prof_total_ms=%s strict=%s",
@@ -869,10 +869,10 @@ class MetricsRegistry:
                 try:
                     if _register_or_note_summary_import:
                         _register_or_note_summary_import('metrics.registry', emitted=True)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+                except (AttributeError, TypeError, ValueError) as e:
+                    logger.debug(f"Failed to register summary import: {e}")
+        except (AttributeError, TypeError, ValueError, KeyError) as e:
+            logger.debug(f"Failed to emit registry summary: {e}")
 
         # Optional cardinality guard (snapshot or compare) invoked last so full registry is visible
         try:
@@ -881,8 +881,8 @@ class MetricsRegistry:
                 try:
                     from src.config.env_config import EnvConfig as _EC
                     _EC.clear_cache()
-                except Exception:
-                    pass
+                except (ImportError, AttributeError, TypeError) as e:
+                    logger.debug(f"Failed to clear EnvConfig cache: {e}")
                 from .cardinality_guard import check_cardinality as _cc  # type: ignore
                 try:
                     summary = _cc(self)
@@ -892,8 +892,10 @@ class MetricsRegistry:
                     # propagate failure after attaching summary for test inspection
                     self._cardinality_guard_summary = getattr(self, '_cardinality_guard_summary', {})  # type: ignore[attr-defined]
                     raise
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError, RuntimeError) as e:
+            if isinstance(e, RuntimeError):
+                raise
+            logger.debug(f"Failed cardinality guard check: {e}")
 
         # Duplicate metric guard – detect multiple attributes referencing same collector
         try:
@@ -906,8 +908,10 @@ class MetricsRegistry:
                 # Attach summary if present then re-raise
                 self._duplicate_metrics_summary = getattr(self, '_duplicate_metrics_summary', {})  # type: ignore[attr-defined]
                 raise
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError, RuntimeError) as e:
+            if isinstance(e, RuntimeError):
+                raise
+            logger.debug(f"Failed duplicate guard check: {e}")
 
         # (Fault budget tracker already initialized earlier if env enabled.)
 
@@ -924,15 +928,15 @@ class MetricsRegistry:
         try:
             from .derived import update_cycle_metrics as _ucm  # type: ignore
             _ucm(self, success, cycle_seconds, options_processed, option_processing_seconds)  # type: ignore[arg-type]
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
             # Fail silent to preserve previous resilience semantics
-            pass
+            logger.debug(f"Failed to update cycle metrics: {e}")
         # Invoke fault budget tracker (after cycle metrics so breach counter may have been incremented)
         try:
             from .fault_budget import fault_budget_on_cycle as _fb_cycle  # type: ignore
             _fb_cycle(self)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to update fault budget on cycle: {e}")
 
     # _apply_group_filters extracted to src/metrics/gating.py (apply_pruning)
 
@@ -946,12 +950,14 @@ class MetricsRegistry:
         try:
             from .introspection import get_metrics_introspection as _gmi  # type: ignore
             return _gmi(self)  # type: ignore[return-value]
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
             # Fallback: if cache already exists return copy; else empty list
+            logger.debug(f"Failed to get metrics introspection: {e}")
             inv = getattr(self, '_metrics_introspection', [])
             try:
                 return list(inv)
-            except Exception:
+            except (TypeError, ValueError) as e:
+                logger.debug(f"Failed to copy introspection inventory: {e}")
                 return []
 
     # ---------------- Governance Summary Helper -----------------
@@ -987,14 +993,14 @@ class MetricsRegistry:
             dup = getattr(self, '_duplicate_metrics_summary', None)
             if isinstance(dup, dict):
                 out['duplicates'] = dup  # type: ignore[assignment]
-        except Exception:
-            pass
+        except (AttributeError, TypeError) as e:
+            logger.debug(f"Failed to get duplicate summary: {e}")
         try:
             card = getattr(self, '_cardinality_guard_summary', None)
             if isinstance(card, dict):
                 out['cardinality'] = card  # type: ignore[assignment]
-        except Exception:
-            pass
+        except (AttributeError, TypeError) as e:
+            logger.debug(f"Failed to get cardinality summary: {e}")
         try:
             fb = getattr(self, '_fault_budget_tracker', None)
             if fb is not None:
@@ -1006,7 +1012,8 @@ class MetricsRegistry:
                 if allowed > 0:
                     try:
                         consumed = min(100.0, (within / allowed) * 100.0)
-                    except Exception:
+                    except (TypeError, ValueError, ZeroDivisionError) as e:
+                        logger.debug(f"Failed to calculate fault budget consumed percentage: {e}")
                         consumed = 0.0
                 out['fault_budget'] = {  # type: ignore[assignment]
                     'window_sec': getattr(fb, 'window_sec', None),
@@ -1016,8 +1023,8 @@ class MetricsRegistry:
                     'consumed_percent': round(consumed, 2),
                     'exhausted': bool(getattr(fb, 'exhausted', False)),
                 }
-        except Exception:
-            pass
+        except (AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to get fault budget summary: {e}")
         return out
 
     # ---------------- Metric Group & Metadata Facade (Phase 3 extraction) -----------------
@@ -1026,15 +1033,16 @@ class MetricsRegistry:
         try:
             from .metadata import reload_group_filters as _rgf
             _rgf(self)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to reload group filters: {e}")
 
     def dump_metrics_metadata(self) -> dict:  # pragma: no cover - thin shim
         """Return metadata structure describing current metrics (delegates)."""
         try:
             from .metadata import dump_metrics_metadata as _dmm
             return _dmm(self)  # type: ignore[return-value]
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to dump metrics metadata: {e}")
             return {}
 
     # ---------------- Group Mapping Accessor (for tests) -----------------
@@ -1050,8 +1058,8 @@ class MetricsRegistry:
         try:
             from .api_call import mark_api_call as _mac  # type: ignore
             _mac(self, success, latency_ms)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to mark API call: {e}")
 
     # ---------------- Per-Index Cycle Attempts / Success -----------------
     def mark_index_cycle(self, index: str, attempts: int, failures: int):
@@ -1059,14 +1067,15 @@ class MetricsRegistry:
         try:
             from .derived import update_index_cycle_metrics as _uicm  # type: ignore
             _uicm(self, index, attempts, failures)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to mark index cycle: {e}")
 
     # Explicit method for clarity (helper sets alias _group_allowed)
     def group_allowed(self, name: str) -> bool:  # pragma: no cover - thin wrapper
         try:
             return self._group_allowed(name)  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError) as e:
+            logger.debug(f"Failed to check if group {name} is allowed: {e}")
             return True
 
     # ---------------- Init Trace Accessor (public) -----------------
@@ -1084,7 +1093,8 @@ class MetricsRegistry:
         if copy:
             try:
                 return list(trace)
-            except Exception:
+            except (TypeError, ValueError) as e:
+                logger.debug(f"Failed to copy init trace: {e}")
                 return []
         return trace
 
@@ -1115,7 +1125,8 @@ class MetricsRegistry:
             from .gating import CONTROLLED_GROUPS as _CG
             from .gating import apply_pruning as _apply
             from .gating import configure_registry_groups as _cfg  # type: ignore
-        except Exception:
+        except (ImportError, AttributeError) as e:
+            logger.debug(f"Failed to import gating module: {e}")
             return {"error": "gating import failed"}
 
         # Optionally reload filters. When False we keep PRIOR predicate and sets exactly
@@ -1123,8 +1134,8 @@ class MetricsRegistry:
         if reload_filters:
             try:
                 _cfg(self)
-            except Exception:
-                pass
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.debug(f"Failed to configure registry groups: {e}")
         enabled_set = getattr(self, '_enabled_groups', None)
         disabled_set = getattr(self, '_disabled_groups', set())
         metric_groups = getattr(self, '_metric_groups', {})  # attr -> group
@@ -1137,7 +1148,8 @@ class MetricsRegistry:
             if staged:
                 try:
                     from prometheus_client import REGISTRY as _PROM_REG  # type: ignore
-                except Exception:
+                except (ImportError, AttributeError) as e:
+                    logger.debug(f"Failed to import Prometheus REGISTRY: {e}")
                     _PROM_REG = None  # type: ignore
                 removed_attrs = []
                 for attr, grp in list(metric_groups.items()):
@@ -1146,21 +1158,21 @@ class MetricsRegistry:
                         if _PROM_REG is not None and coll is not None:
                             try:
                                 _PROM_REG.unregister(coll)  # type: ignore[arg-type]
-                            except Exception:
-                                pass
+                            except (AttributeError, TypeError, ValueError) as e:
+                                logger.debug(f"Failed to unregister {attr}: {e}")
                         try:
                             delattr(self, attr)
-                        except Exception:
-                            pass
+                        except (AttributeError, TypeError) as e:
+                            logger.debug(f"Failed to delete attribute {attr}: {e}")
                         try:
                             del metric_groups[attr]
-                        except Exception:
-                            pass
+                        except (KeyError, TypeError) as e:
+                            logger.debug(f"Failed to remove {attr} from metric_groups: {e}")
                         removed_attrs.append(attr)
                 try:
                     self._staged_prune_groups = None  # type: ignore[attr-defined]
-                except Exception:
-                    pass
+                except (AttributeError, TypeError) as e:
+                    logger.debug(f"Failed to clear staged prune groups: {e}")
                 after_now = len(metric_groups)
                 return {
                     'before_count': before,
@@ -1185,7 +1197,8 @@ class MetricsRegistry:
             try:
                 predicate = getattr(self, '_group_allowed', lambda n: True)
                 always_on = getattr(self, '_always_on_groups', set())
-            except Exception:
+            except (AttributeError, TypeError) as e:
+                logger.debug(f"Failed to get group predicate/always_on: {e}")
                 predicate = lambda _n: True  # type: ignore
                 always_on = set()
             prospective_removed = [a for a, g in snapshot.items() if g not in always_on and (g in (disabled_set or set()) or (enabled_set is not None and g not in enabled_set))]
