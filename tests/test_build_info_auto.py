@@ -36,8 +36,8 @@ def test_gather_build_info_tuple(monkeypatch):
     assert len(ch) == 16
 
 
-def test_auto_register_build_info_integration(monkeypatch):
-    metrics, _ = setup_metrics_server(reset=True)
+def test_auto_register_build_info_integration(monkeypatch, metrics_port):
+    metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
     cfg = {"k": 1}
     auto_register_build_info(metrics, cfg)
     # Inspect registry for g6_build_info metric sample

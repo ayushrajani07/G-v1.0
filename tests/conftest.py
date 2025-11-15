@@ -434,6 +434,22 @@ def _auto_metrics_reset(request):
     yield
 
 # ---------------------------------------------------------------------------
+# Dynamic metrics port fixture (for parallel test execution)
+#
+# Purpose: When tests run in parallel (pytest -n auto), they need unique
+# ports for metrics servers to avoid "Address already in use" errors.
+# This fixture provides a free port dynamically allocated for each test.
+#
+# Usage:
+#     def test_something(metrics_port):
+#         metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
+# ---------------------------------------------------------------------------
+@pytest.fixture
+def metrics_port():
+    """Provide a dynamically allocated free port for metrics server in tests."""
+    return _find_free_port()
+
+# ---------------------------------------------------------------------------
 # Autouse OutputRouter reset fixture
 #
 # Prevents cross-test leakage of sinks / panel transaction stack / file handles.

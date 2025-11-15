@@ -2,10 +2,10 @@ from __future__ import annotations
 import os
 from src.metrics.testing import force_new_metrics_registry
 
-def test_metrics_init_profile_segments_present():
+def test_metrics_init_profile_segments_present(metrics_port):
     os.environ['G6_METRICS_PROFILE_INIT'] = '1'
     os.environ['G6_METRICS_SKIP_PROVIDER_MODE_SEED'] = '1'  # deterministic skip of seeding segment
-    reg = force_new_metrics_registry(enable_resource_sampler=False)
+    reg = force_new_metrics_registry(enable_resource_sampler=False, port=metrics_port)
     profile = getattr(reg, '_init_profile', None)
     assert profile, 'Expected _init_profile to be populated'
     phases = profile.get('phases_ms', {})

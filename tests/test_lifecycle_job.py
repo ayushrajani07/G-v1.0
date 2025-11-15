@@ -9,7 +9,7 @@ def _write_dummy(path: pathlib.Path, size: int = 256):
     path.write_bytes(b'a'*size)
 
 
-def test_lifecycle_compression_and_quarantine(tmp_path, monkeypatch):
+def test_lifecycle_compression_and_quarantine(tmp_path, monkeypatch, metrics_port):
     # Enable dedicated lifecycle group (now extracted) plus any other baseline always-on groups if needed.
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS','lifecycle')
     monkeypatch.setenv('G6_DISABLE_METRIC_GROUPS','')
@@ -20,7 +20,7 @@ def test_lifecycle_compression_and_quarantine(tmp_path, monkeypatch):
     qdir = tmp_path / 'quarantine'
     monkeypatch.setenv('G6_LIFECYCLE_QUAR_DIR', str(qdir))
 
-    metrics, _ = setup_metrics_server(reset=True)
+    metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
     # Create sample csv files
     base_dir = tmp_path / 'g6_data'
     f1 = base_dir / 'a.csv'

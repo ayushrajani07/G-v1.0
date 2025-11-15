@@ -31,11 +31,15 @@ def _purge_default_registry() -> None:
         logger.debug("_purge_default_registry failed", exc_info=True)
 
 
-def force_new_metrics_registry(enable_resource_sampler: bool = False) -> MetricsRegistry:
+def force_new_metrics_registry(enable_resource_sampler: bool = False, port: int = 9108) -> MetricsRegistry:
     """Return a brand new MetricsRegistry, clearing any existing singleton.
 
     We avoid binding a new HTTP server listener by passing reset=True and then
     skipping sampler threads unless explicitly requested.
+    
+    Args:
+        enable_resource_sampler: Enable resource sampling background threads
+        port: Port for metrics HTTP server (default 9108). Use dynamic port in parallel tests.
     """
     # Set env flag so downstream logic sees explicit intent (mirrors runtime pattern)
     # Temporarily request a fresh registry; restore prior value after creation so
@@ -45,7 +49,7 @@ def force_new_metrics_registry(enable_resource_sampler: bool = False) -> Metrics
     os.environ['G6_FORCE_NEW_REGISTRY'] = '1'
     _purge_default_registry()
     # Use reset path on server setup; disable resource sampler for test speed by default
-    metrics, _ = setup_metrics_server(reset=True, enable_resource_sampler=enable_resource_sampler)
+    metrics, _ = setup_metrics_server(port=port, reset=True, enable_resource_sampler=enable_resource_sampler)
     # Explicitly ensure SSE metric families exist in the default registry so
     # any /metrics exposition includes at least zero-sample entries for them.
     try:

@@ -21,10 +21,10 @@ def _isolated_env(**env):
                 os.environ[k] = v
 
 
-def test_adaptive_metrics_registration_and_update(tmp_path):
+def test_adaptive_metrics_registration_and_update(tmp_path, metrics_port):
     # Enable group and controller flag
     with _isolated_env(G6_DISABLE_METRIC_GROUPS='', G6_ENABLE_METRIC_GROUPS='adaptive_controller', G6_ADAPTIVE_CONTROLLER='1'):
-        metrics, _ = setup_metrics_server(reset=True)
+        metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
         # Metrics should be present
         assert getattr(metrics, 'adaptive_controller_actions', None) is not None
         assert getattr(metrics, 'option_detail_mode', None) is not None
@@ -35,9 +35,9 @@ def test_adaptive_metrics_registration_and_update(tmp_path):
         # We cannot easily read current value from the Gauge without internal access; rely on no exceptions
 
 
-def test_adaptive_metrics_gated_by_group(tmp_path):
+def test_adaptive_metrics_gated_by_group(tmp_path, metrics_port):
     # Disable the group explicitly
     with _isolated_env(G6_DISABLE_METRIC_GROUPS='adaptive_controller', G6_ADAPTIVE_CONTROLLER='1'):
-        metrics, _ = setup_metrics_server(reset=True)
+        metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
         assert getattr(metrics, 'adaptive_controller_actions', None) is None
         assert getattr(metrics, 'option_detail_mode', None) is None

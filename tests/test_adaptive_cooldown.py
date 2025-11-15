@@ -4,13 +4,13 @@ from src.metrics import setup_metrics_server  # facade import
 from src.adaptive.logic import evaluate_and_apply
 
 
-def test_adaptive_cooldown_flap_prevention(monkeypatch):
+def test_adaptive_cooldown_flap_prevention(monkeypatch, metrics_port):
     monkeypatch.setenv('G6_ADAPTIVE_CONTROLLER','1')
     monkeypatch.setenv('G6_ADAPTIVE_MAX_SLA_BREACH_STREAK','1')
     monkeypatch.setenv('G6_ADAPTIVE_MIN_HEALTH_CYCLES','1')
     monkeypatch.setenv('G6_ADAPTIVE_DEMOTE_COOLDOWN','2')
     monkeypatch.setenv('G6_ADAPTIVE_PROMOTE_COOLDOWN','3')
-    metrics,_ = setup_metrics_server(reset=True)
+    metrics,_ = setup_metrics_server(port=metrics_port, reset=True)
     # Seed starting mode full
     setattr(metrics, '_adaptive_current_mode', 0)
 

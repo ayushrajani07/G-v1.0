@@ -1,10 +1,10 @@
 import os
 from src.metrics import setup_metrics_server  # facade import
 
-def test_metric_group_state_gauge_presence(monkeypatch):
+def test_metric_group_state_gauge_presence(monkeypatch, metrics_port):
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS', 'panel_diff')  # restrict
     # Use reset to clear default registry and avoid duplicate time series
-    m, _ = setup_metrics_server(reset=True, enable_resource_sampler=False)
+    m, _ = setup_metrics_server(port=metrics_port, reset=True, enable_resource_sampler=False)
     # metric_group_state gauge should exist
     g = getattr(m, 'metric_group_state', None)
     assert g is not None

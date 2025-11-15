@@ -11,21 +11,21 @@ from src.metrics.testing import force_new_metrics_registry
 from src.metrics.duplicate_guard import check_duplicates
 
 
-def _fresh_registry():
+def _fresh_registry(port=9108):
     os.environ['G6_METRICS_SKIP_PROVIDER_MODE_SEED'] = '1'
-    return force_new_metrics_registry(enable_resource_sampler=False)
+    return force_new_metrics_registry(enable_resource_sampler=False, port=port)
 
 
-def test_duplicate_guard_suppresses_alias_families():
-    reg = _fresh_registry()
+def test_duplicate_guard_suppresses_alias_families(metrics_port):
+    reg = _fresh_registry(port=metrics_port)
     names = [n for n in dir(reg) if 'panel_diff_bytes' in n]
     assert names  # basic sanity that family exists in this environment
     summary = check_duplicates(reg)
     assert summary is None, f"Expected no duplicate groups, got: {summary}"
 
 
-def test_duplicate_guard_detects_real_duplicates():
-    reg = _fresh_registry()
+def test_duplicate_guard_detects_real_duplicates(metrics_port):
+    reg = _fresh_registry(port=metrics_port)
     from prometheus_client import Counter  # type: ignore
     # Create a unique counter and bind under two unrelated attribute names that are NOT part of suppression patterns
     c = Counter('g6_test_duplicate_counter_xyz', 'Synthetic duplicate counter for test')

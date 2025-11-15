@@ -30,12 +30,12 @@ def _dummy_option(index='NIFTY', expiry='2025-01-01', strike=100, underlying=100
     return {'index': index, 'expiry': expiry, 'strike': strike, 'underlying': underlying, 'iv': iv}
 
 @pytest.fixture(autouse=True)
-def reset_metrics_env(monkeypatch):
+def reset_metrics_env(monkeypatch, metrics_port):
     # Ensure adaptive group enabled for tests that need it
     # Enable required metric groups (adaptive controller + SLA/health + vol surface analytics)
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS','adaptive_controller,analytics_vol_surface,sla_health')
     monkeypatch.setenv('G6_ADAPTIVE_CONTROLLER','1')
-    metrics, _ = setup_metrics_server(reset=True)
+    metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
     yield metrics
 
 

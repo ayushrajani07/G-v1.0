@@ -24,8 +24,8 @@ def _scrape_metrics_text():
     return '\n'.join(sorted(output))
 
 
-def test_build_info_registration_idempotent():
-    metrics, _ = setup_metrics_server(use_custom_registry=False, reset=True)
+def test_build_info_registration_idempotent(metrics_port):
+    metrics, _ = setup_metrics_server(port=metrics_port, use_custom_registry=False, reset=True)
     register_build_info(metrics, version="1.2.3", git_commit="abc1234", config_hash="deadbeef")
     # Second call with different (changed) values should overwrite labels by emitting a new time-series with same label set
     register_build_info(metrics, version="1.2.3", git_commit="abc1234", config_hash="deadbeef")
@@ -40,8 +40,8 @@ def test_build_info_registration_idempotent():
     assert lines[0].endswith(' 1') or lines[0].endswith(' 1.0')
 
 
-def test_build_info_defaults_unknown_on_missing_values():
-    metrics, _ = setup_metrics_server(use_custom_registry=False, reset=True)
+def test_build_info_defaults_unknown_on_missing_values(metrics_port):
+    metrics, _ = setup_metrics_server(port=metrics_port, use_custom_registry=False, reset=True)
     register_build_info(metrics)  # all None
     text = _scrape_metrics_text()
     assert "version='unknown'" in text
@@ -49,8 +49,8 @@ def test_build_info_defaults_unknown_on_missing_values():
     assert "config_hash='unknown'" in text
 
 
-def test_build_info_partial_values_fill_unknown():
-    metrics, _ = setup_metrics_server(use_custom_registry=False, reset=True)
+def test_build_info_partial_values_fill_unknown(metrics_port):
+    metrics, _ = setup_metrics_server(port=metrics_port, use_custom_registry=False, reset=True)
     register_build_info(metrics, version="2.0")  # others None
     text = _scrape_metrics_text()
     assert "version='2.0'" in text
@@ -58,8 +58,8 @@ def test_build_info_partial_values_fill_unknown():
     assert "config_hash='unknown'" in text
 
 
-def test_build_info_re_registration_updates_labels():
-    metrics, _ = setup_metrics_server(use_custom_registry=False, reset=True)
+def test_build_info_re_registration_updates_labels(metrics_port):
+    metrics, _ = setup_metrics_server(port=metrics_port, use_custom_registry=False, reset=True)
     register_build_info(metrics, version="1.0", git_commit="aaaa", config_hash="hash1")
     register_build_info(metrics, version="1.1", git_commit="bbbb", config_hash="hash2")
     text = _scrape_metrics_text()
