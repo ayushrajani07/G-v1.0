@@ -23,6 +23,7 @@ from __future__ import annotations
 import datetime
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -145,11 +146,14 @@ class ParquetSink:
                 try:
                     if isinstance(r.get('timestamp'), datetime.datetime):
                         r['timestamp'] = r['timestamp'].replace(tzinfo=datetime.UTC)
-                except Exception:
+                except (TypeError, AttributeError):
                     pass
             table = pa.Table.from_pylist(records, schema=schema)
-        except Exception as e:
-            logger.error("Failed to create normalized PyArrow table: %s", e)
+        except (TypeError, ValueError, AttributeError) as e:
+            try:
+                logger.error("Failed to create normalized PyArrow table: %s", e, exc_info=True)
+            except Exception:
+                print(f"CRITICAL: Failed to create PyArrow table for {index_symbol}/{expiry_date}: {e}", file=sys.stderr)
             return
         
         # Simplified single-file layout (index_expiry.parquet) for deterministic test discovery
@@ -162,12 +166,15 @@ class ParquetSink:
                     existing_table = _pq_existing.read_table(sink_file)
                     import pyarrow as pa
                     table = pa.concat_tables([existing_table, table])
-                except Exception:
-                    pass
+                except (OSError, IOError, ValueError) as e:
+                    logger.warning(f"Failed to read existing Parquet file {sink_file}, overwriting: {e}")
             pq.write_table(table, sink_file, compression=self.compression, use_dictionary=True)
             logger.debug("Wrote %d records to Parquet file: %s", len(records), sink_file)
-        except Exception as e:
-            logger.error("Failed to write Parquet table: %s", e)
+        except (OSError, IOError, ValueError) as e:
+            try:
+                logger.error("Failed to write Parquet table %s: %s", sink_file, e, exc_info=True)
+            except Exception:
+                print(f"CRITICAL: Failed to write Parquet table {sink_file}: {e}", file=sys.stderr)
             return
         
         # Periodic CSV export if configured
@@ -337,7 +344,8 @@ class ParquetSink:
                     file_path = Path(root) / file
                     try:
                         total_size += file_path.stat().st_size
-                    except Exception:
+                    except (OSError, IOError):
+                        # File may have been deleted/moved during iteration
                         pass
         
         return {

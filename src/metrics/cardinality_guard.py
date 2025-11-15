@@ -110,7 +110,8 @@ def write_snapshot(path: str, mapping: dict[str, list[str]]):
             if os.path.exists(path) and os.path.getsize(path) == 0:
                 safe_write_json(path, {"version": 1, "generated": _now_iso(), "groups": mapping},
                                 function_name='cardinality_write_snapshot_retry')
-        except Exception:  # pragma: no cover - defensive
+        except (OSError, IOError, ValueError):  # pragma: no cover - defensive
+            # Handle file operation errors or invalid size values
             pass
         # Record last snapshot metadata in-process for fast-path equivalence checks
         try:
@@ -118,7 +119,8 @@ def write_snapshot(path: str, mapping: dict[str, list[str]]):
             _LAST_SNAPSHOT['path'] = path
             _LAST_SNAPSHOT['mapping'] = dict(mapping)
             _LAST_SNAPSHOT['ts'] = _t.time()
-        except Exception:
+        except (ImportError, AttributeError, TypeError):
+            # Handle missing time module, dict access failures, or type mismatches
             pass
 
 
@@ -185,9 +187,11 @@ def check_cardinality(reg: Any) -> dict | None:
                     with open(snap_path, 'w', encoding='utf-8') as _fw:
                         json.dump({"version":1, "generated": _now_iso(), "groups": mapping}, _fw, indent=2, sort_keys=True)
                         _fw.flush()
-            except Exception:
+            except (OSError, IOError, ValueError):
+                # Handle file operations, I/O errors, or JSON encoding failures
                 pass
-        except Exception:  # pragma: no cover
+        except (OSError, IOError, ValueError):  # pragma: no cover
+            # Handle snapshot write failures
             pass
         # If only snapshot (no baseline) we stop here
         if not base_path:
@@ -213,7 +217,8 @@ def check_cardinality(reg: Any) -> dict | None:
             summary["offenders"] = []
             summary["new_groups"] = []
             return summary
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        # Handle dict access failures, type mismatches, or missing keys
         pass
 
     offenders = []
@@ -253,7 +258,8 @@ def check_cardinality(reg: Any) -> dict | None:
                 "offenders": offenders[:5],  # cap inline payload
                 "allowed_growth_percent": allow_pct,
             })
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
+            # Handle missing logger methods, format errors, or invalid values
             pass
         if fail:
             raise RuntimeError(f"Cardinality growth exceeded threshold (offenders={len(offenders)})")
@@ -287,8 +293,9 @@ def check_cardinality(reg: Any) -> dict | None:
                     met = _generated_metrics.m_cardinality_guard_growth_percent_labels(grp)
                     if met:
                         try: met.set(gp)  # type: ignore[attr-defined]
-                        except Exception: pass
-        except Exception:
+                        except (AttributeError, TypeError, RuntimeError): pass
+        except (AttributeError, TypeError, RuntimeError, ImportError):
+            # Handle missing metrics, type issues, metric operation failures, or import errors
             pass
     return summary
 
@@ -304,7 +311,8 @@ try:  # optional in some test paths
     from prometheus_client import Counter as _GC_Counter  # type: ignore
     from prometheus_client import Gauge as _GC_Gauge
     from prometheus_client import Histogram as _GC_Histogram
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
+    # Handle missing prometheus_client library
     _GC_Counter = _GC_Gauge = _GC_Histogram = None  # type: ignore
 
 _rg_lock = threading.RLock()
@@ -329,14 +337,16 @@ class _RegistryGuard:
             try:
                 from prometheus_client import REGISTRY as _PROM_REG  # type: ignore
                 _existing_prom = getattr(_PROM_REG, '_names_to_collectors', {}).get(name)
-            except Exception:
+            except (ImportError, AttributeError):
+                # Handle missing prometheus_client or missing registry attribute
                 _existing_prom = None
             if name in _rg_metrics or _existing_prom is not None:
                 # Duplicate registration attempt – increment duplicates counter if available
                 try:
                     try:
                         logger.info("registry_guard.duplicate_detected name=%s", name)
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Handle missing logger or format errors
                         pass
                     # Prefer direct metric accessor to avoid any gating that could return None
                     try:
@@ -350,7 +360,8 @@ class _RegistryGuard:
                                     _inc = getattr(_child, 'inc', None)
                                     if callable(_inc):
                                         _inc()  # type: ignore[misc]
-                                except Exception:
+                                except (AttributeError, TypeError, RuntimeError):
+                                    # Handle missing method, type issues, or metric operation failures
                                     pass
                         elif m_metric_duplicates_total_labels is not None:
                             # Fallback: use labels helper if direct accessor unavailable
@@ -358,7 +369,7 @@ class _RegistryGuard:
                             inc = getattr(c, 'inc', None)
                             if callable(inc):
                                 inc()  # type: ignore[misc]
-                    except Exception:
+                    except (ImportError, AttributeError, TypeError, RuntimeError):or, AttributeError, TypeError, RuntimeError):
                         # As a last resort, try to bump internal sample value if reachable
                         try:
                             from src.metrics.generated import m_metric_duplicates_total_labels as _dup_lbl  # type: ignore
@@ -367,9 +378,11 @@ class _RegistryGuard:
                             add = getattr(v, 'inc', None)
                             if callable(add):
                                 add(1)
-                        except Exception:
+                        except (ImportError, AttributeError, TypeError):
+                            # Handle missing module, attributes, or type issues
                             pass
-                except Exception:
+                except (ImportError, AttributeError, TypeError, RuntimeError):
+                    # Handle any failures in duplicate detection
                     pass
                 # Optional hard failure for CI / strict environments
                 try:
@@ -377,12 +390,14 @@ class _RegistryGuard:
                         raise RuntimeError(f"duplicate metric registration detected name={name}")
                 except RuntimeError:
                     raise
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle EnvConfig access failures
                     pass
                 # Return the existing collector instance
                 try:
                     return _rg_metrics.get(name) or _existing_prom
-                except Exception:
+                except (AttributeError, KeyError):
+                    # Handle dict access failures
                     return _existing_prom
             try:
                 if _GC_Counter is None or _GC_Gauge is None or _GC_Histogram is None:
@@ -407,7 +422,8 @@ class _RegistryGuard:
                 # Prometheus raises ValueError on duplicate registration attempts; treat as duplicate path
                 try:
                     msg = str(e).lower()
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle missing lower() method or string conversion failures
                     msg = ""
                 if 'duplicat' in msg or 'already registered' in msg or 'collision' in msg:
                     try:
@@ -421,21 +437,25 @@ class _RegistryGuard:
                             raise RuntimeError(f"duplicate metric registration detected name={name}")
                     except RuntimeError:
                         raise
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Handle missing metric or type issues
                         pass
                     # Return existing collector from Prometheus registry if available
                     try:
                         from prometheus_client import REGISTRY as _PROM_REG  # type: ignore
                         return getattr(_PROM_REG, '_names_to_collectors', {}).get(name)
-                    except Exception:
+                    except (ImportError, AttributeError):
+                        # Handle missing prometheus_client or registry attribute
                         return _rg_metrics.get(name)
                 # Not a duplicate-related ValueError; fall through to generic handler
-            except Exception as e:  # pragma: no cover
+            except (TypeError, RuntimeError, ImportError) as e:  # pragma: no cover
+                # Handle type issues, metric operation failures, or import errors
                 try:
                     if EnvConfig.get_bool('G6_SUPPRESS_METRIC_DUP_WARN', False):
                         # Silent suppression path (still allow fail-on-dup earlier to raise if configured)
                         return None
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle EnvConfig access failures
                     pass
                 _rg_rate_limited((name,'register'), f"metric.register.failed name={name} err={e}")
                 return None
@@ -464,10 +484,12 @@ class _RegistryGuard:
                     g = m_cardinality_series_total_labels(name)
                     if g:
                         g.set(len(seen))  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle missing metric, type issues, or metric operation failures
                     pass
             return True
-        except Exception:
+        except (AttributeError, KeyError, TypeError):
+            # Handle dict access failures, missing keys, or type issues
             return False
 
 registry_guard = _RegistryGuard()

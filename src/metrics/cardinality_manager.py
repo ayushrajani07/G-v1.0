@@ -68,7 +68,8 @@ def _get_adaptive_mode(metrics_obj) -> int | None:
         if val is None:
             return None
         return int(val)
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
+        # Handle missing attribute, wrong type, or invalid conversion to int
         return None
 
 
@@ -108,7 +109,8 @@ class CardinalityManager:
         try:
             if hasattr(metrics, 'metric_sampling_rate_limit_per_sec'):
                 metrics.metric_sampling_rate_limit_per_sec.labels(category='option').set(float(self.cfg.rate_limit_per_sec))
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
+            # Handle missing attribute/method, type mismatch, or invalid float conversion
             pass
 
     def _rate_limited(self, now: float) -> bool:
@@ -130,7 +132,8 @@ class CardinalityManager:
         try:
             if hasattr(m, 'metric_sampling_events'):
                 m.metric_sampling_events.labels(category='option', decision=decision, reason=reason).inc()
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle missing metric, type issues, or metric operation failures
             pass
 
     def should_emit(self, index: str, expiry: str, strike: int | float, opt_type: str,
@@ -175,14 +178,16 @@ class CardinalityManager:
                     val = cfg.get('band_window')
                 if isinstance(val, (int,float)) and int(val) > 0:
                     band_window = int(val)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError, KeyError):
+            # Handle missing module/config, wrong types, invalid conversions, missing keys
             band_window = None
         # Env override always wins when positive
         try:
             env_bw = _env_int('G6_DETAIL_MODE_BAND_ATM_WINDOW', 0)
             if int(env_bw) > 0:
                 band_window = int(env_bw)
-        except Exception:
+        except (TypeError, ValueError):
+            # Handle invalid type or int conversion failures
             pass
         if band_window is None:
             band_window = 0
@@ -193,11 +198,12 @@ class CardinalityManager:
                     try:
                         if self._metrics and hasattr(self._metrics, 'option_detail_band_rejections'):
                             self._metrics.option_detail_band_rejections.labels(index=index).inc()
-                    except Exception:
+                    except (AttributeError, TypeError, RuntimeError):
+                        # Handle missing metric, type issues, or metric operation failures
                         pass
                     return False
-            except Exception:
-                # If comparison fails, fall through (do not accept early yet)
+            except (TypeError, ValueError):
+                # If comparison fails due to type mismatch or invalid float conversion, fall through
                 pass
 
         # If manager disabled and not rejected by adaptive gating, auto-accept
@@ -214,8 +220,8 @@ class CardinalityManager:
                 if abs(float(strike) - float(atm_strike)) > w * 1.0:  # treat 1.0 as step; callers pick w accordingly
                     self._record_decision('reject', 'atm_window')
                     return False
-            except Exception:
-                # If comparison fails, fall through without gating
+            except (TypeError, ValueError):
+                # If comparison fails due to type mismatch or invalid float conversion, fall through
                 pass
 
         # Rate limit gating (global per second)
@@ -234,7 +240,8 @@ class CardinalityManager:
                     self._record_decision('reject', 'no_significant_change')
                     return False
                 # Record new value on accept path later
-            except Exception:
+            except (TypeError, ValueError):
+                # Handle type mismatch or invalid float conversion
                 pass
 
         # Accept: record
@@ -242,7 +249,8 @@ class CardinalityManager:
             try:
                 key = (str(index), str(expiry), str(strike), str(opt_type).upper())
                 self._last_value[key] = float(value)
-            except Exception:
+            except (TypeError, ValueError, AttributeError):
+                # Handle type mismatch, invalid float conversion, or missing upper() method
                 pass
         # Token bucket: push timestamp
         if int(self.cfg.rate_limit_per_sec or 0) > 0:

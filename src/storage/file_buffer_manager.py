@@ -11,10 +11,14 @@ Notes:
 from __future__ import annotations
 
 import csv
+import logging
 import os
+import sys
 import time
 from dataclasses import dataclass, field
 from typing import Any, TextIO
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -78,8 +82,11 @@ class FileBufferManager:
         """Close a file entry safely and remove from map (helper avoids try/except in loop)."""
         try:
             fe.fh.close()
-        except Exception:
-            pass
+        except (OSError, IOError) as e:
+            try:
+                logger.warning(f"Failed to close file {path}: {e}")
+            except Exception:
+                print(f"CRITICAL: Failed to close file {path}: {e}", file=sys.stderr)
         finally:
             self._files.pop(path, None)
 
@@ -132,10 +139,22 @@ class FileBufferManager:
                 for row in fe.pending:
                     fe.writer.writerow(row)
                 fe.fh.flush()
-        except Exception:
-            pass
+        except (OSError, IOError) as e:
+            try:
+                logger.error(
+                    f"LRU eviction flush failed for {oldest_path}, {len(fe.pending)} rows lost: {e}",
+                    exc_info=True
+                )
+            except Exception:
+                print(
+                    f"CRITICAL: LRU eviction flush failed for {oldest_path}, {len(fe.pending)} rows lost: {e}",
+                    file=sys.stderr
+                )
         finally:
             try:
                 fe.fh.close()
-            except Exception:
-                pass
+            except (OSError, IOError) as e:
+                try:
+                    logger.warning(f"Failed to close evicted file {oldest_path}: {e}")
+                except Exception:
+                    print(f"CRITICAL: Failed to close evicted file {oldest_path}: {e}", file=sys.stderr)

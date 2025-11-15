@@ -219,5 +219,6 @@ def compute_day_width(expiry_str: str, timestamp: datetime.datetime) -> float:
                 total_minutes = 375
                 elapsed = (timestamp - market_open).total_seconds() / 60
                 return max(0.0, min(1.0, 1.0 - (elapsed / total_minutes)))
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
+        # Invalid date format, type mismatch, or missing attributes
         return 1.0  # Default to full day on error

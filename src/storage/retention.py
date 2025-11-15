@@ -158,8 +158,8 @@ def start_retention_worker(base_dir: str,
                             "Retention pruned option=%s overview=%s files (took %.2fs)",
                             opt_del, ov_del, elapsed
                         )
-                    except Exception:
-                        # Fall back to a simpler message if formatting fails
+                    except (TypeError, ValueError, AttributeError):
+                        # Fall back to a simpler message if formatting fails (type mismatch, invalid format, missing attributes)
                         logger.info("Retention pruned option=%s overview=%s files", opt_del, ov_del)
             except OSError:
                 logger.exception("Retention sweep failure (continuing)")

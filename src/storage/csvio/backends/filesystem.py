@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
@@ -31,8 +32,8 @@ def append_one(
             if wt.enqueue(request, timeout=0.5):
                 return
             # Fall through to sync write if queue full
-    except Exception:
-        # Fall back to sync write on any error
+    except (ImportError, AttributeError, RuntimeError):
+        # Fall back to sync write if writer thread unavailable or queue error
         pass
     
     # Direct append write (original behavior)
@@ -61,8 +62,8 @@ def append_many(
             if wt.enqueue(request, timeout=0.5):
                 return
             # Fall through to sync write if queue full
-    except Exception:
-        # Fall back to sync write on any error
+    except (ImportError, AttributeError, RuntimeError):
+        # Fall back to sync write if writer thread unavailable or queue error
         pass
     
     # Direct append write (original behavior)
@@ -100,5 +101,9 @@ def _write_csv_append(
             
             # Write all rows
             writer.writerows(rows)
-    except Exception as e:
-        logger.error("Failed to write CSV to %s: %s", filepath, e)
+    except (OSError, IOError) as e:
+        try:
+            logger.error("Failed to write CSV to %s: %s", filepath, e, exc_info=True)
+        except Exception:
+            # Critical: CSV write failed AND logging failed - use stderr fallback
+            print(f"CRITICAL: Failed to write CSV to {filepath}: {e}", file=sys.stderr)

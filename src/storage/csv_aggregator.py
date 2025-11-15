@@ -9,6 +9,7 @@ from __future__ import annotations
 import csv
 import datetime
 import os
+import sys
 from typing import Any
 
 
@@ -245,7 +246,8 @@ class CsvAggregator:
         try:
             if self.metrics:
                 self.metrics.inc('csv_overview_aggregate_writes', 1, {'index': index})
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Metrics registry may be None or method unavailable - graceful degradation
             pass
     
     def compute_coverage_masks(
@@ -335,8 +337,8 @@ class CsvAggregator:
             # Try primary helper (format_ist_dt_30s)
             from src.utils.timeutils import format_ist_dt_30s
             return str(format_ist_dt_30s(timestamp))
-        except Exception:
-            # Fallback: legacy rounding logic
+        except (ImportError, AttributeError, TypeError, ValueError):
+            # Fallback: legacy rounding logic if import fails or invalid timestamp
             second = timestamp.second
             if second % 30 < 15:
                 rounded_second = (second // 30) * 30

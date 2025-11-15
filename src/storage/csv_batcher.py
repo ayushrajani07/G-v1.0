@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import os
+import sys
 from typing import Any
 
 
@@ -148,14 +149,17 @@ class CsvBatcher:
                     if self.verbose:
                         try:
                             self.logger.debug("Flushed %s rows to %s", len(rows), filepath)
-                        except Exception:
+                        except (AttributeError, OSError) as e:
+                            # Logger might be None or logging infrastructure failed
+                            # Non-critical, continue without debug logging
                             pass
                 except OSError as e:
                     # Log error but continue flushing other files
                     try:
                         self.logger.error("Failed to flush batch to %s: %s", filepath, e)
-                    except Exception:
-                        pass
+                    except Exception as log_err:
+                        # Critical: flush failed AND logging failed - use stderr fallback
+                        print(f"CRITICAL: Batch flush failed for {filepath}: {e} (logging also failed: {log_err})", file=sys.stderr)
                     continue
             
             # Emit metrics for total flushed rows
@@ -172,8 +176,13 @@ class CsvBatcher:
                                 'date': batch_key[2]
                             }
                         )
-                except Exception:
-                    pass
+                except (AttributeError, TypeError, KeyError) as e:
+                    # Metrics emission failed - log warning but don't crash
+                    try:
+                        self.logger.warning("Metrics emission failed for batch %s: %s", batch_key, e)
+                    except Exception:
+                        # Even warning logging failed, but metrics are not critical
+                        pass
             
             # Clear buffers after flush attempt
             self._batch_buffers.pop(batch_key, None)
@@ -183,8 +192,9 @@ class CsvBatcher:
         except OSError as e:
             try:
                 self.logger.error("Batch flush failed for %s: %s", batch_key, e)
-            except Exception:
-                pass
+            except Exception as log_err:
+                # Critical: top-level flush failed AND logging failed - use stderr fallback
+                print(f"CRITICAL: Batch flush failed for {batch_key}: {e} (logging also failed: {log_err})", file=sys.stderr)
             return False
     
     def get_batch_count(self, batch_key: tuple[str, str, str]) -> int:
@@ -226,13 +236,29 @@ class CsvBatcher:
             Clears all batch buffers
         """
         flushed_count = 0
+        failed_batches = []
         
         for batch_key in list(self._batch_buffers.keys()):
             try:
                 if self.maybe_flush_batch(batch_key=batch_key, force_flush_env=True):
                     flushed_count += 1
-            except Exception:
+            except Exception as e:
+                # Critical: shutdown flush failure - log each failed batch
+                failed_batches.append((batch_key, str(e)))
+                try:
+                    self.logger.error("Shutdown flush failed for batch %s: %s", batch_key, e)
+                except Exception as log_err:
+                    # Logging failed - use stderr as absolute fallback
+                    print(f"CRITICAL: Shutdown flush failed for {batch_key}: {e} (logging failed: {log_err})", file=sys.stderr)
                 continue
+        
+        # Report summary if any failures occurred
+        if failed_batches:
+            try:
+                self.logger.error("Shutdown completed with %d batch failures out of %d total batches", 
+                                len(failed_batches), len(self._batch_buffers) + flushed_count)
+            except Exception:
+                print(f"CRITICAL: {len(failed_batches)} batches failed to flush during shutdown", file=sys.stderr)
         
         return flushed_count
     
