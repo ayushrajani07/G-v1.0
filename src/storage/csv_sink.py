@@ -971,8 +971,8 @@ class CsvSink:
                         if leg_date and leg_date != exp_date_loc:
                             mismatched_meta += 1
                             break
-            except Exception:
-                pass
+            except (KeyError, TypeError, ValueError, AttributeError) as e:
+                self.logger.debug(f"Error checking expiry metadata for strike {strike}: {e}")
             row, header = self._prepare_option_row(index=index,
                                                    expiry_code=expiry_code,
                                                    expiry_date_str=expiry_str,
@@ -995,8 +995,10 @@ class CsvSink:
                     expiry_code = new_code
                     if skip_row:
                         continue
-            except Exception:
-                pass
+            except (KeyError, TypeError, ValueError, AttributeError) as e:
+                self.logger.debug(f"Error in expiry misclassification handler: {e}")
+            except Exception as e:
+                self.logger.warning(f"Unexpected error in expiry misclassification: {e}")
             # Junk filtering (extracted helper); skips row if flagged
             try:
                 if self._maybe_skip_as_junk(index=index,
@@ -1006,8 +1008,10 @@ class CsvSink:
                                              put_data=put_data,
                                              row_ts=row[0]):
                     continue
-            except Exception:
-                pass
+            except (KeyError, TypeError, ValueError, IndexError, AttributeError) as e:
+                self.logger.debug(f"Error in junk filtering: {e}")
+            except Exception as e:
+                self.logger.warning(f"Unexpected error in junk filtering: {e}")
             # Zero-row detection (extracted helper)
             try:
                 is_zero_row, skip_zero = self._handle_zero_row(index=index,
@@ -1018,8 +1022,10 @@ class CsvSink:
                                                                put_data=put_data)
                 if skip_zero:
                     continue
-            except Exception:
-                pass
+            except (KeyError, TypeError, ValueError, AttributeError) as e:
+                self.logger.debug(f"Error in zero row handler: {e}")
+            except Exception as e:
+                self.logger.warning(f"Unexpected error in zero row handler: {e}")
             if not hasattr(self, '_last_row_keys'):
                 self._last_row_keys = {}
             row_sig = (option_file, offset)
@@ -1036,10 +1042,7 @@ class CsvSink:
                 continue
         # Post-loop: meta mismatch log & batch flush decision
         if mismatched_meta:
-            try:
-                self.logger.warning("CSV_EXPIRY_META_MISMATCH index=%s tag=%s mismatched_legs=%s", index, expiry_code, mismatched_meta)
-            except Exception:
-                pass
+            self.logger.warning("CSV_EXPIRY_META_MISMATCH index=%s tag=%s mismatched_legs=%s", index, expiry_code, mismatched_meta)
         flushed = self._maybe_flush_batch(batching_enabled= batching_enabled,
                                           batch_key=batch_key)
         return unique_strikes, mismatched_meta, flushed
@@ -1072,25 +1075,26 @@ class CsvSink:
                 skip_flag = _os_env.environ.get('G6_SKIP_ZERO_ROWS', '0').lower() in ('1','true','yes','on')
                 if skip_flag:
                     if self.verbose:
-                        try:
-                            self.logger.debug("Skipping zero option row index=%s expiry=%s offset=%s", index, expiry_code, offset)
-                        except Exception:
-                            pass
+                        self.logger.debug("Skipping zero option row index=%s expiry=%s offset=%s", index, expiry_code, offset)
                     return True, True
                 else:
                     if self.verbose:
-                        try:
-                            self.logger.debug("Writing zero option row (flag not set to skip) index=%s expiry=%s offset=%s", index, expiry_code, offset)
-                        except Exception:
-                            pass
+                        self.logger.debug("Writing zero option row (flag not set to skip) index=%s expiry=%s offset=%s", index, expiry_code, offset)
                     return True, False
-        except Exception:
-            pass
+        except (AttributeError, TypeError, ValueError) as e:
+            self.logger.debug(f"Error checking zero row condition: {e}")
+        except Exception as e:
+            self.logger.warning(f"Unexpected error in zero row check: {e}")
+        
         try:
             ce_zero = (not call_data) or all(float(call_data.get(k, 0) or 0) == 0 for k in ('last_price','volume','oi','avg_price'))
             pe_zero = (not put_data) or all(float(put_data.get(k, 0) or 0) == 0 for k in ('last_price','volume','oi','avg_price'))
             is_zero = ce_zero and pe_zero
-        except Exception:
+        except (TypeError, ValueError, KeyError) as e:
+            self.logger.debug(f"Error calculating zero row status: {e}")
+            return False, False
+        except Exception as e:
+            self.logger.warning(f"Unexpected error calculating zero row: {e}")
             return False, False
         if not is_zero:
             return False, False
@@ -1099,17 +1103,11 @@ class CsvSink:
         skip_flag = _os_env.environ.get('G6_SKIP_ZERO_ROWS', '0').lower() in ('1','true','yes','on')
         if skip_flag:
             if self.verbose:
-                try:
-                    self.logger.debug("Skipping zero option row index=%s expiry=%s offset=%s", index, expiry_code, offset)
-                except Exception:
-                    pass
+                self.logger.debug("Skipping zero option row index=%s expiry=%s offset=%s", index, expiry_code, offset)
             return True, True
         else:
             if self.verbose:
-                try:
-                    self.logger.debug("Writing zero option row (flag not set to skip) index=%s expiry=%s offset=%s", index, expiry_code, offset)
-                except Exception:
-                    pass
+                self.logger.debug("Writing zero option row (flag not set to skip) index=%s expiry=%s offset=%s", index, expiry_code, offset)
             return True, False
 
     def _maybe_flush_batch(self, *, batching_enabled: bool, batch_key: tuple[str, str, str]) -> bool:
