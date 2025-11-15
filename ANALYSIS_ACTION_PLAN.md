@@ -244,13 +244,13 @@ class G6Config:
 - No enforcement mechanism
 
 **Action Items:**
-- [ ] Week 4: Create deprecation audit script
-- [ ] Week 4: List all items past removal date (see DEPRECATIONS.md)
-- [ ] Week 5: Remove expired items batch 1 (scripts)
-- [ ] Week 6: Remove expired items batch 2 (env vars)
-- [ ] Week 6: Remove expired items batch 3 (code paths)
-- [ ] Week 7: Add CI check for future enforcement
-- [ ] Week 7: Update deprecation policy documentation
+- Create deprecation audit script
+- List all items past removal date (see DEPRECATIONS.md)
+-  Remove expired items batch 1 (scripts)
+-  Remove expired items batch 2 (env vars)
+-  Remove expired items batch 3 (code paths)
+-  Add CI check for future enforcement
+-  Update deprecation policy documentation
 
 **Immediate Removals (already approved per DEPRECATIONS.md):**
 ```

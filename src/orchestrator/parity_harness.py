@@ -149,7 +149,6 @@ def run_parity_cycle(config, use_enhanced: bool = False) -> dict[str, Any]:
         config=config,
         providers=providers,
         csv_sink=csv_sink,
-        influx_sink=influx_sink,
         metrics=metrics,
         index_params=new_params,
     )

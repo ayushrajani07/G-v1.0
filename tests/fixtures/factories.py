@@ -31,7 +31,6 @@ def make_ctx(
         indices: Index configuration dict. Defaults to single AAA index.
         providers: Provider instance. Defaults to DummyProviders().
         csv_sink: CSV sink instance. Defaults to DummyCsvSink().
-        influx_sink: InfluxDB sink instance. Defaults to DummyInfluxSink().
         metrics: Metrics instance. Defaults to DummyMetrics().
         registry: Prometheus registry. Creates new if None.
         **extra_attrs: Additional attributes to set on context.
@@ -56,7 +55,6 @@ def make_ctx(
     ctx.index_params = indices
     ctx.providers = providers or DummyProviders()
     ctx.csv_sink = csv_sink or DummyCsvSink()
-    ctx.influx_sink = influx_sink or DummyInfluxSink()
     ctx.metrics = metrics or DummyMetrics()
     ctx.cycle_count = 0
     ctx.config = {}

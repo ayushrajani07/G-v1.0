@@ -163,12 +163,11 @@ def bootstrap_runtime(config_path: str,
     if not EnvConfig.get_bool('G6_DISABLE_COMPONENTS', False):
         try:
             providers = init_providers(raw_cfg)
-            csv_sink, influx_sink = init_storage(raw_cfg)
+            csv_sink = init_storage(raw_cfg)
             apply_circuit_breakers(raw_cfg, providers)
-            health = init_health(raw_cfg, providers, csv_sink, influx_sink)
+            health = init_health(raw_cfg, providers, csv_sink)
             ctx.providers = providers
             ctx.csv_sink = csv_sink
-            ctx.influx_sink = influx_sink
             ctx.health_monitor = health
         except Exception:
             logger.exception("Component bootstrap (providers/storage/health) failed; proceeding with partial context")

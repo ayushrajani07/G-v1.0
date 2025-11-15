@@ -72,7 +72,6 @@ def publish_cycle_panels(
     success_rate_pct: float | None,
     metrics: Any | None = None,
     csv_sink: Any | None = None,
-    influx_sink: Any | None = None,
     providers: Any | None = None,
 ) -> None:
     """Publish panel data using the high-level metrics processor.
@@ -197,22 +196,6 @@ def publish_cycle_panels(
             except Exception:
                 val = None
             sinks_payload["csv_sink"] = {"last_write": val}
-    except Exception:
-        pass
-    try:
-        if influx_sink is not None:
-            ts = getattr(influx_sink, "last_write_ts", None)
-            val = None
-            try:
-                if ts is None:
-                    val = None
-                elif hasattr(ts, "isoformat"):
-                    val = ts.isoformat()
-                else:
-                    val = str(ts)
-            except Exception:
-                val = None
-            sinks_payload["influx_sink"] = {"last_write": val}
     except Exception:
         pass
 

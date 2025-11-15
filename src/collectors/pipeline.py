@@ -191,9 +191,8 @@ class GreeksBlock(AnalyticsBlock):
                 continue
 
 class CsvPersistAdapter(PersistenceBlock):
-    def __init__(self, csv_sink, influx_sink=None, metrics=None):
+    def __init__(self, csv_sink, metrics=None):
         self.csv = csv_sink
-        self.influx = influx_sink
         self.metrics = metrics
 
     def persist(self, ee: EnrichedExpiry) -> PersistOutcome:
@@ -212,17 +211,6 @@ class CsvPersistAdapter(PersistenceBlock):
         except Exception as e:  # pragma: no cover (reuses upstream error handling eventually)
             logger.error("CSV persistence failed in pipeline: %s", e)
             return PersistOutcome(option_count=0, pcr=None, failed=True)
-        # Optional influx write
-        if self.influx:
-            try:
-                self.influx.write_options_data(
-                    ee.work.index,
-                    ee.work.expiry_date,
-                    ee.enriched,
-                    datetime.datetime.now(datetime.UTC),
-                )
-            except Exception as e:  # pragma: no cover
-                logger.debug("Influx persistence failed in pipeline: %s", e)
         pcr = None
         day_width = None
         ts = None
@@ -283,7 +271,6 @@ class CollectorPipeline:
 def build_default_pipeline(
     providers,
     csv_sink,
-    influx_sink=None,
     metrics=None,
     compute_greeks: bool = False,
     estimate_iv: bool = False,
@@ -317,7 +304,7 @@ def build_default_pipeline(
         resolver = ServiceResolver()
     else:
         resolver = adapter
-    persist = CsvPersistAdapter(csv_sink, influx_sink=influx_sink, metrics=metrics)
+    persist = CsvPersistAdapter(csv_sink, metrics=metrics)
     analytics: list[AnalyticsBlock] = []
     greeks_calculator = None
     if compute_greeks or estimate_iv:

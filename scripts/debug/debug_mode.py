@@ -31,7 +31,6 @@ from src.config.config_wrapper import ConfigWrapper
 from src.metrics import setup_metrics_server  # facade import
 from src.provider.config import get_provider_config
 from src.storage.csv_sink import CsvSink
-from src.storage.influx_sink import NullInfluxSink
 
 
 def main():
@@ -61,7 +60,6 @@ def main():
     csv_dir = data_subdir("csv_debug")
     os.makedirs(csv_dir, exist_ok=True)
     csv_sink = CsvSink(base_dir=csv_dir)
-    influx_sink = NullInfluxSink()
 
     # 5. Initialize metrics
     metrics, _ = setup_metrics_server()
@@ -82,7 +80,6 @@ def main():
             index_params=config.index_params(),
             providers=providers,
             csv_sink=csv_sink,
-            influx_sink=influx_sink,
             metrics=metrics
         )
         print("✓ Collection cycle completed successfully")

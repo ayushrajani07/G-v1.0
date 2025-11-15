@@ -37,7 +37,6 @@ def main():
 
         # Storage backends
         "src.storage.csv_sink",
-        "src.storage.influx_sink",
 
         # (Legacy) main script retained for compatibility
         "src.main",

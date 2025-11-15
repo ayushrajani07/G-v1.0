@@ -723,11 +723,6 @@ def process_index(
             try:
                 if pcr_snapshot:
                     ctx.csv_sink.write_overview_snapshot(index_symbol, pcr_snapshot, snapshot_base_time, representative_day_width, expected_expiries=expected_expiries)
-                    if ctx.influx_sink:
-                        try:
-                            ctx.influx_sink.write_overview_snapshot(index_symbol, pcr_snapshot, snapshot_base_time, representative_day_width, expected_expiries=expected_expiries)
-                        except Exception as ie:  # pragma: no cover
-                            logger.debug("Influx overview snapshot failed for %s: %s", index_symbol, ie)
             except Exception as snap_e:  # pragma: no cover
                 logger.error("Failed to write aggregated overview snapshot for %s: %s", index_symbol, snap_e)
     else:

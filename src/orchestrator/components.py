@@ -59,8 +59,6 @@ circuit_protected_fn: Callable[[str], Callable[[Callable[..., Any]], Callable[..
 get_error_handler_fn: Callable[..., Any]
 ErrorCategoryT: Any
 ErrorSeverityT: Any
-InfluxSinkT: Any | None = None
-NullInfluxSinkT: Any
 
 # Generic note: avoid module-level TypeVar usage in annotations for fallbacks; use Any.
 
@@ -369,23 +367,6 @@ except Exception:  # pragma: no cover
     ErrorCategoryT = _ErrorCategoryFallback
     ErrorSeverityT = _ErrorSeverityFallback
 
-try:  # influx optional
-    from src.storage.influx_sink import InfluxSink as _RealInfluxSink
-    from src.storage.influx_sink import NullInfluxSink as _RealNullInfluxSink
-    InfluxSinkT = _RealInfluxSink
-    NullInfluxSinkT = _RealNullInfluxSink
-except Exception:  # pragma: no cover
-    InfluxSinkT = None
-    class _NullInfluxSink:
-        def __init__(self):
-            self._fallback = True
-        # No-op writer methods expected by collectors
-        def write_options_data(self, *_, **__):  # returns count written (0 in degraded mode)
-            return 0
-        def write_index_overview(self, *_, **__):  # compatibility no-op
-            return 0
-    NullInfluxSinkT = _NullInfluxSink
-
 # --- Late resilience patches for missing health modules ----------------------
 # If the broad optional import block earlier downgraded HealthMonitor/HealthCheck
 # to the 'object' sentinel, provide lightweight stubs so that bootstrap does not
@@ -555,63 +536,10 @@ def init_storage(config) -> tuple[Any, Any]:
         pass
     csv_sink_ctor: Any = CsvSinkT
     csv_sink = csv_sink_ctor(base_dir=data_dir)
-    influx: Any = None  # ensure defined for all control paths
-    influx_cfg = config.get('influx', {})
-    try:
-        sc = config.get('storage', {})
-        if isinstance(sc.get('influx'), dict):
-            influx_cfg = sc.get('influx')
-    except Exception:
-        pass
-    # Support both top-level influx and nested storage.influx and legacy keys
-    enabled_flag = bool(influx_cfg.get('enabled') or influx_cfg.get('enable'))
-
-    # New policy: the config flag is the single source of truth.
-    # - When disabled: do not initialize real Influx; return a Null sink (or None if unavailable).
-    # - When enabled: attempt to initialize real Influx; if the client is unavailable, fall back to Null sink.
-    if not enabled_flag:
-        try:
-            influx = NullInfluxSinkT() if 'NullInfluxSinkT' in globals() and NullInfluxSinkT is not None else None
-        except Exception:
-            influx = None
-        return csv_sink, influx
-
-    if enabled_flag and (InfluxSinkT is not None):
-        try:
-            # Allow environment substitution for token if provided as ${VAR}
-            _token_raw = influx_cfg.get('token') or EnvConfig.get_str('INFLUX_TOKEN', '')
-            if isinstance(_token_raw, str) and _token_raw.startswith('${') and _token_raw.endswith('}'):
-                _env_key = _token_raw[2:-1]
-                _token = EnvConfig.get_str(_env_key, '')
-            else:
-                _token = _token_raw
-            # Allow env override for URL to support runtime port changes without editing config
-            _url = EnvConfig.get_str('G6_INFLUX_URL', '') or influx_cfg.get('url', 'http://localhost:8086')
-            influx = InfluxSinkT(
-                url=_url,
-                token=_token,
-                org=influx_cfg.get('org', ''),
-                bucket=influx_cfg.get('bucket', 'g6_options'),
-                batch_size=int(influx_cfg.get('batch_size', 500)),
-                flush_interval=float(influx_cfg.get('flush_interval_seconds', 1.0)),
-                max_queue_size=int(influx_cfg.get('max_queue_size', 10000)),
-                max_retries=int(influx_cfg.get('max_retries', 3)),
-                backoff_base=float(influx_cfg.get('backoff_base', 0.25)),
-                breaker_fail_threshold=int(influx_cfg.get('breaker_failure_threshold', 5)),
-                breaker_reset_timeout=float(influx_cfg.get('breaker_reset_timeout', 30.0)),
-                pool_min_size=int(influx_cfg.get('pool_min_size', 1)),
-                pool_max_size=int(influx_cfg.get('pool_max_size', 2)),
-            )
-        except Exception:
-            # If initialization fails while enabled, fall back to Null sink so the app can continue.
-            try:
-                influx = NullInfluxSinkT() if 'NullInfluxSinkT' in globals() and NullInfluxSinkT is not None else None
-            except Exception:
-                influx = None
-    return csv_sink, influx
+    return csv_sink
 
 
-def init_health(config, providers, csv_sink, influx_sink) -> Any:
+def init_health(config, providers, csv_sink) -> Any:
     hcfg = config.get('health', {})
     hm_ctor: Any = HealthMonitorT
     hm = hm_ctor(check_interval=hcfg.get('check_interval', 60))
@@ -626,11 +554,6 @@ def init_health(config, providers, csv_sink, influx_sink) -> Any:
                 fn('csv_sink', csv_sink)
             except Exception:
                 pass
-            if influx_sink:
-                try:
-                    fn('influx_sink', influx_sink)
-                except Exception:
-                    pass
         rhc = getattr(hm, 'register_health_check', None)
         if callable(rhc):
             try:

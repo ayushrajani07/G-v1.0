@@ -113,7 +113,6 @@ class CollectorPipeline:
 def build_default_pipeline(
     providers: Any,
     csv_sink: Any,
-    influx_sink: Any | None = None,
     metrics: Any | None = None,
     *,
     compute_greeks: bool = False,  # retained for signature compatibility
@@ -128,7 +127,7 @@ def build_default_pipeline(
     analytics: list[AnalyticsBlock] = [NoOpAnalytics()]
 
     class CsvPersistAdapter(PersistenceBlock):
-        def __init__(self, csv_sink: Any, influx_sink: Any | None = None, metrics: Any | None = None) -> None:  # noqa: D401
+        def __init__(self, csv_sink: Any, metrics: Any | None = None) -> None:  # noqa: D401
             self.csv = csv_sink
 
         def persist(self, ee: EnrichedExpiry) -> PersistOutcome:  # noqa: D401
@@ -164,7 +163,7 @@ def build_default_pipeline(
                 expiry_code=expiry_code,
             )
 
-    persist: PersistenceBlock = CsvPersistAdapter(csv_sink, influx_sink=influx_sink, metrics=metrics)
+    persist: PersistenceBlock = CsvPersistAdapter(csv_sink, metrics=metrics)
     return CollectorPipeline(
         resolver=adapter,
         fetcher=adapter,

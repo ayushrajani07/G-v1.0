@@ -123,25 +123,6 @@ class DummyCsvSink:
         pass
 
 
-class DummyInfluxSink:
-    """Minimal InfluxDB sink stub for tests.
-    
-    Provides no-op write methods.
-    Used in 12+ test files.
-    """
-    def write_option_quotes(self, *args, **kwargs):
-        """No-op: write option quotes to InfluxDB."""
-        pass
-    
-    def write_overview_snapshot(self, *args, **kwargs):
-        """No-op: write overview snapshot."""
-        pass
-    
-    def write_snapshot(self, *args, **kwargs):
-        """No-op: write snapshot."""
-        pass
-
-
 class DummySink:
     """Universal sink stub (CSV + Influx combined).
     

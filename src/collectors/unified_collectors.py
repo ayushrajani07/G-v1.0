@@ -871,7 +871,6 @@ def run_unified_collectors(
     index_params: dict[str, Any],
     providers: Any,
     csv_sink: Any,
-    influx_sink: Any,
     metrics: Any = None,
     *,
     compute_greeks: bool = False,
@@ -893,8 +892,6 @@ def run_unified_collectors(
         Data providers facade.
     csv_sink : CsvSink
         CSV persistence layer.
-    influx_sink : InfluxSink | None
-        Influx persistence layer.
     metrics : Any
         Metrics registry or None.
     compute_greeks : bool
@@ -959,7 +956,7 @@ def run_unified_collectors(
     _trace("cycle_start", indices=list(index_params.keys()), compute_greeks=compute_greeks, estimate_iv=estimate_iv)
     _init_cycle_metrics(metrics)
     start_cycle_wall = time.time(); cycle_start_ts = utc_now()
-    ctx = CycleContext(index_params=index_params, providers=providers, csv_sink=csv_sink, influx_sink=influx_sink, metrics=metrics, start_wall=start_cycle_wall, start_ts=cycle_start_ts)
+    ctx = CycleContext(index_params=index_params, providers=providers, csv_sink=csv_sink, metrics=metrics, start_wall=start_cycle_wall, start_ts=cycle_start_ts)
     # Bootstrap phase: elapsed time from cycle start to just before first heavy timed phase ('init_greeks').
     # We record it explicitly to capture upfront configuration, imports, and light validation overhead.
     ctx.record('bootstrap', 0.0)  # initialize key; will update below once we know elapsed

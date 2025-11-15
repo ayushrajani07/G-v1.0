@@ -27,10 +27,9 @@ except ImportError:
 
 
 class ParallelCollector:
-    def __init__(self, providers: AsyncProviders, csv_sink, influx_sink, metrics=None, *, max_workers: int = 8):
+    def __init__(self, providers: AsyncProviders, csv_sink, metrics=None, *, max_workers: int = 8):
         self.providers = providers
         self.csv = csv_sink
-        self.influx = influx_sink
         self.metrics = metrics
         # Optional thread pool for blocking sinks
         self._pool = ThreadPoolExecutor(max_workers=max_workers) if max_workers and max_workers > 0 else None

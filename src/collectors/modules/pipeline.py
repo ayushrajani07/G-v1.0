@@ -330,7 +330,6 @@ def run_pipeline(
     index_params: Mapping[str, dict[str, Any]],
     providers: Any,
     csv_sink: Any,
-    influx_sink: Any,
     metrics: Any | None = None,
     *,
     compute_greeks: bool = False,

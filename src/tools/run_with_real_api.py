@@ -22,7 +22,7 @@ from src.config.loader import load_and_validate_config
 from src.metrics import setup_metrics_server
 from src.provider.config import get_provider_config
 from src.storage.csv_sink import CsvSink
-from src.storage.influx_sink import NullInfluxSink
+
 
 try:
     from src.error_handling import handle_api_error, handle_collector_error  # type: ignore
@@ -81,7 +81,6 @@ def main():
     output_dir = data_subdir("real_api_test")
     os.makedirs(output_dir, exist_ok=True)
     csv_sink = CsvSink(base_dir=output_dir)
-    influx_sink = NullInfluxSink()
 
     # Initialize metrics
     metrics, stop_metrics = setup_metrics_server(port=9108)
@@ -103,7 +102,6 @@ def main():
                 index_params=index_params,
                 providers=providers,
                 csv_sink=csv_sink,
-                influx_sink=influx_sink,
                 metrics=metrics,
             )
 
