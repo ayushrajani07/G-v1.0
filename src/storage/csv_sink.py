@@ -1142,17 +1142,22 @@ class CsvSink:
                     os.makedirs(os.path.dirname(path), exist_ok=True)
                     self._append_many_csv_rows(path, rows, header_ref if not file_exists_local else None)
                     if self.verbose:
-                        try:
-                            self.logger.debug("Flushed %s rows to %s", len(rows), path)
-                        except Exception:
-                            pass
+                        self.logger.debug("Flushed %s rows to %s", len(rows), path)
                     self._metric_inc('csv_records_written', len(rows))
-                except Exception:
+                except (IOError, OSError, PermissionError) as e:
+                    self.logger.warning(f"Failed to flush batch to {path}: {e}")
+                    continue
+                except Exception as e:
+                    self.logger.error(f"Unexpected error flushing batch: {e}", exc_info=True)
                     continue
             self._batch_buffers.pop(batch_key, None)
             self._batch_counts.pop(batch_key, None)
             return True
-        except Exception:
+        except (KeyError, TypeError, AttributeError) as e:
+            self.logger.debug(f"Error in batch flush: {e}")
+            return False
+        except Exception as e:
+            self.logger.warning(f"Unexpected error in batch flush: {e}")
             return False
 
     def _handle_duplicate_write_or_buffer(self, *, index: str, expiry_code: str, offset: int,
@@ -1169,10 +1174,7 @@ class CsvSink:
             last_ts = self._last_row_keys.get(row_sig)
             if last_ts == row[0]:
                 if self.verbose:
-                    try:
-                        self.logger.debug("Duplicate row suppressed index=%s expiry=%s offset=%s ts=%s", index, expiry_code, offset, row[0])
-                    except Exception:
-                        pass
+                    self.logger.debug("Duplicate row suppressed index=%s expiry=%s offset=%s ts=%s", index, expiry_code, offset, row[0])
                 return True
             if batching_enabled:
                 # Delegate to batcher when available
@@ -1184,9 +1186,9 @@ class CsvSink:
                             row=row,
                             header=header,
                         )
-                except Exception:
+                except (AttributeError, TypeError) as e:
                     # Fall through to legacy mirror buffer update
-                    pass
+                    self.logger.debug(f"Batcher not available, using legacy buffer: {e}")
                 # Maintain legacy mirrors for health/backlog helpers
                 buf = self._batch_buffers.setdefault(batch_key, {}).setdefault(option_file, {'header': header, 'rows': []})
                 buf['rows'].append(row)
@@ -1195,13 +1197,19 @@ class CsvSink:
                 self._append_csv_row(option_file, row, header if not file_exists else None)
                 self._last_row_keys[row_sig] = row[0]
                 if self.verbose:
-                    try:
-                        self.logger.debug("Option data written to %s", option_file)
-                    except Exception:
-                        pass
+                    self.logger.debug("Option data written to %s", option_file)
                 self._metric_inc('csv_records_written', 1)
-        except Exception:
-            # Fail open: if an unexpected error occurs, treat as non-duplicate and avoid crash
+        except (IOError, OSError, PermissionError) as e:
+            # I/O errors - fail open to avoid crash
+            self.logger.warning(f"Failed to write row: {e}")
+            return False
+        except (KeyError, IndexError, TypeError, AttributeError) as e:
+            # Data structure errors - fail open
+            self.logger.debug(f"Error processing row: {e}")
+            return False
+        except Exception as e:
+            # Unexpected error - fail open to avoid crash
+            self.logger.error(f"Unexpected error in duplicate handler: {e}", exc_info=True)
             return False
         return False
 
@@ -1252,26 +1260,24 @@ class CsvSink:
                     self._metric_inc('csv_junk_rows_stale', 1, {'index': index, 'expiry': expiry_code})
             if decision.summary_emitted and decision.summary_snapshot:
                 snap = decision.summary_snapshot
-                try:
-                    self.logger.info(
-                        "CSV_JUNK_SUMMARY window=%ss total=%s threshold=%s stale=%s",
-                        snap.get('window'),
-                        snap.get('total'),
-                        snap.get('threshold'),
-                        snap.get('stale')
-                    )
-                except Exception:
-                    pass
+                self.logger.info(
+                    "CSV_JUNK_SUMMARY window=%ss total=%s threshold=%s stale=%s",
+                    snap.get('window'),
+                    snap.get('total'),
+                    snap.get('threshold'),
+                    snap.get('stale')
+                )
             if self.verbose:
                 try:
-                    try:
-                        route_error('csv.junk.skip', self.logger, self.metrics, index=index, expiry=expiry_code, offset=offset, category=decision.category)
-                    except Exception:
-                        self.logger.debug("CSV_JUNK_SKIP index=%s expiry=%s offset=%s category=%s", index, expiry_code, offset, decision.category)
-                except Exception:
-                    pass
+                    route_error('csv.junk.skip', self.logger, self.metrics, index=index, expiry=expiry_code, offset=offset, category=decision.category)
+                except (AttributeError, TypeError) as e:
+                    self.logger.debug(f"CSV_JUNK_SKIP index={index} expiry={expiry_code} offset={offset} category={decision.category} (route_error failed: {e})")
             return True
-        except Exception:
+        except (AttributeError, TypeError, KeyError) as e:
+            self.logger.debug(f"Error in junk skip logic: {e}")
+            return False
+        except Exception as e:
+            self.logger.warning(f"Unexpected error in junk skip handler: {e}")
             return False
 
     def _handle_expiry_misclassification(self, *, index: str, expiry_code: str, expiry_str: str,
