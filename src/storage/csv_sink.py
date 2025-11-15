@@ -683,9 +683,14 @@ class CsvSink:
                         'batched': batching_enabled,
                         'flushed': True
                     }, f, indent=2)
-            except Exception:
+            except (IOError, OSError, PermissionError) as e:
                 if self.verbose:
-                    self.logger.debug("Failed to write debug file", exc_info=True)
+                    self.logger.debug(f"Failed to write debug file {debug_file}: {e}")
+            except (TypeError, ValueError) as e:
+                self.logger.debug(f"Failed to serialize debug data: {e}")
+            except Exception as e:
+                if self.verbose:
+                    self.logger.warning(f"Unexpected error writing debug file: {e}", exc_info=True)
 
         if self.verbose and not self._concise:
             self.logger.info("Data written for %s %s (unique_strikes=%s)", index, expiry_code, unique_strikes)
@@ -728,22 +733,22 @@ class CsvSink:
         # Parse date
         try:
             exp_date = expiry if isinstance(expiry, datetime.date) else datetime.datetime.strptime(str(expiry), '%Y-%m-%d').date()
-        except Exception:
+        except (ValueError, TypeError, AttributeError) as e:
             # Fallback: treat unparsable expiry as today (should be rare) to avoid crash; logs at warning.
-            try:
-                self.logger.warning("CSV_EXPIRY_PARSE_FALLBACK index=%s raw=%s", index, expiry)
-            except Exception:
-                pass
+            self.logger.warning(f"CSV_EXPIRY_PARSE_FALLBACK index={index} raw={expiry}: {e}")
             exp_date = datetime.date.today()
+        except Exception as e:
+            self.logger.error(f"Unexpected error parsing expiry for {index}: {e}", exc_info=True)
+            exp_date = datetime.date.today()
+        
         supplied_tag = (expiry_rule_tag.strip() if isinstance(expiry_rule_tag, str) and expiry_rule_tag.strip() else None)
         if supplied_tag and re.fullmatch(r"\d{4}-\d{2}-\d{2}", supplied_tag):
-            try:
-                self.logger.debug("CSV_EXPIRY_TAG_RAW_DATE index=%s tag=%s -> falling back to heuristic classification", index, supplied_tag)
-            except Exception:
-                pass
+            self.logger.debug(f"CSV_EXPIRY_TAG_RAW_DATE index={index} tag={supplied_tag} -> falling back to heuristic classification")
             supplied_tag = None
+        
         expiry_code = supplied_tag or self._determine_expiry_code(exp_date)
         expiry_str = exp_date.strftime('%Y-%m-%d')
+        
         # Monthly anchor correction removed: rely on centralized policy in select_expiry_for_index.
         # Emit diagnostic only; do not mutate.
         try:
@@ -759,8 +764,10 @@ class CsvSink:
                     # Just log mismatch; no rewrite
                     # (Rewrite previously caused divergence from unified expiry policy.)
                     pass
-        except Exception:
-            pass
+        except (ValueError, OverflowError) as e:
+            self.logger.debug(f"Failed to compute monthly anchor for {index}: {e}")
+        except Exception as e:
+            self.logger.warning(f"Unexpected error in monthly anchor diagnostic: {e}")
         return exp_date, expiry_code, supplied_tag, expiry_str
 
     def _determine_expiry_code(self, exp_date: datetime.date, today: datetime.date | None = None) -> str:
@@ -897,19 +904,25 @@ class CsvSink:
                         if inst_type not in ('CE','PE'):
                             schema_issues.append(f"missing_or_bad_type:{strike_key}:{leg_type}")
                             leg_map[leg_type] = None
-            except Exception:
+            except (TypeError, KeyError, AttributeError, ValueError) as e:
                 # Defensive: continue collecting other issues
+                self.logger.debug(f"Error validating strike {strike_key}: {e}")
                 continue
+            except Exception as e:
+                self.logger.warning(f"Unexpected error in schema validation for strike {strike_key}: {e}")
+                continue
+        
         if schema_issues:
             try:
-                try:
-                    route_error('csv.schema.issues', self.logger, self.metrics, index=index, expiry=expiry_code, count=len(schema_issues))
-                except Exception:
-                    self.logger.warning(
-                        "CSV_SCHEMA_ISSUES index=%s expiry=%s count=%d issues=%s", index, expiry_code, len(schema_issues), ','.join(schema_issues[:25]) + ("+"+str(len(schema_issues)-25) if len(schema_issues)>25 else "")
-                    )
-            except Exception:
-                pass
+                route_error('csv.schema.issues', self.logger, self.metrics, index=index, expiry=expiry_code, count=len(schema_issues))
+            except (AttributeError, TypeError) as e:
+                self.logger.debug(f"Failed to route schema error: {e}")
+                self.logger.warning(
+                    "CSV_SCHEMA_ISSUES index=%s expiry=%s count=%d issues=%s", index, expiry_code, len(schema_issues), ','.join(schema_issues[:25]) + ("+"+str(len(schema_issues)-25) if len(schema_issues)>25 else "")
+                )
+            except Exception as e:
+                self.logger.warning(f"Unexpected error routing schema issues: {e}")
+            
             # Metrics (migrated to wrapper; preserve capped emission at 50 issues)
             try:
                 for issue in schema_issues[:50]:
@@ -918,8 +931,10 @@ class CsvSink:
                         'component': 'csv_sink.schema',
                         'error_type': issue.split(':',1)[0]
                     })
-            except Exception:
-                pass
+            except (ValueError, IndexError, KeyError) as e:
+                self.logger.debug(f"Failed to emit schema issue metrics: {e}")
+            except Exception as e:
+                self.logger.warning(f"Unexpected error emitting schema metrics: {e}")
         return schema_issues
 
     def _process_strikes_and_maybe_flush(self, *, index: str, expiry_code: str, expiry_str: str,
