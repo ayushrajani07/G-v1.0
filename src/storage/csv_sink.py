@@ -378,7 +378,7 @@ class CsvSink:
         concise_mode = False
         try:
             concise_mode = bool(is_concise_logging())
-        except Exception:
+        except (ImportError, AttributeError, TypeError):
             concise_mode = False
         if concise_mode:
             self.logger.debug("Options data received for %s expiry %s: %s instruments", index, expiry, len(options_data))
@@ -529,7 +529,7 @@ class CsvSink:
         # Ensure prev close values are available (best-effort)
         try:
             self._ensure_prev_close_loaded(index=index, date_key=date_key)
-        except Exception:
+        except (IOError, OSError, csv.Error, KeyError, ValueError):
             pass
         # Capture opening values near market open (9:15 AM)
         current_time = timestamp.time()
@@ -602,14 +602,14 @@ class CsvSink:
             if vix_val is not None:
                 try:
                     self._last_vix = float(vix_val)
-                except Exception:
+                except (ValueError, TypeError):
                     pass
 
         # Update last-seen values after write
         try:
             self._index_last_price[index] = float(index_price or 0.0)
             self._tp_last[index] = float(tp_value)
-        except Exception:
+        except (ValueError, TypeError):
             pass
 
         # Group options by strike
@@ -814,14 +814,14 @@ class CsvSink:
                         try:
                             cand_date = datetime.datetime.strptime(str(raw_exp), fmt).date()
                             break
-                        except Exception:
+                        except (ValueError, TypeError):
                             continue
                     if cand_date is None:
                         continue
                 if cand_date != safe_expected:
                     options_data.pop(sym, None)
                     dropped += 1
-            except Exception:
+            except (KeyError, AttributeError, ValueError, TypeError):
                 continue
         if dropped:
             try:
@@ -835,13 +835,13 @@ class CsvSink:
                         expiry=expiry_code,
                         dropped=dropped,
                     )
-                except Exception:
+                except (ImportError, AttributeError, TypeError):
                     if self._concise:
                         self.logger.debug("CSV_MIXED_EXPIRY_PRUNE index=%s tag=%s dropped=%s", index, expiry_code, dropped)
                     else:
                         self.logger.info("Pruned %s mixed-expiry records for %s %s", dropped, index, expiry_code)
                     self._metric_inc('csv_mixed_expiry_dropped', dropped, {'index': index, 'expiry': expiry_code})
-            except Exception:  # pragma: no cover
+            except (ImportError, AttributeError):  # pragma: no cover
                 pass
         return dropped
 
@@ -878,7 +878,7 @@ class CsvSink:
                     self.logger.debug("CSV_EXPIRY_ADVISORY index=%s seen=%s missing=%s", index, sorted(seen), sorted(missing))
                 else:
                     self.logger.info("Advisory: Not all configured expiries observed for %s today. Seen=%s Missing=%s", index, sorted(seen), sorted(missing))
-        except Exception:  # pragma: no cover
+        except (KeyError, TypeError, ValueError):  # pragma: no cover
             pass
 
     def _validate_schema(self, *, index: str, expiry_code: str, strike_data: dict[float, dict[str, Any]]) -> list[str]:
@@ -1629,10 +1629,10 @@ class CsvSink:
                     try:
                         if self.metrics and hasattr(self.metrics, 'csv_files_created'):
                             self.metrics.csv_files_created.inc()  # type: ignore[call-arg]
-                    except Exception:
+                    except (AttributeError, ImportError):
                         pass
                 return
-        except Exception:
+        except (AttributeError, IOError, OSError):
             # Fallback to legacy inline path
             pass
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -1645,7 +1645,7 @@ class CsvSink:
                 with open(lock_path, 'x') as _lf:
                     _lf.write(str(os.getpid()))
                 lock_created = True
-            except Exception:
+            except (IOError, OSError, FileExistsError):
                 pass
         try:
             with open(filepath, 'a' if file_exists else 'w', newline='') as f:
@@ -1677,17 +1677,17 @@ class CsvSink:
                 try:
                     if os.path.isabs(filepath) and str(filepath).startswith(self.base_dir):
                         rel = os.path.relpath(filepath, self.base_dir)
-                except Exception:
+                except (OSError, ValueError):
                     pass
                 self.writer.append_many_rows(rel, rows, header)  # type: ignore[attr-defined]
                 if not os.path.isfile(filepath):
                     try:
                         if self.metrics and hasattr(self.metrics, 'csv_files_created'):
                             self.metrics.csv_files_created.inc()  # type: ignore[call-arg]
-                    except Exception:
+                    except (AttributeError, ImportError):
                         pass
                 return
-        except Exception:
+        except (AttributeError, IOError, OSError):
             # Fallback to legacy inline path
             pass
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -1794,7 +1794,7 @@ class CsvSink:
         """
         try:
             return str(format_ist_dt_30s(timestamp))
-        except Exception:
+        except (ImportError, AttributeError, ValueError, TypeError):
             second = timestamp.second
             if second % 30 < 15:
                 rounded_second = (second // 30) * 30
@@ -1891,22 +1891,22 @@ class CsvSink:
                             # index_price prev close
                             try:
                                 prev_idx_close = float(closest_row.get('index_price', '') or 0.0)
-                            except Exception:
+                            except (ValueError, TypeError):
                                 prev_idx_close = None
                             # tp prev close (may be absent on older schema)
                             try:
                                 prev_tp_close = float(closest_row.get('tp', '') or 0.0)
-                            except Exception:
+                            except (ValueError, TypeError):
                                 prev_tp_close = None
                             break
-                except Exception:
+                except (IOError, OSError, csv.Error, KeyError):
                     continue
             if prev_idx_close is not None:
                 self._index_prev_close[index] = prev_idx_close
             if prev_tp_close is not None:
                 self._tp_prev_close[index] = prev_tp_close
             self._prev_close_loaded_date[index] = date_key
-        except Exception:
+        except (IOError, OSError, KeyError, ValueError):
             # Best-effort; leave unset on failure
             self._prev_close_loaded_date[index] = date_key
 
