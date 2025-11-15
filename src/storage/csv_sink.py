@@ -1326,60 +1326,45 @@ class CsvSink:
             accounted_key = (index, expiry_code)
             if accounted_key not in self._expiry_misclass_accounted_map:
                 if _dedupe_key not in self._expiry_misclass_mis_keys if hasattr(self, '_expiry_misclass_mis_keys') else True:
-                    try:
-                        # Create tracking set lazily (store mismatching tuples for debugging)
-                        if not hasattr(self, '_expiry_misclass_mis_keys'):
-                            self._expiry_misclass_mis_keys = set()
-                        self._expiry_misclass_mis_keys.add(_dedupe_key)
-                    except Exception:
-                        pass
+                    # Create tracking set lazily (store mismatching tuples for debugging)
+                    if not hasattr(self, '_expiry_misclass_mis_keys'):
+                        self._expiry_misclass_mis_keys = set()
+                    self._expiry_misclass_mis_keys.add(_dedupe_key)
                 self._expiry_misclass_accounted_map[accounted_key] = 1
                 self._metric_inc('expiry_misclassification_total', 1, {'index': index, 'expiry_code': expiry_code, 'expected_date': prev, 'actual_date': expiry_str})
             else:
                 if EnvConfig.get_bool('G6_EXPIRY_MISCLASS_DEBUG', False):
-                    try:
-                        self.logger.debug('misclass_duplicate_suppressed index=%s code=%s expected=%s actual=%s', index, expiry_code, prev, expiry_str)
-                    except Exception:
-                        pass
+                    self.logger.debug('misclass_duplicate_suppressed index=%s code=%s expected=%s actual=%s', index, expiry_code, prev, expiry_str)
             if EnvConfig.get_bool('G6_EXPIRY_MISCLASS_DEBUG', False):
                 try:
-                    try:
-                        # Pass metrics=None to avoid duplicate increment (we already incremented metric above)
-                        route_error('csv.expiry.misclass', self.logger, None, index=index, expiry_tag=expiry_code, expected=prev, actual=expiry_str, offset=offset)
-                    except Exception:
-                        self.logger.warning("EXPIRY_MISCLASS index=%s code=%s expected=%s actual=%s offset=%s ts=%s", index, expiry_code, prev, expiry_str, offset, row[0])
-                except Exception:
-                    pass
+                    # Pass metrics=None to avoid duplicate increment (we already incremented metric above)
+                    route_error('csv.expiry.misclass', self.logger, None, index=index, expiry_tag=expiry_code, expected=prev, actual=expiry_str, offset=offset)
+                except (AttributeError, TypeError) as e:
+                    self.logger.warning("EXPIRY_MISCLASS index=%s code=%s expected=%s actual=%s offset=%s ts=%s (route_error failed: %s)", index, expiry_code, prev, expiry_str, offset, row[0], e)
             legacy_skip = EnvConfig.get_bool('G6_EXPIRY_MISCLASS_SKIP', False)
             if legacy_skip:
                 try:
                     _m = get_metrics()
                     dep = getattr(_m, 'deprecated_usage_total', None)
                     if dep is not None:
-                        try:
-                            dep.labels(component='expiry_misclass_skip_flag').inc()
-                        except Exception:
-                            pass
-                except Exception:
-                    pass
+                        dep.labels(component='expiry_misclass_skip_flag').inc()
+                except (AttributeError, TypeError):
+                    pass  # Metrics not available
             policy = 'reject' if legacy_skip else getattr(self, '_expiry_misclass_policy', 'rewrite')
             # Apply policy
             try:
                 if policy == 'rewrite':
                     original_code = expiry_code
                     if getattr(self, '_expiry_rewrite_annotate', False):
-                        try:
-                            if not hasattr(self, '_rewrite_annotations'):
-                                self._rewrite_annotations = []
-                            self._rewrite_annotations.append((row, original_code, prev))
-                        except Exception:
-                            pass
+                        if not hasattr(self, '_rewrite_annotations'):
+                            self._rewrite_annotations = []
+                        self._rewrite_annotations.append((row, original_code, prev))
                     # Logical tag preserved; rewrite in-place semantics unchanged
                     self._metric_inc('expiry_rewritten_total', 1, {'index': index, 'from_code': original_code, 'to_code': expiry_code})
                     try:
                         self._update_expiry_daily_stats('rewritten')
-                    except Exception:
-                        pass
+                    except (AttributeError, KeyError) as e:
+                        self.logger.debug(f"Failed to update expiry daily stats: {e}")
                     return expiry_code, False
                 elif policy == 'quarantine':
                     try:
@@ -1407,23 +1392,34 @@ class CsvSink:
                             self._expiry_quarantine_pending_counts[iso_date],
                             {'date': iso_date},
                         )
-                    except Exception:
-                        pass
+                    except (AttributeError, KeyError, TypeError) as e:
+                        self.logger.debug(f"Failed to update quarantine metrics: {e}")
                     try:
                         self._update_expiry_daily_stats('quarantined')
-                    except Exception:
-                        pass
+                    except (AttributeError, KeyError) as e:
+                        self.logger.debug(f"Failed to update expiry daily stats: {e}")
                     return expiry_code, True
                 else:  # reject
                     self._metric_inc('expiry_rejected_total', 1, {'index': index, 'expiry_code': expiry_code})
                     try:
                         self._update_expiry_daily_stats('rejected')
-                    except Exception:
-                        pass
+                    except (AttributeError, KeyError) as e:
+                        self.logger.debug(f"Failed to update expiry daily stats: {e}")
                     return expiry_code, True
-            except Exception:
+            except (IOError, OSError, PermissionError) as e:
+                self.logger.warning(f"I/O error in expiry misclassification handler: {e}")
                 return expiry_code, False
-        except Exception:
+            except (KeyError, AttributeError, TypeError) as e:
+                self.logger.debug(f"Data error in expiry misclassification handler: {e}")
+                return expiry_code, False
+            except Exception as e:
+                self.logger.error(f"Unexpected error in expiry misclassification handler: {e}", exc_info=True)
+                return expiry_code, False
+        except (KeyError, TypeError, AttributeError) as e:
+            self.logger.debug(f"Error in expiry misclassification: {e}")
+            return expiry_code, False
+        except Exception as e:
+            self.logger.warning(f"Unexpected error in expiry misclassification: {e}")
             return expiry_code, False
 
     def _compute_atm_strike(self, index: str, index_price: float) -> float:
