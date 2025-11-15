@@ -32,12 +32,12 @@ def lifecycle_env(monkeypatch):
     return monkeypatch
 
 
-def test_retention_deletes_aged_gz(tmp_path, lifecycle_env):
+def test_retention_deletes_aged_gz(tmp_path, lifecycle_env, metrics_port):
     monkeypatch = lifecycle_env
     # retention: delete >1 day old
     monkeypatch.setenv('G6_LIFECYCLE_RETENTION_DAYS','1')
     monkeypatch.setenv('G6_LIFECYCLE_RETENTION_DELETE_LIMIT','100')
-    metrics, _ = setup_metrics_server(reset=True)
+    metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
     # Create gz files: two old, one fresh
     old1 = tmp_path / 'a.csv.gz'; old1.write_bytes(b'x')
     old2 = tmp_path / 'b.csv.gz'; old2.write_bytes(b'y')
@@ -56,11 +56,11 @@ def test_retention_deletes_aged_gz(tmp_path, lifecycle_env):
     assert hasattr(metrics, 'retention_scan_seconds'), 'retention_scan_seconds histogram missing'
 
 
-def test_retention_respects_limit(tmp_path, lifecycle_env):
+def test_retention_respects_limit(tmp_path, lifecycle_env, metrics_port):
     monkeypatch = lifecycle_env
     monkeypatch.setenv('G6_LIFECYCLE_RETENTION_DAYS','1')
     monkeypatch.setenv('G6_LIFECYCLE_RETENTION_DELETE_LIMIT','1')
-    metrics, _ = setup_metrics_server(reset=True)
+    metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
     old1 = tmp_path / 'd.csv.gz'; old1.write_bytes(b'x')
     old2 = tmp_path / 'e.csv.gz'; old2.write_bytes(b'y')
     _backdate(old1, 2)
@@ -71,23 +71,23 @@ def test_retention_respects_limit(tmp_path, lifecycle_env):
     assert remaining == 1
 
 
-def test_retention_disabled_days_zero(tmp_path, lifecycle_env):
+def test_retention_disabled_days_zero(tmp_path, lifecycle_env, metrics_port):
     monkeypatch = lifecycle_env
     monkeypatch.setenv('G6_LIFECYCLE_RETENTION_DAYS','0')
-    metrics, _ = setup_metrics_server(reset=True)
+    metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
     f = tmp_path / 'x.csv.gz'; f.write_bytes(b'x')
     _backdate(f, 10)
     run_lifecycle_once(str(tmp_path))
     assert f.exists(), 'File should not be deleted when retention disabled'
 
 
-def test_retention_ignores_non_gz(tmp_path, lifecycle_env):
+def test_retention_ignores_non_gz(tmp_path, lifecycle_env, metrics_port):
     """Verify retention does not delete non-gz files (and we disable compression so file persists)."""
     monkeypatch = lifecycle_env
     monkeypatch.setenv('G6_LIFECYCLE_RETENTION_DAYS','1')
     # Disable compression by using an extension that won't match .csv
     monkeypatch.setenv('G6_LIFECYCLE_COMPRESSION_EXT','.foo')
-    metrics, _ = setup_metrics_server(reset=True)
+    metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
     fplain = tmp_path / 'plain.csv'; fplain.write_bytes(b'x')
     _backdate(fplain, 5)
     run_lifecycle_once(str(tmp_path))

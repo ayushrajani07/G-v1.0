@@ -1,0 +1,1360 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.1, pluggy-1.6.0
+rootdir: /home/runner/work/G-v1.0/G-v1.0
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.11.0, timeout-2.4.0, cov-7.0.0, xdist-3.8.0, asyncio-1.3.0, mock-3.15.1
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+created: 2/2 workers
+2 workers [1976 items]
+
+........................................................................ [  3%]
+....................................................................FFF. [  7%]
+......................EE................................................ [ 10%]
+.s.........................................s............................ [ 14%]
+....................FF..........FFF.....................FFFFFF.F.....s.. [ 18%]
+...................................FFFFF.......FFF...................... [ 21%]
+...........s............................................................ [ 25%]
+........................................................s............... [ 29%]
+..............F.....s................................................... [ 32%]
+..s.............F...FFs.....F.........................ss..s.FFFFF....... [ 36%]
+...F.....FF...FFFF.......sssssssssssssssssssssssssssssssssssssssssssssss [ 40%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 43%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 47%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 51%]
+sssssssssssssssssssssssssssssssssssssssssssssssss....................... [ 54%]
+............F..................F...............sss...................... [ 58%]
+......s........................................sssssssssssssssssssssssss [ 61%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 65%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 69%]
+sssssssssssssssss..............................................F..s..... [ 72%]
+............s.......s.....F.................s........................... [ 76%]
+....s........................................................ssss....... [ 80%]
+......................s................................................. [ 83%]
+...............F..........................s............................. [ 87%]
+...................s...s......................s......................... [ 91%]
+.............................................................s.......... [ 94%]
+..................................................................F..... [ 98%]
+...F............................                                         [100%]
+==================================== ERRORS ====================================
+__________ ERROR at setup of test_adaptive_logic_demote_then_promote ___________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_adaptive_logic_and_surface_metrics.py:38: in reset_metrics_env
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+---------------------------- Captured stdout setup -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log setup ------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+____________ ERROR at setup of test_vol_surface_quality_and_timing _____________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_adaptive_logic_and_surface_metrics.py:38: in reset_metrics_env
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+---------------------------- Captured stdout setup -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log setup ------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+=================================== FAILURES ===================================
+________________ test_adaptive_metrics_registration_and_update _________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_adaptive_controller_metrics.py:27: in test_adaptive_metrics_registration_and_update
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+_____________________ test_adaptive_metrics_gated_by_group _____________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_adaptive_controller_metrics.py:41: in test_adaptive_metrics_gated_by_group
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+____________________ test_adaptive_cooldown_flap_prevention ____________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_adaptive_cooldown.py:13: in test_adaptive_cooldown_flap_prevention
+    metrics,_ = setup_metrics_server(reset=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+_________________ test_applied_k_prefers_smooth_when_available _________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_applied_k.py:57: in test_applied_k_prefers_smooth_when_available
+    text = out_fp.read_text(encoding='utf-8')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_applied_k_prefers_smooth_0/data/ml/live_predictions/NIFTY_ensemble.csv'
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+________________________ test_override_wins_over_smooth ________________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_applied_k.py:107: in test_override_wins_over_smooth
+    text = out_fp.read_text(encoding='utf-8')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_override_wins_over_smooth0/data/ml/live_predictions/NIFTY_ensemble.csv'
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+______________________ test_adaptive_target_moves[under] _______________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_auto_calibrate_adaptive_target.py:102: in test_adaptive_target_moves
+    assert 'dynamic_target_coverage' in side and 'adaptive_state' in side
+E   AssertionError: assert ('dynamic_target_coverage' in {'adaptive_state': 'no_tp', 'band_radius': nan, 'effective_cov': nan, 'horizon': '1', ...})
+----------------------------- Captured stdout call -----------------------------
+[auto-calibrate] No TP rows found
+_______________________ test_adaptive_target_moves[over] _______________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_auto_calibrate_adaptive_target.py:102: in test_adaptive_target_moves
+    assert 'dynamic_target_coverage' in side and 'adaptive_state' in side
+E   AssertionError: assert ('dynamic_target_coverage' in {'adaptive_state': 'no_tp', 'band_radius': nan, 'effective_cov': nan, 'horizon': '1', ...})
+----------------------------- Captured stdout call -----------------------------
+[auto-calibrate] No TP rows found
+____________________ test_adaptive_state_insufficient_data _____________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_auto_calibrate_adaptive_target.py:142: in test_adaptive_state_insufficient_data
+    assert side.get('adaptive_state') == 'insufficient'
+E   AssertionError: assert 'no_tp' == 'insufficient'
+E     
+E     - insufficient
+E     + no_tp
+----------------------------- Captured stdout call -----------------------------
+[auto-calibrate] No TP rows found
+_____________ test_forecast_inflation_from_predicted_disagreement ______________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_forecast_dynamic.py:83: in test_forecast_inflation_from_predicted_disagreement
+    assert out_fp.exists(), 'ensemble output missing'
+E   AssertionError: ensemble output missing
+E   assert False
+E    +  where False = exists()
+E    +    where exists = PosixPath('/tmp/pytest-of-runner/pytest-2/popen-gw1/test_forecast_inflation_from_p0/data/ml/live_predictions/NIFTY_ensemble.csv').exists
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+_______________________ test_inflate_k_from_band_radius ________________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_forecast_inflation.py:60: in test_inflate_k_from_band_radius
+    header, last = _read_last(out_fp)
+                   ^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_forecast_inflation.py:28: in _read_last
+    txt = out_fp.read_text(encoding='utf-8')
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_inflate_k_from_band_radiu0/data/ml/live_predictions/NIFTY_ensemble.csv'
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+__________________ test_override_auto_revert_after_stability ___________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_override_auto_revert.py:79: in test_override_auto_revert_after_stability
+    assert int((ovs['1'].get('stable_cycles') or 0)) == 1
+E   AssertionError: assert 0 == 1
+E    +  where 0 = int((None or 0))
+E    +    where None = <built-in method get of dict object at 0x7f53ee5f4a40>('stable_cycles')
+E    +      where <built-in method get of dict object at 0x7f53ee5f4a40> = {'expires': None, 'k': 1.6}.get
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+___________________________ test_cli_flag_use_raw_k ____________________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_precedence.py:61: in test_cli_flag_use_raw_k
+    header, last = _read_last_row(out_fp)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_precedence.py:28: in _read_last_row
+    text = out_fp.read_text(encoding='utf-8')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_cli_flag_use_raw_k0/data/ml/live_predictions/NIFTY_ensemble.csv'
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+_________________ test_env_raw_k_with_override_still_override __________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_precedence.py:93: in test_env_raw_k_with_override_still_override
+    header, last = _read_last_row(out_fp)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_precedence.py:28: in _read_last_row
+    text = out_fp.read_text(encoding='utf-8')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_env_raw_k_with_override_s0/data/ml/live_predictions/NIFTY_ensemble.csv'
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+___________________ test_missing_k_smooth_falls_back_to_raw ____________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_precedence.py:120: in test_missing_k_smooth_falls_back_to_raw
+    header, last = _read_last_row(out_fp)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_precedence.py:28: in _read_last_row
+    text = out_fp.read_text(encoding='utf-8')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_missing_k_smooth_falls_ba0/data/ml/live_predictions/NIFTY_ensemble.csv'
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+___________________ test_expired_override_reverts_to_smooth ____________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_precedence.py:150: in test_expired_override_reverts_to_smooth
+    header, last = _read_last_row(out_fp)
+                   ^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/tests/test_ensemble_k_precedence.py:28: in _read_last_row
+    text = out_fp.read_text(encoding='utf-8')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1015: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_expired_override_reverts_0/data/ml/live_predictions/NIFTY_ensemble.csv'
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+__________________ test_auto_register_build_info_integration ___________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_build_info_auto.py:40: in test_auto_register_build_info_integration
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+___________________ test_build_info_registration_idempotent ____________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_build_info_metric.py:28: in test_build_info_registration_idempotent
+    metrics, _ = setup_metrics_server(use_custom_registry=False, reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+______________ test_build_info_defaults_unknown_on_missing_values ______________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_build_info_metric.py:44: in test_build_info_defaults_unknown_on_missing_values
+    metrics, _ = setup_metrics_server(use_custom_registry=False, reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+_________________ test_build_info_partial_values_fill_unknown __________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_build_info_metric.py:53: in test_build_info_partial_values_fill_unknown
+    metrics, _ = setup_metrics_server(use_custom_registry=False, reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+________________ test_build_info_re_registration_updates_labels ________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_build_info_metric.py:62: in test_build_info_re_registration_updates_labels
+    metrics, _ = setup_metrics_server(use_custom_registry=False, reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+____________________ test_detail_mode_aggregate_blocks_all _____________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_cardinality_detail_modes.py:12: in test_detail_mode_aggregate_blocks_all
+    metrics,_ = setup_metrics_server(reset=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+_________________________ test_detail_mode_band_window _________________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_cardinality_detail_modes.py:24: in test_detail_mode_band_window
+    metrics,_ = setup_metrics_server(reset=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+____________________ test_detail_mode_full_no_extra_gating _____________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_cardinality_detail_modes.py:38: in test_detail_mode_full_no_extra_gating
+    metrics,_ = setup_metrics_server(reset=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+____________________ test_metric_group_state_gauge_presence ____________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metric_group_state.py:7: in test_metric_group_state_gauge_presence
+    m, _ = setup_metrics_server(reset=True, enable_resource_sampler=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+________________________ test_auto_dump_not_suppressed _________________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_dump_suppression.py:49: in test_auto_dump_not_suppressed
+    assert 'METRICS_INTROSPECTION:' in logs or 'METRICS_INIT_TRACE:' in logs
+E   AssertionError: assert ('METRICS_INTROSPECTION:' in '' or 'METRICS_INIT_TRACE:' in '')
+________________ test_duplicate_guard_suppresses_alias_families ________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_duplicates.py:20: in test_duplicate_guard_suppresses_alias_families
+    reg = _fresh_registry()
+          ^^^^^^^^^^^^^^^^^
+tests/test_metrics_duplicates.py:16: in _fresh_registry
+    return force_new_metrics_registry(enable_resource_sampler=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/testing.py:48: in force_new_metrics_registry
+    metrics, _ = setup_metrics_server(reset=True, enable_resource_sampler=enable_resource_sampler)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+_________________ test_duplicate_guard_detects_real_duplicates _________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_duplicates.py:28: in test_duplicate_guard_detects_real_duplicates
+    reg = _fresh_registry()
+          ^^^^^^^^^^^^^^^^^
+tests/test_metrics_duplicates.py:16: in _fresh_registry
+    return force_new_metrics_registry(enable_resource_sampler=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/testing.py:48: in force_new_metrics_registry
+    metrics, _ = setup_metrics_server(reset=True, enable_resource_sampler=enable_resource_sampler)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+__________________ test_reload_group_filters_allows_new_group __________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_group_reload.py:7: in test_reload_group_filters_allows_new_group
+    m, _ = setup_metrics_server(reset=True, enable_resource_sampler=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+__________________ test_lifecycle_compression_and_quarantine ___________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_lifecycle_job.py:23: in test_lifecycle_compression_and_quarantine
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+/home/runner/.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+________________________ test_retention_deletes_aged_gz ________________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_lifecycle_retention.py:40: in test_retention_deletes_aged_gz
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+/home/runner/.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+________________________ test_retention_respects_limit _________________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_lifecycle_retention.py:63: in test_retention_respects_limit
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+/home/runner/.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+______________________ test_retention_disabled_days_zero _______________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_lifecycle_retention.py:77: in test_retention_disabled_days_zero
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+/home/runner/.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+________________________ test_retention_ignores_non_gz _________________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_lifecycle_retention.py:90: in test_retention_ignores_non_gz
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+/home/runner/.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+__________________ test_metrics_init_profile_segments_present __________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_init_profile.py:8: in test_metrics_init_profile_segments_present
+    reg = force_new_metrics_registry(enable_resource_sampler=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/testing.py:48: in force_new_metrics_registry
+    metrics, _ = setup_metrics_server(reset=True, enable_resource_sampler=enable_resource_sampler)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+_________________ test_dump_metrics_metadata_respects_filters __________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_metadata.py:42: in test_dump_metrics_metadata_respects_filters
+    setup_metrics_server(reset=True)
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+__________________ test_dump_metrics_metadata_disable_filter ___________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_metadata.py:61: in test_dump_metrics_metadata_disable_filter
+    setup_metrics_server(reset=True)
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+___________________ test_prune_removes_newly_disabled_group ____________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_prune_api.py:9: in test_prune_removes_newly_disabled_group
+    m, _ = setup_metrics_server(reset=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+___________________ test_prune_no_reload_uses_cached_filters ___________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_prune_api.py:28: in test_prune_no_reload_uses_cached_filters
+    setup_metrics_server(reset=True)
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+__________________________ test_prune_dry_run_preview __________________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_prune_api.py:47: in test_prune_dry_run_preview
+    setup_metrics_server(reset=True)
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+_______________________ test_preview_wrapper_equivalence _______________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_prune_api.py:66: in test_preview_wrapper_equivalence
+    setup_metrics_server(reset=True)
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+----------------------------- Captured stdout call -----------------------------
+Prometheus default registry cleared via reset flag
+------------------------------ Captured log call -------------------------------
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+________________________ test_all_spec_metrics_present _________________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_spec.py:61: in test_all_spec_metrics_present
+    assert not missing, (
+E   AssertionError: Spec metrics missing from runtime registry (import side effects incomplete or name drift):
+E     g6_adaptive_controller_actions_total
+E     g6_collection_cycles
+E     g6_collection_duration_seconds
+E     g6_collection_errors
+E     g6_config_deprecated_keys
+E     g6_index_atm_strike
+E     g6_index_price
+E     g6_iv_estimation_avg_iterations
+E     g6_iv_estimation_failure
+E     g6_iv_estimation_success
+E     g6_option_detail_mode
+E     g6_option_iv
+E     g6_option_oi
+E     g6_option_price
+E     g6_option_volume
+E     g6_options_collected
+E     g6_panel_diff_bytes_last
+E     g6_panel_diff_bytes_total
+E     g6_panel_diff_truncated_total
+E     g6_panel_diff_writes_total
+E     g6_panels_integrity_checks_total
+E     g6_panels_integrity_failures_total
+E     g6_panels_integrity_last_elapsed_seconds
+E     g6_panels_integrity_last_gap_seconds
+E     g6_panels_integrity_last_success_age_seconds
+E     g6_panels_integrity_mismatches
+E     g6_panels_integrity_ok
+E     g6_provider_mode
+E     g6_put_call_ratio
+E     g6_risk_agg_bucket_utilization
+E     g6_risk_agg_notional_delta
+E     g6_risk_agg_notional_vega
+E     g6_risk_agg_rows
+E     g6_root_cache_evictions
+E     g6_root_cache_hit_ratio
+E     g6_root_cache_hits
+E     g6_root_cache_misses
+E     g6_root_cache_size
+E     g6_vol_surface_interp_seconds
+E     g6_vol_surface_interpolated_fraction
+E     g6_vol_surface_quality_score
+E     g6_vol_surface_rows
+E   assert not ['g6_adaptive_controller_actions_total', 'g6_collection_cycles', 'g6_collection_duration_seconds', 'g6_collection_errors', 'g6_config_deprecated_keys', 'g6_index_atm_strike', ...]
+______________ test_metrics_spec_hash_matches_generated_constant _______________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_metrics_spec_hash_sync.py:15: in test_metrics_spec_hash_matches_generated_constant
+    assert h == SPEC_HASH, f"SPEC_HASH out of date: expected {h}, found {SPEC_HASH}"
+E   AssertionError: SPEC_HASH out of date: expected 86045faad187462f, found 0533405d11f9f66e
+E   assert '86045faad187462f' == '0533405d11f9f66e'
+E     
+E     - 0533405d11f9f66e
+E     + 86045faad187462f
+___________________________ test_recoverable_counter ___________________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_pipeline_taxonomy_counters.py:58: in test_recoverable_counter
+    assert 'pipeline_expiry_recoverable_total' in names
+E   assert 'pipeline_expiry_recoverable_total' in "{'metric_names': ['g6_collection_duration_seconds', 'g6_collection_duration_seconds_sum', 'g6_collection_duration_sec...g6_option_theta', 'g6_option_gamma', 'g6_option_vega', 'g6_option_rho', 'g6_events_last_full_unixtime'], 'count': 380}"
+----------------------------- Captured stdout call -----------------------------
+phase=atm index=IDX rule=n/a outcome=ok meta={'found': True}
+phase=expiry_map index=IDX rule=n/a outcome=ok meta={'expiry_count': 1}
+phase=strike_universe index=IDX rule=this_week outcome=ok meta={'strikes_itm': 2, 'strikes_otm': 2, 'strike_count': 1}
+phase=enrich index=IDX rule=this_week outcome=ok meta={'async_enabled': False, 'enriched_count': 1}
+phase=preventive_validate index=IDX rule=this_week outcome=ok meta={}
+phase=coverage index=IDX rule=this_week outcome=ok meta={'strike_cov': 1.0, 'field_cov': 1.0}
+phase=status_reduce index=IDX rule=this_week outcome=ok meta={}
+phase=finalize index=IDX rule=this_week outcome=fail reason=finalize_expiry_failed: injected_finalize_failure meta={}
+pipeline_index_failed
+Prometheus default registry cleared via reset flag
+metrics.group_filters.loaded
+Grouped metrics registration complete (specs=54 attrs=54)
+Initialized 224 metrics for g6_platform
+METRICS_INTROSPECTION: 0
+METRICS_INIT_TRACE: 0 steps
+metrics.cardinality.guard_ok evaluated=0
+metrics.group_filters.loaded
+Prometheus default registry cleared via reset flag
+metrics.group_filters.loaded
+Grouped metrics registration complete (specs=54 attrs=54)
+Initialized 224 metrics for g6_platform
+METRICS_INTROSPECTION: 0
+METRICS_INIT_TRACE: 0 steps
+metrics.cardinality.guard_ok evaluated=0
+metrics.group_filters.loaded
+Prometheus default registry cleared via reset flag
+metrics.group_filters.loaded
+Grouped metrics registration complete (specs=54 attrs=54)
+Initialized 224 metrics for g6_platform
+METRICS_INTROSPECTION: 0
+METRICS_INIT_TRACE: 0 steps
+metrics.cardinality.guard_ok evaluated=0
+metrics.group_filters.loaded
+------------------------------ Captured log call -------------------------------
+INFO     src.collectors.pipeline:logging_schema.py:107 phase=atm index=IDX rule=n/a outcome=ok meta={'found': True}
+INFO     src.collectors.pipeline:logging_schema.py:107 phase=expiry_map index=IDX rule=n/a outcome=ok meta={'expiry_count': 1}
+INFO     src.collectors.pipeline:logging_schema.py:107 phase=strike_universe index=IDX rule=this_week outcome=ok meta={'strikes_itm': 2, 'strikes_otm': 2, 'strike_count': 1}
+INFO     src.collectors.pipeline:logging_schema.py:107 phase=enrich index=IDX rule=this_week outcome=ok meta={'async_enabled': False, 'enriched_count': 1}
+INFO     src.collectors.pipeline:logging_schema.py:107 phase=preventive_validate index=IDX rule=this_week outcome=ok meta={}
+INFO     src.collectors.pipeline:logging_schema.py:107 phase=coverage index=IDX rule=this_week outcome=ok meta={'strike_cov': 1.0, 'field_cov': 1.0}
+INFO     src.collectors.pipeline:logging_schema.py:107 phase=status_reduce index=IDX rule=this_week outcome=ok meta={}
+INFO     src.collectors.pipeline:logging_schema.py:98 phase=finalize index=IDX rule=this_week outcome=fail reason=finalize_expiry_failed: injected_finalize_failure meta={}
+ERROR    src.collectors.pipeline:pipeline.py:532 pipeline_index_failed
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+INFO     src.metrics.gating:gating.py:169 metrics.group_filters.loaded
+INFO     src.metrics.group_registry:group_registry.py:56 Grouped metrics registration complete (specs=54 attrs=54)
+INFO     src.metrics.metrics:metrics.py:783 Initialized 224 metrics for g6_platform
+INFO     src.metrics.metrics:metrics.py:810 METRICS_INTROSPECTION: 0
+INFO     src.metrics.metrics:metrics.py:815 METRICS_INIT_TRACE: 0 steps
+INFO     src.metrics.cardinality_guard:cardinality_guard.py:225 metrics.cardinality.guard_ok evaluated=0
+INFO     src.metrics:__init__.py:427 metrics.group_filters.loaded
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+INFO     src.metrics.gating:gating.py:169 metrics.group_filters.loaded
+INFO     src.metrics.group_registry:group_registry.py:56 Grouped metrics registration complete (specs=54 attrs=54)
+INFO     src.metrics.metrics:metrics.py:783 Initialized 224 metrics for g6_platform
+INFO     src.metrics.metrics:metrics.py:810 METRICS_INTROSPECTION: 0
+INFO     src.metrics.metrics:metrics.py:815 METRICS_INIT_TRACE: 0 steps
+INFO     src.metrics.cardinality_guard:cardinality_guard.py:225 metrics.cardinality.guard_ok evaluated=0
+INFO     src.metrics:__init__.py:427 metrics.group_filters.loaded
+INFO     src.metrics.server:server.py:48 Prometheus default registry cleared via reset flag
+INFO     src.metrics.gating:gating.py:169 metrics.group_filters.loaded
+INFO     src.metrics.group_registry:group_registry.py:56 Grouped metrics registration complete (specs=54 attrs=54)
+INFO     src.metrics.metrics:metrics.py:783 Initialized 224 metrics for g6_platform
+INFO     src.metrics.metrics:metrics.py:810 METRICS_INTROSPECTION: 0
+INFO     src.metrics.metrics:metrics.py:815 METRICS_INIT_TRACE: 0 steps
+INFO     src.metrics.cardinality_guard:cardinality_guard.py:225 metrics.cardinality.guard_ok evaluated=0
+INFO     src.metrics:__init__.py:427 metrics.group_filters.loaded
+___________________ test_provider_mode_seed_fast_and_one_hot ___________________
+[gw0] linux -- Python 3.12.3 /usr/bin/python3
+tests/test_provider_mode_seed.py:15: in test_provider_mode_seed_fast_and_one_hot
+    reg = force_new_metrics_registry(enable_resource_sampler=False)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/testing.py:48: in force_new_metrics_registry
+    metrics, _ = setup_metrics_server(reset=True, enable_resource_sampler=enable_resource_sampler)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+../../../.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+________________ test_stale_counter_isolated_between_registries ________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_stale_gating_isolated.py:10: in test_stale_counter_isolated_between_registries
+    r1 = force_new_metrics_registry(enable_resource_sampler=False)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/testing.py:48: in force_new_metrics_registry
+    metrics, _ = setup_metrics_server(reset=True, enable_resource_sampler=enable_resource_sampler)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+/home/runner/.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+________________ test_vol_surface_interpolation_records[False] _________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_vol_surface_deterministic_interp.py:16: in test_vol_surface_interpolation_records
+    metrics, _ = setup_metrics_server(reset=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/metrics.py:1293: in setup_metrics_server
+    metrics, closer = _sms(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+/home/runner/work/G-v1.0/G-v1.0/src/metrics/server.py:96: in setup_metrics_server
+    start_http_server(port, addr=host)
+/home/runner/.local/lib/python3.12/site-packages/prometheus_client/exposition.py:241: in start_wsgi_server
+    httpd = make_server(addr, port, app, TmpServer, handler_class=_SilentHandler)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/wsgiref/simple_server.py:154: in make_server
+    server = server_class((host, port), handler_class)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/socketserver.py:457: in __init__
+    self.server_bind()
+/usr/lib/python3.12/wsgiref/simple_server.py:50: in server_bind
+    HTTPServer.server_bind(self)
+/usr/lib/python3.12/http/server.py:136: in server_bind
+    socketserver.TCPServer.server_bind(self)
+/usr/lib/python3.12/socketserver.py:473: in server_bind
+    self.socket.bind(self.server_address)
+E   OSError: [Errno 98] Address already in use
+_________________________ test_weights_sidecar_written _________________________
+[gw1] linux -- Python 3.12.3 /usr/bin/python3
+/home/runner/work/G-v1.0/G-v1.0/tests/test_weighted_ensemble_engine.py:117: in test_weights_sidecar_written
+    assert isinstance(tp_val, (int, float))
+E   AssertionError: assert False
+E    +  where False = isinstance(None, (<class 'int'>, <class 'float'>))
+----------------------------- Captured stderr call -----------------------------
+/usr/bin/python3: can't open file '/home/runner/work/G-v1.0/scripts/ml/ensemble_consensus_exporter.py': [Errno 2] No such file or directory
+=========================== short test summary info ============================
+FAILED tests/test_adaptive_controller_metrics.py::test_adaptive_metrics_registration_and_update - OSError: [Errno 98] Address already in use
+FAILED tests/test_adaptive_controller_metrics.py::test_adaptive_metrics_gated_by_group - OSError: [Errno 98] Address already in use
+FAILED tests/test_adaptive_cooldown.py::test_adaptive_cooldown_flap_prevention - OSError: [Errno 98] Address already in use
+FAILED tests/test_ensemble_applied_k.py::test_applied_k_prefers_smooth_when_available - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_applied_k_prefers_smooth_0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_applied_k.py::test_override_wins_over_smooth - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_override_wins_over_smooth0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_auto_calibrate_adaptive_target.py::test_adaptive_target_moves[under] - AssertionError: assert ('dynamic_target_coverage' in {'adaptive_state': 'no_tp', 'band_radius': nan, 'effective_cov': nan, 'horizon': '1', ...})
+FAILED tests/test_auto_calibrate_adaptive_target.py::test_adaptive_target_moves[over] - AssertionError: assert ('dynamic_target_coverage' in {'adaptive_state': 'no_tp', 'band_radius': nan, 'effective_cov': nan, 'horizon': '1', ...})
+FAILED tests/test_auto_calibrate_adaptive_target.py::test_adaptive_state_insufficient_data - AssertionError: assert 'no_tp' == 'insufficient'
+  
+  - insufficient
+  + no_tp
+FAILED tests/test_ensemble_k_forecast_dynamic.py::test_forecast_inflation_from_predicted_disagreement - AssertionError: ensemble output missing
+assert False
+ +  where False = exists()
+ +    where exists = PosixPath('/tmp/pytest-of-runner/pytest-2/popen-gw1/test_forecast_inflation_from_p0/data/ml/live_predictions/NIFTY_ensemble.csv').exists
+FAILED tests/test_ensemble_k_forecast_inflation.py::test_inflate_k_from_band_radius - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_inflate_k_from_band_radiu0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_override_auto_revert.py::test_override_auto_revert_after_stability - AssertionError: assert 0 == 1
+ +  where 0 = int((None or 0))
+ +    where None = <built-in method get of dict object at 0x7f53ee5f4a40>('stable_cycles')
+ +      where <built-in method get of dict object at 0x7f53ee5f4a40> = {'expires': None, 'k': 1.6}.get
+FAILED tests/test_ensemble_k_precedence.py::test_cli_flag_use_raw_k - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_cli_flag_use_raw_k0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_precedence.py::test_env_raw_k_with_override_still_override - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_env_raw_k_with_override_s0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_precedence.py::test_missing_k_smooth_falls_back_to_raw - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_missing_k_smooth_falls_ba0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_precedence.py::test_expired_override_reverts_to_smooth - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-2/popen-gw1/test_expired_override_reverts_0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_build_info_auto.py::test_auto_register_build_info_integration - OSError: [Errno 98] Address already in use
+FAILED tests/test_build_info_metric.py::test_build_info_registration_idempotent - OSError: [Errno 98] Address already in use
+FAILED tests/test_build_info_metric.py::test_build_info_defaults_unknown_on_missing_values - OSError: [Errno 98] Address already in use
+FAILED tests/test_build_info_metric.py::test_build_info_partial_values_fill_unknown - OSError: [Errno 98] Address already in use
+FAILED tests/test_build_info_metric.py::test_build_info_re_registration_updates_labels - OSError: [Errno 98] Address already in use
+FAILED tests/test_cardinality_detail_modes.py::test_detail_mode_aggregate_blocks_all - OSError: [Errno 98] Address already in use
+FAILED tests/test_cardinality_detail_modes.py::test_detail_mode_band_window - OSError: [Errno 98] Address already in use
+FAILED tests/test_cardinality_detail_modes.py::test_detail_mode_full_no_extra_gating - OSError: [Errno 98] Address already in use
+FAILED tests/test_metric_group_state.py::test_metric_group_state_gauge_presence - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_dump_suppression.py::test_auto_dump_not_suppressed - AssertionError: assert ('METRICS_INTROSPECTION:' in '' or 'METRICS_INIT_TRACE:' in '')
+FAILED tests/test_metrics_duplicates.py::test_duplicate_guard_suppresses_alias_families - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_duplicates.py::test_duplicate_guard_detects_real_duplicates - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_group_reload.py::test_reload_group_filters_allows_new_group - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_job.py::test_lifecycle_compression_and_quarantine - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_retention.py::test_retention_deletes_aged_gz - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_retention.py::test_retention_respects_limit - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_retention.py::test_retention_disabled_days_zero - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_retention.py::test_retention_ignores_non_gz - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_init_profile.py::test_metrics_init_profile_segments_present - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_metadata.py::test_dump_metrics_metadata_respects_filters - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_metadata.py::test_dump_metrics_metadata_disable_filter - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_prune_api.py::test_prune_removes_newly_disabled_group - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_prune_api.py::test_prune_no_reload_uses_cached_filters - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_prune_api.py::test_prune_dry_run_preview - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_prune_api.py::test_preview_wrapper_equivalence - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_spec.py::test_all_spec_metrics_present - AssertionError: Spec metrics missing from runtime registry (import side effects incomplete or name drift):
+  g6_adaptive_controller_actions_total
+  g6_collection_cycles
+  g6_collection_duration_seconds
+  g6_collection_errors
+  g6_config_deprecated_keys
+  g6_index_atm_strike
+  g6_index_price
+  g6_iv_estimation_avg_iterations
+  g6_iv_estimation_failure
+  g6_iv_estimation_success
+  g6_option_detail_mode
+  g6_option_iv
+  g6_option_oi
+  g6_option_price
+  g6_option_volume
+  g6_options_collected
+  g6_panel_diff_bytes_last
+  g6_panel_diff_bytes_total
+  g6_panel_diff_truncated_total
+  g6_panel_diff_writes_total
+  g6_panels_integrity_checks_total
+  g6_panels_integrity_failures_total
+  g6_panels_integrity_last_elapsed_seconds
+  g6_panels_integrity_last_gap_seconds
+  g6_panels_integrity_last_success_age_seconds
+  g6_panels_integrity_mismatches
+  g6_panels_integrity_ok
+  g6_provider_mode
+  g6_put_call_ratio
+  g6_risk_agg_bucket_utilization
+  g6_risk_agg_notional_delta
+  g6_risk_agg_notional_vega
+  g6_risk_agg_rows
+  g6_root_cache_evictions
+  g6_root_cache_hit_ratio
+  g6_root_cache_hits
+  g6_root_cache_misses
+  g6_root_cache_size
+  g6_vol_surface_interp_seconds
+  g6_vol_surface_interpolated_fraction
+  g6_vol_surface_quality_score
+  g6_vol_surface_rows
+assert not ['g6_adaptive_controller_actions_total', 'g6_collection_cycles', 'g6_collection_duration_seconds', 'g6_collection_errors', 'g6_config_deprecated_keys', 'g6_index_atm_strike', ...]
+FAILED tests/test_metrics_spec_hash_sync.py::test_metrics_spec_hash_matches_generated_constant - AssertionError: SPEC_HASH out of date: expected 86045faad187462f, found 0533405d11f9f66e
+assert '86045faad187462f' == '0533405d11f9f66e'
+  
+  - 0533405d11f9f66e
+  + 86045faad187462f
+FAILED tests/test_pipeline_taxonomy_counters.py::test_recoverable_counter - assert 'pipeline_expiry_recoverable_total' in "{'metric_names': ['g6_collection_duration_seconds', 'g6_collection_duration_seconds_sum', 'g6_collection_duration_sec...g6_option_theta', 'g6_option_gamma', 'g6_option_vega', 'g6_option_rho', 'g6_events_last_full_unixtime'], 'count': 380}"
+FAILED tests/test_provider_mode_seed.py::test_provider_mode_seed_fast_and_one_hot - OSError: [Errno 98] Address already in use
+FAILED tests/test_stale_gating_isolated.py::test_stale_counter_isolated_between_registries - OSError: [Errno 98] Address already in use
+FAILED tests/test_vol_surface_deterministic_interp.py::test_vol_surface_interpolation_records[False] - OSError: [Errno 98] Address already in use
+FAILED tests/test_weighted_ensemble_engine.py::test_weights_sidecar_written - AssertionError: assert False
+ +  where False = isinstance(None, (<class 'int'>, <class 'float'>))
+ERROR tests/test_adaptive_logic_and_surface_metrics.py::test_adaptive_logic_demote_then_promote - OSError: [Errno 98] Address already in use
+ERROR tests/test_adaptive_logic_and_surface_metrics.py::test_vol_surface_quality_and_timing - OSError: [Errno 98] Address already in use
+=========== 47 failed, 1399 passed, 539 skipped, 2 errors in 53.63s ============

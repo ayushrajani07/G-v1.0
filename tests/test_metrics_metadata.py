@@ -34,12 +34,12 @@ def test_dump_metrics_metadata_structure():
 
 
 @pytest.mark.skipif(os.getenv('G6_EGRESS_FROZEN','').lower() in {'1','true','yes','on'}, reason='panel diff egress frozen')
-def test_dump_metrics_metadata_respects_filters(monkeypatch):
+def test_dump_metrics_metadata_respects_filters(monkeypatch, metrics_port):
     # Enable only a narrow subset of groups, verify others absent
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS', 'panel_diff,provider_failover')
     # Clear singleton so new env takes effect
     from src.metrics import setup_metrics_server  # facade import
-    setup_metrics_server(reset=True)
+    setup_metrics_server(port=metrics_port, reset=True)
     m = get_metrics_singleton()
     assert m is not None
     from src.metrics import get_metrics_metadata  # type: ignore
@@ -54,11 +54,11 @@ def test_dump_metrics_metadata_respects_filters(monkeypatch):
 
 
 @pytest.mark.skipif(os.getenv('G6_EGRESS_FROZEN','').lower() in {'1','true','yes','on'}, reason='panel diff egress frozen')
-def test_dump_metrics_metadata_disable_filter(monkeypatch):
+def test_dump_metrics_metadata_disable_filter(monkeypatch, metrics_port):
     # Disable a specific group
     monkeypatch.setenv('G6_DISABLE_METRIC_GROUPS', 'panel_diff')
     from src.metrics import setup_metrics_server  # facade import
-    setup_metrics_server(reset=True)
+    setup_metrics_server(port=metrics_port, reset=True)
     m = get_metrics_singleton()
     from src.metrics import get_metrics_metadata  # type: ignore
     groups = get_metrics_metadata()['groups']  # type: ignore[index]

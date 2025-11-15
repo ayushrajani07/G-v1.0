@@ -83,8 +83,9 @@ class CsvValidator:
                         if inst_type not in ('CE', 'PE'):
                             schema_issues.append(f"missing_or_bad_type:{strike_key}:{leg_type}")
                             leg_map[leg_type] = None
-            except Exception:
+            except (TypeError, KeyError, AttributeError, ValueError) as e:
                 # Defensive: continue collecting other issues
+                self.logger.debug("CSV_SCHEMA_VALIDATION_ERROR strike=%s error=%s", strike_key, e)
                 continue
         
         # Emit validation events if issues found
@@ -98,11 +99,12 @@ class CsvValidator:
                     expiry=expiry_code,
                     count=len(schema_issues)
                 )
-            except Exception:
+            except (ImportError, AttributeError, TypeError) as e:
                 self.logger.warning(
-                    "CSV_SCHEMA_ISSUES index=%s expiry=%s count=%d issues=%s",
+                    "CSV_SCHEMA_ISSUES index=%s expiry=%s count=%d issues=%s error=%s",
                     index, expiry_code, len(schema_issues),
-                    ','.join(schema_issues[:25]) + (f"+{len(schema_issues)-25}" if len(schema_issues) > 25 else "")
+                    ','.join(schema_issues[:25]) + (f"+{len(schema_issues)-25}" if len(schema_issues) > 25 else ""),
+                    e
                 )
             
             # Emit metrics (cap at 50 issues to prevent cardinality explosion)
@@ -118,8 +120,8 @@ class CsvValidator:
                                 'error_type': issue.split(':', 1)[0]
                             }
                         )
-            except Exception:
-                pass
+            except (AttributeError, TypeError, KeyError) as e:
+                self.logger.debug("CSV_SCHEMA_METRICS_ERROR error=%s", e)
         
         return schema_issues
     
@@ -189,8 +191,9 @@ class CsvValidator:
             # Both legs are stale (or no update times)
             self._record_junk_filtered(index, expiry_code, offset, 'stale_update')
             return True
-        except Exception:
+        except (ValueError, TypeError, AttributeError, KeyError) as e:
             # Failed to parse timestamps → don't filter
+            self.logger.debug("CSV_JUNK_FILTER_TIMESTAMP_ERROR error=%s", e)
             return False
     
     def handle_zero_row(
@@ -249,8 +252,8 @@ class CsvValidator:
                             'offset': str(offset)
                         }
                     )
-            except Exception:
-                pass
+            except (AttributeError, TypeError, KeyError) as e:
+                self.logger.debug("CSV_ZERO_ROW_METRICS_ERROR error=%s", e)
             
             # Log detection (legacy behavior: warn but don't skip)
             try:
@@ -270,8 +273,8 @@ class CsvValidator:
                         expiry_date_str,
                         offset,
                     )
-            except Exception:
-                pass
+            except (AttributeError, TypeError) as e:
+                self.logger.debug("CSV_ZERO_ROW_LOG_ERROR error=%s", e)
         
         # Legacy behavior: detect but don't skip (return False for skip_row)
         return is_zero_row, False
@@ -320,8 +323,9 @@ class CsvValidator:
             # Not a duplicate → cache it
             self._duplicate_cache[cache_key] = timestamp_str
             return False
-        except Exception:
+        except (ValueError, TypeError, AttributeError) as e:
             # Failed to parse timestamp → don't suppress
+            self.logger.debug("CSV_DUPLICATE_CHECK_ERROR error=%s", e)
             return False
     
     def prune_mixed_expiry(
@@ -379,7 +383,8 @@ class CsvValidator:
                         try:
                             cand_date = datetime.datetime.strptime(str(raw_exp), fmt).date()
                             break
-                        except Exception:
+                        except (ValueError, TypeError) as e:
+                            self.logger.debug("CSV_EXPIRY_DATE_PARSE_ERROR fmt=%s raw=%s error=%s", fmt, raw_exp, e)
                             continue
                     if cand_date is None:
                         continue
@@ -388,7 +393,8 @@ class CsvValidator:
                 if cand_date != safe_expected:
                     options_data.pop(sym, None)
                     dropped += 1
-            except Exception:
+            except (TypeError, ValueError, AttributeError, KeyError) as e:
+                self.logger.debug("CSV_MIXED_EXPIRY_PRUNE_ERROR sym=%s error=%s", sym, e)
                 continue
         
         # Emit metrics/logs if instruments were dropped
@@ -403,14 +409,14 @@ class CsvValidator:
                     expiry=expiry_code,
                     dropped=dropped
                 )
-            except Exception:
+            except (ImportError, AttributeError, TypeError) as e:
                 if self._concise:
                     self.logger.debug(
-                        "CSV_MIXED_EXPIRY_PRUNE index=%s tag=%s dropped=%s", index, expiry_code, dropped
+                        "CSV_MIXED_EXPIRY_PRUNE index=%s tag=%s dropped=%s error=%s", index, expiry_code, dropped, e
                     )
                 else:
                     self.logger.info(
-                        "Pruned %s mixed-expiry records for %s %s", dropped, index, expiry_code
+                        "Pruned %s mixed-expiry records for %s %s (route_error failed: %s)", dropped, index, expiry_code, e
                     )
                 
                 # Emit metric directly
@@ -421,8 +427,8 @@ class CsvValidator:
                             dropped,
                             {'index': index, 'expiry': expiry_code}
                         )
-                except Exception:
-                    pass
+                except (AttributeError, TypeError, KeyError) as me:
+                    self.logger.debug("CSV_MIXED_EXPIRY_METRICS_ERROR error=%s", me)
         
         return dropped
     
@@ -448,8 +454,8 @@ class CsvValidator:
                         'category': category
                     }
                 )
-        except Exception:
-            pass
+        except (AttributeError, TypeError, KeyError) as e:
+            self.logger.debug("CSV_JUNK_FILTERED_METRICS_ERROR error=%s", e)
     
     def _record_duplicate_suppressed(
         self,
@@ -469,5 +475,5 @@ class CsvValidator:
                         'offset': str(offset)
                     }
                 )
-        except Exception:
-            pass
+        except (AttributeError, TypeError, KeyError) as e:
+            self.logger.debug("CSV_DUPLICATE_SUPPRESSED_METRICS_ERROR error=%s", e)

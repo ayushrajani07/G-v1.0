@@ -1,0 +1,152 @@
+........................................................................ [  3%]
+.FFF..........EE..............................s......................... [  7%]
+..............FFF...................................FFFFF.....FFF....... [ 10%]
+...........s............................................................ [ 14%]
+.....................................................................s.. [ 18%]
+..............................................FF.FFFFFFF.....s.......... [ 21%]
+.............................F.......................................... [ 25%]
+...................................................s.................... [ 29%]
+.......s................................................................ [ 32%]
+.....ss..s.FFFFF..........................F...........s.............F... [ 36%]
+FFs.....F.F.....FF...FFFF..F...F..............sss.............ssssssssss [ 40%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 43%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 47%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 51%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 54%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 58%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss [ 61%]
+ssssssssssssssssssssssssssssssssssssssssssssssssssssssss................ [ 65%]
+...................................................s.................... [ 69%]
+............................s.................s......................... [ 72%]
+....................s................................................... [ 76%]
+.......F..s................s.......s.....F.............................. [ 80%]
+........................ssss............................................ [ 83%]
+.................................................F...................... [ 87%]
+.s........................................s...s.....[metrics-init-basic] begin
+[metrics-init-basic] group_gating_start
+[metrics-init-basic] group_gating_ok groups=16
+[metrics-init-basic] spec_registration_start
+[metrics-init-basic] spec_registration_ok count=80
+[metrics-init-basic] post_spec_segment_enter
+[metrics-init-basic] provider_mode_seed_start skip=False
+[metrics-init-basic] provider_mode_seed_done skipped=False
+[metrics-init-basic] aliases_canonicalize_start
+[metrics-init-basic] aliases_canonicalize_done
+[metrics-init-basic] core_fallback_start
+[metrics-init-basic] index_aggregate_start
+................s... [ 91%]
+........................................................................ [ 94%]
+..........sF............................................................ [ 98%]
+.............F........F.........                                         [100%]
+=========================== short test summary info ============================
+FAILED tests/test_adaptive_controller_metrics.py::test_adaptive_metrics_registration_and_update - OSError: [Errno 98] Address already in use
+FAILED tests/test_adaptive_controller_metrics.py::test_adaptive_metrics_gated_by_group - OSError: [Errno 98] Address already in use
+FAILED tests/test_adaptive_cooldown.py::test_adaptive_cooldown_flap_prevention - OSError: [Errno 98] Address already in use
+FAILED tests/test_auto_calibrate_adaptive_target.py::test_adaptive_target_moves[under] - AssertionError: assert ('dynamic_target_coverage' in {'adaptive_state': 'no_tp', 'band_radius': nan, 'effective_cov': nan, 'horizon': '1', ...})
+FAILED tests/test_auto_calibrate_adaptive_target.py::test_adaptive_target_moves[over] - AssertionError: assert ('dynamic_target_coverage' in {'adaptive_state': 'no_tp', 'band_radius': nan, 'effective_cov': nan, 'horizon': '1', ...})
+FAILED tests/test_auto_calibrate_adaptive_target.py::test_adaptive_state_insufficient_data - AssertionError: assert 'no_tp' == 'insufficient'
+  
+  - insufficient
+  + no_tp
+FAILED tests/test_build_info_auto.py::test_auto_register_build_info_integration - OSError: [Errno 98] Address already in use
+FAILED tests/test_build_info_metric.py::test_build_info_registration_idempotent - OSError: [Errno 98] Address already in use
+FAILED tests/test_build_info_metric.py::test_build_info_defaults_unknown_on_missing_values - OSError: [Errno 98] Address already in use
+FAILED tests/test_build_info_metric.py::test_build_info_partial_values_fill_unknown - OSError: [Errno 98] Address already in use
+FAILED tests/test_build_info_metric.py::test_build_info_re_registration_updates_labels - OSError: [Errno 98] Address already in use
+FAILED tests/test_cardinality_detail_modes.py::test_detail_mode_aggregate_blocks_all - OSError: [Errno 98] Address already in use
+FAILED tests/test_cardinality_detail_modes.py::test_detail_mode_band_window - OSError: [Errno 98] Address already in use
+FAILED tests/test_cardinality_detail_modes.py::test_detail_mode_full_no_extra_gating - OSError: [Errno 98] Address already in use
+FAILED tests/test_ensemble_applied_k.py::test_applied_k_prefers_smooth_when_available - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-1/test_applied_k_prefers_smooth_0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_applied_k.py::test_override_wins_over_smooth - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-1/test_override_wins_over_smooth0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_forecast_dynamic.py::test_forecast_inflation_from_predicted_disagreement - AssertionError: ensemble output missing
+assert False
+ +  where False = exists()
+ +    where exists = PosixPath('/tmp/pytest-of-runner/pytest-1/test_forecast_inflation_from_p0/data/ml/live_predictions/NIFTY_ensemble.csv').exists
+FAILED tests/test_ensemble_k_forecast_inflation.py::test_inflate_k_from_band_radius - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-1/test_inflate_k_from_band_radiu0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_override_auto_revert.py::test_override_auto_revert_after_stability - AssertionError: assert 0 == 1
+ +  where 0 = int((None or 0))
+ +    where None = <built-in method get of dict object at 0x7f6358cd8e40>('stable_cycles')
+ +      where <built-in method get of dict object at 0x7f6358cd8e40> = {'expires': None, 'k': 1.6}.get
+FAILED tests/test_ensemble_k_precedence.py::test_cli_flag_use_raw_k - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-1/test_cli_flag_use_raw_k0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_precedence.py::test_env_raw_k_with_override_still_override - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-1/test_env_raw_k_with_override_s0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_precedence.py::test_missing_k_smooth_falls_back_to_raw - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-1/test_missing_k_smooth_falls_ba0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_ensemble_k_precedence.py::test_expired_override_reverts_to_smooth - FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-runner/pytest-1/test_expired_override_reverts_0/data/ml/live_predictions/NIFTY_ensemble.csv'
+FAILED tests/test_events_latency_metrics.py::test_events_last_full_unixtime_gauge_and_publish_unixtime - AssertionError: events_last_full_unixtime too old: 1763191655.6272254
+assert (1763191673.7091205 - 1763191655.6272254) < 10
+ +  where 1763191673.7091205 = <built-in function time>()
+ +    where <built-in function time> = time.time
+FAILED tests/test_lifecycle_job.py::test_lifecycle_compression_and_quarantine - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_retention.py::test_retention_deletes_aged_gz - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_retention.py::test_retention_respects_limit - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_retention.py::test_retention_disabled_days_zero - OSError: [Errno 98] Address already in use
+FAILED tests/test_lifecycle_retention.py::test_retention_ignores_non_gz - OSError: [Errno 98] Address already in use
+FAILED tests/test_metric_group_state.py::test_metric_group_state_gauge_presence - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_dump_suppression.py::test_auto_dump_not_suppressed - AssertionError: assert ('METRICS_INTROSPECTION:' in '' or 'METRICS_INIT_TRACE:' in '')
+FAILED tests/test_metrics_duplicates.py::test_duplicate_guard_suppresses_alias_families - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_duplicates.py::test_duplicate_guard_detects_real_duplicates - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_group_reload.py::test_reload_group_filters_allows_new_group - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_init_profile.py::test_metrics_init_profile_segments_present - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_metadata.py::test_dump_metrics_metadata_respects_filters - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_metadata.py::test_dump_metrics_metadata_disable_filter - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_prune_api.py::test_prune_removes_newly_disabled_group - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_prune_api.py::test_prune_no_reload_uses_cached_filters - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_prune_api.py::test_prune_dry_run_preview - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_prune_api.py::test_preview_wrapper_equivalence - OSError: [Errno 98] Address already in use
+FAILED tests/test_metrics_spec.py::test_all_spec_metrics_present - AssertionError: Spec metrics missing from runtime registry (import side effects incomplete or name drift):
+  g6_adaptive_controller_actions_total
+  g6_collection_cycles
+  g6_collection_duration_seconds
+  g6_collection_errors
+  g6_config_deprecated_keys
+  g6_index_atm_strike
+  g6_index_price
+  g6_iv_estimation_avg_iterations
+  g6_iv_estimation_failure
+  g6_iv_estimation_success
+  g6_option_detail_mode
+  g6_option_iv
+  g6_option_oi
+  g6_option_price
+  g6_option_volume
+  g6_options_collected
+  g6_panel_diff_bytes_last
+  g6_panel_diff_bytes_total
+  g6_panel_diff_truncated_total
+  g6_panel_diff_writes_total
+  g6_panels_integrity_checks_total
+  g6_panels_integrity_failures_total
+  g6_panels_integrity_last_elapsed_seconds
+  g6_panels_integrity_last_gap_seconds
+  g6_panels_integrity_last_success_age_seconds
+  g6_panels_integrity_mismatches
+  g6_panels_integrity_ok
+  g6_provider_mode
+  g6_put_call_ratio
+  g6_risk_agg_bucket_utilization
+  g6_risk_agg_notional_delta
+  g6_risk_agg_notional_vega
+  g6_risk_agg_rows
+  g6_root_cache_evictions
+  g6_root_cache_hit_ratio
+  g6_root_cache_hits
+  g6_root_cache_misses
+  g6_root_cache_size
+  g6_vol_surface_interp_seconds
+  g6_vol_surface_interpolated_fraction
+  g6_vol_surface_quality_score
+  g6_vol_surface_rows
+assert not ['g6_adaptive_controller_actions_total', 'g6_collection_cycles', 'g6_collection_duration_seconds', 'g6_collection_errors', 'g6_config_deprecated_keys', 'g6_index_atm_strike', ...]
+FAILED tests/test_metrics_spec_hash_sync.py::test_metrics_spec_hash_matches_generated_constant - AssertionError: SPEC_HASH out of date: expected 86045faad187462f, found 0533405d11f9f66e
+assert '86045faad187462f' == '0533405d11f9f66e'
+  
+  - 0533405d11f9f66e
+  + 86045faad187462f
+FAILED tests/test_pipeline_taxonomy_counters.py::test_recoverable_counter - assert 'pipeline_expiry_recoverable_total' in "{'metric_names': ['g6_collection_duration_seconds', 'g6_collection_duration_seconds_sum', 'g6_collection_duration_sec...g6_option_theta', 'g6_option_gamma', 'g6_option_vega', 'g6_option_rho', 'g6_events_last_full_unixtime'], 'count': 380}"
+FAILED tests/test_provider_mode_seed.py::test_provider_mode_seed_fast_and_one_hot - OSError: [Errno 98] Address already in use
+FAILED tests/test_stale_gating_isolated.py::test_stale_counter_isolated_between_registries - OSError: [Errno 98] Address already in use
+FAILED tests/test_token_providers.py::test_token_manager_headless_fake_provider - assert 1 in (0,)
+FAILED tests/test_vol_surface_deterministic_interp.py::test_vol_surface_interpolation_records[False] - OSError: [Errno 98] Address already in use
+FAILED tests/test_weighted_ensemble_engine.py::test_weights_sidecar_written - AssertionError: assert False
+ +  where False = isinstance(None, (<class 'int'>, <class 'float'>))
+ERROR tests/test_adaptive_logic_and_surface_metrics.py::test_adaptive_logic_demote_then_promote - OSError: [Errno 98] Address already in use
+ERROR tests/test_adaptive_logic_and_surface_metrics.py::test_vol_surface_quality_and_timing - OSError: [Errno 98] Address already in use

@@ -3,10 +3,10 @@ from src.metrics import setup_metrics_server, prune_metrics_groups, get_metrics_
 from src.metrics import preview_prune_metrics_groups
 
 
-def test_prune_removes_newly_disabled_group(monkeypatch):
+def test_prune_removes_newly_disabled_group(monkeypatch, metrics_port):
     # Start with panel_diff + provider_failover enabled explicitly
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS', 'panel_diff,provider_failover')
-    m, _ = setup_metrics_server(reset=True)
+    m, _ = setup_metrics_server(port=metrics_port, reset=True)
     groups_before = set(m.get_metric_groups().values())
     assert 'panel_diff' in groups_before
     assert 'provider_failover' in groups_before
@@ -22,10 +22,10 @@ def test_prune_removes_newly_disabled_group(monkeypatch):
     assert summary.get('removed', 0) >= 1
 
 
-def test_prune_no_reload_uses_cached_filters(monkeypatch):
+def test_prune_no_reload_uses_cached_filters(monkeypatch, metrics_port):
     # Enable only panel_diff
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS', 'panel_diff')
-    setup_metrics_server(reset=True)
+    setup_metrics_server(port=metrics_port, reset=True)
     m = get_metrics_singleton()
     assert m is not None
     assert 'panel_diff' in set(m.get_metric_groups().values())
@@ -41,10 +41,10 @@ def test_prune_no_reload_uses_cached_filters(monkeypatch):
     assert 'panel_diff' not in set(m.get_metric_groups().values())
 
 
-def test_prune_dry_run_preview(monkeypatch):
+def test_prune_dry_run_preview(monkeypatch, metrics_port):
     # Enable two groups; then plan to disable one but run dry-run first
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS', 'panel_diff,provider_failover')
-    setup_metrics_server(reset=True)
+    setup_metrics_server(port=metrics_port, reset=True)
     m = get_metrics_singleton()
     assert m is not None
     assert 'panel_diff' in set(m.get_metric_groups().values())
@@ -60,10 +60,10 @@ def test_prune_dry_run_preview(monkeypatch):
     assert 'panel_diff' not in set(m.get_metric_groups().values())
 
 
-def test_preview_wrapper_equivalence(monkeypatch):
+def test_preview_wrapper_equivalence(monkeypatch, metrics_port):
     # Enable two groups; then plan to disable one
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS', 'panel_diff,provider_failover')
-    setup_metrics_server(reset=True)
+    setup_metrics_server(port=metrics_port, reset=True)
     m = get_metrics_singleton()
     assert m is not None
     assert 'panel_diff' in set(m.get_metric_groups().values())

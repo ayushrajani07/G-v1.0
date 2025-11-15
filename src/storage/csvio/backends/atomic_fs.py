@@ -25,7 +25,7 @@ try:  # pragma: no cover - defensive optional import
     _CSVIO_LOCK_FAILS = _get_counter(
         'csvio_lock_acquire_failures_total', 'CSVIO lock acquire failures (retry exhausted)', []
     )
-except Exception:  # pragma: no cover - null fallbacks when metrics unavailable
+except (ImportError, AttributeError):  # pragma: no cover - null fallbacks when metrics unavailable
     class _Null:
         def labels(self, *a, **k):
             return self
@@ -50,7 +50,8 @@ def _inc_lock_wait(kind: str = 'atomic_fs') -> None:
         inc2 = getattr(_CSVIO_LOCK_WAITS, 'inc', None)
         if callable(inc2):
             inc2()
-    except Exception:
+    except (AttributeError, TypeError):
+        # Expected when metrics not available
         pass
 
 
@@ -59,6 +60,7 @@ def _get_logger(logger: Optional[logging.Logger]) -> logging.Logger:
 
 
 def _read_existing_header(fp: str) -> list[str] | None:
+    """Read the header row from an existing CSV file."""
     try:
         if not os.path.isfile(fp):
             return None
@@ -67,7 +69,14 @@ def _read_existing_header(fp: str) -> list[str] | None:
             first = next(rdr, None)
             if isinstance(first, list) and first:
                 return first
+    except (IOError, OSError, PermissionError):
+        # File access issues - return None to trigger header creation
+        return None
+    except (csv.Error, StopIteration, UnicodeDecodeError):
+        # CSV parsing issues - return None
+        return None
     except Exception:
+        # Unexpected errors - return None for safety
         return None
     return None
 
@@ -80,7 +89,7 @@ def _align_row(file_header: list[str], new_header: list[str], values: list[Any])
     if 'atm' in file_header and 'strike' in mapping and 'offset' in mapping and 'atm' not in mapping:
         try:
             mapping['atm'] = float(mapping['strike']) - int(mapping['offset'])
-        except Exception:
+        except (ValueError, TypeError, KeyError):
             mapping['atm'] = ''
     return [mapping.get(c, '') for c in file_header]
 
@@ -94,7 +103,7 @@ def _align_rows(file_header: list[str], new_header: list[str], values_list: list
         if 'atm' in file_header and 'strike' in mapping and 'offset' in mapping and 'atm' not in mapping:
             try:
                 mapping['atm'] = float(mapping['strike']) - int(mapping['offset'])
-            except Exception:
+            except (ValueError, TypeError, KeyError):
                 mapping['atm'] = ''
         out.append([mapping.get(c, '') for c in file_header])
     return out
@@ -119,8 +128,8 @@ def _copy_original_to_temp(src: str, dst: str, *, logger: logging.Logger | None 
                     _CSVIO_LOCK_FAILS.inc()
                     if waited_ms_total:
                         _CSVIO_LOCK_WAIT_MS.inc(waited_ms_total)  # type: ignore[arg-type]
-                except Exception:
-                    pass
+                except (AttributeError, TypeError):
+                    pass  # Metrics not available
                 raise
             _inc_lock_wait('atomic_fs')
             waited_ms_total += float(delay)
@@ -128,7 +137,7 @@ def _copy_original_to_temp(src: str, dst: str, *, logger: logging.Logger | None 
     if waited_ms_total:
         try:
             _CSVIO_LOCK_WAIT_MS.inc(waited_ms_total)  # type: ignore[arg-type]
-        except Exception:
+        except (AttributeError, TypeError):
             pass
 
 
@@ -186,8 +195,8 @@ def append_one(
                         _CSVIO_LOCK_FAILS.inc()
                         if waited_ms_total:
                             _CSVIO_LOCK_WAIT_MS.inc(waited_ms_total)  # type: ignore[arg-type]
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Metrics not available
                     raise
                 _inc_lock_wait('atomic_fs')
                 waited_ms_total += float(delay)
@@ -195,8 +204,8 @@ def append_one(
         if waited_ms_total:
             try:
                 _CSVIO_LOCK_WAIT_MS.inc(waited_ms_total)  # type: ignore[arg-type]
-            except Exception:
-                pass
+            except (AttributeError, TypeError):
+                pass  # Metrics not available
 
         file_exists = os.path.isfile(filepath)
         file_header = _read_existing_header(filepath) if file_exists else None
@@ -298,8 +307,8 @@ def append_many(
                         _CSVIO_LOCK_FAILS.inc()
                         if waited_ms_total:
                             _CSVIO_LOCK_WAIT_MS.inc(waited_ms_total)  # type: ignore[arg-type]
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Metrics not available
                     raise
                 _inc_lock_wait('atomic_fs')
                 waited_ms_total += float(delay)
@@ -307,8 +316,8 @@ def append_many(
         if waited_ms_total:
             try:
                 _CSVIO_LOCK_WAIT_MS.inc(waited_ms_total)  # type: ignore[arg-type]
-            except Exception:
-                pass
+            except (AttributeError, TypeError):
+                pass  # Metrics not available
 
         file_exists = os.path.isfile(filepath)
         file_header = _read_existing_header(filepath) if file_exists else None

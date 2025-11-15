@@ -5,14 +5,14 @@ from prometheus_client import REGISTRY  # type: ignore
 from src.metrics.testing import force_new_metrics_registry
 
 
-def test_provider_mode_seed_fast_and_one_hot():
+def test_provider_mode_seed_fast_and_one_hot(metrics_port):
     # Force seeding to run even under pytest auto-skip heuristic
     os.environ['G6_METRICS_SKIP_PROVIDER_MODE_SEED'] = ''
     os.environ['G6_METRICS_FORCE_PROVIDER_MODE_SEED'] = '1'
     os.environ['G6_METRICS_INIT_SIMPLE_TRACE'] = '1'
     os.environ['G6_PROVIDER_MODE_SEED_TIMEOUT'] = '0.10'
     start = time.perf_counter()
-    reg = force_new_metrics_registry(enable_resource_sampler=False)
+    reg = force_new_metrics_registry(enable_resource_sampler=False, port=metrics_port)
     elapsed = time.perf_counter() - start
     # Must be under generous 0.5s (allows CI variability) and under configured timeout * 5 for slack
     assert elapsed < 0.5, f"provider mode seeding too slow: {elapsed:.3f}s"

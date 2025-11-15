@@ -114,7 +114,7 @@ class InfluxSink:
         self._pool: InfluxConnectionPool | None = None
         try:
             self._health_enabled = _env_bool('G6_HEALTH_COMPONENTS', False)
-        except Exception:
+        except (ValueError, TypeError, KeyError):
             self._health_enabled = False
 
         try:
@@ -129,7 +129,8 @@ class InfluxSink:
                     min_size=_env_int('G6_INFLUX_POOL_MIN_SIZE', pool_min_size),
                     max_size=_env_int('G6_INFLUX_POOL_MAX_SIZE', pool_max_size),
                 )
-            except Exception:
+            except (TypeError, ValueError, ImportError) as e:
+                logger.debug(f"Failed to initialize InfluxConnectionPool: {e}")
                 self._pool = None
             # Buffer manager configured from env overrides when not provided
             eff_batch = _env_int('G6_INFLUX_BATCH_SIZE', batch_size or 500)
@@ -155,8 +156,8 @@ class InfluxSink:
                         self.metrics.influxdb_connection_status.set(1)
                     if self._health_enabled:
                         health_runtime.set_component('influx_sink', HealthLevel.HEALTHY, HealthState.HEALTHY)
-                except Exception:
-                    pass
+                except (AttributeError, TypeError) as e:
+                    logger.debug(f"Failed to record success metrics: {e}")
 
             def _on_failure(e: Exception) -> None:
                 try:
@@ -168,8 +169,8 @@ class InfluxSink:
                         state = HealthState.CRITICAL if self._breaker.state == "OPEN" else HealthState.WARNING
                         level = HealthLevel.CRITICAL if self._breaker.state == "OPEN" else HealthLevel.WARNING
                         health_runtime.set_component('influx_sink', level, state)
-                except Exception:
-                    pass
+                except (AttributeError, TypeError) as ex:
+                    logger.debug(f"Failed to record failure metrics: {ex}")
 
             self._buffer = InfluxBufferManager(
                 write_fn=_write_points,
@@ -428,8 +429,8 @@ class InfluxSink:
                         if self.metrics:
                             try:
                                 self.metrics.influxdb_points_written.inc(len(points))
-                            except Exception:
-                                pass
+                            except (AttributeError, TypeError):
+                                pass  # Metrics/health update failed
                     except Exception as e:
                         logger.debug("Fallback direct write failed: %s", e)
                         get_error_handler().handle_error(
@@ -457,8 +458,8 @@ class InfluxSink:
             try:
                 if self.metrics:
                     self.metrics.influxdb_connection_status.set(0)
-            except Exception:
-                pass
+            except (AttributeError, TypeError):
+                pass  # Metrics/health update failed
 
     def write_overview_snapshot(
         self,
@@ -521,8 +522,8 @@ class InfluxSink:
                         if self.metrics:
                             try:
                                 self.metrics.influxdb_points_written.inc()
-                            except Exception:
-                                pass
+                            except (AttributeError, TypeError):
+                                pass  # Metrics/health update failed
                     except Exception as e:
                         logger.debug("Fallback direct write (overview) failed: %s", e)
                         get_error_handler().handle_error(
@@ -611,8 +612,8 @@ class InfluxSink:
                         if self.metrics:
                             try:
                                 self.metrics.influxdb_points_written.inc()
-                            except Exception:
-                                pass
+                            except (AttributeError, TypeError):
+                                pass  # Metrics/health update failed
                     except Exception as e:
                         logger.debug("Fallback direct write (cycle) failed: %s", e)
                         get_error_handler().handle_error(

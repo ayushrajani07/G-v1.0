@@ -7,13 +7,13 @@ from src.metrics import setup_metrics_server, get_metrics  # facade import
 # quality score gauge is updated deterministically.
 
 @pytest.mark.parametrize('with_model', [False])
-def test_vol_surface_interpolation_records(monkeypatch, with_model):
+def test_vol_surface_interpolation_records(monkeypatch, with_model, metrics_port):
     # Enable vol surface metrics group explicitly
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS','analytics_vol_surface')
     monkeypatch.setenv('G6_DISABLE_METRIC_GROUPS','')
     if with_model:
         monkeypatch.setenv('G6_VOL_SURFACE_MODEL','1')
-    metrics, _ = setup_metrics_server(reset=True)
+    metrics, _ = setup_metrics_server(port=metrics_port, reset=True)
     # Fabricate metrics state representing a build where interpolation fraction > 0
     # We simulate by directly invoking gauge setters if present, then calling a fake histogram observe.
     interp_hist = getattr(metrics, 'vol_surface_interp_seconds', None)
