@@ -137,21 +137,38 @@ class CsvSink:
         # Note: These are injected for testability and modular adoption; defaults are created if not provided.
         try:
             self.writer = writer or CsvWriter(self.base_dir)
-        except Exception:
+        except (ImportError, TypeError, ValueError, OSError) as e:
+            self.logger.warning(f"Failed to initialize CsvWriter: {e}. Falling back to legacy I/O paths.")
             self.writer = None  # Fallback to legacy inline I/O paths
+        except Exception as e:
+            self.logger.error(f"Unexpected error initializing CsvWriter: {e}", exc_info=True)
+            self.writer = None
+        
         try:
             self.metrics_tracker = metrics_tracker or CsvMetricsTracker(None)
-        except Exception:
+        except (ImportError, TypeError) as e:
+            self.logger.warning(f"Failed to initialize CsvMetricsTracker: {e}")
             self.metrics_tracker = None
+        except Exception as e:
+            self.logger.error(f"Unexpected error initializing CsvMetricsTracker: {e}", exc_info=True)
+            self.metrics_tracker = None
+        
         try:
             self.validator = validator or CsvValidator(logger=self.logger, metrics=self.metrics_tracker, concise_mode=self._concise)
-        except Exception:
+        except (ImportError, TypeError) as e:
+            self.logger.warning(f"Failed to initialize CsvValidator: {e}")
             self.validator = None
+        except Exception as e:
+            self.logger.error(f"Unexpected error initializing CsvValidator: {e}", exc_info=True)
+            self.validator = None
+        
         try:
             # Use configured threshold; 0 disables batching
             flush_threshold = int(self._batch_flush_threshold) if getattr(self, '_batch_flush_threshold', 0) else 0
-        except Exception:
+        except (ValueError, TypeError, AttributeError) as e:
+            self.logger.debug(f"Failed to parse batch flush threshold: {e}. Using default 0.")
             flush_threshold = 0
+        
         try:
             self.batcher = batcher or CsvBatcher(
                 logger=self.logger,
@@ -159,8 +176,13 @@ class CsvSink:
                 flush_threshold=flush_threshold if flush_threshold > 0 else 50,
                 verbose=self.verbose,
             )
-        except Exception:
+        except (ImportError, TypeError) as e:
+            self.logger.warning(f"Failed to initialize CsvBatcher: {e}")
             self.batcher = None
+        except Exception as e:
+            self.logger.error(f"Unexpected error initializing CsvBatcher: {e}", exc_info=True)
+            self.batcher = None
+        
         try:
             self.aggregator = aggregator or CsvAggregator(
                 base_dir=self.base_dir,
@@ -169,7 +191,11 @@ class CsvSink:
                 overview_interval_seconds=self.overview_interval_seconds,
                 concise_mode=self._concise,
             )
-        except Exception:
+        except (ImportError, TypeError, OSError) as e:
+            self.logger.warning(f"Failed to initialize CsvAggregator: {e}")
+            self.aggregator = None
+        except Exception as e:
+            self.logger.error(f"Unexpected error initializing CsvAggregator: {e}", exc_info=True)
             self.aggregator = None
 
     def attach_metrics(self, metrics_registry: Any) -> None:
@@ -181,59 +207,81 @@ class CsvSink:
         try:
             if self.metrics_tracker:
                 self.metrics_tracker.attach_metrics(metrics_registry)
-        except Exception:
-            pass
+        except (AttributeError, TypeError) as e:
+            self.logger.debug(f"Failed to attach metrics to metrics_tracker: {e}")
+        except Exception as e:
+            self.logger.warning(f"Unexpected error attaching metrics to metrics_tracker: {e}")
+        
         try:
             if self.batcher:
                 self.batcher.metrics = metrics_registry  # type: ignore[attr-defined]
-        except Exception:
-            pass
+        except (AttributeError, TypeError) as e:
+            self.logger.debug(f"Failed to attach metrics to batcher: {e}")
+        except Exception as e:
+            self.logger.warning(f"Unexpected error attaching metrics to batcher: {e}")
+        
         try:
             if self.aggregator:
                 self.aggregator.metrics = metrics_registry  # type: ignore[attr-defined]
-        except Exception:
-            pass
+        except (AttributeError, TypeError) as e:
+            self.logger.debug(f"Failed to attach metrics to aggregator: {e}")
+        except Exception as e:
+            self.logger.warning(f"Unexpected error attaching metrics to aggregator: {e}")
 
     # ---------------- Metric Wrapper Helpers ----------------
     def _metric_inc(self, name: str, amount: int | float = 1, labels: dict[str, Any] | None = None) -> None:
         """Safely increment a metric if it exists (counter/gauge)."""
+        if not self.metrics:
+            return
+        
         try:
-            if not self.metrics:
-                return
             metric = getattr(self.metrics, name, None)
             if not metric:
                 return
+            
             if labels:
                 try:
                     metric = metric.labels(**labels)  # type: ignore
-                except Exception:
+                except (TypeError, KeyError, ValueError) as e:
+                    self.logger.debug(f"Failed to apply labels to metric {name}: {e}")
                     return
+            
             try:
                 metric.inc(amount)  # type: ignore
-            except Exception:
-                pass
-        except Exception:
+            except (AttributeError, TypeError, ValueError) as e:
+                self.logger.debug(f"Failed to increment metric {name}: {e}")
+        except AttributeError:
+            # Metric doesn't exist - this is expected for optional metrics
             pass
+        except Exception as e:
+            self.logger.warning(f"Unexpected error incrementing metric {name}: {e}")
 
     def _metric_set(self, name: str, value: int | float, labels: dict[str, Any] | None = None) -> None:
         """Safely set a gauge metric if it exists."""
+        if not self.metrics:
+            return
+        
         try:
-            if not self.metrics:
-                return
             metric = getattr(self.metrics, name, None)
             if not metric:
                 return
+            
             if labels:
                 try:
                     metric = metric.labels(**labels)  # type: ignore
-                except Exception:
+                except (TypeError, KeyError, ValueError) as e:
+                    self.logger.debug(f"Failed to apply labels to metric {name}: {e}")
                     return
+            
             try:
                 metric.set(value)  # type: ignore
-            except Exception:
-                pass
-        except Exception:
+            except (AttributeError, TypeError, ValueError) as e:
+                self.logger.debug(f"Failed to set metric {name}: {e}")
+        except AttributeError:
+            # Metric doesn't exist - this is expected for optional metrics
             pass
+        except Exception as e:
+            self.logger.warning(f"Unexpected error setting metric {name}: {e}")
 
     # ------------------------------------------------------------------
     # Expiry remediation daily summary helpers
