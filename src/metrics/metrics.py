@@ -778,17 +778,21 @@ class MetricsRegistry:
                         if hasattr(mgs, 'labels'):
                             try:
                                 mgs.labels(group=grp).set(val)  # type: ignore[attr-defined]
-                            except Exception:
+                            except (AttributeError, TypeError, ValueError, RuntimeError):
+                                # Handle label or gauge operation failures
                                 pass
                         else:
                             if val:
                                 try:
                                     mgs.set(1)
-                                except Exception:
+                                except (AttributeError, TypeError, ValueError, RuntimeError):
+                                    # Handle gauge operation failures
                                     pass
-                    except Exception:
+                    except (AttributeError, TypeError, KeyError):
+                        # Handle dict or attribute access failures
                         pass
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle metric_group_state access failures
             pass
 
         # (Group pruning + spec fallback + group state population already performed earlier in ordered init above.)
@@ -800,7 +804,8 @@ class MetricsRegistry:
             try:
                 from .introspection import build_introspection_inventory as _bii  # type: ignore
                 self._metrics_introspection = _bii(self)
-            except Exception as _e:  # pragma: no cover - defensive
+            except (ImportError, AttributeError, TypeError, RuntimeError) as _e:  # pragma: no cover - defensive
+                # Handle import, attribute, type, or build failures
                 logger.debug("Failed to build metrics introspection inventory: %s", _e)
                 self._metrics_introspection = []  # type: ignore[attr-defined]
         else:
@@ -814,33 +819,39 @@ class MetricsRegistry:
             try:  # pragma: no cover - defensive wrapper
                 from .introspection_dump import run_post_init_dumps as _rp
                 _rp(self)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle import or dump execution failures
                 pass
             # Explicit markers for tests expecting raw lines (in addition to any dump output)
             try:
                 inv = getattr(self, '_metrics_introspection', []) or []
                 logger.info("METRICS_INTROSPECTION: %s", len(inv))
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle attribute access or logging failures
                 logger.info("METRICS_INTROSPECTION: 0")
             try:
                 trace = getattr(self, '_init_trace', []) or []
                 logger.info("METRICS_INIT_TRACE: %s steps", len(trace))
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle attribute access or logging failures
                 logger.info("METRICS_INIT_TRACE: 0 steps")
         else:  # structured log for observability of suppression
             try:
                 # Emit a deterministic suppression line even if earlier phases bailed out.
                 logger.info("metrics.dumps.suppressed reason=G6_METRICS_SUPPRESS_AUTO_DUMPS env=%s introspection_dump=%s init_trace_dump=%s", _env_str('G6_METRICS_SUPPRESS_AUTO_DUMPS',''), _env_str('G6_METRICS_INTROSPECTION_DUMP',''), _env_str('G6_METRICS_INIT_TRACE_DUMP',''))
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
             try:
                 # Also emit zero-value markers so tests can assert explicit absence of dumps while still seeing markers.
                 logger.info("METRICS_INTROSPECTION: 0")
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
             try:
                 logger.info("METRICS_INIT_TRACE: 0 steps")
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
 
         # Fallback: ensure a single structured metrics.registry.summary line exists
@@ -852,12 +863,14 @@ class MetricsRegistry:
                 try:
                     from prometheus_client import REGISTRY as _R  # type: ignore
                     fam_count = len(list(_R.collect()))
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle registry collection failures
                     pass
                 profile_total = None
                 try:
                     profile_total = round(float(getattr(self, '_init_profile', {}).get('total_ms', 0.0)), 2)  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Handle profile dict access or conversion failures
                     profile_total = None
                 logger.info(
                     "metrics.registry.summary families=%s always_on_groups=%s prof_total_ms=%s strict=%s",
@@ -867,9 +880,11 @@ class MetricsRegistry:
                 try:
                     if _register_or_note_summary_import:
                         _register_or_note_summary_import('metrics.registry', emitted=True)
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle registration failures
                     pass
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle fallback summary emission failures
             pass
 
         # Optional cardinality guard (snapshot or compare) invoked last so full registry is visible
@@ -879,7 +894,8 @@ class MetricsRegistry:
                 try:
                     from src.config.env_config import EnvConfig as _EC
                     _EC.clear_cache()
-                except Exception:
+                except (ImportError, AttributeError, TypeError, RuntimeError):
+                    # Handle import or cache clear failures
                     pass
                 from .cardinality_guard import check_cardinality as _cc  # type: ignore
                 try:
@@ -890,7 +906,8 @@ class MetricsRegistry:
                     # propagate failure after attaching summary for test inspection
                     self._cardinality_guard_summary = getattr(self, '_cardinality_guard_summary', {})  # type: ignore[attr-defined]
                     raise
-        except Exception:
+        except (ImportError, AttributeError, TypeError, OSError):
+            # Handle import, attribute, type, or file access failures (excluding RuntimeError which is re-raised)
             pass
 
         # Duplicate metric guard – detect multiple attributes referencing same collector
@@ -904,7 +921,8 @@ class MetricsRegistry:
                 # Attach summary if present then re-raise
                 self._duplicate_metrics_summary = getattr(self, '_duplicate_metrics_summary', {})  # type: ignore[attr-defined]
                 raise
-        except Exception:
+        except (ImportError, AttributeError, TypeError):
+            # Handle import or attribute access failures (excluding RuntimeError which is re-raised)
             pass
 
         # (Fault budget tracker already initialized earlier if env enabled.)
@@ -927,7 +945,8 @@ class MetricsRegistry:
         try:
             from .fault_budget import fault_budget_on_cycle as _fb_cycle  # type: ignore
             _fb_cycle(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or fault budget update failures
             pass
 
     # _apply_group_filters extracted to src/metrics/gating.py (apply_pruning)
@@ -947,7 +966,8 @@ class MetricsRegistry:
             inv = getattr(self, '_metrics_introspection', [])
             try:
                 return list(inv)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle list conversion failures
                 return []
 
     # ---------------- Governance Summary Helper -----------------
@@ -983,13 +1003,15 @@ class MetricsRegistry:
             dup = getattr(self, '_duplicate_metrics_summary', None)
             if isinstance(dup, dict):
                 out['duplicates'] = dup  # type: ignore[assignment]
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle attribute access or type issues
             pass
         try:
             card = getattr(self, '_cardinality_guard_summary', None)
             if isinstance(card, dict):
                 out['cardinality'] = card  # type: ignore[assignment]
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle attribute access or type issues
             pass
         try:
             fb = getattr(self, '_fault_budget_tracker', None)
@@ -1002,7 +1024,8 @@ class MetricsRegistry:
                 if allowed > 0:
                     try:
                         consumed = min(100.0, (within / allowed) * 100.0)
-                    except Exception:
+                    except (ZeroDivisionError, TypeError, ValueError):
+                        # Handle division by zero or type issues
                         consumed = 0.0
                 out['fault_budget'] = {  # type: ignore[assignment]
                     'window_sec': getattr(fb, 'window_sec', None),
@@ -1012,7 +1035,8 @@ class MetricsRegistry:
                     'consumed_percent': round(consumed, 2),
                     'exhausted': bool(getattr(fb, 'exhausted', False)),
                 }
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle attribute access or type issues
             pass
         return out
 
@@ -1022,7 +1046,8 @@ class MetricsRegistry:
         try:
             from .metadata import reload_group_filters as _rgf
             _rgf(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or reload failures
             pass
 
     def dump_metrics_metadata(self) -> dict:  # pragma: no cover - thin shim
@@ -1030,7 +1055,8 @@ class MetricsRegistry:
         try:
             from .metadata import dump_metrics_metadata as _dmm
             return _dmm(self)  # type: ignore[return-value]
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or dump failures
             return {}
 
     # ---------------- Group Mapping Accessor (for tests) -----------------
@@ -1046,7 +1072,8 @@ class MetricsRegistry:
         try:
             from .api_call import mark_api_call as _mac  # type: ignore
             _mac(self, success, latency_ms)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or marking failures
             pass
 
     # ---------------- Per-Index Cycle Attempts / Success -----------------
@@ -1055,7 +1082,8 @@ class MetricsRegistry:
         try:
             from .derived import update_index_cycle_metrics as _uicm  # type: ignore
             _uicm(self, index, attempts, failures)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or marking failures
             pass
 
     # Explicit method for clarity (helper sets alias _group_allowed)
