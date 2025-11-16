@@ -509,8 +509,10 @@ class Providers:
                         self.logger.debug(
                             "[prov-metrics] enriched_count=%s missing_vol_oi=%s avg_price_fb=%s provider=%s", enriched_count, missing_volume_oi, avg_price_fallback, prov
                         )
-            except Exception:
-                pass
+            except (AttributeError, KeyError, TypeError) as e:
+                # Metrics emission failed - non-critical, log and continue
+                if os.environ.get('G6_PROVIDER_METRICS_DEBUG'):
+                    self.logger.debug("[prov-metrics] Failed to emit metrics: %s", e)
             return enriched_data
         except Exception as e:
             import traceback
@@ -547,7 +549,8 @@ def _active_provider_name(providers) -> str:  # noqa: D401
     try:
         if getattr(providers, 'primary_provider', None):
             return type(providers.primary_provider).__name__
-    except Exception:
+    except (AttributeError, TypeError):
+        # Provider introspection failed - return safe default
         pass
     return 'unknown'
 

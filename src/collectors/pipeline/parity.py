@@ -103,7 +103,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
         details['indices'] = (la, lb)
         comp_idx = 1 - min(1.0, abs(la - lb) / max(1, la))
         components['index_count'] = comp_idx
-    except Exception:
+    except (TypeError, ValueError, ZeroDivisionError):
+        # Index count calculation failed
         missing.append('index_count')
 
     # Option totals
@@ -119,7 +120,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                 if isinstance(rec, dict):
                     try:
                         total += int(rec.get('option_count') or 0)
-                    except Exception:
+                    except (TypeError, ValueError):
+                        # Option count conversion failed - skip this record
                         pass
             return total
         if opt_a is None:
@@ -131,7 +133,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
             details['options_total'] = (opt_a, opt_b)
             comp_opt = 1 - min(1.0, abs(opt_a - opt_b) / max(1, opt_a))
             components['option_count'] = comp_opt
-        except Exception:
+        except (TypeError, ValueError, ZeroDivisionError):
+            # Option count parity calculation failed
             missing.append('option_count')
     else:
         missing.append('option_count')
@@ -150,7 +153,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                     for k, v in cats.items():
                         try:
                             norm[str(k)] = int(v)
-                        except Exception:
+                        except (TypeError, ValueError):
+                            # Category value conversion failed - skip
                             continue
                     return norm
             seq = root.get('alerts') if isinstance(root, dict) else None
@@ -173,7 +177,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                     k, val = part.split(':',1)
                     try:
                         sev_weights[k.strip()] = float(val)
-                    except Exception:
+                    except (TypeError, ValueError):
+                        # Severity weight parsing failed - skip
                         continue
         # Default weight =1.0
         diffs_weighted = 0.0
@@ -207,7 +212,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                 'weights_applied': bool(raw_weights),
             }
         components['alerts'] = comp_alerts
-    except Exception:
+    except (TypeError, ValueError, KeyError, ZeroDivisionError):
+        # Alert parity calculation failed
         missing.append('alerts')
 
     # Extended: strike coverage distribution similarity (simple mean diff heuristic)
@@ -232,7 +238,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                 details['strike_coverage_avg'] = (avg_a, avg_b)
                 comp_cov = 1 - min(1.0, abs(avg_a - avg_b) / max(1e-9, abs(avg_a) if abs(avg_a) > 0 else 1.0))
                 components['strike_coverage'] = comp_cov
-        except Exception:
+        except (TypeError, ValueError, ZeroDivisionError):
+            # Strike coverage calculation failed
             missing.append('strike_coverage')
 
     # Strike shape distribution component (Wave 4 W4-07)
@@ -285,7 +292,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                 for i in range(L):
                     try:
                         l1 += abs(pa[i] - pb[i])
-                    except Exception:
+                    except (TypeError, ValueError, IndexError):
+                        # Distance calculation failed for this element
                         l1 += 0.0
                 tvd = 0.5 * l1
                 if tvd < 0:  # safety
@@ -298,7 +306,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                     'legacy_counts': counts_a_sorted[:L],
                     'pipeline_counts': counts_b_sorted[:L],
                 }
-        except Exception:
+        except (TypeError, ValueError, KeyError, ZeroDivisionError):
+            # Strike shape calculation failed
             missing.append('strike_shape')
 
     # Strike coverage variance component (Wave 4 W4-08)
@@ -338,7 +347,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                     'count_a': len(vals_a),
                     'count_b': len(vals_b),
                 }
-        except Exception:
+        except (TypeError, ValueError, KeyError, ZeroDivisionError):
+            # Strike coverage variance calculation failed
             missing.append('strike_cov_variance')
 
     # Assign weights if not provided (allow explicit override for strike_shape)
@@ -361,7 +371,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
                     continue
                 try:
                     fv = float(v)
-                except Exception:
+                except (TypeError, ValueError):
+                    # Weight value parsing failed - skip
                     continue
                 if k in components:
                     weights[k] = fv
@@ -369,7 +380,8 @@ def compute_parity_score(legacy: dict[str, Any] | None, pipeline: dict[str, Any]
             totw = sum(weights.values()) or 1.0
             for k in list(weights.keys()):
                 weights[k] = weights[k] / totw
-    except Exception:
+    except (TypeError, ValueError, KeyError, ZeroDivisionError):
+        # Weight override parsing/normalization failed - use defaults
         pass
 
     # Weighted score
@@ -409,7 +421,8 @@ def record_parity_score(value: float | None) -> RollingParityResult:
         # Read directly from os.environ to avoid EnvConfig caching across mid-test updates
         raw = os.environ.get('G6_PARITY_ROLLING_WINDOW', '')
         window = int(raw) if raw.strip() else 0
-    except Exception:
+    except (TypeError, ValueError):
+        # Rolling window parsing failed - disable
         window = 0
     if window <= 1 or value is None:
         # Disabled or trivial window
@@ -432,5 +445,6 @@ def get_parity_average() -> float | None:
         return None
     try:
         return float(sum(_ROLLING_SCORES)/len(_ROLLING_SCORES))
-    except Exception:
+    except (TypeError, ValueError, ZeroDivisionError):
+        # Average calculation failed
         return None

@@ -57,13 +57,16 @@ def _try_call(fn: Callable[..., Any], variants: Variants) -> Any | None:
         try:  # noqa: PERF203 small loop, variants tiny (<=3)
             return fn(*args)
         except TypeError:
+            # Signature mismatch - try next variant
             continue
         except Exception:
+            # Actual error from function call - re-raise as-is
             raise
     # Final attempt: call with first variant (will raise original error)
     try:
         return fn(*variants[0])
-    except Exception:
+    except (TypeError, AttributeError, ValueError, KeyError):
+        # All variants failed - return None as safe fallback
         return None
 
 
@@ -82,7 +85,8 @@ def phase_resolve(ctx: Any, state: ExpiryState) -> ExpiryState:
                 raise PhaseAbortError('expiry_unresolved')
         except PhaseAbortError:
             raise
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
+            # Modern resolve failed - fallback to legacy unified helper
             strikes = getattr(ctx, 'precomputed_strikes', [])
             metrics = getattr(ctx, 'metrics', None)
             variants = [
@@ -125,7 +129,8 @@ def phase_fetch(ctx: Any, state: ExpiryState, precomputed_strikes: Sequence[floa
                 raise ValueError('modular_fetch_returned_empty')
         except PhaseRecoverableError:
             raise
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
+            # Modern fetch failed - fallback to legacy unified helper
             variants = [
                 (state.index, state.rule, state.expiry_date, state.strikes, ctx.providers, getattr(ctx, 'metrics', None)),
                 (state.index, state.rule, state.expiry_date, state.strikes, ctx.providers),
@@ -208,7 +213,8 @@ def phase_enrich(ctx: Any, state: ExpiryState) -> ExpiryState:
                     enriched = enrich_quotes(state.index, state.rule, state.expiry_date, state.instruments, ctx.providers, getattr(ctx, 'metrics', None))
                 except NoQuotesError as nq:
                     raise PhaseRecoverableError('enrich_no_quotes_domain') from nq
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Metrics parameter issue - retry without metrics
                     enriched = enrich_quotes(state.index, state.rule, state.expiry_date, state.instruments, ctx.providers, None)
             except NoQuotesError as nq:  # fallback if second call raised domain error
                 raise PhaseRecoverableError('enrich_no_quotes_domain') from nq
@@ -216,7 +222,8 @@ def phase_enrich(ctx: Any, state: ExpiryState) -> ExpiryState:
                 raise ValueError('modular_enrich_empty')
         except PhaseRecoverableError:
             raise
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
+            # Modern enrich failed - fallback to legacy unified helper
             variants = [
                 (state.index, state.rule, state.expiry_date, state.instruments, ctx.providers, getattr(ctx,'metrics', None)),
                 (state.index, state.rule, state.expiry_date, state.instruments, ctx.providers, None),
@@ -331,11 +338,13 @@ def phase_coverage(ctx: Any, state: ExpiryState) -> ExpiryState:
         strike_cov = field_cov = None
         try:
             strike_cov = coverage_metrics(ctx, state.instruments, state.strikes, state.index, state.rule, state.expiry_date)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError, ZeroDivisionError):
+            # Coverage metric computation failed - set to None
             strike_cov = None
         try:
             field_cov = field_coverage_metrics(ctx, state.enriched, state.index, state.rule, state.expiry_date)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError, ZeroDivisionError):
+            # Field coverage metric computation failed - set to None
             field_cov = None
         state.meta['coverage'] = {'strike': strike_cov, 'field': field_cov}
     except Exception as e:  # pragma: no cover
@@ -411,7 +420,8 @@ def phase_iv(ctx: Any, state: ExpiryState) -> ExpiryState:
             },
             state=state,
         )
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
+        # Structured event emission failed - non-critical
         pass
     return state
 
@@ -478,7 +488,8 @@ def phase_greeks(ctx: Any, state: ExpiryState) -> ExpiryState:
             },
             state=state,
         )
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
+        # Structured event emission failed - non-critical
         pass
     return state
 
@@ -504,7 +515,8 @@ def phase_persist_sim(ctx: Any, state: ExpiryState) -> ExpiryState:
                 },
                 state=state,
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
+            # Structured event emission failed - non-critical
             pass
         return state
     try:
@@ -519,7 +531,8 @@ def phase_persist_sim(ctx: Any, state: ExpiryState) -> ExpiryState:
         if calls > 0 and puts > 0:
             try:
                 pcr = round(puts / calls, 4)
-            except Exception:
+            except (ZeroDivisionError, TypeError, ValueError):
+                # PCR calculation failed - set to None
                 pcr = None
         state.meta['persist_sim'] = {
             'option_count': len(state.enriched),
@@ -542,7 +555,8 @@ def phase_persist_sim(ctx: Any, state: ExpiryState) -> ExpiryState:
                 },
                 state=state,
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
+            # Structured event emission failed - non-critical
             pass
     except Exception as e:  # pragma: no cover
         token = f"persist_sim:{e}"
@@ -561,7 +575,8 @@ def phase_persist_sim(ctx: Any, state: ExpiryState) -> ExpiryState:
                 },
                 state=state,
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
+            # Structured event emission failed - non-critical
             pass
     return state
 

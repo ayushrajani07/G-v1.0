@@ -139,7 +139,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                         },
                         state=state,
                     )
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Structured event emission failed - non-critical
                     pass
                 break
             except PhaseRecoverableError as e:
@@ -159,7 +160,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                         },
                         state=state,
                     )
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Structured event emission failed - non-critical
                     pass
                 if not retry_enabled or attempts >= max_attempts:
                     final_outcome = 'recoverable_exhausted' if retry_enabled and attempts >= max_attempts else 'recoverable'
@@ -184,7 +186,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                         },
                         state=state,
                     )
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Structured event emission failed - non-critical
                     pass
                 break
             except Exception as e:
@@ -205,7 +208,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                         },
                         state=state,
                     )
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Structured event emission failed - non-critical
                     pass
                 if cls == 'recoverable' and retry_enabled and attempts < max_attempts:
                     _sleep_backoff(base_ms, jitter_ms, attempts, phase_name if _retry_metrics_enabled else None, _metrics_cache if _retry_metrics_enabled else None)
@@ -233,7 +237,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                         },
                         state=state,
                     )
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Structured event emission failed - non-critical
                     pass
                 break
             finally:
@@ -255,7 +260,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                 },
                 state=state,
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
+            # Final structured event emission failed - non-critical
             pass
         # Phase last attempts gauge
         if _retry_metrics_enabled:
@@ -265,9 +271,11 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                 if g is not None:
                     try:
                         g.labels(phase=phase_name).set(attempts)
-                    except Exception:
+                    except (AttributeError, TypeError, KeyError):
+                        # Metric label access failed - non-critical
                         pass
-            except Exception:
+            except (AttributeError, TypeError, KeyError):
+                # Retry metrics access failed - non-critical
                 pass
         try:
             phase_runs.append({
@@ -276,7 +284,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                 'attempts': attempts,
                 'duration_ms': round(total_duration_ms, 3),
             })
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Phase run record append failed - non-critical
             pass
         if final_outcome in ('abort','fatal','recoverable','recoverable_exhausted','unknown'):
             # stop further phases on any non-ok outcome to preserve original semantics
@@ -309,7 +318,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
             if _env_bool('G6_PIPELINE_STRUCT_ERROR_EXPORT_STDOUT', False):
                 try:
                     print('pipeline.structured_errors', json.dumps(payload, separators=(',',':')))
-                except Exception:
+                except (TypeError, ValueError):
+                    # JSON serialization or print failed - non-critical
                     pass
         # Attach cycle summary optionally after structured errors projection
         if _env_bool('G6_PIPELINE_CYCLE_SUMMARY', True):  # default on
@@ -336,16 +346,16 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                     _pcs = getattr(_m, 'pipeline_cycle_success', None)
                     if _pcs is not None:
                         try: _pcs.set(is_success)
-                        except Exception: pass
+                        except (AttributeError, TypeError): pass
                     _pct = getattr(_m, 'pipeline_cycles_total', None)
                     if _pct is not None:
                         try: _pct.inc()
-                        except Exception: pass
+                        except (AttributeError, TypeError): pass
                     if is_success:
                         _pcst = getattr(_m, 'pipeline_cycles_success_total', None)
                         if _pcst is not None:
                             try: _pcst.inc()
-                            except Exception: pass
+                            except (AttributeError, TypeError): pass
                     # Error ratio gauge
                     _pcer = getattr(_m, 'pipeline_cycle_error_ratio', None)
                     if _pcer is not None:
@@ -356,16 +366,18 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             pe_val = int(raw_pe) if isinstance(raw_pe, (int, float)) else 0
                             ratio = (float(pe_val) / float(pt_val)) if pt_val else 0.0
                             _pcer.set(ratio)
-                        except Exception:
+                        except (TypeError, ValueError, ZeroDivisionError):
+                            # Error ratio calculation failed - non-critical
                             pass
                     # Rolling window success/error rate gauges
                     try:
                         _rw_size_env = _env_int('G6_PIPELINE_ROLLING_WINDOW', 0)
-                    except Exception:
+                    except (TypeError, ValueError):
+                        # Rolling window env parsing failed - disable
                         _rw_size_env = 0
                     if _rw_size_env > 0:
                         try:
-                            from collections import deque as _deque
+                            from collections import deque as _deque  # noqa: F401
                             # Module-level cache (attribute on function object to avoid global)
                             if not hasattr(execute_phases, '_rolling_window'):
                                 # attach deque lazily; use cast for type checker since attribute added dynamically
@@ -375,7 +387,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             _pcsrw = getattr(_m, 'pipeline_cycle_success_rate_window', None)
                             if _pcsrw is not None:
                                 try: _pcsrw.set(sum(window)/len(window))
-                                except Exception: pass
+                                except (AttributeError, TypeError, ZeroDivisionError): pass
                             _pcerw = getattr(_m, 'pipeline_cycle_error_rate_window', None)
                             if _pcerw is not None:
                                 try: _pcerw.set(1 - (sum(window)/len(window)))
