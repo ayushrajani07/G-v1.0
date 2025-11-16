@@ -75,7 +75,8 @@ async def api_live_csv(
         try:
             await asyncio.wait_for(_SEM.acquire(), timeout=0.002)
             acquired = True
-        except Exception:
+        except asyncio.TimeoutError:
+            # Semaphore acquisition timeout - too many concurrent requests
             _obs_too_many("live_csv")
             return JSONResponse(
                 {"error": "too_many_requests", "retry_after": 1},
@@ -176,7 +177,8 @@ async def api_live_csv(
                         if v is None:
                             return False
                         x = int(v)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         return False
                     if fms is not None and x < fms:
                         return False
@@ -205,7 +207,8 @@ async def api_live_csv(
                     else:
                         for r in rows_sel:
                             r["index_pct"] = None
-                except Exception:
+                except (ValueError, TypeError, ZeroDivisionError, KeyError):
+                    # Value conversion, type errors, division by zero, or dict access errors
                     for r in rows_sel:
                         r["index_pct"] = None
 
@@ -240,7 +243,8 @@ async def api_live_csv(
                 try:
                     lm = _time.gmtime(lm_ns / 1_000_000_000)
                     headers["Last-Modified"] = _time.strftime("%a, %d %b %Y %H:%M:%S GMT", lm)
-                except Exception:
+                except (OSError, ValueError):
+                    # Time conversion errors or value errors
                     pass
             inm = request.headers.get("if-none-match") if isinstance(request, Request) else None
             if (not disable_cache) and inm and inm == etag_key:
@@ -263,7 +267,8 @@ async def api_live_csv(
                 try:
                     lm = _time.gmtime(st.st_mtime_ns / 1_000_000_000)
                     headers["Last-Modified"] = _time.strftime("%a, %d %b %Y %H:%M:%S GMT", lm)
-                except Exception:
+                except (OSError, ValueError, AttributeError):
+                    # Time conversion errors, value errors, or attribute access failures
                     pass
             headers["Cache-Control"] = "public, max-age=15, must-revalidate"
             headers["ETag"] = f"W/\"{h:x}\""
@@ -292,5 +297,6 @@ async def api_live_csv(
         if acquired:
             try:
                 _SEM.release()
-            except Exception:
+            except RuntimeError:
+                # Semaphore release error - already released or not acquired
                 pass

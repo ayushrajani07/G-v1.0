@@ -43,7 +43,7 @@ from .routes.path_forecast import router as path_forecast_router
 try:
     # Advisor router provides universal advisor endpoints
     from .routes.advisor import router as advisor_router
-except Exception:  # pragma: no cover - missing optional advisor engine deps
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover - missing optional advisor engine deps
     advisor_router = None  # type: ignore
 
 # Optional imports for late import elimination (Batch 30)
@@ -67,14 +67,16 @@ def _resolve_log_dir() -> str:
     try:
         if os.path.isdir(r"C:\GrafanaData\log"):
             return r"C:\GrafanaData\log"
-    except Exception:
+    except (OSError, PermissionError):
+        # Directory check failed or permission denied
         pass
     return os.path.join(os.getcwd(), "logs")
 
 _LOG_DIR = _resolve_log_dir()
 try:
     os.makedirs(_LOG_DIR, exist_ok=True)
-except Exception:
+except (OSError, PermissionError):
+    # Directory creation failed or permission denied
     pass
 
 class _JsonFormatter(logging.Formatter):
@@ -94,7 +96,8 @@ class _JsonFormatter(logging.Formatter):
             if record.exc_info:
                 payload["exc"] = self.formatException(record.exc_info)
             return _json.dumps(payload, ensure_ascii=False)
-        except Exception:
+        except (_json.JSONDecodeError, TypeError, ValueError, AttributeError):
+            # JSON encoding error, type error, value error, or attribute access failure
             return super().format(record)
 
 _logger = logging.getLogger("g6.webapi")
@@ -105,7 +108,8 @@ if not _logger.handlers:
         _h = logging.handlers.RotatingFileHandler(_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
         _h.setFormatter(_JsonFormatter())
         _logger.addHandler(_h)
-    except Exception:
+    except (OSError, IOError, PermissionError, ValueError):
+        # File handler creation failed - use stream handler instead
         _sh = logging.StreamHandler()
         _sh.setFormatter(_JsonFormatter())
         _logger.addHandler(_sh)
@@ -169,7 +173,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if DEBUG_MODE:
         try:
             set_debug_cache(cache)
-        except Exception:
+        except (AttributeError, TypeError, NameError):
+            # Debug function not available, attribute error, or type error
             pass  # Debug endpoints are optional, don't fail startup
     
     yield
@@ -193,7 +198,7 @@ app = FastAPI(title="G6 Dashboard", version="0.1.0", lifespan=lifespan, default_
 # Compression for JSON payloads (saves bandwidth and speeds Grafana Infinity)
 try:
     app.add_middleware(GZipMiddleware, minimum_size=1024)
-except Exception:
+except (ImportError, AttributeError, RuntimeError):
     # Defensive: if middleware import fails in minimal envs, continue without gzip
     pass
 
@@ -225,7 +230,8 @@ try:
             allow_headers=["*"],
             max_age=300,
         )
-except Exception:
+except (ImportError, AttributeError, RuntimeError, ValueError):
+    # Middleware import failed, attribute error, runtime error, or value error
     pass
 
 # Lightweight observability handled in routers
@@ -240,7 +246,7 @@ app.include_router(path_forecast_router)
 # Memory status endpoint (lightweight; avoid dedicated router for single path)
 try:
     from src.utils.memory_manager import get_memory_manager as _get_mm
-except Exception:  # pragma: no cover - optional dependency
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover - optional dependency
     _get_mm = None  # type: ignore
 
 @app.get('/api/memory/status')
@@ -266,7 +272,8 @@ def memory_status() -> JSONResponse:
                 'gc_last_duration_ms': m.get('gc_last_duration_ms'),
                 'registered_caches': m.get('registered_caches'),
             } if isinstance(m, dict) else {}
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Missing snapshot method, type error, or dict access error
             pass
         # Ensure all expected keys present even if snapshot partial
         for k in ('rss_mb','peak_rss_mb','gc_collections_total','gc_last_duration_ms','registered_caches'):
@@ -292,11 +299,13 @@ def memory_status() -> JSONResponse:
 if advisor_router is not None:
     try:
         app.include_router(advisor_router)
-    except Exception:
+    except (RuntimeError, ValueError, AttributeError):
+        # Router inclusion failed - runtime error, value error, or attribute error
         pass
 try:
     app.state.metrics_cache = cache
-except Exception:
+except (AttributeError, RuntimeError):
+    # State attribute assignment failed
     pass
 
 # startup handled by lifespan above
@@ -311,7 +320,8 @@ async def _access_log_middleware(request: Request, call_next):
     try:
         response = await call_next(request)
         status = getattr(response, "status_code", 200)
-    except Exception:
+    except (HTTPException, RequestValidationError, RuntimeError, ValueError) as exc:
+        # HTTP exceptions, validation errors, runtime errors, or value errors
         status = 500
         _logger.exception(
             "request_error",
@@ -340,7 +350,8 @@ async def _access_log_middleware(request: Request, call_next):
         )
     try:
         response.headers["X-Request-ID"] = cid
-    except Exception:
+    except (AttributeError, TypeError):
+        # Response object missing headers attribute or type error
         pass
     return response
 
@@ -773,14 +784,17 @@ def _ensure_advisor_gauges() -> None:
         if not hasattr(reg, 'advisor_integrity_ok'):
             try:
                 reg.advisor_integrity_ok = Gauge('g6_advisor_integrity_ok', 'advisor integrity ok (1/0)')  # type: ignore[attr-defined]
-            except Exception:
+            except (ImportError, AttributeError, ValueError, RuntimeError):
+                # Gauge creation failed - import error, attribute error, value error, or runtime error
                 pass
         if not hasattr(reg, 'advisor_age_minutes'):
             try:
                 reg.advisor_age_minutes = Gauge('g6_advisor_age_minutes', 'advisor report age (minutes)')  # type: ignore[attr-defined]
-            except Exception:
+            except (ImportError, AttributeError, ValueError, RuntimeError):
+                # Gauge creation failed - import error, attribute error, value error, or runtime error
                 pass
-    except Exception:
+    except (ImportError, AttributeError, TypeError):
+        # Missing metrics module, attribute error, or type error
         pass
 
 @app.get('/api/diag/advisor_integrity')
@@ -806,7 +820,8 @@ async def api_diag_advisor_integrity() -> JSONResponse:
             reg = get_metrics_singleton()
             if reg is not None and hasattr(reg, 'advisor_integrity_ok'):
                 reg.advisor_integrity_ok.set(1 if present else 0)  # type: ignore[attr-defined]
-        except Exception:
+        except (ImportError, AttributeError, TypeError):
+            # Missing metrics module, attribute error, or type error
             pass
         # Check OpenAPI presence (best-effort)
         openapi_present = False
@@ -814,7 +829,8 @@ async def api_diag_advisor_integrity() -> JSONResponse:
             spec = app.openapi()
             paths_dict = spec.get('paths', {}) if isinstance(spec, dict) else {}
             openapi_present = all(p in paths_dict for p in expected_routes)
-        except Exception:
+        except (RuntimeError, ValueError, AttributeError, KeyError):
+            # OpenAPI generation error, value error, attribute error, or dict access error
             openapi_present = False
         payload = {
             'pid': os.getpid(),
@@ -903,16 +919,19 @@ async def health_metrics() -> JSONResponse:
                     fams = list(reg.advisor_integrity_ok.collect())  # type: ignore[attr-defined]
                     if fams and fams[0].samples:
                         advisor_integrity_ok = fams[0].samples[0].value
-            except Exception:
+            except (AttributeError, IndexError, TypeError):
+                # Missing attribute, index out of range, or type error
                 pass
             try:
                 if hasattr(reg, 'advisor_age_minutes'):
                     fams2 = list(reg.advisor_age_minutes.collect())  # type: ignore[attr-defined]
                     if fams2 and fams2[0].samples:
                         advisor_age_minutes = fams2[0].samples[0].value
-            except Exception:
+            except (AttributeError, IndexError, TypeError):
+                # Missing attribute, index out of range, or type error
                 pass
-    except Exception:
+    except (ImportError, AttributeError, TypeError):
+        # Missing metrics module, attribute error, or type error
         pass
     return JSONResponse({
         'advisor_integrity_ok': advisor_integrity_ok,
@@ -927,14 +946,16 @@ from .core import paths as _paths_core
 from src.utils.timeutils import utc_now_z as _utc_now_z
 try:
     from src.path_forecast.composite import CompositePathForecaster, CompositeConfig
-except Exception:
+except (ImportError, ModuleNotFoundError, AttributeError):
+    # Import failed - module not found or attribute error
     CompositePathForecaster = None  # type: ignore
     CompositeConfig = None  # type: ignore
 
 def _ml_live_predictions_dir() -> Path:
     try:
         return _paths_core.project_root() / 'data' / 'ml' / 'live_predictions'
-    except Exception:
+    except (AttributeError, TypeError, OSError):
+        # Missing project_root function, type error, or OS error
         return Path('data/ml/live_predictions')
 
 # --------------------------- Alerts File Write Endpoint ---------------------------
@@ -971,7 +992,8 @@ async def alert_webhook_file(request: Request) -> JSONResponse:
     log_fp = log_dir / 'alerts.log'
     try:
         log_dir.mkdir(parents=True, exist_ok=True)
-    except Exception:
+    except (OSError, PermissionError):
+        # Directory creation failed or permission denied
         pass
     lines: list[str] = []
     for a in alerts:
@@ -1033,7 +1055,8 @@ async def api_ml_ensemble_k_calibration(index: str, horizon: str | None = None) 
     if k_smooth is not None:
         try:
             k_smooth_fmt = f"{float(k_smooth):.2f}"
-        except Exception:
+        except (ValueError, TypeError):
+            # Invalid numeric conversion or type error
             k_smooth_fmt = str(k_smooth)
     else:
         k_smooth_fmt = ''
@@ -1063,11 +1086,13 @@ async def api_ml_ensemble_weights(index: str, horizon: str) -> PlainTextResponse
     for model, w in weights.items():
         try:
             w_val = float(w)
-        except Exception:
+        except (ValueError, TypeError):
+            # Invalid numeric conversion or type error
             w_val = 0.0
         try:
             rmse_val = float(rmse.get(model, 0.0))
-        except Exception:
+        except (ValueError, TypeError):
+            # Invalid numeric conversion or type error
             rmse_val = 0.0
         rows.append((model, w_val, rmse_val))
     rows.sort(key=lambda x: x[1], reverse=True)
@@ -1139,7 +1164,8 @@ async def api_ml_forecast_path(index: str, horizon: int = 60, quantiles: str = '
             continue
         try:
             q_list.append(float(part))
-        except Exception:
+        except (ValueError, TypeError):
+            # Invalid numeric conversion or type error
             continue
     if not q_list:
         q_list = [0.1, 0.5, 0.9]
@@ -1154,7 +1180,8 @@ async def api_ml_forecast_path(index: str, horizon: int = 60, quantiles: str = '
         return PlainTextResponse('\n'.join([header] + rows))
     try:
         root = _paths_core.project_root() / 'data' / 'g6_data'
-    except Exception:
+    except (AttributeError, OSError, TypeError):
+        # Path resolution error
         root = Path('data/g6_data')
     try:
         cfg = CompositeConfig(root=root, window=60, k=15, min_days=3)

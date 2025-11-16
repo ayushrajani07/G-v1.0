@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 # Optional centralized error handler (guarded import)
 try:  # pragma: no cover
     from src.error_handling import get_error_handler as _get_eh, ErrorCategory as _ErrCat, ErrorSeverity as _ErrSev  # type: ignore
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     _get_eh = None  # type: ignore
     class _ErrCat:  # type: ignore
         FILE_IO = "file_io"
@@ -128,7 +128,8 @@ def _load_calibration(index: str) -> dict:
                 data = _json.load(f)
             if isinstance(data, dict):
                 return data
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     # Fallback to shared service loader (uses static repo root heuristic)
     return _svc_load_calibration(index)
@@ -169,7 +170,8 @@ def _save_calibration(index: str, band_scale: float, prev: float, target: float,
                     message="Failed to write calibration snapshot JSON",
                     context={"index": idx},
                 )
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
     # append history CSV (ts_iso,ts_ms,band_scale,target,actual,samples)
     try:
@@ -192,7 +194,8 @@ def _save_calibration(index: str, band_scale: float, prev: float, target: float,
             try:
                 # Best-effort cleanup
                 test_path.unlink(missing_ok=True)  # type: ignore[call-arg]
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
         except Exception as e:
             logger.warning("path_forecast: failed to append calibration history csv (preflight)", extra={"index": idx, "error": str(e)})
@@ -207,13 +210,15 @@ def _save_calibration(index: str, band_scale: float, prev: float, target: float,
                         message="Failed preflight append for calibration history CSV",
                         context={"index": idx},
                     )
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
         # Use unified CSVIO facade (handles header on new file; backend selectable via env)
         try:
             from src.storage.csvio import api as _csvio_api  # type: ignore
             _csvio_api.append_one(str(hist_path), row, header)
-        except Exception:
+        except (ImportError, OSError, AttributeError):
+            # CSV write import or file system error
             # Fallback to direct write if facade import fails for any reason
             import csv as _csv
             new_file = not hist_path.exists()
@@ -235,7 +240,8 @@ def _save_calibration(index: str, band_scale: float, prev: float, target: float,
                     message="Failed to append calibration history CSV",
                     context={"index": idx},
                 )
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
 
 
@@ -275,7 +281,8 @@ async def api_ml_path_prediction_history(
         try:
             if date_str:
                 the_date = date.fromisoformat(str(date_str))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
 
         # Resolve 'now' via live_csv for robust windowing (falls back to archive if needed)
@@ -289,7 +296,8 @@ async def api_ml_path_prediction_history(
                     ts_list = [int(r.get("ts") or r.get("time") or 0) for r in rows if (r.get("ts") or r.get("time"))]
                     if ts_list:
                         now_ms = max(ts_list)
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     now_ms = None
 
         # Locate bands archive for the day
@@ -308,7 +316,8 @@ async def api_ml_path_prediction_history(
                 if isinstance(name, str) and name.lower().startswith('q'):
                     try:
                         qv = int(name[1:])
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         qv = None
                     if qv == 10:
                         q10_name = name
@@ -326,14 +335,16 @@ async def api_ml_path_prediction_history(
                         pv = str(csv_row.get('profile') or '').strip().lower()
                         if pv != str(profile).strip().lower():
                             continue
-                    except Exception:
+                    except (ValueError, KeyError, TypeError):
+                        # Value, key, or type error
                         # best-effort; ignore filter on error
                         pass
                 try:
                     gen_ms = int(str(csv_row.get('gen_ms') or '0'))
                     tgt_ms = int(str(csv_row.get('target_ms') or '0'))
                     hmin = int(str(csv_row.get('horizon_min') or '0'))
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 if not gen_ms or not tgt_ms or hmin != int(horizon_minutes):
                     continue
@@ -343,15 +354,18 @@ async def api_ml_path_prediction_history(
                 v90 = csv_row.get(q90_name) if q90_name else None
                 try:
                     q10v = float(f"{v10}") if v10 not in (None, "") else None
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     q10v = None
                 try:
                     q50v = float(f"{v50}") if v50 not in (None, "") else None
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     q50v = None
                 try:
                     q90v = float(f"{v90}") if v90 not in (None, "") else None
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     q90v = None
                 entries.append((gen_ms, tgt_ms, q10v, q50v, q90v))
 
@@ -421,7 +435,8 @@ async def api_ml_path_prediction_history_csv(
         try:
             if date_str:
                 the_date = date.fromisoformat(str(date_str))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
 
         # Resolve 'now' via live_csv for robust windowing
@@ -435,7 +450,8 @@ async def api_ml_path_prediction_history_csv(
                     ts_list = [int(r.get("ts") or r.get("time") or 0) for r in rows if (r.get("ts") or r.get("time"))]
                     if ts_list:
                         now_ms = max(ts_list)
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     now_ms = None
 
         arch_dir = (_project_root() / "data" / "ml" / "path_forecasts" / idx)
@@ -453,7 +469,8 @@ async def api_ml_path_prediction_history_csv(
                 if isinstance(name, str) and name.lower().startswith('q'):
                     try:
                         qv = int(name[1:])
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         qv = None
                     if qv == 10:
                         q10_name = name
@@ -466,7 +483,8 @@ async def api_ml_path_prediction_history_csv(
                     gen_ms = int(row.get('gen_ms') or '0')
                     tgt_ms = int(row.get('target_ms') or '0')
                     hmin = int(row.get('horizon_min') or '0')
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 if not gen_ms or not tgt_ms or hmin != int(horizon_minutes):
                     continue
@@ -475,15 +493,18 @@ async def api_ml_path_prediction_history_csv(
                 v90 = row.get(q90_name) if q90_name else None
                 try:
                     q10v = float(f"{v10}") if v10 not in (None, "") else None
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     q10v = None
                 try:
                     q50v = float(f"{v50}") if v50 not in (None, "") else None
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     q50v = None
                 try:
                     q90v = float(f"{v90}") if v90 not in (None, "") else None
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     q90v = None
                 # Clamp non-negative
                 if isinstance(q10v, (int, float)) and q10v < 0:
@@ -590,7 +611,8 @@ async def api_ml_path_forecast_meta(
         # Sanitize qmap for meta route as well (defensive for synthetic tests)
         try:
             qmap = _sanitize_qmap(qmap)  # type: ignore[arg-type]
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         diag.update(pdiag)
         cal = _load_calibration(idx_norm)
@@ -733,7 +755,8 @@ async def api_ml_live_tp_series(
         try:
             if date_str:
                 the_date = date.fromisoformat(str(date_str))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         eff_tag = _normalize_expiry_tag(idx, expiry_tag)
         p = _find_live_csv((_project_root() / "data" / "g6_data"), idx, eff_tag, offset, the_date)
@@ -746,7 +769,8 @@ async def api_ml_live_tp_series(
         try:
             ts_list = [int(r.get("ts") or r.get("time") or 0) for r in rows if (r.get("ts") or r.get("time"))]
             now_ms = max(ts_list) if ts_list else None
-        except Exception:
+        except (ValueError, TypeError):
+            # Invalid numeric conversion or type error
             now_ms = None
         if now_ms is None:
             return JSONResponse([], status_code=200)
@@ -755,7 +779,8 @@ async def api_ml_live_tp_series(
         for r in rows:
             try:
                 tms = int(r.get("ts") or r.get("time") or 0)
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Value, type, or key error
                 continue
             if not tms or tms < cutoff:
                 continue
@@ -779,7 +804,8 @@ async def api_ml_live_tp_series(
                     # derive ms from ISO by using integer seconds, acceptable for bucketing purposes
                     from datetime import datetime as _dtpy
                     ms = int(_dtpy.fromisoformat(str(o["plot_time"]).rstrip("Z")).replace(tzinfo=None).timestamp() * 1000)
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     ms = None
                 if ms is None:
                     continue
@@ -818,7 +844,8 @@ def _load_live_rows_and_context(request: "Request", idx_norm: str, expiry_tag: s
     try:
         if date_str:
             the_date = date.fromisoformat(str(date_str))
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     eff_tag = _normalize_expiry_tag(idx_norm, expiry_tag)
     p = _find_live_csv((_project_root() / "data" / "g6_data"), idx_norm, eff_tag, offset, the_date)
@@ -836,7 +863,8 @@ def _load_live_rows_and_context(request: "Request", idx_norm: str, expiry_tag: s
     if raw_override is not None and f"{raw_override}".strip() != "":
         try:
             nm = int(f"{raw_override}")
-        except Exception:
+        except (ValueError, TypeError):
+            # Invalid numeric conversion or type error
             nm = None
     if nm is not None:
         try:
@@ -850,7 +878,8 @@ def _load_live_rows_and_context(request: "Request", idx_norm: str, expiry_tag: s
             for r in reversed(rows):
                 try:
                     ems = int(r.get("ts") or r.get("time") or 0)
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 if not ems or ems > nm:
                     continue
@@ -859,7 +888,8 @@ def _load_live_rows_and_context(request: "Request", idx_norm: str, expiry_tag: s
                     last_tp = float(tpv)
                     ref_now_ms = int(ems)
                     break
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
     if last_tp is None or ref_now_ms is None:
         for r in reversed(rows):
@@ -904,21 +934,25 @@ def _apply_profile_overrides(profile: Optional[str], window: int, k: int, mode: 
                 pdiag["profile"] = profile.lower()
                 try:
                     window_eff = int(pf.get("window", window_eff))
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                    # Value, type, key, attribute, or index errors
                     pass
                 try:
                     k_eff = int(pf.get("k", k_eff))
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                    # Value, type, key, attribute, or index errors
                     pass
                 try:
                     fb_band_pct = float(pf.get("fallback_band_pct", fb_band_pct))
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                    # Value, type, key, attribute, or index errors
                     pass
                 try:
                     fm = pf.get("force_mode")
                     if isinstance(fm, str) and fm.strip():
                         mode_eff = fm.strip().lower()
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                    # Value, type, key, attribute, or index errors
                     pass
                 # Phase C overrides only when query param not supplied
                 if dist_eff is None and pf.get("distance_metric"):
@@ -929,25 +963,29 @@ def _apply_profile_overrides(profile: Optional[str], window: int, k: int, mode: 
                 if recent_gamma_eff is None and isinstance(_rg, (int, float, str)) and _rg not in (None, ""):
                     try:
                         recent_gamma_eff = float(_rg)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         recent_gamma_eff = None
                 _rt = pf.get("regime_tolerance")
                 if regime_tol_eff is None and isinstance(_rt, (int, float, str)) and _rt not in (None, ""):
                     try:
                         regime_tol_eff = float(_rt)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         regime_tol_eff = None
                 _rp = pf.get("regime_penalty")
                 if regime_penalty_eff is None and isinstance(_rp, (int, float, str)) and _rp not in (None, ""):
                     try:
                         regime_penalty_eff = float(_rp)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         regime_penalty_eff = None
                 # Phase D ANN overrides (only when query param not supplied)
                 if ann_use_eff is None and pf.get("use_ann") is not None:
                     try:
                         ann_use_eff = bool(pf.get("use_ann"))
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         ann_use_eff = None
                 if ann_space_eff is None and isinstance(pf.get("ann_space"), str) and pf.get("ann_space"):
                     ann_space_eff = str(pf.get("ann_space")).lower()
@@ -955,7 +993,8 @@ def _apply_profile_overrides(profile: Optional[str], window: int, k: int, mode: 
                 if ann_max_cand_eff is None and isinstance(_amc, (int, float, str)) and _amc not in (None, ""):
                     try:
                         ann_max_cand_eff = int(_amc)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         ann_max_cand_eff = None
                 # Profile-specific absolute ribbon floor (half-width) override
                 _af = pf.get("abs_floor")
@@ -964,7 +1003,8 @@ def _apply_profile_overrides(profile: Optional[str], window: int, k: int, mode: 
                         afv = float(_af)
                         if afv >= 0:
                             abs_floor_override = afv
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                        # Value, type, key, attribute, or index errors
                         pass
                 # echo effective knobs for diagnostics
                 pdiag.update({
@@ -982,7 +1022,8 @@ def _apply_profile_overrides(profile: Optional[str], window: int, k: int, mode: 
                     "profile_ann_max_candidates": ann_max_cand_eff,
                     "profile_abs_floor": abs_floor_override,
                 })
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     if abs_floor_override is not None:
         pdiag["ribbon_abs_floor_override"] = abs_floor_override
@@ -1038,7 +1079,8 @@ def _run_forecast_pipeline(idx_norm: str, rows: list[dict], ref_now_ms: int, hor
             # Inject minimal dispersion if ribbon degenerate
             try:
                 _inject_degenerate_dispersion(idx_norm, int(horizon_minutes), times, qmap, diag)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
         else:
             rcfg = RetrievalConfig(
@@ -1070,9 +1112,11 @@ def _run_forecast_pipeline(idx_norm: str, rows: list[dict], ref_now_ms: int, hor
             diag = dict(retr.last_meta or {})
             try:
                 _inject_degenerate_dispersion(idx_norm, int(horizon_minutes), times, qmap, diag)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
-    except Exception:
+    except (ImportError, ValueError, KeyError, TypeError, AttributeError, OSError):
+        # Forecaster error - import, value, key, type, attribute, or file system
         try:
             forecaster = HybridPathForecaster(band_pct=fb_band_pct)
             t_seq, qmap_seq = forecaster.forecast_path(
@@ -1089,9 +1133,11 @@ def _run_forecast_pipeline(idx_norm: str, rows: list[dict], ref_now_ms: int, hor
             # As a safety net, if fallback yields flat bands, inject minimal dispersion
             try:
                 _inject_degenerate_dispersion(idx_norm, int(horizon_minutes), times, qmap, diag)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
-        except Exception:
+        except (ValueError, TypeError, KeyError):
+            # Value, type, or key error
             # Hard fallback: generate zero bands to avoid propagation of secondary errors
             steps = max(1, int(round(int(horizon_minutes) * 60_000 / max(1, int(bucket_ms)))))
             base_start = ref_now_ms + int(bucket_ms)
@@ -1117,7 +1163,8 @@ def _run_forecast_pipeline(idx_norm: str, rows: list[dict], ref_now_ms: int, hor
             # Ensure flat zeros don't render as a dead ribbon
             try:
                 _inject_degenerate_dispersion(idx_norm, int(horizon_minutes), times, qmap, diag)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             # If historical files exist for index, present as retrieval (tests expect non-fallback)
             try:
@@ -1127,7 +1174,8 @@ def _run_forecast_pipeline(idx_norm: str, rows: list[dict], ref_now_ms: int, hor
                     csv_count = sum(1 for p in hist_dir.rglob("*.csv") if p.is_file())
                     if csv_count >= 1:
                         mode_used = "retrieval"
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
     return times, qmap, mode_used, diag
 
@@ -1165,18 +1213,21 @@ def _inject_degenerate_dispersion(idx: str, horizon_minutes: int, times: list[in
         import statistics
         try:
             q50_vals = [float(v) for v in q50 if isinstance(v, (int, float))]
-        except Exception:
+        except (ValueError, TypeError, ZeroDivisionError):
+            # Statistics calculation error
             q50_vals = []
         try:
             stdev_q50 = statistics.pstdev(q50_vals) if len(q50_vals) >= 2 else 0.0
-        except Exception:
+        except (ValueError, TypeError, ZeroDivisionError):
+            # Statistics calculation error
             stdev_q50 = 0.0
         base_pct = 0.01  # 1% default band
         if q50_vals:
             mean_q50 = sum(q50_vals) / len(q50_vals)
             try:
                 ratio = (stdev_q50 / mean_q50) if mean_q50 > 0 else 0.0
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 ratio = 0.0
             if ratio > 0.0005:
                 base_pct = min(0.02, max(base_pct, 0.005 * ratio))
@@ -1208,13 +1259,16 @@ def _inject_degenerate_dispersion(idx: str, horizon_minutes: int, times: list[in
                 base_pct,
                 injected,
             )
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
-    except Exception:
+    except (ValueError, KeyError, TypeError, AttributeError):
+        # Value, key, type, or attribute error
         # Silent; do not disrupt main pipeline
         try:
             logger.debug('ribbon_degenerate_handler_failed index=%s', idx, exc_info=True)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
 
 
@@ -1234,7 +1288,8 @@ def _sanitize_qmap(qmap: dict[float, list[float]] | dict) -> dict[float, list[fl
             # Normalize key
             try:
                 qf = float(q)
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Value, type, or key error
                 continue
             seq = []
             for v in (arr or []):  # type: ignore[union-attr]
@@ -1244,12 +1299,14 @@ def _sanitize_qmap(qmap: dict[float, list[float]] | dict) -> dict[float, list[fl
                     # Substitute 0.0 for None/invalid entries
                     seq.append(0.0)
             cleaned[qf] = seq
-    except Exception:
+    except (ValueError, KeyError, TypeError):
+        # Value, key, or type error
         # On unexpected structure, fall back to original mapping casted to lists
         try:
             for k, v in qmap.items():
                 cleaned[float(k)] = [float(x) if isinstance(x, (int, float)) else 0.0 for x in (v or [])]  # type: ignore[list-item]
-        except Exception:
+        except (ValueError, TypeError, KeyError):
+            # Value, type, or key error
             return {0.5: [0.0]}
     return cleaned
 
@@ -1278,11 +1335,13 @@ def _inject_fallback_trend(rows: list[dict], times: list[int], ref_now_ms: int, 
                         arr[i] = float(arr[i]) + slope * delta_min
             try:
                 qmap = _clamp_non_negative(qmap)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             diag["fallback_trend_slope"] = slope
             diag["fallback_trend_points"] = len(tps_recent)
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
 
 
@@ -1301,14 +1360,16 @@ def _cap_to_close(times: list[int], qmap: dict, ref_now_ms: int):
                         last_ok = i
                     else:
                         break
-                except Exception:
+                except (ValueError, IndexError, KeyError, TypeError):
+                    # Value, index, key, or type error
                     break
             if last_ok >= 0 and last_ok < len(times) - 1:
                 times[:] = list(times[: last_ok + 1])
                 for q in (0.1, 0.5, 0.9):
                     seq = list(qmap.get(q) or [])
                     qmap[q] = seq[: last_ok + 1]
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
 
 
@@ -1335,7 +1396,8 @@ def _recentering_shift(times: list[int], qmap: dict, last_tp: float, diag: dict)
                                 seq[i] = float(v) + shift
                         qmap[q] = seq
                     diag["post_shift"] = shift
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
 
 
@@ -1344,12 +1406,14 @@ def _apply_calibration_and_archive(idx_norm: str, ref_now_ms: int, rows: list[di
     try:
         if True:  # preserve flag structure; calibrate handled by caller
             pass
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     # Clamp non-negative
     try:
         qmap = _clamp_non_negative(qmap)
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     # Archive best-effort
     try:
@@ -1360,7 +1424,8 @@ def _apply_calibration_and_archive(idx_norm: str, ref_now_ms: int, rows: list[di
         meta_for_archive.update({"mode": mode_used})
         qmap_cast = cast(Dict[float, Sequence[float]], {k: (tuple(v) if isinstance(v, list) else v) for k, v in qmap.items()})
         _archive_q50(_acfg, index=idx_norm, gen_ms=ref_now_ms, times=times, qmap=qmap_cast, meta=meta_for_archive)
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     try:
         from typing import Dict, Sequence, cast
@@ -1371,11 +1436,13 @@ def _apply_calibration_and_archive(idx_norm: str, ref_now_ms: int, rows: list[di
         try:
             if profile:
                 meta_for_bands2["profile"] = str(profile).lower()
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         meta_for_bands2["mode"] = mode_used
         _archive_bands(_acfg2, index=idx_norm, gen_ms=ref_now_ms, times=times, qmap=qmap_cast2, meta=meta_for_bands2)
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
 
 
@@ -1397,7 +1464,8 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
                     vv = 0.0
             tp_ts.append(int(tms))
             tp_vals.append(vv)
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError):
+        # Value, type, key, or attribute error
         tp_ts, tp_vals = [], []
     q10_list = list(qmap.get(0.1) or qmap.get("0.1") or [])
     q50_list = list(qmap.get(0.5) or qmap.get("0.5") or [])
@@ -1412,7 +1480,8 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
             v90 = q90_list[i] if i < len(q90_list) else None
             if all(isinstance(v,(int,float)) for v in (v10,v50,v90)):
                 widths_pre_sample.append(float(v90) - float(v10))
-    except Exception:
+    except (KeyError, AttributeError, TypeError, ValueError):
+        # Key, attribute, type, or value error
         widths_pre_sample = []
     # Final safety: if bands are still completely flat at this stage, widen minimally for output only
     try:
@@ -1436,14 +1505,16 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
         try:
             if bool(diag.get('fallback_stub')):
                 should_widen = True
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         if should_widen:
             base_pct_ = 0.01
             try:
                 if isinstance(diag.get('ribbon_dispersion_pct'), (int, float)):
                     base_pct_ = float(diag['ribbon_dispersion_pct'])
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             # Cap between 0.05% and 2% to avoid extremes
             base_pct_ = max(0.0005, min(0.02, base_pct_))
@@ -1475,11 +1546,14 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
                         diag['ribbon_abs_floor'] = float(profile_override)
                     else:
                         diag['ribbon_abs_floor'] = EnvConfig.get_float("G6_RIBBON_ABS_FLOOR", 1.0)
-                except Exception:
-                    diag['ribbon_abs_floor'] = 1.0
-            except Exception:
+                except (ValueError, TypeError, AttributeError):
+                    # Config access error
+                    diag[\'ribbon_abs_floor\'] = 1.0
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     # Capture width sample after widening for diagnostics
     widths_post_sample: list[float] = []
@@ -1491,13 +1565,15 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
             v90 = q90_list[i] if i < len(q90_list) else None
             if all(isinstance(v,(int,float)) for v in (v10,v50,v90)):
                 widths_post_sample.append(float(v90) - float(v10))
-    except Exception:
+    except (KeyError, AttributeError, TypeError, ValueError):
+        # Key, attribute, type, or value error
         widths_post_sample = []
     # Log concise width diagnostics
     try:
         if widths_pre_sample or widths_post_sample:
             logger.info("ribbon-widths %s mode=%s pre=%s post=%s", idx_norm, (mode_used or ""), widths_pre_sample, widths_post_sample)
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     out: list[dict] = []
     H = len(times)
@@ -1520,7 +1596,8 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
                     return float(vv)
                 j -= 1
             return None
-        except Exception:
+        except (ValueError, IndexError, TypeError, KeyError):
+            # Value, index, type, or key error
             return None
     seed_tp = float(last_tp) if isinstance(last_tp, (int, float)) else None
     for i, t in enumerate(times):
@@ -1563,9 +1640,11 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
                     try:
                         diag.setdefault("ribbon_output_fix_rows", 0)
                         diag["ribbon_output_fix_rows"] = int(diag.get("ribbon_output_fix_rows", 0)) + 1
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                        # Value, type, key, attribute, or index errors
                         pass
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         out.append(row)
 
@@ -1599,7 +1678,8 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
             headers["X-Ribbon-Width-Pre"] = ",".join(f"{w:.3f}" for w in widths_pre_sample)
         if widths_post_sample:
             headers["X-Ribbon-Width-Post"] = ",".join(f"{w:.3f}" for w in widths_post_sample)
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+        # Value, type, key, attribute, or index errors
         pass
     if isinstance(diag.get('ribbon_output_fix'), int) and diag.get('ribbon_output_fix') == 1:
         try:
@@ -1608,13 +1688,15 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
                 headers["X-Ribbon-Output-Pct"] = str(diag.get('ribbon_output_pct'))
             # Surface absolute floor used for visibility (constant min of 3.0)
             headers["X-Ribbon-Output-AbsFloorMin"] = "3.0"
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
     # Indicate pre-cache dispersion attempt
     if isinstance(diag.get('ribbon_pre_disp'), int) and diag.get('ribbon_pre_disp') == 1:
         try:
             headers["X-Ribbon-PreDispersion"] = "1"
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
     # Always surface profile echo headers for parity, use empty string when not set
     headers["X-Profile"] = (str(profile).lower() if profile else "")
@@ -1672,13 +1754,15 @@ async def api_ml_path_forecast_json(
         if rows is None:
             try:
                 logger.info("path_forecast: empty-return rows_none index=%s horizon=%s", idx_norm, horizon_minutes)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             return JSONResponse([])
         if (not rows) or last_tp is None or ref_now_ms is None:
             try:
                 logger.info("path_forecast: empty-return rows_len=%s last_tp=%s ref_now_ms=%s index=%s horizon=%s", (len(rows) if rows else 0), last_tp, ref_now_ms, idx_norm, horizon_minutes)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             return JSONResponse([])
 
@@ -1719,7 +1803,8 @@ async def api_ml_path_forecast_json(
                         try:
                             _inject_degenerate_dispersion(idx_norm, int(horizon_minutes), times, qmap, diag)
                             diag['ribbon_pre_disp'] = 1
-                        except Exception:
+                        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                            # Value, type, key, attribute, or index errors
                             pass
                         # If injection didn't mark pre-disp, force a minimal widening so panels show variance
                         try:
@@ -1745,9 +1830,11 @@ async def api_ml_path_forecast_json(
                                     qmap[0.9] = q90_for
                                     qmap["0.9"] = q90_for
                                     diag['ribbon_pre_disp'] = 1
-                        except Exception:
+                        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                            # Value, type, key, attribute, or index errors
                             pass
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                    # Value, type, key, attribute, or index errors
                     pass
         if not times:
             qs = [0.1, 0.5, 0.9]
@@ -1761,7 +1848,8 @@ async def api_ml_path_forecast_json(
             # Defensive: sanitize qmap to eliminate None entries that can trigger float(None)
             try:
                 qmap = _sanitize_qmap(qmap)  # type: ignore[arg-type]
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             if mode_used == "fallback":
                 _inject_fallback_trend(rows, times, ref_now_ms, qmap, diag)
@@ -1770,7 +1858,8 @@ async def api_ml_path_forecast_json(
                 diag.update(pdiag)
                 # Record effective mode after profile override
                 diag["mode_eff"] = mode_eff
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             try:
                 _cache_set("path_forecast_json", cache_key, {
@@ -1780,7 +1869,8 @@ async def api_ml_path_forecast_json(
                     "mode": mode_used,
                     "diag": diag,
                 })
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             # Pre-cache dispersion enforcement: if upstream produced degenerate bands
             pre_disp_applied = False
@@ -1802,9 +1892,11 @@ async def api_ml_path_forecast_json(
                         _inject_degenerate_dispersion(idx_norm, int(horizon_minutes), times, qmap, diag)
                         pre_disp_applied = True
                         diag['ribbon_pre_disp'] = 1
-                    except Exception:
+                    except (ValueError, KeyError, TypeError, AttributeError):
+                        # Value, key, type, or attribute error
                         pre_disp_applied = False
-            except Exception:
+            except (ImportError, ValueError, KeyError):
+                # Import, value, or key error
                 pre_disp_applied = False
             # If this was a fallback-produced degenerate set, avoid caching the collapsed stub so recovery can propagate quickly
             try:
@@ -1813,9 +1905,11 @@ async def api_ml_path_forecast_json(
                     try:
                         # write a small negative cache to avoid serving stale stub
                         _cache_set("path_forecast_json", cache_key, {"bucket": bucket_key, "times": [], "qmap": {}, "mode": "", "diag": {}})
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                        # Value, type, key, attribute, or index errors
                         pass
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
 
         # Hard cap beyond market close
@@ -1823,13 +1917,15 @@ async def api_ml_path_forecast_json(
         try:
             if not times:
                 logger.info("path_forecast: post-cap empty times index=%s horizon=%s ref_now_ms=%s", idx_norm, horizon_minutes, ref_now_ms)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
 
         # Recentering and calibration + archival
         try:
             _recentering_shift(times, qmap, float(last_tp), diag)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         try:
             if calibrate:
@@ -1837,12 +1933,14 @@ async def api_ml_path_forecast_json(
                 _bs_raw = cal.get("band_scale", 1.0)
                 band_scale_eff = float(_bs_raw) if isinstance(_bs_raw, (int, float)) else 1.0
                 qmap = _apply_band_scale(qmap, band_scale_eff)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         # Post-calibration safety: re-inject dispersion if bands collapsed
         try:
             _inject_degenerate_dispersion(idx_norm, int(horizon_minutes), times, qmap, diag)
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         _apply_calibration_and_archive(idx_norm, ref_now_ms, rows, times, qmap, diag, profile, mode_used, int(bucket_ms))
 
@@ -1861,7 +1959,8 @@ async def api_ml_path_forecast_json(
                 str(diag.get("cache_misses", "")),
                 str(diag.get("cache_evictions", "")),
             )
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
 
         out, headers = _build_output_rows_and_headers(idx_norm, rows, times, qmap, diag, float(last_tp), ref_now_ms, int(bucket_ms), align,
@@ -1869,7 +1968,8 @@ async def api_ml_path_forecast_json(
         try:
             if not out:
                 logger.info("path_forecast: final empty out index=%s horizon=%s times_len=%s", idx_norm, horizon_minutes, len(times))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         return JSONResponse(out, headers=headers)
     except HTTPException:
@@ -1905,7 +2005,8 @@ async def api_ml_path_diagnostics(
         try:
             if date_str:
                 the_date = date.fromisoformat(str(date_str))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         eff_tag = _normalize_expiry_tag(idx_norm, expiry_tag)
         p_live = _find_live_csv((_project_root() / "data" / "g6_data"), idx_norm, eff_tag, offset, the_date)
@@ -1919,7 +2020,8 @@ async def api_ml_path_diagnostics(
         for r in rows:
             try:
                 tms = int(r.get("ts") or r.get("time") or 0)
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Value, type, or key error
                 continue
             if not tms:
                 continue
@@ -1946,7 +2048,8 @@ async def api_ml_path_diagnostics(
                 continue
             try:
                 Hs.append(int(tok))
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Value, type, or key error
                 continue
         Hs = [h for h in Hs if 1 <= h <= 480]
         if not Hs:
@@ -1966,7 +2069,8 @@ async def api_ml_path_diagnostics(
                     gen_ms = int(row.get('gen_ms') or '0')
                     tgt_ms = int(row.get('target_ms') or '0')
                     hmin = int(row.get('horizon_min') or '0')
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 # parse q50 value strictly; skip row if invalid/empty
                 val = row.get('q50')
@@ -1974,7 +2078,8 @@ async def api_ml_path_diagnostics(
                     continue
                 try:
                     q50 = float(f"{val}")
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 if not gen_ms or not tgt_ms:
                     continue
@@ -2004,7 +2109,8 @@ async def api_ml_path_diagnostics(
                         if isinstance(name, str) and name.lower().startswith('q'):
                             try:
                                 qv = int(name[1:])
-                            except Exception:
+                            except (ValueError, TypeError):
+                                # Invalid numeric conversion or type error
                                 qv = None
                             if qv == 10:
                                 q10_name = name
@@ -2019,7 +2125,8 @@ async def api_ml_path_diagnostics(
                             gen_ms = int(row.get('gen_ms') or '0')
                             tgt_ms = int(row.get('target_ms') or '0')
                             hmin = int(row.get('horizon_min') or '0')
-                        except Exception:
+                        except (ValueError, TypeError, KeyError):
+                            # Value, type, or key error
                             continue
                         if not gen_ms or not tgt_ms:
                             continue
@@ -2035,13 +2142,15 @@ async def api_ml_path_diagnostics(
                             v = row.get(q10_name)
                             try:
                                 q10v = float(v) if v not in (None, "") else None
-                            except Exception:
+                            except (ValueError, TypeError):
+                                # Invalid numeric conversion or type error
                                 q10v = None
                         if q90_name:
                             v = row.get(q90_name)
                             try:
                                 q90v = float(v) if v not in (None, "") else None
-                            except Exception:
+                            except (ValueError, TypeError):
+                                # Invalid numeric conversion or type error
                                 q90v = None
                         if q10v is None or q90v is None:
                             continue
@@ -2059,7 +2168,8 @@ async def api_ml_path_diagnostics(
                         else:
                             coverage_by_h[h] = cover_counts.get(h, 0) / float(tot)
                             bandw_by_h[h] = bw_sums.get(h, 0.0) / float(tot)
-        except Exception:
+        except (ValueError, KeyError, TypeError, ZeroDivisionError):
+            # Value, key, type, or division error
             # Optional bands; ignore errors
             pass
 
@@ -2094,7 +2204,8 @@ async def api_ml_path_diagnostics(
             try:
                 if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
                     return None
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             return v
 
@@ -2144,7 +2255,8 @@ async def api_ml_path_stats(
         try:
             if date_str:
                 the_date = date.fromisoformat(str(date_str))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         base = (_project_root() / "data" / "g6_data")
         p_live = _find_live_csv(base, idx, expiry_tag, offset, the_date)
@@ -2177,7 +2289,8 @@ async def api_ml_path_stats(
         for r in rows:
             try:
                 tms_raw = int(r.get("ts") or r.get("time") or 0)
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Value, type, or key error
                 continue
             if not tms_raw:
                 continue
@@ -2229,7 +2342,8 @@ async def api_ml_path_stats(
         try:
             cal = _load_calibration(idx)
             cal_scale = float(cal.get("band_scale", 1.0)) or 1.0
-        except Exception:
+        except (ValueError, KeyError, TypeError, OSError):
+            # Value, key, type, or file system error
             cal_scale = 1.0
 
         import csv  # local import for safety
@@ -2240,7 +2354,8 @@ async def api_ml_path_stats(
                 if isinstance(name, str) and name.lower().startswith('q'):
                     try:
                         qv = int(name[1:])
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         qv = None
                     if qv == 10:
                         q10_name = name
@@ -2256,7 +2371,8 @@ async def api_ml_path_stats(
                     gen_ms = int(row.get('gen_ms') or '0')
                     tgt_ms = int(row.get('target_ms') or '0')
                     hmin = int(row.get('horizon_min') or '0')
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 if not gen_ms or not tgt_ms or hmin != int(horizon) or gen_ms < cutoff_gen:
                     continue
@@ -2269,7 +2385,8 @@ async def api_ml_path_stats(
                         continue
                     q10v = float(f"{v10}")
                     q90v = float(f"{v90}")
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
 
                 # Nearest realized value within tolerance
@@ -2293,13 +2410,15 @@ async def api_ml_path_stats(
                     mv = row.get(q50_name)
                     try:
                         m = float(f"{mv}") if mv not in (None, "") else None
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         m = None
                     s = cal_scale
                     if has_scale_col:
                         try:
                             s = float(row.get('band_scale') or s) or s
-                        except Exception:
+                        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                            # Value, type, key, attribute, or index errors
                             pass
                     if m is not None and s and s > 1e-9:
                         q10v = m - (m - q10v) / s
@@ -2356,7 +2475,8 @@ async def api_ml_path_advisor(
         try:
             if date_str:
                 the_date = date.fromisoformat(str(date_str))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         base = (_project_root() / "data" / "g6_data")
         p_live = _find_live_csv(base, idx, expiry_tag, offset, the_date)
@@ -2416,7 +2536,8 @@ async def api_ml_path_advisor(
             try:
                 tms = int(r.get("ts") or r.get("time") or 0)
                 tpv = r.get("tp")
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Value, type, or key error
                 continue
             if tms and isinstance(tpv, (int, float)):
                 realized[tms] = float(tpv)
@@ -2469,7 +2590,8 @@ async def api_ml_path_advisor(
                     if isinstance(name, str) and name.lower().startswith('q'):
                         try:
                             qv = int(name[1:])
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid numeric conversion or type error
                             qv = None
                         if qv == 10:
                             q10_name = name
@@ -2481,7 +2603,8 @@ async def api_ml_path_advisor(
                         gen_ms = int(row.get('gen_ms') or '0')
                         tgt_ms = int(row.get('target_ms') or '0')
                         hmin = int(row.get('horizon_min') or '0')
-                    except Exception:
+                    except (ValueError, TypeError, KeyError):
+                        # Value, type, or key error
                         continue
                     if not gen_ms or not tgt_ms or hmin != int(horizon):
                         continue
@@ -2494,7 +2617,8 @@ async def api_ml_path_advisor(
                             continue
                         q10v = float(f"{v10}")
                         q90v = float(f"{v90}")
-                    except Exception:
+                    except (ValueError, TypeError, KeyError):
+                        # Value, type, or key error
                         continue
                     # NN align
                     import bisect as _bisect
@@ -2561,7 +2685,8 @@ async def api_ml_path_advisor(
             summary["gap"] = gap
             try:
                 summary["gap_abs"] = abs(gap)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             gabs = abs(gap)
             if gabs >= float(gap_crit) and samples > 0:
@@ -2623,14 +2748,16 @@ async def api_ml_path_advisor(
                 comp.forecast_path(recent_tp, context={"index": idx, "now_ms": now_ms_row, "live_rows": rows}, quantiles=(0.5,), horizon_minutes=int(horizon), bucket_ms=int(bucket_ms))
                 retrieval_meta = dict(comp.last_meta or {})
                 mode_used = "hybrid"
-            except Exception:
+            except (ImportError, ValueError, KeyError, TypeError, AttributeError, OSError):
+                # Forecaster error - import, value, key, type, attribute, or file system
                 try:
                     rcfg = RetrievalConfig(root=_project_root() / "data" / "g6_data", expiry_tag=expiry_tag, offset=offset, window=60, k=15)
                     retr = RetrievalPathForecaster(rcfg)
                     retr.forecast_path(recent_tp, context={"index": idx, "now_ms": now_ms_row, "live_rows": rows}, quantiles=(0.5,), horizon_minutes=int(horizon), bucket_ms=int(bucket_ms))
                     retrieval_meta = dict(retr.last_meta or {})
                     mode_used = "retrieval"
-                except Exception:
+                except (ImportError, ValueError, KeyError, TypeError, AttributeError):
+                    # Forecaster error
                     mode_used = "fallback"
                     retrieval_meta = {}
             # Candidates/K threshold
@@ -2638,7 +2765,8 @@ async def api_ml_path_advisor(
                 def _safe_int(x, d=0):
                     try:
                         return int(float(f"{x}"))
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         return int(d)
                 cand = _safe_int(retrieval_meta.get("candidates_total", 0), 0)
                 need = _safe_int(retrieval_meta.get("threshold_needed", 0), 0)
@@ -2652,7 +2780,8 @@ async def api_ml_path_advisor(
                         "remedy": "Broaden window/days, relax filters, or ensure historical corpus is complete.",
                         "metrics": {"candidates_total": cand, "threshold_needed": need, "k_used": k_used},
                     })
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
             # Mode fallback
             summary["mode"] = mode_used
@@ -2680,9 +2809,11 @@ async def api_ml_path_advisor(
                         "remedy": "Ensure ribbon panel is refreshing and API cache TTL is appropriate.",
                         "metrics": {"staleness_ms": staleness_ms},
                     })
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+                # Value, type, key, attribute, or index errors
                 pass
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
 
         # overall level (crit if any, else warn if any, else ok)
@@ -2733,7 +2864,8 @@ async def api_ml_path_coverage_history(
         try:
             if date_str:
                 the_date = date.fromisoformat(str(date_str))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
 
         base = (_project_root() / "data" / "g6_data")
@@ -2749,7 +2881,8 @@ async def api_ml_path_coverage_history(
             try:
                 tms = int(r.get("ts") or r.get("time") or 0)
                 tpv = r.get("tp")
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Value, type, or key error
                 continue
             if tms and isinstance(tpv, (int, float)):
                 realized[tms] = float(tpv)
@@ -2777,7 +2910,8 @@ async def api_ml_path_coverage_history(
                 if isinstance(name, str) and name.lower().startswith('q'):
                     try:
                         qv = int(name[1:])
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         qv = None
                     if qv == 10:
                         q10_name = name
@@ -2788,7 +2922,8 @@ async def api_ml_path_coverage_history(
                     gen_ms = int(row.get('gen_ms') or '0')
                     tgt_ms = int(row.get('target_ms') or '0')
                     hmin = int(row.get('horizon_min') or '0')
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 if not gen_ms or not tgt_ms or hmin != int(horizon):
                     continue
@@ -2799,7 +2934,8 @@ async def api_ml_path_coverage_history(
                         continue
                     q10v = float(f"{v10}")
                     q90v = float(f"{v90}")
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 band_rows.append((gen_ms, tgt_ms, q10v, q90v))
 
@@ -2817,15 +2953,18 @@ async def api_ml_path_coverage_history(
                 for row in rd:
                     try:
                         t = int(row.get('ts_ms') or '0')
-                    except Exception:
+                    except (ValueError, TypeError, KeyError):
+                        # Value, type, or key error
                         continue
                     try:
                         bs = float(f"{row.get('band_scale')}") if row.get('band_scale') not in (None, "") else None  # type: ignore[assignment]
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         bs = None  # type: ignore[assignment]
                     try:
                         tgt = float(f"{row.get('target')}") if row.get('target') not in (None, "") else None  # type: ignore[assignment]
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         tgt = None  # type: ignore[assignment]
                     if t:
                         hist_ts.append(t)
@@ -2899,7 +3038,8 @@ async def api_ml_path_coverage_history(
 
             try:
                 gap_abs = (abs(float(cov) - float(tgt)) if (cov is not None and isinstance(tgt, (int, float))) else None)
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 gap_abs = None
 
             out.append({
@@ -2965,7 +3105,8 @@ async def api_ml_path_coverage_history_csv(
                 else:
                     s = str(rb)
                 data = json.loads(s)
-            except Exception:
+            except (KeyError, AttributeError, TypeError, ValueError):
+                # Key, attribute, type, or value error
                 data = []
         # Build CSV
         import io, csv as _csv
@@ -3031,7 +3172,8 @@ async def api_ml_path_advisor_flags(
             else:
                 s = str(rb)
             data = json.loads(s)
-        except Exception:
+        except (KeyError, AttributeError, TypeError):
+            # Dict access, attribute, or type error
             data = {}
         sm = (data or {}).get("summary") or {}
         band_scale = sm.get("band_scale")
@@ -3071,7 +3213,8 @@ async def api_ml_path_calibrate_now(
         try:
             if date_str:
                 the_date = date.fromisoformat(str(date_str))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError, IndexError):
+            # Value, type, key, attribute, or index errors
             pass
         # Load realized from live_csv
         base = (_project_root() / "data" / "g6_data")
@@ -3086,7 +3229,8 @@ async def api_ml_path_calibrate_now(
         for r in rows:
             try:
                 tms = int(r.get("ts") or r.get("time") or 0)
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Value, type, or key error
                 continue
             if not tms:
                 continue
@@ -3121,7 +3265,8 @@ async def api_ml_path_calibrate_now(
                 if isinstance(name, str) and name.lower().startswith('q'):
                     try:
                         qv = int(name[1:])
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         qv = None
                     if qv == 10:
                         q10_name = name
@@ -3132,7 +3277,8 @@ async def api_ml_path_calibrate_now(
                     gen_ms = int(row.get('gen_ms') or '0')
                     tgt_ms = int(row.get('target_ms') or '0')
                     hmin = int(row.get('horizon_min') or '0')
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 if not gen_ms or not tgt_ms or hmin != int(horizon):
                     continue
@@ -3145,7 +3291,8 @@ async def api_ml_path_calibrate_now(
                         continue
                     q10v = float(f"{v10}")
                     q90v = float(f"{v90}")
-                except Exception:
+                except (ValueError, TypeError, KeyError):
+                    # Value, type, or key error
                     continue
                 # nearest realized alignment
                 import bisect as _bisect
@@ -3178,7 +3325,8 @@ async def api_ml_path_calibrate_now(
         # heuristic update rule: scale *= (target/actual) ** 0.5, clamped
         try:
             ratio = float(target) / max(1e-9, float(actual))
-        except Exception:
+        except (ValueError, TypeError, ZeroDivisionError):
+            # Value error, type error, or division by zero
             ratio = 1.0
         new_scale = prev_scale * (ratio ** 0.5)
         new_scale = max(0.5, min(5.0, float(new_scale)))
@@ -3235,7 +3383,8 @@ async def api_ml_path_calibrate(
             else:
                 s = str(rb)
             data = _json.loads(s)
-        except Exception:
+        except (KeyError, AttributeError, TypeError):
+            # Dict access, attribute, or type error
             data = {}
         _bs_val = data.get("band_scale") if isinstance(data, dict) else None
         band_scale = float(_bs_val) if isinstance(_bs_val, (int, float)) else None
@@ -3275,12 +3424,14 @@ async def api_ml_path_calibration_history(
         def _to_float(v):
             try:
                 return float(f"{v}")
-            except Exception:
+            except (ValueError, IndexError, TypeError, KeyError):
+                # Value, index, type, or key error
                 return None
         def _to_int(v):
             try:
                 return int(float(f"{v}"))
-            except Exception:
+            except (ValueError, IndexError, TypeError, KeyError):
+                # Value, index, type, or key error
                 return None
         rows = []
         with p_hist.open('r', encoding='utf-8', newline='') as f:
@@ -3288,7 +3439,8 @@ async def api_ml_path_calibration_history(
             for row in rd:
                 try:
                     ts_ms = int(row.get('ts_ms') or '0')
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     ts_ms = 0
                 # Parse base fields
                 _band_scale = _to_float(row.get('band_scale'))
@@ -3299,7 +3451,8 @@ async def api_ml_path_calibration_history(
                     _gap_abs = (abs(float(_actual) - float(_target))
                                 if (_actual is not None and _target is not None)
                                 else None)
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     _gap_abs = None
                 obj = {
                     "ts_ms": ts_ms,

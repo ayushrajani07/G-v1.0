@@ -55,7 +55,8 @@ def load_profiles(config_path: Optional[str]) -> Dict[str, Dict[str, float]]:
                 for name, cfg in data.items():
                     if isinstance(cfg, dict):
                         profiles[name] = {**profiles.get(name, {}), **cfg}
-    except Exception:
+    except (OSError, IOError, json.JSONDecodeError, ValueError):
+        # File access errors, JSON parsing errors - use defaults
         pass
     return profiles
 
@@ -115,7 +116,8 @@ def forecast_path_core(
             mode_used = "hybrid"
             try:
                 diag = dict(comp.last_meta or {})
-            except Exception:
+            except (AttributeError, TypeError):
+                # Missing last_meta attribute or type conversion error
                 diag = {}
         else:
             from pathlib import Path
@@ -131,9 +133,10 @@ def forecast_path_core(
             mode_used = "retrieval"
             try:
                 diag = dict(retr.last_meta or {})
-            except Exception:
+            except (AttributeError, TypeError):
+                # Missing last_meta attribute or type conversion error
                 diag = {}
-    except Exception:
+    except (ImportError, AttributeError, ValueError, TypeError, KeyError, OSError):
         # Keep a functional fallback
         forecaster = HybridPathForecaster(band_pct=fb_band_pct)
         times, qmap = forecaster.forecast_path(
@@ -171,11 +174,13 @@ def forecast_path_core(
                         qmap[q] = arr
                 try:
                     qmap = _clamp_non_negative(qmap)
-                except Exception:
+                except (KeyError, ValueError, TypeError):
+                    # Dict access, value conversion, or type errors
                     pass
                 diag["fallback_trend_slope"] = slope
                 diag["fallback_trend_points"] = len(tps_recent)
-        except Exception:
+        except (ValueError, TypeError, KeyError, IndexError, ZeroDivisionError):
+            # Value conversion, type errors, dict/list access errors, or division by zero
             pass
 
     return times, qmap, mode_used, diag

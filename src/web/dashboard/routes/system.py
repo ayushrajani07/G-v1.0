@@ -55,7 +55,8 @@ async def api_info() -> JSONResponse:
                 "concurrency_limit": _MAX_CONCURRENCY,
             }
         )
-    except Exception:
+    except (KeyError, ValueError, AttributeError):
+        # Config access or attribute errors - return minimal version info
         return JSONResponse({"version": "0.1.0"})
 
 
@@ -81,7 +82,8 @@ def _norm_offset(s: str | None) -> str:
             return up
         if up.isdigit():
             return f"+{up}"
-    except Exception:
+    except (ValueError, AttributeError):
+        # Invalid numeric conversion or string method failure
         pass
     return v
 
@@ -156,7 +158,8 @@ async def api_stats() -> JSONResponse:
                 "avg_ms": round(avg_ms, 2),
                 "max_ms": round(float(v.get("dur_ms_max", 0.0)), 2),
             }
-    except Exception:
+    except (KeyError, ValueError, TypeError, AttributeError):
+        # Dict access, conversion, or attribute errors - continue with partial data
         pass
     out["concurrency_limit"] = max(1, _MAX_CONCURRENCY)
     return JSONResponse(out)

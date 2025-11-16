@@ -62,7 +62,8 @@ async def api_overlay(
         try:
             await asyncio.wait_for(_SEM.acquire(), timeout=0.001)
             acquired = True
-        except Exception:
+        except asyncio.TimeoutError:
+            # Semaphore acquisition timeout - too many concurrent requests
             _obs_too_many("overlay")
             return JSONResponse(
                 {"error": "too_many_requests", "retry_after": 1},
@@ -112,7 +113,8 @@ async def api_overlay(
                     else:
                         try:
                             obj[col] = float(val)
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid numeric conversion or type error
                             obj[col] = None
                 rows.append(obj)
 
@@ -132,7 +134,8 @@ async def api_overlay(
                 if (not disable_cache) and inm and inm == headers["ETag"]:
                     _obs_end("overlay", t0, ok=True)
                     return JSONResponse(None, status_code=304, headers=headers)
-        except Exception:
+        except (OSError, ValueError, AttributeError):
+            # File stat errors, time conversion errors, or attribute access failures
             pass
 
         resp = ORJSONResponse(rows, headers=headers)
@@ -157,5 +160,6 @@ async def api_overlay(
         if acquired:
             try:
                 _SEM.release()
-            except Exception:
+            except RuntimeError:
+                # Semaphore release error - already released or not acquired
                 pass
