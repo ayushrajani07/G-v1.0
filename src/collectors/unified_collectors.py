@@ -1285,12 +1285,14 @@ def run_unified_collectors(
             if not cycle_ts_attr:
                 try:
                     cycle_ts_attr = int(getattr(cycle_start_ts, 'timestamp', lambda: 0)())  # datetime to epoch
-                except Exception:
+                except (AttributeError, TypeError, ValueError):
+                    # Failed to convert timestamp
                     cycle_ts_attr = 0
             cycle_ts_int = int(cycle_ts_attr or 0)
             index_count = len(index_params) if isinstance(index_params, dict) else -1
             logger.info("PHASE_TIMING_MERGED cycle_ts=%s indices=%s %s | total=%.3fs", cycle_ts_int, index_count, ' | '.join(parts), total_ph)
-        except Exception:
+        except (AttributeError, TypeError, KeyError, ValueError):
+            # Phase timing emission failed, not critical
             logger.debug('phase_timing_merged_emit_failed', exc_info=True)
     # Emit accumulated human summary before structured cycle line
     # When single-emit phase timing is enabled defer emission until just before human summary (single cycle consolidation)
@@ -1306,17 +1308,20 @@ def run_unified_collectors(
                 if not cycle_ts_attr:
                     try:
                         cycle_ts_attr = int(getattr(cycle_start_ts, 'timestamp', lambda: 0)())
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError):
+                        # Failed to convert timestamp
                         cycle_ts_attr = 0
                 cycle_ts_int = int(cycle_ts_attr or 0)
                 index_count = len(index_params) if isinstance(index_params, dict) else -1
                 logger.info("PHASE_TIMING_MERGED cycle_ts=%s indices=%s %s | total=%.3fs", cycle_ts_int, index_count, ' | '.join(parts), total_ph)
-            except Exception:
+            except (AttributeError, TypeError, KeyError, ValueError):
+                # Phase timing single emit failed, not critical
                 logger.debug('phase_timing_merged_single_emit_failed', exc_info=True)
     # Compute stale_present regardless of human block emission to drive abort logic reliably.
     try:
         stale_present = any(((e.get('status') or '').upper() == 'STALE') for e in indices_struct)
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        # Failed to check stale status in indices_struct
         stale_present = False
     if concise_mode and human_blocks:
         try:
@@ -1764,17 +1769,17 @@ def run_unified_collectors(
                 cycle_elapsed = total_elapsed
                 if not hasattr(metrics, 'legacy_cycle_duration_seconds'):
                     try: metrics.legacy_cycle_duration_seconds = _H('g6_legacy_cycle_duration_seconds','Legacy collectors cycle duration seconds', buckets=(0.1,0.25,0.5,1,2,5,10))
-                    except Exception: pass
+                    except (AttributeError, TypeError, ValueError): pass  # Metric registration failed
                 if not hasattr(metrics, 'legacy_cycle_duration_summary'):
                     try: metrics.legacy_cycle_duration_summary = _S('g6_legacy_cycle_duration_summary','Legacy collectors cycle duration summary')
-                    except Exception: pass
+                    except (AttributeError, TypeError, ValueError): pass  # Metric registration failed
                 h = getattr(metrics,'legacy_cycle_duration_seconds',None); s = getattr(metrics,'legacy_cycle_duration_summary',None)
                 if h:
                     try: h.observe(cycle_elapsed)
-                    except Exception: pass
+                    except (AttributeError, TypeError, ValueError): pass  # Metric observation failed
                 if s:
                     try: s.observe(cycle_elapsed)
-                    except Exception: pass
+                    except (AttributeError, TypeError, ValueError): pass  # Metric observation failed
                 # Alert counters (flat or nested)
                 alerts_block_obj: Any = None
                 if snapshot_summary and 'alerts' in snapshot_summary:
@@ -1788,11 +1793,11 @@ def run_unified_collectors(
                         metric_name = f'legacy_alerts_{cat}_total'
                         if not hasattr(metrics, metric_name):
                             try: setattr(metrics, metric_name, _C(f'g6_{metric_name}','Count of legacy cycles with occurrences for category'))
-                            except Exception: pass
+                            except (AttributeError, TypeError, ValueError): pass  # Metric registration failed
                         c = getattr(metrics, metric_name, None)
                         if c:
                             try: c.inc(int(val) if isinstance(val, (int, float, str)) else 1)
-                            except Exception: pass
+                            except (AttributeError, TypeError, ValueError): pass  # Metric increment failed
         except Exception:
             logger.debug('legacy_operational_metrics_failed', exc_info=True)
         # Shadow diff attachment removed with rollout mode deprecation.
