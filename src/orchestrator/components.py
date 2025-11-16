@@ -132,17 +132,20 @@ except Exception as _providers_import_err:  # pragma: no cover
                         raw_price = first_val.get('last_price', 0)
                         try:
                             price = float(raw_price) if raw_price is not None else 0.0
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Handle float conversion failures
                             price = 0.0
                     else:
                         try:
                             price = float(first_val)
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Handle float conversion failures
                             price = 0.0
                 else:
                     price = 0.0
                 return price, {}
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
+                # Handle provider access, type conversion, or data retrieval failures
                 self.logger.debug("[fallback Providers] get_index_data failure for %s", index_symbol, exc_info=True)
                 return 0, {}
         def get_ltp(self, index_symbol):  # noqa: D401
@@ -156,12 +159,14 @@ except Exception as _providers_import_err:  # pragma: no cover
                         meta_step = float(get_index_meta(index_symbol).step)
                     else:
                         raise ImportError("get_index_meta not available")
-                except Exception:
+                except (ImportError, AttributeError, TypeError, ValueError, KeyError):
+                    # Handle meta retrieval or conversion failures
                     meta_step = 100.0 if index_symbol in ("BANKNIFTY","SENSEX") else 50.0
                 if meta_step <= 0:
                     meta_step = 50.0
                 return round(price/meta_step)*meta_step
-            except Exception:
+            except (AttributeError, TypeError, ValueError, ZeroDivisionError):
+                # Handle price retrieval, math operations, or division failures
                 return 0
         def resolve_expiry(self, index_symbol, expiry_rule):  # noqa: D401
             """Synthetic expiry resolver (very naive).
@@ -192,7 +197,8 @@ except Exception as _providers_import_err:  # pragma: no cover
                     nxt = (first_next.replace(day=28) + _d.timedelta(days=4)).replace(day=1) - _d.timedelta(days=1)
                     return nxt
                 return today + _d.timedelta(days=5)
-            except Exception:
+            except (ValueError, TypeError, AttributeError, OverflowError):
+                # Handle date parsing or calculation failures
                 return _dt.date.today()
         def get_option_instruments(self, index_symbol, expiry_date, strikes):  # noqa: D401
             synthetic = []
@@ -206,7 +212,8 @@ except Exception as _providers_import_err:  # pragma: no cover
                 def _to_int(val) -> int | None:
                     try:
                         return int(val)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Handle int conversion failures
                         return None
                 def _build_pair(k: int) -> tuple[dict, dict]:
                     ce = {
@@ -234,7 +241,8 @@ except Exception as _providers_import_err:  # pragma: no cover
                     ce, pe = _build_pair(k)
                     synthetic.append(ce)
                     synthetic.append(pe)
-            except Exception:
+            except (AttributeError, TypeError, ValueError, ImportError):
+                # Handle instrument construction failures
                 return []
             return synthetic
         def enrich_with_quotes(self, instruments):  # noqa: D401
@@ -269,7 +277,8 @@ except Exception as _providers_import_err:  # pragma: no cover
                     try:
                         if lbl:
                             lbl.inc(amt)
-                    except Exception:
+                    except (AttributeError, TypeError, RuntimeError):
+                        # Handle metric increment failures
                         pass
                 if enriched_count:
                     lbl_q = m_quote_enriched_total_labels('fallback')
@@ -277,7 +286,8 @@ except Exception as _providers_import_err:  # pragma: no cover
                 if instruments:  # one synthetic API call per enrich invocation
                     lbl_api = m_api_calls_total_labels('fallback_enrich','success')
                     _safe_inc(lbl_api)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle metrics generation or emission failures
                 pass
             return out
         def __getattr__(self, name):  # final fallback for unimplemented attrs
@@ -322,10 +332,11 @@ try:
                 create_provider_fn = _CreateProviderImport
             else:
                 raise ImportError("create_provider not available")
-            logger.debug("Recovered real create_provider after broad optional import fallback")
-        except Exception:
+                logger.debug("Recovered real create_provider after broad optional import fallback")
+        except (ImportError, AttributeError, TypeError):
+            # Handle create_provider recovery failures
             logger.debug("create_provider recovery attempt failed", exc_info=True)
-except Exception as _csv_reimport_err:  # pragma: no cover
+except (ImportError, AttributeError, TypeError) as _csv_reimport_err:  # pragma: no cover
     # Provide a minimal no-op CsvSink to preserve downstream logic; metrics &
     # providers can still function and orchestrator will fall back to unified
     # collectors with synthetic provider if necessary.
@@ -348,7 +359,8 @@ try:
     get_error_handler_fn = get_error_handler_lazy
     ErrorCategoryT = ErrorCategory
     ErrorSeverityT = ErrorSeverity
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing error handling module
     def _get_error_handler_fallback():
         class _EH:
             def handle_error(self, *a, **k):
@@ -409,7 +421,7 @@ def init_providers(config) -> Any:
                         }
                     else:
                         raise ImportError("get_index_meta not available")
-                except Exception:
+                except (ImportError, AttributeError, TypeError, ValueError, KeyError):  # Handle meta retrieval failures
                     self._bases = {'NIFTY': 20000.0, 'BANKNIFTY': 45000.0, 'FINNIFTY': 21000.0, 'SENSEX': 66000.0}
                 self._prices = dict(self._bases)
             def _symbol(self, name):
@@ -485,7 +497,7 @@ def init_providers(config) -> Any:
                         import datetime as _dt
                         return _dt.date(int(y),int(m),int(d))
                     return exp_list[0]
-                except Exception:
+                except (ValueError, TypeError, IndexError, AttributeError, ImportError):
                     # Final fallback: first future expiry
                     exp_list = self.get_expiry_dates(index_symbol)
                     return exp_list[0] if exp_list else None
@@ -510,16 +522,19 @@ def init_providers(config) -> Any:
                     mod = __import__(module_name, fromlist=[class_name])
                     cls = getattr(mod, class_name)
                     extra.append(cls())
-                except Exception:
+                except (ImportError, AttributeError, TypeError, ValueError):
+                    # Handle dynamic import or instantiation failures
                     logger.warning("Failed loading secondary provider from %s", sec_path)
             if extra and (CompositeProviderT is not None):
                 try:
                     cp = CompositeProviderT([provider] + extra, metrics=metrics, name='primary_cluster')
                     # Wrap composite under Providers facade for downstream compatibility
                     providers_wrapper.primary_provider = cp
-                except Exception:
+                except (TypeError, ValueError, RuntimeError, AttributeError):
+                    # Handle composite provider construction failures
                     logger.debug("CompositeProvider construction failed", exc_info=True)
-    except Exception:
+    except (ImportError, AttributeError, TypeError, KeyError):
+        # Handle composite provider configuration failures
         pass
     return providers_wrapper
 
@@ -532,7 +547,8 @@ def init_storage(config) -> tuple[Any, Any]:
         os.environ.setdefault('G6_CSV_BUFFER_SIZE', str(storage_cfg.get('csv_buffer_size', 0)))
         os.environ.setdefault('G6_CSV_MAX_OPEN_FILES', str(storage_cfg.get('csv_max_open_files', 64)))
         os.environ.setdefault('G6_CSV_FLUSH_INTERVAL', str(storage_cfg.get('csv_flush_interval_seconds', 2.0)))
-    except Exception:
+    except (AttributeError, TypeError, KeyError, ValueError, OSError):
+        # Handle config access or environment variable set failures
         pass
     csv_sink_ctor: Any = CsvSinkT
     csv_sink = csv_sink_ctor(base_dir=data_dir)
@@ -548,19 +564,23 @@ def init_health(config, providers, csv_sink) -> Any:
         if callable(fn):
             try:
                 fn('providers', providers)
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle component registration failures
                 pass
             try:
                 fn('csv_sink', csv_sink)
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle component registration failures
                 pass
         rhc = getattr(hm, 'register_health_check', None)
         if callable(rhc):
             try:
                 rhc('csv_storage', lambda: getattr(HealthCheckT, 'check_storage', lambda *_: True)(csv_sink))
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle health check registration failures
                 pass
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle health monitor method access failures
         pass
     return hm
 
