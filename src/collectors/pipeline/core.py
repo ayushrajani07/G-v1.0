@@ -105,7 +105,8 @@ class ProvidersAdapter:
                 logger.warning(
                     "TRACE_PIPELINE_RESOLVE index=%s rule=%s resolved=%s", wi.index, wi.expiry_rule, getattr(expiry_date,'isoformat',lambda:expiry_date)()
                 )
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError, ValueError):  # pragma: no cover
+            # Failed to format trace log - ignore silently
             pass
         return wi
 
@@ -157,7 +158,8 @@ class IVEstimationBlock(AnalyticsBlock):
                     if iv_res < self.iv_min: iv_res = self.iv_min
                     elif iv_res > self.iv_max: iv_res = self.iv_max
                     data['iv'] = iv_res
-            except Exception:  # pragma: no cover
+            except (ValueError, ZeroDivisionError, ArithmeticError, KeyError, TypeError):  # pragma: no cover
+                # IV estimation failed for this option - skip it
                 continue
 
 class GreeksBlock(AnalyticsBlock):
@@ -189,7 +191,8 @@ class GreeksBlock(AnalyticsBlock):
                         data[k_dst] = greeks.get(k_src,0)
                 if float(data.get('iv',0)) == 0 and iv_fraction:
                     data['iv'] = iv_fraction
-            except Exception:  # pragma: no cover
+            except (ValueError, ZeroDivisionError, ArithmeticError, KeyError, TypeError):  # pragma: no cover
+                # Greeks computation failed for this option - skip it
                 continue
 
 class CsvPersistAdapter(PersistenceBlock):
@@ -210,9 +213,15 @@ class CsvPersistAdapter(PersistenceBlock):
                 return_metrics=True,
                 expiry_rule_tag=ee.work.expiry_rule,
             )
-        except Exception as e:  # pragma: no cover (reuses upstream error handling eventually)
-            logger.error("CSV persistence failed in pipeline: %s", e)
+        except (OSError, IOError, PermissionError) as e:  # pragma: no cover
+            logger.error("CSV persistence failed in pipeline (I/O error): %s", e, exc_info=True)
             return PersistOutcome(option_count=0, pcr=None, failed=True)
+        except (KeyError, ValueError, TypeError, AttributeError) as e:  # pragma: no cover
+            logger.error("CSV persistence failed in pipeline (data error): %s", e, exc_info=True)
+            return PersistOutcome(option_count=0, pcr=None, failed=True)
+        except Exception as e:  # pragma: no cover (reuses upstream error handling eventually)
+            logger.critical("CSV persistence failed in pipeline (unexpected error): %s", e, exc_info=True)
+            raise
         pcr = None
         day_width = None
         ts = None
@@ -223,7 +232,8 @@ class CsvPersistAdapter(PersistenceBlock):
                 day_width = metrics_payload.get("day_width")
                 ts = metrics_payload.get("timestamp")
                 expiry_code = metrics_payload.get("expiry_code")
-        except Exception:  # pragma: no cover
+        except (KeyError, AttributeError, TypeError):  # pragma: no cover
+            # Failed to extract metrics payload fields - continue with defaults
             pass
         return PersistOutcome(option_count=len(ee.enriched), pcr=pcr, failed=False, day_width=day_width, snapshot_timestamp=ts, expiry_code=expiry_code)
 
@@ -260,13 +270,18 @@ class CollectorPipeline:
             for block in self.analytics:
                 try:
                     block.apply(ee)
+                except (ValueError, ZeroDivisionError, ArithmeticError, KeyError, TypeError, AttributeError) as ab:  # pragma: no cover
+                    logger.debug("Analytics block failure (expected error): %s", ab)
                 except Exception as ab:  # pragma: no cover
-                    logger.debug("Analytics block failure: %s", ab)
+                    logger.warning("Analytics block failure (unexpected error): %s", ab, exc_info=True)
             outcome = self.persistence.persist(ee)
             return ee, outcome
-        except Exception as e:  # pragma: no cover
-            logger.error("Pipeline expiry failure %s %s: %s", wi.index, wi.expiry_rule, e)
+        except (KeyError, ValueError, TypeError, AttributeError) as e:  # pragma: no cover
+            logger.error("Pipeline expiry failure %s %s (data error): %s", wi.index, wi.expiry_rule, e, exc_info=True)
             return None, None
+        except Exception as e:  # pragma: no cover
+            logger.critical("Pipeline expiry failure %s %s (unexpected error): %s", wi.index, wi.expiry_rule, e, exc_info=True)
+            raise
 
 def build_default_pipeline(
     providers: Any,
@@ -293,14 +308,16 @@ def build_default_pipeline(
                     try:
                         if hasattr(providers, 'get_expiry_dates'):
                             cands = providers.get_expiry_dates(wi.index)
-                    except Exception:  # pragma: no cover
+                    except (AttributeError, KeyError, ValueError, TypeError):  # pragma: no cover
+                        # Provider method failed - use empty list
                         cands = []
                     if not cands:
                         # fallback to provider resolution for this rule only
                         return adapter.resolve(wi)
                     wi.expiry_date = expiry_service.select(wi.expiry_rule, cands)
                     return wi
-                except Exception:  # pragma: no cover
+                except (KeyError, ValueError, TypeError, AttributeError, IndexError):  # pragma: no cover
+                    # Expiry service selection failed - fallback to adapter
                     return adapter.resolve(wi)
         resolver: ExpiryResolver = ServiceResolver()
     else:
@@ -311,7 +328,7 @@ def build_default_pipeline(
     if (compute_greeks or estimate_iv) and OptionGreeks is not None:
         try:  # lazy import to avoid overhead when disabled
             greeks_calculator = OptionGreeks(risk_free_rate=risk_free_rate)
-        except Exception as e:  # pragma: no cover
+        except (ImportError, AttributeError, TypeError, ValueError) as e:  # pragma: no cover
             logger.debug("Greeks calculator init failed: %s", e)
             greeks_calculator = None
     if estimate_iv and greeks_calculator:

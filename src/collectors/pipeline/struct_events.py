@@ -44,18 +44,20 @@ def emit_struct_event(name: str, payload: dict[str, Any], *, state: Any | None =
         # Log compact JSON
         try:
             logger.debug('%s %s', name, json.dumps(evt, separators=(',',':'), sort_keys=True))
-        except Exception:
-            # Fallback repr
+        except (TypeError, ValueError):
+            # Fallback repr if JSON serialization fails
             logger.debug('%s %r', name, evt)
         if EnvConfig.get_bool('G6_PIPELINE_STRUCT_EVENTS_STDOUT', False):
             try:
                 print(name, json.dumps(evt, separators=(',',':')))
-            except Exception:
+            except (TypeError, ValueError, OSError):
+                # Failed to print to stdout - ignore
                 pass
         # Optional in-memory buffer for tests / quick inspection
         try:
             buf_sz = EnvConfig.get_int('G6_PIPELINE_STRUCT_EVENTS_BUFFER', 0)
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
+            # Failed to parse buffer size - use 0 (disabled)
             buf_sz = 0
         if state is not None and buf_sz > 0:
             try:
@@ -70,9 +72,10 @@ def emit_struct_event(name: str, payload: dict[str, Any], *, state: Any | None =
                     if len(buf) > buf_sz:
                         # keep last N
                         del buf[0:len(buf)-buf_sz]
-            except Exception:
+            except (AttributeError, KeyError, TypeError, IndexError):
+                # Failed to append to buffer - ignore
                 pass
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError):
         # Never raise from observability path
         pass
 

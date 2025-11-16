@@ -42,7 +42,8 @@ def evaluate_market_gate(build_snapshots: bool, metrics: Any | None) -> tuple[bo
     try:  # pragma: no cover
         _mh = importlib.import_module('src.utils.market_hours')
         _market_open = bool(getattr(_mh, 'is_market_open', lambda **k: True)(market_type="equity", session_type="regular"))
-    except Exception:
+    except (ImportError, AttributeError, KeyError, ValueError, TypeError):
+        # Failed to import or call market_hours - default to open
         _market_open = True
 
     # Weekend mode logic removed (reverting to strict weekday/holiday market hours only)
@@ -53,7 +54,8 @@ def evaluate_market_gate(build_snapshots: bool, metrics: Any | None) -> tuple[bo
         if build_snapshots:
             if ('PYTEST_CURRENT_TEST' in os.environ) or ('pytest' in __import__('sys').modules) or EnvConfig.get_bool('G6_SNAPSHOT_TEST_MODE', False):
                 force_open = True
-    except Exception:
+    except (ImportError, KeyError, AttributeError):
+        # Failed to check pytest environment - continue with default
         pass
 
     # Honor environment override regardless of snapshot mode
@@ -87,7 +89,8 @@ def evaluate_market_gate(build_snapshots: bool, metrics: Any | None) -> tuple[bo
         get_next_market_open = _mh.get_next_market_open
         next_open = get_next_market_open(market_type="equity", session_type="regular")
         wait_time = (next_open - datetime.datetime.now(datetime.UTC)).total_seconds()
-    except Exception:
+    except (ImportError, AttributeError, KeyError, ValueError, TypeError):
+        # Failed to get next market open time - use defaults
         next_open = None; wait_time = 0
 
     # Throttled banner: emit at most once per configured interval
@@ -106,20 +109,21 @@ def evaluate_market_gate(build_snapshots: bool, metrics: Any | None) -> tuple[bo
         emit_trace_event = getattr(_se, 'emit_trace_event', None)
         if callable(emit_trace_event):
             emit_trace_event("market_closed", next_open=str(next_open), wait_s=wait_time)
-    except Exception:
+    except (ImportError, AttributeError, KeyError, ValueError, TypeError):
         try:
             # Fallback: attempt global _trace imported by unified collectors
             _uc = importlib.import_module('src.collectors.unified_collectors')
             _trace = getattr(_uc, '_trace', None)
             if callable(_trace):
                 _trace("market_closed", next_open=str(next_open), wait_s=wait_time)
-        except Exception:
+        except (ImportError, AttributeError, KeyError, ValueError, TypeError):
             logger.debug("trace_event_failed_market_closed", exc_info=True)
 
     if metrics and hasattr(metrics, 'collection_cycle_in_progress'):
         try:
             metrics.collection_cycle_in_progress.set(0)
-        except Exception:
+        except (AttributeError, ValueError, TypeError):
+            # Failed to clear cycle in progress metric - ignore
             pass
 
     early = {

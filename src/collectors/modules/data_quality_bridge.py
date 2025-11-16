@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 try:  # protected import
     from src.utils.data_quality import DataQualityChecker as _RealDQ  # pragma: no cover
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     _RealDQ = None  # type: ignore[assignment]
 
 class DataQualityChecker:  # runtime facade wrapping real or stub
@@ -27,7 +27,8 @@ class DataQualityChecker:  # runtime facade wrapping real or stub
         if _RealDQ is not None:
             try:
                 self._impl = _RealDQ(*a, **k)
-            except Exception:
+            except (TypeError, ValueError, AttributeError):
+                # Failed to construct real DQ checker - use stub
                 self._impl = None
         else:
             self._impl = None
@@ -63,7 +64,7 @@ def get_dq_checker() -> DataQualityChecker | None:  # pragma: no cover (thin wra
     """
     try:
         return DataQualityChecker()
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         logger.debug('dq_checker_init_failed', exc_info=True)
         return None
 
@@ -78,7 +79,7 @@ def run_option_quality(dq: DataQualityChecker | None, options_data: dict[str, An
         if not isinstance(issues, list):
             issues = ['dq_internal_malformed']
         return valid, issues
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError):
         logger.debug('dq_validate_options_failed', exc_info=True)
         return {}, ['dq_internal_error']
 
@@ -96,7 +97,7 @@ def run_expiry_consistency(
         if isinstance(res, list):
             return [str(r) for r in res]
         return []
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError):
         logger.debug('dq_expiry_consistency_failed', exc_info=True)
         return ['dq_consistency_internal_error']
 
@@ -115,6 +116,6 @@ def run_index_quality(
         if not isinstance(issues, list):
             issues = ['dq_index_internal_malformed']
         return ok, issues
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError):
         logger.debug('dq_index_quality_failed', exc_info=True)
         return False, ['dq_index_internal_error']
