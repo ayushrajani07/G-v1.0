@@ -133,9 +133,10 @@ def forecast_path_core(
             mode_used = "retrieval"
             try:
                 diag = dict(retr.last_meta or {})
-            except Exception:
+            except (AttributeError, TypeError):
+                # Missing last_meta attribute or type conversion error
                 diag = {}
-    except Exception:
+    except (ImportError, AttributeError, ValueError, TypeError, KeyError, OSError):
         # Keep a functional fallback
         forecaster = HybridPathForecaster(band_pct=fb_band_pct)
         times, qmap = forecaster.forecast_path(
@@ -173,11 +174,13 @@ def forecast_path_core(
                         qmap[q] = arr
                 try:
                     qmap = _clamp_non_negative(qmap)
-                except Exception:
+                except (KeyError, ValueError, TypeError):
+                    # Dict access, value conversion, or type errors
                     pass
                 diag["fallback_trend_slope"] = slope
                 diag["fallback_trend_points"] = len(tps_recent)
-        except Exception:
+        except (ValueError, TypeError, KeyError, IndexError, ZeroDivisionError):
+            # Value conversion, type errors, dict/list access errors, or division by zero
             pass
 
     return times, qmap, mode_used, diag
