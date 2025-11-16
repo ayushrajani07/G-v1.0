@@ -1185,11 +1185,13 @@ class MetricsRegistry:
                         if _PROM_REG is not None and coll is not None:
                             try:
                                 _PROM_REG.unregister(coll)  # type: ignore[arg-type]
-                            except Exception:
+                            except (ValueError, KeyError):
+                                # Handle collector not registered or already removed
                                 pass
                         try:
                             delattr(self, attr)
-                        except Exception:
+                        except (AttributeError, TypeError):
+                            # Handle attribute deletion failures
                             pass
                         try:
                             del metric_groups[attr]
@@ -1278,7 +1280,8 @@ class MetricsRegistry:
                         if _PROM_REG is not None and coll is not None:
                             try:
                                 _PROM_REG.unregister(coll)  # type: ignore[arg-type]
-                            except Exception:
+                            except (ValueError, KeyError):
+                                # Handle collector not registered or already removed
                                 pass
                         try:
                             if hasattr(self, attr):
