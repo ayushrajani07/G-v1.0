@@ -1,0 +1,291 @@
+# ML Ensemble Monitoring Rules - Phase 4 Implementation
+# 
+# Alert rules for production monitoring of ML ensemble forecasting system.
+# Part of Production Deployment (Phase 4) of ML ARM Implementation Roadmap.
+
+groups:
+  # Recording rules for ensemble metrics
+  - name: ml_ensemble_recording
+    interval: 15s
+    rules:
+      # Coverage metrics
+      - record: ml:ensemble:coverage_avg_15m
+        expr: avg_over_time(g6_ml_ensemble_coverage_actual[15m])
+      
+      - record: ml:ensemble:coverage_avg_1h
+        expr: avg_over_time(g6_ml_ensemble_coverage_actual[1h])
+      
+      # MAE metrics
+      - record: ml:ensemble:mae_p50_avg_15m
+        expr: avg_over_time(g6_ml_ensemble_mae_p50[15m])
+      
+      - record: ml:ensemble:mae_p50_avg_1h
+        expr: avg_over_time(g6_ml_ensemble_mae_p50[1h])
+      
+      # Confidence metrics
+      - record: ml:ensemble:confidence_avg_15m
+        expr: avg_over_time(g6_ml_ensemble_confidence[15m])
+      
+      - record: ml:ensemble:confidence_min_15m
+        expr: min_over_time(g6_ml_ensemble_confidence[15m])
+      
+      # Latency metrics
+      - record: ml:ensemble:latency_p95_5m
+        expr: histogram_quantile(0.95, rate(g6_ml_ensemble_latency_seconds_bucket[5m]))
+      
+      - record: ml:ensemble:latency_p99_5m
+        expr: histogram_quantile(0.99, rate(g6_ml_ensemble_latency_seconds_bucket[5m]))
+      
+      # Error rate
+      - record: ml:ensemble:error_rate_5m
+        expr: rate(g6_ml_ensemble_forecast_errors_total[5m])
+      
+      - record: ml:ensemble:error_rate_1h
+        expr: rate(g6_ml_ensemble_forecast_errors_total[1h])
+      
+      # Forecast rate
+      - record: ml:ensemble:forecast_rate_5m
+        expr: rate(g6_ml_ensemble_forecasts_total[5m])
+      
+      # Band width (P90 - P10)
+      - record: ml:ensemble:band_width
+        expr: g6_ml_ensemble_forecast_p90 - g6_ml_ensemble_forecast_p10
+      
+      # Relative band width (as % of P50)
+      - record: ml:ensemble:band_width_pct
+        expr: 100 * (g6_ml_ensemble_forecast_p90 - g6_ml_ensemble_forecast_p10) / g6_ml_ensemble_forecast_p50
+
+  # Alert rules for ensemble monitoring
+  - name: ml_ensemble_alerts
+    interval: 15s
+    rules:
+      # Coverage alerts
+      - alert: MLEnsembleUnderCoverage
+        expr: ml:ensemble:coverage_avg_15m < 0.75
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble coverage below threshold"
+          description: "Average coverage over 15m is {{ $value | humanizePercentage }} (target: 75-85%). Index: {{ $labels.index }}"
+          runbook: "Check conformal calibration, verify data quality, consider widening bands"
+      
+      - alert: MLEnsemblePersistentUnderCoverage
+        expr: ml:ensemble:coverage_avg_1h < 0.70
+        for: 30m
+        labels:
+          severity: critical
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble persistent under-coverage"
+          description: "Average coverage over 1h is {{ $value | humanizePercentage }} and persisted for 30m. Index: {{ $labels.index }}"
+          runbook: "Urgent: Investigate model drift, recalibrate conformal bands, or trigger retraining"
+      
+      - alert: MLEnsembleOverCoverage
+        expr: ml:ensemble:coverage_avg_1h > 0.90
+        for: 30m
+        labels:
+          severity: info
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble over-coverage detected"
+          description: "Average coverage over 1h is {{ $value | humanizePercentage }}. Bands may be too wide. Index: {{ $labels.index }}"
+          runbook: "Consider tightening conformal bands for better precision"
+      
+      # Accuracy alerts
+      - alert: MLEnsembleHighMAE
+        expr: ml:ensemble:mae_p50_avg_1h > 15
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble high prediction error"
+          description: "MAE over 1h is {{ $value | printf \"%.2f\" }} (threshold: 15). Index: {{ $labels.index }}"
+          runbook: "Check for regime shift, verify input features, consider retraining"
+      
+      - alert: MLEnsembleMAESpike
+        expr: |
+          ml:ensemble:mae_p50_avg_15m > 
+          (ml:ensemble:mae_p50_avg_1h * 1.5)
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble MAE spike detected"
+          description: "Recent MAE (15m) is 50% higher than 1h average. Index: {{ $labels.index }}"
+          runbook: "Check for data anomalies, market events, or system issues"
+      
+      # Latency alerts
+      - alert: MLEnsembleHighLatency
+        expr: ml:ensemble:latency_p95_5m > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble high forecast latency"
+          description: "P95 latency is {{ $value | printf \"%.2f\" }}s (threshold: 2s). Index: {{ $labels.index }}, Component: {{ $labels.component }}"
+          runbook: "Check system resources, retrieval cache hit rate, GBRT model size"
+      
+      - alert: MLEnsembleCriticalLatency
+        expr: ml:ensemble:latency_p99_5m > 5.0
+        for: 5m
+        labels:
+          severity: critical
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble critical forecast latency"
+          description: "P99 latency is {{ $value | printf \"%.2f\" }}s (threshold: 5s). Index: {{ $labels.index }}"
+          runbook: "Urgent: Profile components, check for resource contention, consider fallback mode"
+      
+      # Confidence alerts
+      - alert: MLEnsembleLowConfidence
+        expr: ml:ensemble:confidence_avg_15m < 0.5
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble low confidence detected"
+          description: "Average confidence over 15m is {{ $value | printf \"%.2f\" }} (threshold: 0.5). Index: {{ $labels.index }}"
+          runbook: "Check GBRT OOB score, retrieval match quality, consider widening bands"
+      
+      - alert: MLEnsembleConfidenceCollapse
+        expr: ml:ensemble:confidence_min_15m < 0.3
+        for: 10m
+        labels:
+          severity: critical
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble confidence collapse"
+          description: "Minimum confidence over 15m is {{ $value | printf \"%.2f\" }}. Index: {{ $labels.index }}"
+          runbook: "Urgent: Switch to retrieval-only or baseline-only mode, investigate model issues"
+      
+      # Model staleness alerts
+      - alert: MLEnsembleModelStale
+        expr: g6_ml_ensemble_model_age_days > 14
+        for: 1h
+        labels:
+          severity: warning
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble model is stale"
+          description: "GBRT model age is {{ $value | printf \"%.1f\" }} days (threshold: 14). Index: {{ $labels.index }}"
+          runbook: "Schedule model retraining with recent data"
+      
+      - alert: MLEnsembleModelVeryStale
+        expr: g6_ml_ensemble_model_age_days > 30
+        for: 1h
+        labels:
+          severity: critical
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble model is very stale"
+          description: "GBRT model age is {{ $value | printf \"%.1f\" }} days (threshold: 30). Index: {{ $labels.index }}"
+          runbook: "Urgent: Retrain model immediately or switch to retrieval-only mode"
+      
+      # Error rate alerts
+      - alert: MLEnsembleForecastErrors
+        expr: ml:ensemble:error_rate_5m > 0.10
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble high error rate"
+          description: "Forecast error rate is {{ $value | printf \"%.2f\" }}/s (threshold: 0.1/s). Index: {{ $labels.index }}"
+          runbook: "Check logs for error patterns, verify data availability"
+      
+      - alert: MLEnsembleForecastErrorStorm
+        expr: ml:ensemble:error_rate_5m > 0.50
+        for: 2m
+        labels:
+          severity: critical
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble error storm"
+          description: "Forecast error rate is {{ $value | printf \"%.2f\" }}/s. Index: {{ $labels.index }}"
+          runbook: "Urgent: Check system health, consider enabling fallback mode"
+      
+      # Forecast rate alerts (service health)
+      - alert: MLEnsembleForecastsStalled
+        expr: ml:ensemble:forecast_rate_5m == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble forecasts stalled"
+          description: "No forecasts generated in last 5m. Index: {{ $labels.index }}"
+          runbook: "Urgent: Check if service is running, verify data pipeline"
+      
+      # Band width alerts
+      - alert: MLEnsembleBandsTooNarrow
+        expr: ml:ensemble:band_width_pct < 10
+        for: 30m
+        labels:
+          severity: info
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble prediction bands too narrow"
+          description: "Band width is {{ $value | printf \"%.1f\" }}% of P50 (< 10%). May underestimate uncertainty. Index: {{ $labels.index }}"
+          runbook: "Verify conformal calibration, check if model is overconfident"
+      
+      - alert: MLEnsembleBandsTooWide
+        expr: ml:ensemble:band_width_pct > 30
+        for: 30m
+        labels:
+          severity: info
+          component: ml_ensemble
+        annotations:
+          summary: "ML Ensemble prediction bands too wide"
+          description: "Band width is {{ $value | printf \"%.1f\" }}% of P50 (> 30%). May be too conservative. Index: {{ $labels.index }}"
+          runbook: "Consider tightening bands or investigating high uncertainty period"
+      
+      # Component weight alerts
+      - alert: MLEnsembleGBRTDominant
+        expr: g6_ml_ensemble_weight_gbrt > 0.95
+        for: 30m
+        labels:
+          severity: info
+          component: ml_ensemble
+        annotations:
+          summary: "GBRT component dominating ensemble"
+          description: "GBRT weight is {{ $value | printf \"%.2f\" }} (> 0.95). Retrieval barely contributing. Index: {{ $labels.index }}"
+          runbook: "Verify retrieval component is working, check confidence computation"
+      
+      - alert: MLEnsembleRetrievalDominant
+        expr: g6_ml_ensemble_weight_retrieval > 0.95
+        for: 30m
+        labels:
+          severity: warning
+          component: ml_ensemble
+        annotations:
+          summary: "Retrieval component dominating ensemble"
+          description: "Retrieval weight is {{ $value | printf \"%.2f\" }} (> 0.95). GBRT not contributing. Index: {{ $labels.index }}"
+          runbook: "Check GBRT confidence, verify model is loaded correctly"
+
+  # SLO-based alerts
+  - name: ml_ensemble_slo
+    interval: 15s
+    rules:
+      - alert: MLEnsembleSLOViolation
+        expr: |
+          (
+            (ml:ensemble:coverage_avg_1h < 0.75) or
+            (ml:ensemble:mae_p50_avg_1h > 15) or
+            (ml:ensemble:latency_p95_5m > 2.0) or
+            (ml:ensemble:error_rate_1h > 0.05)
+          )
+        for: 15m
+        labels:
+          severity: critical
+          component: ml_ensemble
+          slo: forecast_quality
+        annotations:
+          summary: "ML Ensemble SLO violation"
+          description: "One or more SLO metrics out of bounds. Index: {{ $labels.index }}"
+          runbook: "Review all ensemble metrics, check for systemic issues"
