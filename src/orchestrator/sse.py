@@ -47,7 +47,8 @@ def serve_events_sse(
                 raw = vals[0]
                 if raw is None or str(raw).strip() == '' or str(raw).lower() in ('1','true','yes','on'):
                     force_full = True
-        except Exception:
+        except (ValueError, TypeError, KeyError, IndexError):
+            # Handle query string parsing failures
             force_full = False
         type_filters: list[str] = []
         for key in ('type', 'types'):
@@ -62,18 +63,21 @@ def serve_events_sse(
         if hdr_id:
             try:
                 last_event_id = int(hdr_id)
-            except Exception:
+            except (ValueError, TypeError):
+                # Handle int conversion failures
                 last_event_id = 0
         if 'last_id' in qs:
             try:
                 last_event_id = int(qs['last_id'][0])
-            except Exception:
+            except (ValueError, TypeError, KeyError, IndexError):
+                # Handle query string parsing or int conversion failures
                 pass
         backlog_limit = None
         if 'backlog' in qs:
             try:
                 backlog_limit = max(0, int(qs['backlog'][0]))
-            except Exception:
+            except (ValueError, TypeError, KeyError, IndexError):
+                # Handle query string parsing or int conversion failures
                 backlog_limit = None
         retry_ms = env_int('G6_EVENTS_SSE_RETRY_MS', 5000)
         poll_interval = env_float('G6_EVENTS_SSE_POLL', 0.5)
@@ -92,7 +96,8 @@ def serve_events_sse(
                 fn = getattr(bus, '_consumer_started', None)
                 if callable(fn):
                     fn()
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle consumer started callback failures
             pass
 
         def _send(event) -> None:
@@ -101,7 +106,8 @@ def serve_events_sse(
             if observe_event_latency is not None:
                 try:
                     observe_event_latency(payload)
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle latency observation failures
                     pass
             evt_type = payload.get('type')
             if type_filters and evt_type not in type_filters:
@@ -125,9 +131,11 @@ def serve_events_sse(
                                         observe = getattr(hist, 'observe', None)
                                         if callable(observe):
                                             observe(flush_latency)
-                                    except Exception:
+                                    except (AttributeError, TypeError, RuntimeError):
+                                        # Handle metric observation failures
                                         pass
-                    except Exception:
+                    except (AttributeError, TypeError, KeyError, OSError):
+                        # Handle flush latency capture failures
                         pass
                 if is_truthy_env('G6_SSE_TRACE') and isinstance(payload, dict):
                     try:
@@ -144,9 +152,11 @@ def serve_events_sse(
                                             inc = getattr(ctr, 'inc', None)
                                             if callable(inc):
                                                 inc()
-                                    except Exception:
+                                    except (AttributeError, TypeError, RuntimeError):
+                                        # Handle metric increment failures
                                         pass
-                    except Exception:
+                    except (AttributeError, TypeError, KeyError, OSError):
+                        # Handle trace stage capture failures
                         pass
                 handler.wfile.write(f"id: {event.event_id}\n".encode())
                 if evt_type:
@@ -156,7 +166,8 @@ def serve_events_sse(
                 handler.wfile.flush()
                 last_event_id = event.event_id
                 last_heartbeat = time.time()
-            except Exception:
+            except (OSError, IOError, json.JSONEncodeError, UnicodeDecodeError, BrokenPipeError, ConnectionResetError):
+                # Handle write, encoding, or connection failures
                 raise
 
         # Initial backlog replay
@@ -188,12 +199,14 @@ def serve_events_sse(
                                     }
                             synthetic = _Synthetic(last_event_id, snap, getattr(bus, '_generation', 0))
                             _send(synthetic)
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Handle snapshot retrieval or synthetic event construction failures
                     logger.debug("catalog_http: force_full injection failed", exc_info=True)
             bus_any = bus  # type: ignore[assignment]
             for ev in bus_any.get_since(last_event_id, limit=backlog_limit):
                 _send(ev)
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError, OSError, IOError):
+            # Handle bus access or event retrieval failures
             return
 
         try:
@@ -209,11 +222,13 @@ def serve_events_sse(
                             try:
                                 handler.wfile.write(b': keep-alive\n\n')
                                 handler.wfile.flush()
-                            except Exception:
+                            except (OSError, IOError, BrokenPipeError, ConnectionResetError):
+                                # Handle write or connection failures
                                 break
                             last_heartbeat = now
                         time.sleep(poll_interval)
-                except Exception:
+                except (OSError, IOError, BrokenPipeError, ConnectionResetError, InterruptedError):
+                    # Handle sleep interruption or connection failures
                     break
         finally:
             try:
@@ -226,15 +241,18 @@ def serve_events_sse(
                             fn = getattr(bus2, '_observe_connection_duration', None)
                             if callable(fn):
                                 fn(duration)
-                        except Exception:
+                        except (AttributeError, TypeError, RuntimeError):
+                            # Handle observation callback failures
                             pass
                     if hasattr(bus2, '_consumer_stopped'):
                         fn2 = getattr(bus2, '_consumer_stopped', None)
                         if callable(fn2):
                             fn2()
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle bus cleanup failures
                 pass
-    except Exception:
+    except (OSError, IOError, AttributeError, TypeError, RuntimeError):
+        # Handle SSE serving failures
         logger.exception("catalog_http: failure serving SSE events")
 
 
@@ -275,7 +293,8 @@ def serve_adaptive_theme_sse(
                 try:
                     time.sleep(interval)
                     continue
-                except Exception:
+                except (OSError, InterruptedError):
+                    # Handle sleep interruption
                     break
             if (
                 diff_only
@@ -315,23 +334,27 @@ def serve_adaptive_theme_sse(
                             prev_last = prev_snaps[-1]
                             if cur_last.get('counts') != prev_last.get('counts'):
                                 send_trend['latest'] = cur_last.get('counts')
-                    except Exception:
+                    except (TypeError, KeyError, IndexError, AttributeError):
+                        # Handle snapshot comparison failures
                         pass
                     if send_trend:
                         diff['trend'] = send_trend
                     if len(diff) > 1:
                         send_obj = diff
-                except Exception:
+                except (TypeError, KeyError, AttributeError):
+                    # Handle diff construction failures
                     send_obj = full_payload
             data = json.dumps(send_obj)
             try:
                 handler.wfile.write(f"data: {data}\n\n".encode())
                 handler.wfile.flush()
-            except Exception:
+            except (OSError, IOError, BrokenPipeError, ConnectionResetError, json.JSONEncodeError):
+                # Handle write, encoding, or connection failures
                 break
             last_payload = full_payload
             time.sleep(interval)
-    except Exception:
+    except (OSError, IOError, AttributeError, TypeError, RuntimeError, InterruptedError):
+        # Handle SSE adaptive theme serving failures
         logger.exception("catalog_http: SSE adaptive theme failure")
 
 
