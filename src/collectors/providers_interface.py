@@ -21,13 +21,13 @@ from src.metrics.generated import (
 
 try:
     from src.broker.kite_provider import is_concise_logging as _is_concise_logging  # type: ignore
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     def _is_concise_logging():  # type: ignore
         return os.environ.get('G6_CONCISE_LOGS', '1').lower() not in ('0','false','no','off')
 try:  # Prometheus client optional during some tests
     from prometheus_client import Counter as _C
     from prometheus_client import Histogram as _H
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     class _Dummy:  # noqa: D401
         def __init__(self,*a,**k): pass
         def labels(self,*a,**k): return self
@@ -52,7 +52,7 @@ def _safe_inc(lbl, amount=1):  # helper to tolerate label None or unexpected met
     try:
         if lbl:
             lbl.inc(amount)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError):
         pass
 
 class Providers:
@@ -146,7 +146,7 @@ class Providers:
                         self.logger.warning(
                             "get_index_data instrumentation: zero price from quote key=%s provider=%s", key, type(self.primary_provider).__name__
                         )
-                    except Exception:
+                    except (AttributeError, TypeError):
                         pass
                     # Synthetic fallback price injection (single pass) to keep pipeline moving
                     synth_map = {
