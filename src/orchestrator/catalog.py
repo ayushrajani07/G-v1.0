@@ -77,12 +77,14 @@ def _parse_last_row_meta(path: Path) -> tuple[int | None, str | None, str | None
             if _EPOCH_RE.match(candidate):
                 try:
                     derived_ts = _iso(float(candidate))
-                except Exception:
+                except (ValueError, TypeError, OSError):
+                    # Handle float conversion or ISO formatting failures
                     derived_ts = None
             elif _ISO_RE.match(candidate):
                 derived_ts = candidate
         return option_count, last_line, derived_ts
-    except Exception:  # pragma: no cover - defensive
+    except (OSError, IOError, UnicodeDecodeError):  # pragma: no cover - defensive
+        # Handle file I/O or encoding failures
         logger.debug("catalog: failed parsing CSV last row meta for %s", path, exc_info=True)
         return None, None, None
 
@@ -103,7 +105,8 @@ def _gather_recent_events() -> tuple[list[dict], int | None]:
             return events, last_seq
         else:
             raise ImportError("get_recent_events not available")
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle event API failures or missing module
         # Fallback: read tail of file
         path = EnvConfig.get_str('G6_EVENTS_LOG_PATH', os.path.join('logs','events.log'))
         try:
@@ -120,7 +123,8 @@ def _gather_recent_events() -> tuple[list[dict], int | None]:
                     if not include_ctx and 'context' in obj:
                         del obj['context']
                     return obj
-                except Exception:
+                except (json.JSONDecodeError, TypeError, KeyError):
+                    # Handle JSON parsing or dict access failures
                     return None
             for ln in reversed(take):  # newest first
                 obj = _parse_line(ln)
@@ -129,7 +133,8 @@ def _gather_recent_events() -> tuple[list[dict], int | None]:
             if parsed:
                 last_seq = parsed[0].get('seq')
             return parsed, last_seq
-        except Exception:  # pragma: no cover
+        except (OSError, IOError, UnicodeDecodeError, json.JSONDecodeError):  # pragma: no cover
+            # Handle file I/O or parsing failures
             logger.debug("catalog: failed reading events fallback", exc_info=True)
             return [], None
 
@@ -140,7 +145,8 @@ def build_catalog(*, runtime_status_path: str, csv_dir: str = "data/g6_data") ->
         with open(runtime_status_path, encoding='utf-8') as fh:
             status = json.load(fh)
         indices = status.get('indices', []) or []
-    except Exception:
+    except (OSError, IOError, json.JSONDecodeError, KeyError):
+        # Handle file I/O or JSON parsing failures
         logger.debug("catalog: unable to read runtime status at %s", runtime_status_path)
     now_ts = dt.datetime.now(dt.UTC).timestamp()
     catalog: dict[str, Any] = {"generated_at": _iso(now_ts), "indices": {}}
@@ -167,7 +173,8 @@ def build_catalog(*, runtime_status_path: str, csv_dir: str = "data/g6_data") ->
                         if mt > latest_mtime:
                             latest_mtime = mt
                             latest_file = f
-                except Exception:
+                except (OSError, IOError):
+                    # Handle file stat failures
                     pass
                 if latest_file:
                     opt_count, last_row_raw, derived_ts = _parse_last_row_meta(latest_file)
@@ -195,10 +202,12 @@ def build_catalog(*, runtime_status_path: str, csv_dir: str = "data/g6_data") ->
                                     index_latest_ts = epoch_val
                                 if global_latest_ts is None or epoch_val > global_latest_ts:
                                     global_latest_ts = epoch_val
-                        except Exception:  # pragma: no cover - defensive
+                        except (ValueError, TypeError, AttributeError, OSError):  # pragma: no cover - defensive
+                            # Handle timestamp parsing or conversion failures
                             pass
                     expiries[expiry_dir.name] = entry
-        except Exception:  # pragma: no cover - defensive directory scan failure
+        except (OSError, IOError):  # pragma: no cover - defensive directory scan failure
+            # Handle directory iteration or file access failures
             logger.debug("catalog: failure scanning %s", idx_dir, exc_info=True)
         if expiries:
             idx_entry: dict[str, Any] = {"expiries": expiries}
@@ -237,7 +246,8 @@ def build_catalog(*, runtime_status_path: str, csv_dir: str = "data/g6_data") ->
                         continue
                     try:
                         obj = json.loads(line)
-                    except Exception:
+                    except (json.JSONDecodeError, TypeError):
+                        # Handle JSON parsing failures
                         continue
                     if obj.get('event') == 'cycle_start':
                         ctx = obj.get('context') or {}
@@ -260,7 +270,8 @@ def build_catalog(*, runtime_status_path: str, csv_dir: str = "data/g6_data") ->
             'missing_count': missing,
             'status': 'OK' if missing == 0 else 'GAPS'
         }
-    except Exception:  # pragma: no cover
+    except (OSError, IOError, json.JSONDecodeError, ValueError, TypeError):  # pragma: no cover
+        # Handle file I/O, JSON parsing, or computation failures
         logger.debug("catalog: integrity computation failed", exc_info=True)
     # Optional event enrichment
     if is_truthy_env('G6_EMIT_CATALOG_EVENTS'):
@@ -281,7 +292,8 @@ def emit_catalog(*, runtime_status_path: str, csv_dir: str = "data/g6_data") -> 
         with open(tmp, 'w', encoding='utf-8') as fh:
             json.dump(cat, fh, indent=2, sort_keys=True)
         os.replace(tmp, CATALOG_PATH)
-    except Exception:  # pragma: no cover
+    except (OSError, IOError, json.JSONEncodeError):  # pragma: no cover
+        # Handle file I/O or JSON encoding failures
         logger.warning("catalog: failed to write catalog.json", exc_info=True)
 
 __all__ = ["build_catalog", "emit_catalog", "CATALOG_PATH"]
