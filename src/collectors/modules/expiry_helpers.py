@@ -50,7 +50,7 @@ def _get_expiry_service() -> Any:  # lazy import + build to avoid overhead
     try:
         if build_expiry_service is not None:
             _EXPIRY_SERVICE_SINGLETON = build_expiry_service()
-    except Exception:  # pragma: no cover
+    except (ImportError, ValueError, RuntimeError):  # pragma: no cover
         _EXPIRY_SERVICE_SINGLETON = None
     return _EXPIRY_SERVICE_SINGLETON
 
@@ -66,7 +66,7 @@ def fetch_option_instruments(index_symbol: str, expiry_rule: str, expiry_date: A
             len(strikes or []),
             list(strikes)[:6] if strikes else [],
         )
-    except Exception:
+    except (ValueError, TypeError):
         pass
     universe_fallback_enabled = EnvConfig.get_bool('G6_UNIVERSE_FALLBACK', False)
     try:
@@ -76,7 +76,7 @@ def fetch_option_instruments(index_symbol: str, expiry_rule: str, expiry_date: A
         try:
             if report_instrument_fetch_error is not None:
                 report_instrument_fetch_error(inst_err, index_symbol, expiry_rule, expiry_date, len(strikes))
-        except Exception:
+        except (ValueError, TypeError, RuntimeError):
             handle_collector_error(inst_err, component="collectors.expiry_helpers", index_name=index_symbol,
                                    context={"stage":"get_option_instruments","rule":expiry_rule,"expiry":str(expiry_date),"strike_count":len(strikes)})
         instruments = []
