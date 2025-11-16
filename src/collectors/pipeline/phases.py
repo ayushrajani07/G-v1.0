@@ -139,7 +139,8 @@ def phase_fetch(ctx: Any, state: ExpiryState, precomputed_strikes: Sequence[floa
         elif isinstance(raw_instruments, dict):
             try:
                 norm = [v for v in raw_instruments.values() if isinstance(v, dict)]
-            except Exception:
+            except (AttributeError, TypeError):
+                # Failed to extract values from dict-like object
                 norm = []
         state.instruments = norm
         if not state.instruments and not used_unified:
@@ -156,10 +157,12 @@ def phase_fetch(ctx: Any, state: ExpiryState, precomputed_strikes: Sequence[floa
                 elif isinstance(raw2, dict):
                     try:
                         norm2 = [v for v in raw2.values() if isinstance(v, dict)]
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Failed to extract values from dict-like object
                         norm2 = []
                 state.instruments = norm2
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
+                # Fallback fetch attempt failed, continue with empty instruments
                 pass
         if not state.instruments:
             # Recoverable: treat as transient (could be provider outage or data delay)
@@ -233,7 +236,8 @@ def phase_enrich(ctx: Any, state: ExpiryState) -> ExpiryState:
                 enriched2 = _enrich_quotes(state.index, state.rule, state.expiry_date, state.instruments, ctx.providers, None)
                 if isinstance(enriched2, dict) and enriched2:
                     state.enriched = {str(k): v for k, v in enriched2.items() if isinstance(v, dict)}
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
+                # Fallback enrich attempt failed
                 pass
         if not state.enriched:
             raise PhaseRecoverableError('enrich_empty')

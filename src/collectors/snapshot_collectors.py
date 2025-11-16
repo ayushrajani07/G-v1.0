@@ -92,12 +92,13 @@ def run_snapshot_collectors(
                 try:
                     try:
                         expiry_date = providers.resolve_expiry(index_symbol, expiry_rule)  # type: ignore[attr-defined]
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError):
                         # Best effort: treat rule as explicit date (YYYY-MM-DD) else skip
                         import datetime as _dt
                         try:
                             expiry_date = _dt.date.fromisoformat(expiry_rule)
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid date format
                             continue
                     strikes = [atm_strike + off*strike_step for off in offsets]
                     instruments = _load_instruments(providers, index_symbol, expiry_date, strikes)
@@ -127,9 +128,10 @@ def run_snapshot_collectors(
                             for k,q in quotes.items():
                                 try:
                                     option_objs.append(_OptionQuote.from_raw(k,q))
-                                except Exception:
+                                except (AttributeError, TypeError, ValueError):
+                                    # Failed to create OptionQuote from raw data
                                     continue
-                        except Exception:  # pragma: no cover
+                        except (AttributeError, TypeError):  # pragma: no cover
                             logger.debug("snapshot_collectors: OptionQuote mapping failed", exc_info=True)
                     if return_snapshots and _ExpirySnapshot is not None:
                         try:
@@ -141,11 +143,11 @@ def run_snapshot_collectors(
                                 options=option_objs,
                                 generated_at=now,
                             ))
-                        except Exception:  # pragma: no cover
+                        except (AttributeError, TypeError, ValueError):  # pragma: no cover
                             logger.debug("snapshot_collectors: building ExpirySnapshot failed", exc_info=True)
-                except Exception:  # pragma: no cover
+                except (AttributeError, TypeError, ValueError, KeyError):  # pragma: no cover
                     logger.debug("snapshot_collectors: per-expiry failure index=%s rule=%s", index_symbol, expiry_rule, exc_info=True)
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError, ValueError, KeyError):  # pragma: no cover
             logger.debug("snapshot_collectors: index failure %s", index_symbol, exc_info=True)
     return snapshots if return_snapshots else None
 

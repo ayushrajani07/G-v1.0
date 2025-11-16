@@ -188,12 +188,15 @@ def _maybe_run_benchmark_cycle(metrics: BenchMetricsLike | None) -> None:
         try:
           v_pre = float(thr_env_pre)
           g_pre.set(v_pre)
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
+          # Failed to convert or set threshold value
           pass
         metrics.bench_p95_regression_threshold_pct = g_pre
-      except Exception:
+      except (AttributeError, TypeError):
+        # Failed to create gauge metric
         pass
-  except Exception:
+  except (AttributeError, TypeError):
+    # Failed to access metrics object
     pass
   interval = EnvConfig.get_float('G6_BENCH_CYCLE_INTERVAL_SECONDS', 300.0)
   # Interval <= 0 disables gating (run every invocation)
@@ -208,14 +211,16 @@ def _maybe_run_benchmark_cycle(metrics: BenchMetricsLike | None) -> None:
     return
   try:
     from prometheus_client import Gauge as _G
-  except Exception:
+  except ImportError:
+    # Prometheus client not available
     return
   # Import bench_collectors in-process (same pattern as bench_delta)
   bench_mod: Any | None = None
   try:
     import scripts.bench_collectors as _bench_mod
     bench_mod = cast(Any, _bench_mod)
-  except Exception:  # pragma: no cover
+  except (ImportError, AttributeError):  # pragma: no cover
+    # Bench collectors module not available
     bench_mod = None
   if bench_mod is None:
     logger.debug('benchmark_cycle_import_failed')
@@ -240,7 +245,8 @@ def _maybe_run_benchmark_cycle(metrics: BenchMetricsLike | None) -> None:
       bench_mod.main()
     out_txt = buf.getvalue().strip()
     result = json.loads(out_txt)
-  except Exception:
+  except (ImportError, AttributeError, ValueError, json.JSONDecodeError):
+    # Benchmark execution or JSON parsing failed
     logger.debug('benchmark_cycle_run_failed', exc_info=True)
     return
   finally:
@@ -254,7 +260,8 @@ def _maybe_run_benchmark_cycle(metrics: BenchMetricsLike | None) -> None:
     if not hasattr(metrics, name):
       try:
         setattr(metrics, name, _G(f'g6_{name}', desc))
-      except Exception:
+      except (AttributeError, TypeError, ValueError):
+        # Failed to create gauge metric
         setattr(metrics, name, None)
     return getattr(metrics, name, None)
   g_legacy_p50 = _lazy('bench_legacy_p50_seconds','Legacy collector p50 latency (s)')
@@ -269,7 +276,8 @@ def _maybe_run_benchmark_cycle(metrics: BenchMetricsLike | None) -> None:
   if thr_env is not None:
     try:
       thr_val = float(thr_env)
-    except Exception:
+    except (ValueError, TypeError):
+      # Failed to parse threshold value
       logger.debug('benchmark_cycle_threshold_parse_failed', extra={'value': thr_env})
     else:
       g_thr = _lazy('bench_p95_regression_threshold_pct','Configured allowed p95 regression % threshold')

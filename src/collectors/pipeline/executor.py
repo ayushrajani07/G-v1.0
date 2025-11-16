@@ -46,7 +46,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
         max_attempts = _env_int('G6_PIPELINE_RETRY_MAX_ATTEMPTS', 3)
         if max_attempts < 1:
             max_attempts = 1
-    except Exception:
+    except (ValueError, TypeError):
+        # Failed to parse max_attempts, use default
         max_attempts = 3
     base_ms = _safe_int(_env_str('G6_PIPELINE_RETRY_BASE_MS','50'), 50)
     jitter_ms = _safe_int(_env_str('G6_PIPELINE_RETRY_JITTER_MS','0'), 0)
@@ -80,21 +81,25 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
             try:
                 flags_stable_bytes = _json_cfg.dumps(snapshot['flags'], sort_keys=True).encode()
                 snapshot['content_hash'] = _h_cfg.sha256(flags_stable_bytes).hexdigest()[:16]
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
+                # Failed to compute content hash
                 pass
             panels_dir = _env_str('G6_PANELS_DIR','') or 'data/panels'
             try:
                 os.makedirs(panels_dir, exist_ok=True)
                 with open(os.path.join(panels_dir, 'pipeline_config_snapshot.json'), 'w', encoding='utf-8') as fh:
                     _json_cfg.dump(snapshot, fh, separators=(',',':'))
-            except Exception:
+            except (OSError, IOError, ValueError):
+                # Failed to write config snapshot file
                 pass
             if _env_bool('G6_PIPELINE_CONFIG_SNAPSHOT_STDOUT', False):
                 try:
                     print('pipeline.config_snapshot', _json_cfg.dumps(snapshot, separators=(',',':')))
-                except Exception:
+                except (ValueError, TypeError):
+                    # Failed to serialize snapshot for stdout
                     pass
-    except Exception:
+    except (ImportError, AttributeError, ValueError):
+        # Config snapshot generation failed
         pass
 
     phase_runs: list[dict[str, Any]] = []
