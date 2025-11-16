@@ -8,7 +8,7 @@ from src.config.env_config import EnvConfig
 
 try:
     from src.utils.env_flags import is_truthy_env
-except Exception:  # fallback should not trigger normally
+except ImportError:  # fallback should not trigger normally
     def is_truthy_env(name: str, default: str | None = None) -> bool:  # keep signature parity with primary variant
         return EnvConfig.get_bool(name, (default or '').lower() in {'1','true','yes','on'})
 
@@ -20,8 +20,8 @@ def _trace_import(msg: str) -> None:  # lightweight, safe no-op if disabled
         return
     try:
         print(f"[g6-import] {msg}", flush=True)
-    except Exception:
-        pass
+    except (OSError, ValueError):
+        pass  # Silently ignore print errors
 
 _trace_import('unified_collectors: start import')
 import json
@@ -155,7 +155,7 @@ try:  # Phase 6: data quality bridge (extracted)
     from src.collectors.modules.data_quality_bridge import (
         run_option_quality as _run_option_quality,
     )
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     _get_dq_checker = lambda: None
     _run_option_quality = lambda dq, options_data: ({}, [])
     _run_index_quality = lambda dq, index_price, index_ohlc=None: (True, [])
@@ -195,7 +195,7 @@ __all__: list[str] = ['_EXPIRY_SERVICE_SINGLETON']
 # Tests import _iv_estimation_block from this module; delegate to modular implementation.
 try:  # pragma: no cover - simple adapter
     from src.collectors.modules.iv_estimation import run_iv_estimation as _run_iv_estimation  # type: ignore[assignment]
-except Exception:  # fallback no-op if module unavailable
+except ImportError:  # fallback no-op if module unavailable
     def _run_iv_estimation(*_a: "object", **_k: "object") -> None:  # type: ignore[override]
         return None
 
@@ -235,21 +235,21 @@ def _iv_estimation_block(
             iv_max,
             iv_precision,
         )
-    except Exception:
-        logger.debug('iv_estimation_block_delegate_failed', exc_info=True)
+    except (AttributeError, TypeError, ValueError) as e:
+        logger.debug('iv_estimation_block_delegate_failed: %s', e, exc_info=True)
 
 # Centralized TRACE emission: delegate to broker.kite.tracing when available.
 try:  # pragma: no cover - import side-effect free
     from src.broker.kite.tracing import trace as _raw_trace
     def _trace(msg: str, **ctx: Any) -> None:
         _raw_trace(msg, **ctx)
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     def _trace(msg: str, **ctx: Any) -> None:  # fallback minimal gating using CollectorSettings when available
         settings_obj = None
         try:
             if get_collector_settings:
                 settings_obj = get_collector_settings()
-        except Exception:
+        except (AttributeError, TypeError):
             settings_obj = None
         try:
             quiet_mode = False
@@ -276,8 +276,8 @@ except Exception:  # pragma: no cover
                 logger.warning("TRACE %s | %s", msg, json.dumps(ctx, default=str)[:4000])
             else:
                 logger.warning("TRACE %s", msg)
-        except Exception:
-            pass
+        except (ValueError, TypeError, AttributeError):
+            pass  # Silently ignore trace logging errors
 
 ################################################################################
 # Internal Helper Abstractions (extracted to reduce cyclomatic complexity)
@@ -320,8 +320,8 @@ class AggregationState:
             if ts:
                 if self.snapshot_base_time is None or ts < self.snapshot_base_time:
                     self.snapshot_base_time = ts
-        except Exception:
-            logger.debug('aggregation_state_capture_failed', exc_info=True)
+        except (ValueError, TypeError, KeyError, AttributeError) as e:
+            logger.debug('aggregation_state_capture_failed: %s', e, exc_info=True)
 
 
 # ------------------------------ Typed Structures (Batch 2) ------------------------------
@@ -361,7 +361,7 @@ def _determine_concise_mode() -> bool:
         if not is_concise_logging:
             raise ImportError("is_concise_logging not available")
         return bool(is_concise_logging())
-    except Exception:  # pragma: no cover
+    except (ImportError, AttributeError, TypeError):  # pragma: no cover
         return False
 
 # Heartbeat state (process-wide)
@@ -382,7 +382,7 @@ def _maybe_emit_heartbeat(metrics: Any, *, force: bool = False) -> None:
         if get_collector_settings:
             try:
                 settings_obj = get_collector_settings()
-            except Exception:
+            except (AttributeError, TypeError):
                 settings_obj = None
         if settings_obj:
             # prefer explicit setting; if unset fallback to env (legacy)
@@ -404,7 +404,7 @@ def _maybe_emit_heartbeat(metrics: Any, *, force: bool = False) -> None:
                 return
             try:
                 interval = float(interval_env)
-            except Exception:
+            except (ValueError, TypeError):
                 interval = 0.0
             if interval <= 0:
                 return
@@ -424,21 +424,21 @@ def _maybe_emit_heartbeat(metrics: Any, *, force: bool = False) -> None:
                 val = getattr(metrics.collection_cycles, '_value', None)
                 if val and hasattr(val, 'get'):
                     cycles = int(val.get())
-        except Exception:
-            pass
+        except (AttributeError, TypeError, ValueError):
+            pass  # Silently ignore metric access errors
         try:
             if metrics and hasattr(metrics, '_last_cycle_options'):
                 opts = int(metrics._last_cycle_options or 0)
-        except Exception:
-            pass
+        except (AttributeError, TypeError, ValueError):
+            pass  # Silently ignore metric access errors
         try:  # batching stats
             if not get_batcher:
                 raise ImportError("get_batcher not available")
             _b = get_batcher()
             batch_saved = getattr(_b, '_debug_calls_saved', None)
             batch_avg = getattr(_b, '_debug_avg_batch_size', None)
-        except Exception:
-            pass
+        except (ImportError, AttributeError, TypeError):
+            pass  # Silently ignore batcher stats errors
         try:  # limiter snapshot
             import gc
             for _obj in gc.get_objects():
@@ -451,8 +451,8 @@ def _maybe_emit_heartbeat(metrics: Any, *, force: bool = False) -> None:
                     else:
                         limiter_cooldown = 0.0
                     break
-        except Exception:
-            pass
+        except (AttributeError, TypeError, ValueError):
+            pass  # Silently ignore limiter snapshot errors
         logger.info(
             "hb.loop.heartbeat cycles=%s last_cycle_options=%s limiter_tokens=%s "
             "limiter_cooldown_s=%s batch_saved_calls=%s batch_avg_size=%s",
@@ -464,16 +464,16 @@ def _maybe_emit_heartbeat(metrics: Any, *, force: bool = False) -> None:
             (batch_avg if batch_avg is not None else 'NA'),
         )
         _LAST_HEARTBEAT_EMIT = now
-    except Exception:
-        logger.debug('heartbeat_emit_failed', exc_info=True)
+    except (AttributeError, TypeError, ValueError) as e:
+        logger.debug('heartbeat_emit_failed: %s', e, exc_info=True)
 
 
 def _init_cycle_metrics(metrics: Any) -> None:  # side-effect only
     if metrics and hasattr(metrics, 'collection_cycle_in_progress'):
         try:
                 metrics.collection_cycle_in_progress.set(1)
-        except Exception:
-            pass
+        except (AttributeError, TypeError):
+            pass  # Silently ignore metric errors
 
 
 def _maybe_init_greeks(compute_greeks: bool, estimate_iv: bool, risk_free_rate: float, metrics: Any) -> tuple[Any, bool, bool]:
@@ -481,7 +481,7 @@ def _maybe_init_greeks(compute_greeks: bool, estimate_iv: bool, risk_free_rate: 
     try:
         _env_force_greeks = is_truthy_env('G6_FORCE_GREEKS')
         _env_disable_greeks = is_truthy_env('G6_DISABLE_GREEKS')
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError):  # pragma: no cover
         _env_force_greeks = False
         _env_disable_greeks = False
     if _env_force_greeks:
@@ -509,8 +509,8 @@ def _maybe_init_greeks(compute_greeks: bool, estimate_iv: bool, risk_free_rate: 
     if metrics and hasattr(metrics, 'memory_greeks_enabled'):
         try:
             metrics.memory_greeks_enabled.set(1 if greeks_calculator else 0)
-        except Exception:  # pragma: no cover
-            pass
+        except (AttributeError, TypeError):  # pragma: no cover
+            pass  # Silently ignore metric errors
     return greeks_calculator, compute_greeks, estimate_iv
 
 
@@ -521,7 +521,7 @@ def _evaluate_memory_pressure(metrics: Any) -> dict[str,Any]:  # backward-compat
 _FALLBACK_BUILD = False
 try:
     from src.utils.strikes import build_strikes as _build_strikes  # shared utility with scale param
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     _FALLBACK_BUILD = True
     def _build_strikes(atm: float, n_itm: int, n_otm: int, index_symbol: str, *, step: float | None = None, min_strikes: int = 0, scale: float | None = None) -> list[float]:  # match primary signature superset
         # scale ignored in fallback
@@ -532,7 +532,7 @@ except Exception:  # pragma: no cover
             if not get_index_meta:
                 raise ImportError("get_index_meta not available")
             step = float(get_index_meta(index_symbol).step)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError):
             step = 100.0 if index_symbol in ['BANKNIFTY','SENSEX'] else 50.0
         arr: list[float] = []
         for i in range(1, n_itm + 1):
@@ -556,16 +556,16 @@ except Exception:  # pragma: no cover
 
 try:  # synthetic classification removed; keep placeholder for backward compatibility if tests import
     from src.collectors.helpers.synthetic import classify_expiry_result as _classify_expiry_result
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     def _classify_expiry_result(expiry_rec: dict[str, Any], enriched_data: dict[str, Any]) -> Any:  # widen to Any for parity
         return {'status': 'OK'}
 try:  # synthetic index price strategy deprecated
     from src.synthetic.strategy import synthesize_index_price as _synthesize_index_price
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     def _synthesize_index_price(index_symbol: str, index_price: Any, atm_strike: Any) -> tuple[float, float, bool]:  # match imported flexibility
         try:
             return float(index_price), float(atm_strike), False
-        except Exception:
+        except (ValueError, TypeError):
             return 0.0, 0.0, False
 from src.collectors.helpers.status_reducer import aggregate_cycle_status as _aggregate_cycle_status
 from src.collectors.helpers.struct_events import (
@@ -575,7 +575,7 @@ from src.collectors.helpers.struct_events import (
 try:
     # B11 anomaly detection (optional) – lightweight import; guarded where used
     from src.bench.anomaly import detect_anomalies as _detect_anomalies
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     _detect_anomalies = None
 
 
@@ -626,7 +626,7 @@ def _maybe_auto_disable_trace_flags() -> None:
             if val in ('1', 'true', 'yes', 'on'):
                 os.environ[flag] = '0'
                 disabled.append(flag)
-        except Exception:
+        except (ValueError, TypeError, KeyError):
             # best-effort; continue flipping others
             continue
     if disabled:
@@ -643,7 +643,7 @@ def _default_rule_for_index(index_symbol: str) -> str:
     try:
         idx = (index_symbol or "").upper()
         return 'this_month' if idx in ('BANKNIFTY','FINNIFTY') else 'this_week'
-    except Exception:
+    except (AttributeError, TypeError):
         return 'this_week'
 
 def _resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics: Any, concise_mode: bool) -> datetime.date:  # pragma: no cover
@@ -729,8 +729,8 @@ def _process_index(
             },
         )
         return cast(dict[str, Any], res)
-    except Exception:
-        logger.debug('index_processor_module_failed', exc_info=True)
+    except (AttributeError, TypeError, ValueError, KeyError) as e:
+        logger.debug('index_processor_module_failed: %s', e, exc_info=True)
         return cast(dict[str, Any], {
             'human_block': None,
             'indices_struct_entry': None,
@@ -786,18 +786,18 @@ def _process_expiry(
                         try:
                             try:
                                 ctx.precomputed_strikes = precomputed_strikes  # type: ignore[attr-defined]
-                            except Exception:
-                                pass
-                        except Exception:
-                            pass
+                            except (AttributeError, TypeError):
+                                pass  # Silently ignore context attribute errors
+                        except (AttributeError, TypeError):
+                            pass  # Silently ignore context attribute errors
                         if expiry_universe_map is not None:
                             try:
                                 try:
                                     ctx.expiry_universe_map = expiry_universe_map  # type: ignore[attr-defined]
-                                except Exception:
-                                    pass
-                            except Exception:
-                                pass
+                                except (AttributeError, TypeError):
+                                    pass  # Silently ignore context attribute errors
+                            except (AttributeError, TypeError):
+                                pass  # Silently ignore context attribute errors
                         return process_expiry_v2(
                             process_expiry_impl,
                             ctx=ctx,
@@ -815,10 +815,10 @@ def _process_expiry(
                             else:
                                 try:
                                     ctx.precomputed_strikes = _prev_strikes  # type: ignore[attr-defined]
-                                except Exception:
-                                    pass
-                        except Exception:
-                            pass
+                                except (AttributeError, TypeError):
+                                    pass  # Silently ignore context attribute errors
+                        except (AttributeError, TypeError):
+                            pass  # Silently ignore context attribute errors
                         if expiry_universe_map is not None:
                             try:
                                 if _prev_universe is None:
@@ -827,11 +827,11 @@ def _process_expiry(
                                 else:
                                     try:
                                         ctx.expiry_universe_map = _prev_universe  # type: ignore[attr-defined]
-                                    except Exception:
-                                        pass
-                            except Exception:
-                                pass
-        except Exception:
+                                    except (AttributeError, TypeError):
+                                        pass  # Silently ignore context attribute errors
+                            except (AttributeError, TypeError):
+                                pass  # Silently ignore context attribute errors
+        except (AttributeError, TypeError, ImportError):
             pass  # fall back to legacy immediately
         res2: dict[str, Any] = process_expiry_impl(
             ctx=ctx,
@@ -861,8 +861,8 @@ def _process_expiry(
             collector_settings=getattr(ctx, 'collector_settings', None),
         )
         return res2
-    except Exception:  # pragma: no cover - fallback path
-        logger.debug('expiry_processor_module_failed_fallback_inline', exc_info=True)
+    except (AttributeError, TypeError, ValueError, KeyError, ImportError) as e:  # pragma: no cover - fallback path
+        logger.debug('expiry_processor_module_failed_fallback_inline: %s', e, exc_info=True)
         # Preserve legacy failure semantics: return a minimal failure outcome
         return cast(dict[str, Any], {'success': False, 'option_count': 0, 'expiry_rec': {'rule': expiry_rule, 'failed': True}})
 
@@ -912,18 +912,18 @@ def run_unified_collectors(
             raise ImportError("CollectorSettings not available")
         if hasattr(CollectorSettings, 'load'):
             _collector_settings = CollectorSettings.load()
-    except Exception:
+    except (ImportError, AttributeError, TypeError):
         _collector_settings = None  # tolerate absence (legacy path continues)
     # Graceful guard: if providers facade missing, skip collection instead of raising attribute errors per index.
     if providers is None:
         try:
             have_warned = bool(getattr(run_unified_collectors, '_g6_warned_missing_providers', False))
-        except Exception:
+        except (AttributeError, TypeError):
             have_warned = False
         if not have_warned:
             logger.error("Unified collectors: providers not initialized (set G6_BOOTSTRAP_COMPONENTS=1 or supply credentials); skipping all indices")
             try: run_unified_collectors._g6_warned_missing_providers = True
-            except Exception: pass
+            except (AttributeError, TypeError): pass  # Silently ignore attribute assignment errors
         return {
             'status': 'no_providers',
             'indices_processed': 0,
@@ -949,8 +949,8 @@ def run_unified_collectors(
             if (len(expiries) <= 1 and strikes_span <= 4 and not bypass_check):
                 # Set via os.environ to ensure downstream code sees it
                 os.environ.setdefault('G6_VALIDATION_BYPASS','1')
-    except Exception:
-        logger.debug('validation_bypass_heuristic_failed', exc_info=True)
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
+        logger.debug('validation_bypass_heuristic_failed: %s', e, exc_info=True)
     # (iv_max_iterations, iv_min, iv_max) currently unused; integration handled in later task.
     # Mark cycle in-progress & start timers
     _trace("cycle_start", indices=list(index_params.keys()), compute_greeks=compute_greeks, estimate_iv=estimate_iv)
@@ -964,10 +964,10 @@ def run_unified_collectors(
         if _collector_settings is not None:
             try:
                 ctx.collector_settings = _collector_settings
-            except Exception:
-                pass
-    except Exception:
-        logger.debug('attach_collector_settings_failed', exc_info=True)
+            except (AttributeError, TypeError):
+                pass  # Silently ignore context attribute errors
+    except (AttributeError, TypeError) as e:
+        logger.debug('attach_collector_settings_failed: %s', e, exc_info=True)
     # Phase 1: build high-level CollectorContext (non-invasive; not yet threaded through downstream helpers)
     try:
         _collector_ctx: CollectorContext = build_collector_context(
@@ -977,10 +977,10 @@ def run_unified_collectors(
         )
         try:
             ctx.collector_ctx = _collector_ctx
-        except Exception:
-            pass
-    except Exception:
-        logger.debug('collector_context_init_failed', exc_info=True)
+        except (AttributeError, TypeError):
+            pass  # Silently ignore context attribute errors
+    except (AttributeError, TypeError, ValueError) as e:
+        logger.debug('collector_context_init_failed: %s', e, exc_info=True)
 
     # Phase 0 (modularization refactor) instrumentation flag
     # Deprecated: refactor_debug parity accumulation removed
@@ -998,17 +998,17 @@ def run_unified_collectors(
                     ctx.phase_times['bootstrap'] = time.time() - start_cycle_wall
                 if metrics and hasattr(metrics, 'phase_duration_seconds'):
                     metrics.phase_duration_seconds.labels(phase='bootstrap').observe(ctx.phase_times['bootstrap'])
-            except Exception:
-                logger.debug('early_bootstrap_phase_record_failed', exc_info=True)
+            except (AttributeError, TypeError, KeyError) as e:
+                logger.debug('early_bootstrap_phase_record_failed: %s', e, exc_info=True)
             # Honor trace auto-disable even on early return (market closed)
             try:
                 _maybe_auto_disable_trace_flags()
-            except Exception:
-                logger.debug('trace_auto_disable_early_failed', exc_info=True)
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.debug('trace_auto_disable_early_failed: %s', e, exc_info=True)
             return cast(dict[str, Any], early)
         _trace("market_open")
-    except Exception:
-        logger.debug("market_gate_module_failed_fallback_inline", exc_info=True)
+    except (ImportError, AttributeError, TypeError, ValueError) as e:
+        logger.debug("market_gate_module_failed_fallback_inline: %s", e, exc_info=True)
         # Fallback: do nothing (assume open) and continue
 
     # Init greeks & memory pressure flags
@@ -1016,8 +1016,8 @@ def run_unified_collectors(
     try:
         if ctx.phase_times.get('bootstrap', 0.0) == 0.0:
             ctx.phase_times['bootstrap'] = time.time() - start_cycle_wall
-    except Exception:
-        logger.debug('bootstrap_phase_record_failed', exc_info=True)
+    except (AttributeError, TypeError, KeyError) as e:
+        logger.debug('bootstrap_phase_record_failed: %s', e, exc_info=True)
     with ctx.time_phase('init_greeks'):
         greeks_calculator, compute_greeks, estimate_iv = _maybe_init_greeks(compute_greeks, estimate_iv, risk_free_rate, metrics)
         _trace("init_greeks_done", greeks_enabled=bool(greeks_calculator), compute_greeks=compute_greeks, estimate_iv=estimate_iv)
@@ -1062,7 +1062,7 @@ def run_unified_collectors(
                 return obj.get(name, default)
             # dataclass or object with attribute
             return getattr(obj, name, default)
-        except Exception:
+        except (AttributeError, TypeError):
             return default
 
     # Container for optional snapshot domain objects (built only when build_snapshots=True)
@@ -1120,7 +1120,7 @@ def run_unified_collectors(
                 attempts = int(entry.get('attempts') or 0)
                 option_count = int(entry.get('option_count') or 0)
                 is_empty = attempts > 0 and option_count == 0
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 is_empty = False
             # Update counters
             try:
@@ -1133,17 +1133,17 @@ def run_unified_collectors(
                 if metrics is not None and getattr(metrics, '_consec_empty_counters', None) is None:
                     try:
                         metrics._consec_empty_counters = counter_map
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Silently ignore metric assignment errors
                 entry['empty_consec'] = curr
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 entry['empty_consec'] = 0
             indices_struct.append(entry)
         else:
             # Fallback: synthesize a minimal entry so structured return isn't empty in minimal environments
             try:
                 opt_count = int(_res.get('overall_legs', 0) or 0)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 opt_count = 0
             try:
                 cfg = params if isinstance(params, dict) else {}
@@ -1152,7 +1152,7 @@ def run_unified_collectors(
                     first_rule = exp_list[0]
                 else:
                     first_rule = _default_rule_for_index(index_symbol)
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 first_rule = _default_rule_for_index(index_symbol)
             indices_struct.append(cast(IndexStructEntry, {
                 'index': index_symbol,
@@ -1171,8 +1171,8 @@ def run_unified_collectors(
                 per_map = metrics._per_index_last_cycle_options
                 if isinstance(per_map, dict):
                     per_map[index_symbol] = legs
-        except Exception:
-            logger.debug('metrics_per_index_option_accumulate_failed', exc_info=True)
+        except (ValueError, TypeError, AttributeError) as e:
+            logger.debug('metrics_per_index_option_accumulate_failed: %s', e, exc_info=True)
 
     # Update collection time metrics
     total_elapsed = time.time() - start_cycle_wall  # cycle duration (seconds)
@@ -1186,18 +1186,18 @@ def run_unified_collectors(
                     m = metrics._per_index_last_cycle_options
                     if isinstance(m, dict) and m:
                         total_legs = sum(int(v or 0) for v in m.values())
-                except Exception:
-                    pass
+                except (ValueError, TypeError, AttributeError):
+                    pass  # Silently ignore per-index computation errors
             metrics._last_cycle_options = total_legs
-    except Exception:
-        logger.debug('metrics_total_option_accumulate_failed', exc_info=True)
+    except (ValueError, TypeError, AttributeError) as e:
+        logger.debug('metrics_total_option_accumulate_failed: %s', e, exc_info=True)
     # Reconstitute merged phase timings for metrics emission if merge mode cleared ctx.phase_times.
     if _PHASE_MERGE and not ctx.phase_times and merged_phase_times:
         try:
             # Do not mutate merged_phase_times; copy so later consolidated log still uses its own structure if needed.
             ctx.phase_times.update(merged_phase_times)
-        except Exception:
-            logger.debug('restore_merged_phase_times_failed', exc_info=True)
+        except (AttributeError, TypeError) as e:
+            logger.debug('restore_merged_phase_times_failed: %s', e, exc_info=True)
     # Emit phase metrics summary (debug line removed after validation phase)
     with ctx.time_phase('emit_phase_metrics'):
         try:
@@ -1216,23 +1216,23 @@ def run_unified_collectors(
                         if not metrics._phase_observed and ctx.phase_times:
                             for _phase_name, _secs in ctx.phase_times.items():
                                 try: metrics.phase_duration_seconds.labels(phase=_phase_name).observe(_secs)
-                                except Exception: pass
+                                except (AttributeError, TypeError): pass  # Silently ignore metric errors
                     # Bootstrap test tracks _phases dict
                     if hasattr(metrics, '_phases') and isinstance(metrics._phases, dict):
                         if not metrics._phases and ctx.phase_times:
                             for _phase_name, _secs in ctx.phase_times.items():
                                 try: metrics.phase_duration_seconds.labels(phase=_phase_name).observe(_secs)
-                                except Exception: pass
-                except Exception:
-                    logger.debug('second_chance_phase_metrics_failed', exc_info=True)
-        except Exception:
-            logger.debug("Failed emitting phase metrics", exc_info=True)
+                                except (AttributeError, TypeError): pass  # Silently ignore metric errors
+                except (AttributeError, TypeError) as e:
+                    logger.debug('second_chance_phase_metrics_failed: %s', e, exc_info=True)
+        except (AttributeError, TypeError) as e:
+            logger.debug("Failed emitting phase metrics: %s", e, exc_info=True)
         _trace("phase_metrics_emitted")
     # Emit consolidated phase timing summary line (human-readable)
     try:
         ctx.emit_consolidated_log()
-    except Exception:
-        logger.debug("Failed emitting consolidated phase timing log", exc_info=True)
+    except (AttributeError, TypeError) as e:
+        logger.debug("Failed emitting consolidated phase timing log: %s", e, exc_info=True)
     _trace("consolidated_log_emitted")
     if metrics:
         try:
@@ -1244,20 +1244,20 @@ def run_unified_collectors(
                 cycle_start_ts=cycle_start_ts,
                 total_elapsed=total_elapsed,
             )
-        except Exception:
+        except (ImportError, AttributeError, TypeError) as e:
             try:
                 collection_time_elapsed = (utc_now() - cycle_start_ts).total_seconds()
                 metrics.collection_duration.observe(collection_time_elapsed)
                 metrics.collection_cycles.inc()
                 try:
                     metrics.mark_cycle(success=True, cycle_seconds=total_elapsed, options_processed=metrics._last_cycle_options or 0, option_processing_seconds=metrics._last_cycle_option_seconds or 0.0)
-                except Exception:
+                except (AttributeError, TypeError):
                     metrics.avg_cycle_time.set(total_elapsed)
                     if total_elapsed > 0:
                         metrics.cycles_per_hour.set(3600.0 / total_elapsed)
                 if hasattr(metrics, 'collection_cycle_in_progress'):
                     try: metrics.collection_cycle_in_progress.set(0)
-                    except Exception: pass
+                    except (AttributeError, TypeError): pass  # Silently ignore metric errors
             except Exception as inner:
                 logger.error("Failed to update collection metrics: %s", inner)
                 _trace("metrics_update_error", error=str(inner))
@@ -1272,11 +1272,11 @@ def run_unified_collectors(
             # Reset for cycle (no-op if same)
             try:
                 global_phase_timing.reset_for_cycle(getattr(ctx, 'cycle_ts', None))
-            except Exception:
-                pass
+            except (AttributeError, TypeError):
+                pass  # Silently ignore cycle reset errors
             global_phase_timing.record_phases(merged_phase_times)
-        except Exception:
-            logger.debug('global_phase_timing_record_failed', exc_info=True)
+        except (ImportError, AttributeError, TypeError) as e:
+            logger.debug('global_phase_timing_record_failed: %s', e, exc_info=True)
     elif _PHASE_MERGE and merged_phase_times and not _PHASE_SINGLE_EMIT:
         try:
             total_ph = sum(merged_phase_times.values()) or 0.0

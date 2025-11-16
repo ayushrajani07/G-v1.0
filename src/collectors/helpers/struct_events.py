@@ -23,8 +23,8 @@ try:
         for _tok in _raw_sup.replace(',', ' ').split():
             if _tok:
                 _STRUCT_SUPPRESS.add(_tok.strip())
-except Exception:  # pragma: no cover
-    pass
+except (ValueError, AttributeError, TypeError) as e:  # pragma: no cover
+    pass  # Silently ignore suppression config errors
 
 # Formatting mode: json (default existing behaviour), human (concise human readable), both
 _STRUCT_FMT_MODE = EnvConfig.get_str('G6_STRUCT_EVENTS_FORMAT', 'json').strip().lower()
@@ -45,7 +45,7 @@ try:
         record_prefilter,
         record_strike_adjust,
     )  # type: ignore
-except Exception:  # pragma: no cover - optional dependency path
+except ImportError:  # pragma: no cover - optional dependency path
     # Explicit light-weight no-op fallbacks ensure safe removal of cycle_tables module.
     record_prefilter = lambda *a, **k: None  # type: ignore
     record_option_stats = lambda *a, **k: None  # type: ignore
@@ -67,8 +67,8 @@ try:
         for _tok in _raw_sup.replace(',', ' ').split():
             if _tok:
                 _STRUCT_SUPPRESS.add(_tok.strip())
-except Exception:  # pragma: no cover
-    pass
+except (ValueError, AttributeError, TypeError) as e:  # pragma: no cover
+    pass  # Silently ignore suppression config errors
 
 # Formatting mode: json (default existing behaviour), human (concise human readable), both
 _STRUCT_FMT_MODE = os.environ.get('G6_STRUCT_EVENTS_FORMAT', 'json').strip().lower()
@@ -93,7 +93,7 @@ def _compact_payload(event: str, payload: dict[str, Any]) -> dict[str, Any]:
             if dk in p:
                 del p[dk]
         return p
-    except Exception:
+    except (TypeError, KeyError, ValueError) as e:
         return payload
 
 # Common safe json dumps
@@ -115,14 +115,14 @@ def _human_line(event: str, payload: dict[str, Any]) -> str:
         if event == 'instrument_prefilter_summary':
             idx = payload.get('index'); raw = payload.get('total_raw'); kept = payload.get('prefiltered'); cand = payload.get('option_candidates'); rej = (payload.get('rejects') or {}).get('prefilter_rejected',0)
             return f"STRUCT_H {event} {idx} raw={raw} kept={kept} cand={cand} rej={rej}"
-    except Exception:
-        pass
+    except (KeyError, TypeError, AttributeError) as e:
+        pass  # Fall through to generic summarizer
     # Fallback generic summarizer
     try:
         keys = list(payload.keys())[:6]
         summary = ' '.join(f"{k}={payload.get(k)}" for k in keys)
         return f"STRUCT_H {event} {summary}"
-    except Exception:
+    except (AttributeError, TypeError, KeyError) as e:
         return f"STRUCT_H {event}"
 
 def _emit(event: str, payload: dict[str, Any]) -> None:  # pragma: no cover (thin wrapper)
@@ -136,13 +136,13 @@ def _emit(event: str, payload: dict[str, Any]) -> None:  # pragma: no cover (thi
         if _STRUCT_FMT_MODE in {'human','both'}:
             try:
                 logger.info(_human_line(event, payload))
-            except Exception:
-                logger.debug("human_struct_emit_failed %s", event, exc_info=True)
-    except Exception:
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.debug("human_struct_emit_failed %s: %s", event, e, exc_info=True)
+    except (TypeError, ValueError, AttributeError) as e:
         try:
-            logger.debug("Failed STRUCT %s", event, exc_info=True)
-        except Exception:
-            pass
+            logger.debug("Failed STRUCT %s: %s", event, e, exc_info=True)
+        except (AttributeError, TypeError) as e:
+            pass  # Silently ignore if even logging fails
 
 # ---------------------- Event Specific Emitters ----------------------
 
@@ -182,8 +182,8 @@ def emit_instrument_prefilter_summary(
     _emit('instrument_prefilter_summary', payload)
     try:
         record_prefilter(payload)
-    except Exception:
-        pass
+    except (AttributeError, TypeError) as e:
+        pass  # Silently ignore record errors
 
 
 def emit_option_match_stats(
@@ -236,13 +236,13 @@ def emit_option_match_stats(
                 filt = [s for s in sample if isinstance(s,(int,float)) and (int(round(float(s))) % 100 == 0)]
                 if filt:
                     payload['sample'] = filt[:8]
-    except Exception:
-        pass
+    except (TypeError, ValueError, KeyError) as e:
+        pass  # Silently ignore sample filtering errors
     _emit('option_match_stats', payload)
     try:
         record_option_stats(payload)
-    except Exception:
-        pass
+    except (AttributeError, TypeError) as e:
+        pass  # Silently ignore record errors
 
 
 def emit_zero_data(
@@ -328,8 +328,8 @@ def emit_cycle_status_summary(
     _emit('cycle_status_summary', payload)
     try:  # best-effort table emission at cycle end
         emit_cycle_tables(payload)
-    except Exception:
-        pass
+    except (AttributeError, TypeError) as e:
+        pass  # Silently ignore table emission errors
 
 
 def emit_strike_depth_adjustment(
@@ -371,8 +371,8 @@ def emit_strike_depth_adjustment(
     _emit('strike_depth_adjustment', payload)
     try:
         record_strike_adjust(payload)
-    except Exception:
-        pass
+    except (AttributeError, TypeError) as e:
+        pass  # Silently ignore record errors
 
 def emit_prefilter_clamp(
     *,

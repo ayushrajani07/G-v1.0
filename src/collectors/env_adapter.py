@@ -36,7 +36,7 @@ def get_csv(name: str, default: list[str] | None = None, *, sep: str = ",", tran
         if transform:
             parts = [transform(p) for p in parts]
         return parts
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
         return list(default or [])
 
 __all__ = [

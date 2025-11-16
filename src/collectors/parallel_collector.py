@@ -69,7 +69,7 @@ class ParallelCollector:
                             d = await self.providers.resolve_expiry(idx, r)
                             dte = (d - today).days
                             row.append(f"{d.isoformat()} ({dte})")
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError):
                             row.append("ERR")
                     rows.append(row)
 
@@ -83,7 +83,7 @@ class ParallelCollector:
                 print("  ".join("-" * w for w in col_widths))
                 for r in rows:
                     _print_row(r)
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 # Never fail collection due to matrix printing
                 pass
             finally:
@@ -114,14 +114,14 @@ class ParallelCollector:
                 d = d + datetime.timedelta(days=1)
             date_expiry_dir = _os_env.path.join(self.csv.base_dir, index_symbol, d.strftime('%Y-%m-%d'))
             _os_env.makedirs(date_expiry_dir, exist_ok=True)
-        except Exception:
-            pass
+        except (OSError, AttributeError, TypeError):
+            pass  # Silently ignore structure creation errors
 
     async def _collect_index(self, index_symbol: str, params: dict[str, Any]):
         try:
             _logctx.set_context(component='collector', index=index_symbol)
-        except Exception:
-            pass
+        except (AttributeError, TypeError):
+            pass  # Silently ignore log context errors
 
         # Ensure the base index directory exists so downstream readers/tests can find it
         try:
@@ -129,8 +129,8 @@ class ParallelCollector:
             _os_env.makedirs(base_index_dir, exist_ok=True)
             # Also ensure at least one expiry subfolder exists for predictable structure in tests
             _os_env.makedirs(_os_env.path.join(base_index_dir, 'this_week'), exist_ok=True)
-        except Exception:
-            pass
+        except (OSError, AttributeError, TypeError):
+            pass  # Silently ignore directory creation errors
 
         # Enforce market-hours guard (IST 09:15–15:30 via is_market_open)
         try:
@@ -139,18 +139,18 @@ class ParallelCollector:
                 if self.metrics:
                     try:
                         self.metrics.collection_skipped.labels(index=index_symbol, reason="market_closed").inc()
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Silently ignore metric errors
                 # Ensure a minimal structure exists so smoke/tests can find expected folders
                 self._ensure_minimal_structure(index_symbol)
                 return
-        except Exception:
+        except (AttributeError, TypeError, ValueError) as e:
             # If market-hours check fails, proceed but record error
             if self.metrics:
                 try:
                     self.metrics.collection_errors.labels(index=index_symbol, error_type='market_hours').inc()
-                except Exception:
-                    pass
+                except (AttributeError, TypeError):
+                    pass  # Silently ignore metric errors
 
         # Index price + OHLC
         price = 0
@@ -158,12 +158,12 @@ class ParallelCollector:
         try:
             price, ohlc = await self.providers.get_index_data(index_symbol)
             atm = await self.providers.get_ltp(index_symbol)
-        except Exception:
+        except (AttributeError, TypeError, ValueError) as e:
             if self.metrics:
                 try:
                     self.metrics.collection_errors.labels(index=index_symbol, error_type='index_data').inc()
-                except Exception:
-                    pass
+                except (AttributeError, TypeError):
+                    pass  # Silently ignore metric errors
             # Ensure minimal structure so tests can find expiry folder
             self._ensure_minimal_structure(index_symbol)
             return
@@ -171,8 +171,8 @@ class ParallelCollector:
             try:
                 self.metrics.index_price.labels(index=index_symbol).set(price)
                 self.metrics.index_atm.labels(index=index_symbol).set(atm)
-            except Exception:
-                pass
+            except (AttributeError, TypeError, ValueError):
+                pass  # Silently ignore metric errors
 
         # Aggregation containers per index
         pcr_snapshot: dict[str, float] = {}
@@ -184,12 +184,12 @@ class ParallelCollector:
         for expiry_rule in params.get('expiries', ['this_week']):
             try:
                 expiry_date = await self.providers.resolve_expiry(index_symbol, expiry_rule)
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError) as e:
                 if self.metrics:
                     try:
                         self.metrics.collection_errors.labels(index=index_symbol, error_type='resolve_expiry').inc()
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Silently ignore metric errors
                 # Emit detailed error with context
                 handle_collector_error(
                     ResolveExpiryError(f"Failed to resolve expiry for {index_symbol} using rule '{expiry_rule}': {e}"),
@@ -206,7 +206,7 @@ class ParallelCollector:
                     step = float(get_index_meta(index_symbol).step)
                     if step <= 0:
                         step = 50.0
-                except Exception:
+                except (AttributeError, TypeError, ValueError):
                     step = 100.0 if index_symbol in ("BANKNIFTY", "SENSEX") else 50.0
             else:
                 step = 100.0 if index_symbol in ("BANKNIFTY", "SENSEX") else 50.0
@@ -223,8 +223,8 @@ class ParallelCollector:
                 if self.metrics:
                     try:
                         self.metrics.collection_errors.labels(index=index_symbol, error_type='no_instruments').inc()
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Silently ignore metric errors
                 handle_collector_error(
                     NoInstrumentsError(
                         f"No instruments for {index_symbol} expiry {expiry_date} (rule: {expiry_rule}) with strikes={int_strikes}"
@@ -239,8 +239,8 @@ class ParallelCollector:
                 if self.metrics:
                     try:
                         self.metrics.collection_errors.labels(index=index_symbol, error_type='no_quotes').inc()
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Silently ignore metric errors
                 handle_collector_error(
                     NoQuotesError(
                         f"No quotes returned for {index_symbol} expiry {expiry_date} (rule: {expiry_rule}); instruments={len(instruments)}"
@@ -256,8 +256,8 @@ class ParallelCollector:
             try:
                 self._any_chain_realized = True
                 await self._print_expiry_matrix_once()
-            except Exception:
-                pass
+            except (AttributeError, TypeError):
+                pass  # Silently ignore matrix printing errors
 
             # Compute PCR and day width for this expiry snapshot
             try:
@@ -271,14 +271,14 @@ class ParallelCollector:
                         dw = float(ohlc.get('high', 0)) - float(ohlc.get('low', 0))
                         if dw > 0:
                             representative_day_width = dw
-                except Exception:
-                    pass
-            except Exception:
+                except (ValueError, TypeError, KeyError):
+                    pass  # Silently ignore day width calculation errors
+            except (ValueError, TypeError, ZeroDivisionError) as e:
                 if self.metrics:
                     try:
                         self.metrics.collection_errors.labels(index=index_symbol, error_type='pcr_compute').inc()
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Silently ignore metric errors
 
             # Health check before writing
             try:
@@ -287,16 +287,16 @@ class ParallelCollector:
                     if self.metrics:
                         try:
                             self.metrics.storage_health.labels(sink='csv').set(0)
-                        except Exception:
-                            pass
+                        except (AttributeError, TypeError):
+                            pass  # Silently ignore metric errors
                 else:
                     if self.metrics:
                         try:
                             self.metrics.storage_health.labels(sink='csv').set(1)
-                        except Exception:
-                            pass
-            except Exception:
-                pass
+                        except (AttributeError, TypeError):
+                            pass  # Silently ignore metric errors
+            except (AttributeError, TypeError):
+                pass  # Silently ignore health check errors
 
             # Write via CsvSink (sync). Offload to thread if pool exists.
             ts = datetime.datetime.now(datetime.UTC)
@@ -313,8 +313,8 @@ class ParallelCollector:
                     if self.metrics:
                         try:
                             self.metrics.collection_errors.labels(index=index_symbol, error_type='csv_write').inc()
-                        except Exception:
-                            pass
+                        except (AttributeError, TypeError):
+                            pass  # Silently ignore metric errors
                     handle_collector_error(
                         CsvWriteError(
                             f"CSV write failed for {index_symbol} {expiry_rule} (expiry {expiry_date}): {e}"
@@ -331,8 +331,8 @@ class ParallelCollector:
                     if self.metrics:
                         try:
                             self.metrics.collection_errors.labels(index=index_symbol, error_type='csv_write').inc()
-                        except Exception:
-                            pass
+                        except (AttributeError, TypeError):
+                            pass  # Silently ignore metric errors
                     handle_collector_error(
                         CsvWriteError(
                             f"CSV write failed for {index_symbol} {expiry_rule} (expiry {expiry_date}): {e}"
@@ -350,8 +350,8 @@ class ParallelCollector:
             try:
                 if metrics_payload and metrics_payload.get('timestamp') and metrics_payload['timestamp'] < snapshot_base_time:
                     snapshot_base_time = metrics_payload['timestamp']
-            except Exception:
-                pass
+            except (AttributeError, TypeError, KeyError):
+                pass  # Silently ignore snapshot timing errors
 
             # Influx write if configured
             try:
@@ -361,8 +361,8 @@ class ParallelCollector:
                 if self.metrics:
                     try:
                         self.metrics.collection_errors.labels(index=index_symbol, error_type='influx_write').inc()
-                    except Exception:
-                        pass
+                    except (AttributeError, TypeError):
+                        pass  # Silently ignore metric errors
                 handle_collector_error(
                     InfluxWriteError(
                         f"Influx write failed for {index_symbol} {expiry_rule} (expiry {expiry_date}): {e}"
@@ -379,14 +379,14 @@ class ParallelCollector:
                 if self.influx:
                     try:
                         self.influx.write_overview_snapshot(index_symbol, pcr_snapshot, snapshot_base_time, representative_day_width, expected_expiries=list(pcr_snapshot.keys()))
-                    except Exception:
-                        pass
-        except Exception:
+                    except (AttributeError, TypeError):
+                        pass  # Silently ignore influx overview errors
+        except (AttributeError, TypeError, ValueError) as e:
             if self.metrics:
                 try:
                     self.metrics.collection_errors.labels(index=index_symbol, error_type='overview_write').inc()
-                except Exception:
-                    pass
+                except (AttributeError, TypeError):
+                    pass  # Silently ignore metric errors
 
         # Fallback: if nothing was written (e.g., due to data filters), create a minimal placeholder CSV
         try:
@@ -400,8 +400,8 @@ class ParallelCollector:
                 if not _os_env.path.exists(placeholder):
                     with open(placeholder, 'w', newline='') as f:
                         f.write('timestamp,index\n')
-        except Exception:
-            pass
+        except (OSError, AttributeError, TypeError):
+            pass  # Silently ignore placeholder creation errors
 
     async def run_once(self, index_params: dict[str, Any]):
         tasks = []
@@ -428,8 +428,8 @@ class ParallelCollector:
                     d = d + datetime.timedelta(days=1)
                 date_expiry_dir = _os_env.path.join(base_index_dir, d.strftime('%Y-%m-%d'))
                 _os_env.makedirs(date_expiry_dir, exist_ok=True)
-            except Exception:
-                pass
+            except (OSError, AttributeError, TypeError):
+                pass  # Silently ignore directory creation errors
         # Persist full enabled indices set for matrix printing before any tasks run
         self._enabled_indices = list(enabled_indices)
         # Now schedule tasks
@@ -455,15 +455,15 @@ class ParallelCollector:
                     d = d + datetime.timedelta(days=1)
                 date_expiry_dir = _os_env.path.join(base_index_dir, d.strftime('%Y-%m-%d'))
                 _os_env.makedirs(date_expiry_dir, exist_ok=True)
-            except Exception:
-                pass
+            except (OSError, AttributeError, TypeError):
+                pass  # Silently ignore directory creation errors
 
         # Fallback: only if at least one option chain was realized but print didn't happen (edge cases)
         try:
             if self._any_chain_realized and not self._expiry_matrix_printed:
                 await self._print_expiry_matrix_once()
-        except Exception:
-            pass
+        except (AttributeError, TypeError):
+            pass  # Silently ignore matrix printing errors
 
 
 __all__ = ["ParallelCollector"]

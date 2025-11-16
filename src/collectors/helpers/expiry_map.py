@@ -49,7 +49,7 @@ def _normalize_expiry(raw) -> _dt.date | None:
     if isinstance(raw, _dt.datetime):
         try:
             return raw.date()
-        except Exception:
+        except (AttributeError, ValueError) as e:
             return None
     # String ISO
     if isinstance(raw, str):
@@ -60,7 +60,7 @@ def _normalize_expiry(raw) -> _dt.date | None:
             if y.isdigit() and m.isdigit() and d.isdigit():
                 try:
                     return _dt.date(int(y), int(m), int(d))
-                except Exception:
+                except (ValueError, OverflowError) as e:
                     return None
         return None  # unrecognized string format
     # Object with date() method
@@ -69,7 +69,7 @@ def _normalize_expiry(raw) -> _dt.date | None:
             val = raw.date()
             if isinstance(val, _dt.date):
                 return val
-        except Exception:
+        except (AttributeError, TypeError, ValueError) as e:
             return None
     return None
 

@@ -26,15 +26,15 @@ def compute_greeks_block(ctx, enriched_data: dict[str, dict[str, Any]], index_sy
         try:
             if mp_manager and mem_flags.get('skip_greeks'):
                 skip_due_mem = True
-        except Exception:  # pragma: no cover
-            pass
+        except (AttributeError, TypeError, KeyError) as e:  # pragma: no cover
+            pass  # Silently ignore memory flag check errors
         if skip_due_mem:
             logger.debug("Skipping Greek computation due to memory pressure: %s %s", index_symbol, expiry_rule)
             return
         greek_success = greek_fail = 0
         try:
             spot = float(index_price)
-        except Exception:
+        except (ValueError, TypeError) as e:
             spot = 0.0
         for symbol, data in enriched_data.items():
             try:
@@ -53,8 +53,8 @@ def compute_greeks_block(ctx, enriched_data: dict[str, dict[str, Any]], index_sy
                     try:
                         if float(data.get(k_dst, 0)) == 0:
                             data[k_dst] = g.get(k_src, 0)
-                    except Exception:
-                        pass
+                    except (ValueError, TypeError, KeyError) as e:
+                        pass  # Silently ignore individual greek assignment errors
                 if float(data.get('iv', 0)) == 0 and iv_fraction:
                     data['iv'] = iv_fraction
                 greek_success += 1
@@ -67,15 +67,15 @@ def compute_greeks_block(ctx, enriched_data: dict[str, dict[str, Any]], index_sy
                     metrics.greeks_success.labels(index=index_symbol, expiry=expiry_rule).inc(greek_success)
                 if greek_fail and hasattr(metrics, 'greeks_fail'):
                     metrics.greeks_fail.labels(index=index_symbol, expiry=expiry_rule).inc(greek_fail)
-            except Exception:  # pragma: no cover
-                pass
+            except (AttributeError, TypeError) as e:  # pragma: no cover
+                pass  # Silently ignore metric update errors
     except Exception as gex:
         logger.error("Greek computation batch failed for %s %s: %s", index_symbol, expiry_rule, gex)
         if metrics and hasattr(metrics, 'greeks_batch_fail'):
             try:
                 metrics.greeks_batch_fail.labels(index=index_symbol, expiry=expiry_rule).inc()
-            except Exception:  # pragma: no cover
-                pass
+            except (AttributeError, TypeError) as e:  # pragma: no cover
+                pass  # Silently ignore batch fail metric errors
 
 
 def compute_greeks(ctx, enriched_data: dict[str, dict[str, Any]], expiry_ctx: Any, greeks_calculator, mp_manager, mem_flags):

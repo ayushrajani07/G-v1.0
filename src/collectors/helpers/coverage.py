@@ -21,14 +21,14 @@ _SUPPRESS_COVERAGE_WARN = EnvConfig.get_bool('G6_SUPPRESS_COVERAGE_WARNINGS', Fa
 try:  # pragma: no cover
     from src.broker.kite.tracing import is_enabled as _trace_enabled
     from src.broker.kite.tracing import trace as _trace  # type: ignore
-except Exception:  # fallback minimal gate
+except ImportError:  # fallback minimal gate
     def _trace(event: str, **ctx):
         if not EnvConfig.get_bool('G6_TRACE_COLLECTOR', False):
             return
         try:
             logger.warning("TRACE %s | %s", event, {k: v for k, v in ctx.items() if k not in ('enriched_sample',)})
-        except Exception:
-            pass
+        except (ValueError, TypeError, KeyError) as e:
+            logger.debug("Trace logging failed: %s", e)
     def _trace_enabled():  # type: ignore
         return EnvConfig.get_bool('G6_TRACE_COLLECTOR', False)
 
@@ -58,12 +58,15 @@ def coverage_metrics(ctx, instruments: Iterable[dict[str, Any]], strikes, index_
         if metrics and hasattr(metrics, 'instrument_coverage_pct'):
             try:
                 metrics.instrument_coverage_pct.labels(index=index_symbol, expiry=str(expiry_date)).set(coverage_ratio * 100.0)
-            except Exception:
-                logger.debug("Failed to set instrument coverage metric", exc_info=True)
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.debug("Failed to set instrument coverage metric: %s", e, exc_info=True)
         return coverage_ratio
-    except Exception:
-        logger.debug("Coverage diagnostics failed", exc_info=True)
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
+        logger.debug("Coverage diagnostics failed: %s", e, exc_info=True)
         return None
+    except Exception as e:
+        logger.critical("Unexpected coverage diagnostics error: %s", e, exc_info=True)
+        raise
 
 def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str, expiry_rule: str, expiry_date):  # side effects only; returns full-field coverage ratio (0..1)
     try:
@@ -83,15 +86,15 @@ def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str
                     if cnt > 0:
                         try:
                             metrics.missing_option_fields_total.labels(index=index_symbol, expiry=str(expiry_date), field=field).inc(cnt)
-                        except Exception:
-                            logger.debug("Failed to inc missing field metric", exc_info=True)
+                        except (AttributeError, TypeError, ValueError) as e:
+                            logger.debug("Failed to inc missing field metric: %s", e, exc_info=True)
             full_present = sum(1 for _sym,opt in enriched_data.items() if opt.get('volume') and opt.get('oi') and opt.get('avg_price'))
             coverage_pct = (full_present / total_options) * 100.0
             if metrics and hasattr(metrics, 'option_field_coverage_ratio'):
                 try:
                     metrics.option_field_coverage_ratio.labels(index=index_symbol, expiry=str(expiry_date)).set(coverage_pct)
-                except Exception:
-                    logger.debug("Failed to set field coverage ratio", exc_info=True)
+                except (AttributeError, TypeError, ValueError) as e:
+                    logger.debug("Failed to set field coverage ratio: %s", e, exc_info=True)
             logger.debug(
                 "Field coverage %s %s %s: total=%s full=%s missing(volume=%s,oi=%s,avg_price=%s) ratio=%s%%",
                 index_symbol,
@@ -132,8 +135,11 @@ def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str
             return coverage_pct/100.0
         else:
             return 0.0
-    except Exception:
-        logger.debug("Field coverage diagnostics failure", exc_info=True)
+    except (ValueError, TypeError, KeyError, AttributeError) as e:
+        logger.debug("Field coverage diagnostics failure: %s", e, exc_info=True)
         return None
+    except Exception as e:
+        logger.critical("Unexpected field coverage error: %s", e, exc_info=True)
+        raise
 
 __all__ = ["coverage_metrics", "field_coverage_metrics"]
