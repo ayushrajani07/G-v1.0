@@ -68,12 +68,12 @@ class _ExpiryContextFallback:  # baseline fallback; may be replaced by import be
             setattr(self, a, b)
 try:  # pragma: no cover
     ExpiryContext = _ExpiryContextReal  # simple alias (safe)
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     ExpiryContext = _ExpiryContextFallback  # fallback alias
 
 try:  # pragma: no cover
     _run_persist_flow = run_persist_flow  # alias from module import
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     def _run_persist_flow(ctx: Any, enriched_data: dict[str, dict[str, Any]], expiry_ctx: Any, index_ohlc: Any, allowed_expiry_dates: set, trace: Callable[..., None], concise_mode: bool) -> Any:
         raise RuntimeError("persist_flow_unavailable")
 # Alias back to original name for consistency
@@ -86,7 +86,7 @@ def _classify_expiry_result(_expiry_rec: dict[str, Any], _enriched: dict[str, An
         _res = classify_expiry_result(_expiry_rec, _enriched)
         if isinstance(_res, str):
             status = _res
-    except Exception:
+    except (TypeError, KeyError, AttributeError, ValueError):
         status = 'OK'
     return status
 def _compute_expiry_status(_rec: dict[str, Any]) -> str:
@@ -94,7 +94,7 @@ def _compute_expiry_status(_rec: dict[str, Any]) -> str:
         _res: object = compute_expiry_status(_rec)
         if isinstance(_res, str):
             return _res
-    except Exception:
+    except (TypeError, KeyError, AttributeError, ValueError):
         return 'empty'
     return 'empty'
 
@@ -102,7 +102,7 @@ def _compute_expiry_status(_rec: dict[str, Any]) -> str:
 def _format_concise_expiry_row_fallback(**_k: Any) -> Any:
     try:  # pragma: no cover
         return format_concise_expiry_row(**_k)
-    except Exception:
+    except (TypeError, KeyError, AttributeError, ValueError):
         return None
 
 
@@ -152,12 +152,12 @@ def finalize_from_enriched(
                 expiry_rec['prefilter_max_allowed'] = clamp_meta.get('prefilter_max_allowed')
                 if clamp_meta.get('prefilter_strict_mode'):
                     expiry_rec.setdefault('partial_reason','prefilter_clamp')
-        except Exception:
+        except (TypeError, KeyError, AttributeError):
             logger.debug('pipeline_finalize_clamp_meta_failed', exc_info=True)
         # Remove sentinel to avoid polluting persisted data
         if '_pipeline_clamp' in enriched_data:
             try: enriched_data.pop('_pipeline_clamp', None)
-            except Exception: pass
+            except (KeyError, TypeError): pass
         collection_time = per_index_ts
         expiry_ctx = ExpiryContext(index_symbol=index_symbol, expiry_rule=expiry_rule, expiry_date=expiry_date, collection_time=collection_time, index_price=index_price, risk_free_rate=getattr(legacy_classifiers,'risk_free_rate',0.05), allow_per_option_metrics=getattr(legacy_classifiers,'allow_per_option_metrics',True), compute_greeks=getattr(legacy_classifiers,'compute_greeks',False))
         # Persist
@@ -177,16 +177,16 @@ def finalize_from_enriched(
         # Classification & status
         try:
             expiry_rec['options'] = len(enriched_data)
-        except Exception:
+        except TypeError:
             pass
         # Coverage metrics propagated from pipeline coverage phase (if present via preventive_report path is not passed here; rely on enriched_data sentinel? For now skipped.)
         try:
             _classify_expiry_result(expiry_rec, enriched_data)
-        except Exception:
+        except (TypeError, KeyError, AttributeError, ValueError):
             logger.debug('pipeline_finalize_classify_failed', exc_info=True)
         try:
             expiry_rec['status'] = _compute_expiry_status(expiry_rec)
-        except Exception:
+        except (TypeError, KeyError, AttributeError, ValueError):
             logger.debug('pipeline_finalize_status_failed', exc_info=True)
         # Optional domain models mapping (parity w/ legacy)
         _domain_models_enabled = False
@@ -195,7 +195,7 @@ def finalize_from_enriched(
                 _domain_models_enabled = bool(getattr(collector_settings, 'domain_models_enabled', False))
             else:
                 _domain_models_enabled = EnvConfig.get_bool('G6_DOMAIN_MODELS', False)
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             _domain_models_enabled = False
         if _domain_models_enabled and enriched_data:
             try:
@@ -203,9 +203,9 @@ def finalize_from_enriched(
                 for k,q in list(enriched_data.items()):
                     try:
                         OptionQuote.from_raw(k,q)
-                    except Exception:
+                    except (TypeError, KeyError, AttributeError, ValueError):
                         continue
-            except Exception:
+            except (TypeError, AttributeError):
                 logger.debug('pipeline_finalize_domain_models_failed', exc_info=True)
         # Snapshot build if requested
         if getattr(ctx, 'build_snapshots', False):
@@ -213,7 +213,7 @@ def finalize_from_enriched(
                 snap_obj = build_expiry_snapshot(index_symbol, expiry_rule, expiry_date, atm_strike, enriched_data, per_index_ts)
                 if snap_obj is not None:
                     getattr(ctx, 'snapshots_accum', []).append(snap_obj)
-            except Exception:
+            except (TypeError, KeyError, AttributeError, ValueError):
                 logger.debug('pipeline_finalize_snapshot_failed', exc_info=True)
         # Concise row
         if concise_mode:
@@ -227,19 +227,19 @@ def finalize_from_enriched(
                     enriched_data=enriched_data,
                     strikes=strikes,
                 )
-            except Exception:
+            except (TypeError, KeyError, AttributeError, ValueError):
                 logger.debug('pipeline_finalize_concise_row_failed', exc_info=True)
         expiry_rec['failed'] = False
         outcome['success'] = True
         outcome['option_count'] = len(enriched_data)
         outcome['expiry_rec'] = expiry_rec
         return outcome
-    except Exception as e:
+    except (RuntimeError, OSError, IOError) as e:
         logger.error('pipeline_finalize_unexpected_error index=%s rule=%s err=%s', index_symbol, expiry_rule, e)
         try:
             expiry_rec['failed'] = True
             outcome['expiry_rec'] = expiry_rec
-        except Exception:
+        except (KeyError, TypeError):
             pass
         return outcome
 
