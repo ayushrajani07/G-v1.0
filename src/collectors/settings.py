@@ -73,7 +73,7 @@ def apply_basic_filters(enriched: dict[str, dict], settings: CollectorSettings) 
                 if isinstance(oi, (int, float)) and oi < moi:
                     continue
             out[k] = v
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             # Defensive: skip pathological entries rather than failing entire filter
             continue
     return out
