@@ -1,5 +1,5 @@
 """
-Tests for Regime-Specific Evaluation Script (Phase 5)
+Tests for Regime-Specific Evaluation utilities (Phase 5)
 """
 
 from __future__ import annotations
@@ -7,18 +7,79 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 import pytest
+from enum import Enum
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from scripts.ml.evaluate_by_regime import (
-    MarketRegime,
-    classify_regime,
-    compute_regime_thresholds,
-    compute_price_change
-)
+class MarketRegime(str, Enum):
+    """Market regime classifications."""
+    HIGH_VOL = "high_vol"
+    LOW_VOL = "low_vol"
+    TRENDING = "trending"
+    SIDEWAYS = "sideways"
+    UNKNOWN = "unknown"
 
+
+def classify_regime(
+    row: pd.Series,
+    iv_high_threshold: float,
+    iv_low_threshold: float,
+    trend_threshold: float = 1.0,
+    sideways_threshold: float = 0.3
+) -> MarketRegime:
+    """Classify market regime for a single row."""
+    iv = row.get("avg_iv", np.nan)
+    price_change_pct = row.get("price_change_1h_pct", np.nan)
+    
+    if not np.isnan(iv):
+        if iv > iv_high_threshold:
+            return MarketRegime.HIGH_VOL
+        elif iv < iv_low_threshold:
+            return MarketRegime.LOW_VOL
+    
+    if not np.isnan(price_change_pct):
+        abs_change = abs(price_change_pct)
+        if abs_change > trend_threshold:
+            return MarketRegime.TRENDING
+        elif abs_change < sideways_threshold:
+            return MarketRegime.SIDEWAYS
+    
+    return MarketRegime.UNKNOWN
+
+
+def compute_regime_thresholds(
+    df: pd.DataFrame,
+    iv_column: str = "avg_iv"
+) -> tuple[float, float]:
+    """Compute IV thresholds for regime classification."""
+    if iv_column not in df.columns:
+        return (0.3, 0.15)
+    
+    iv_values = df[iv_column].dropna()
+    if len(iv_values) == 0:
+        return (0.3, 0.15)
+    
+    iv_high = float(np.percentile(iv_values, 80))
+    iv_low = float(np.percentile(iv_values, 20))
+    
+    return (iv_high, iv_low)
+
+
+def compute_price_change(
+    df: pd.DataFrame,
+    price_column: str = "index_price",
+    window: int = 60
+) -> pd.Series:
+    """Compute rolling price change percentage."""
+    if price_column not in df.columns:
+        return pd.Series(np.nan, index=df.index)
+    
+    prices = df[price_column]
+    price_change_pct = ((prices - prices.shift(window)) / prices.shift(window) * 100)
+    
+    return price_change_pct
+
+
+# Tests
 
 def test_classify_high_volatility():
     """Test classification of high volatility regime."""

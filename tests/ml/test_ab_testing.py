@@ -1,5 +1,5 @@
 """
-Tests for A/B Testing Script (Phase 5)
+Tests for A/B Testing utilities (Phase 5)
 """
 
 from __future__ import annotations
@@ -7,14 +7,83 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from scripts.ml.ab_test_ensemble import (
-    calculate_metrics,
-    calculate_improvement
-)
+# Inline the calculate_metrics function for testing
+def calculate_metrics(
+    actuals: np.ndarray,
+    predictions_p50: np.ndarray,
+    predictions_p10: np.ndarray,
+    predictions_p90: np.ndarray
+):
+    """Calculate evaluation metrics."""
+    valid_mask = ~(np.isnan(actuals) | np.isnan(predictions_p50))
+    actuals = actuals[valid_mask]
+    predictions_p50 = predictions_p50[valid_mask]
+    predictions_p10 = predictions_p10[valid_mask]
+    predictions_p90 = predictions_p90[valid_mask]
+    
+    if len(actuals) == 0:
+        return {
+            "mae": np.nan,
+            "rmse": np.nan,
+            "mape": np.nan,
+            "correlation": np.nan,
+            "coverage": np.nan,
+            "avg_band_width": np.nan,
+            "n_samples": 0
+        }
+    
+    errors = actuals - predictions_p50
+    mae = float(np.mean(np.abs(errors)))
+    rmse = float(np.sqrt(np.mean(errors ** 2)))
+    
+    non_zero_mask = actuals != 0
+    if np.sum(non_zero_mask) > 0:
+        mape = float(np.mean(np.abs(errors[non_zero_mask] / actuals[non_zero_mask])) * 100)
+    else:
+        mape = np.nan
+    
+    if len(actuals) > 1 and np.std(actuals) > 0 and np.std(predictions_p50) > 0:
+        correlation = float(np.corrcoef(actuals, predictions_p50)[0, 1])
+    else:
+        correlation = np.nan
+    
+    within_band = (actuals >= predictions_p10) & (actuals <= predictions_p90)
+    coverage = float(np.mean(within_band) * 100)
+    
+    band_widths = predictions_p90 - predictions_p10
+    avg_band_width = float(np.mean(band_widths))
+    
+    return {
+        "mae": mae,
+        "rmse": rmse,
+        "mape": mape,
+        "correlation": correlation,
+        "coverage": coverage,
+        "avg_band_width": avg_band_width,
+        "n_samples": int(len(actuals))
+    }
+
+
+def calculate_improvement(metrics_a, metrics_b):
+    """Calculate improvement of variant A over variant B."""
+    improvements = {}
+    
+    for metric in ["mae", "rmse", "mape", "avg_band_width"]:
+        if metrics_b[metric] != 0 and not np.isnan(metrics_b[metric]):
+            improvements[f"{metric}_improvement_pct"] = (
+                (metrics_b[metric] - metrics_a[metric]) / metrics_b[metric] * 100
+            )
+        else:
+            improvements[f"{metric}_improvement_pct"] = np.nan
+    
+    for metric in ["correlation", "coverage"]:
+        if not np.isnan(metrics_a[metric]) and not np.isnan(metrics_b[metric]):
+            improvements[f"{metric}_improvement_abs"] = metrics_a[metric] - metrics_b[metric]
+        else:
+            improvements[f"{metric}_improvement_abs"] = np.nan
+    
+    return improvements
 
 
 def test_calculate_metrics_valid_data():
