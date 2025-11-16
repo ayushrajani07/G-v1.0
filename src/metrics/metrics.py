@@ -1090,7 +1090,8 @@ class MetricsRegistry:
     def group_allowed(self, name: str) -> bool:  # pragma: no cover - thin wrapper
         try:
             return self._group_allowed(name)  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle missing or failing predicate
             return True
 
     # ---------------- Init Trace Accessor (public) -----------------
@@ -1108,7 +1109,8 @@ class MetricsRegistry:
         if copy:
             try:
                 return list(trace)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle list conversion failures
                 return []
         return trace
 
@@ -1178,12 +1180,14 @@ class MetricsRegistry:
                             pass
                         try:
                             del metric_groups[attr]
-                        except Exception:
+                        except (KeyError, TypeError):
+                            # Handle dict operations
                             pass
                         removed_attrs.append(attr)
                 try:
                     self._staged_prune_groups = None  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle attribute assignment failures
                     pass
                 after_now = len(metric_groups)
                 return {
@@ -1226,13 +1230,15 @@ class MetricsRegistry:
                     })
                 else:
                     logger.info("metrics.prune_groups.preview", extra={'dry_run': True, 'before_count': before, 'prospective_removed': len(prospective_removed)})
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
             # Stage groups for next non-reload prune
             try:
                 # Store attribute names for precise application (tests expect specific attrs removed)
                 self._staged_prune_groups = {a for a, g in snapshot.items() if g not in always_on and (g in (disabled_set or set()) or (enabled_set is not None and g not in enabled_set))}  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle attribute assignment failures
                 pass
         else:
             # Perform pruning
@@ -1261,13 +1267,16 @@ class MetricsRegistry:
                         try:
                             if hasattr(self, attr):
                                 delattr(self, attr)
-                        except Exception:
+                        except (AttributeError, TypeError):
+                            # Handle attribute deletion failures
                             pass
                         try:
                             del self._metric_groups[attr]  # type: ignore[index]
-                        except Exception:
+                        except (KeyError, TypeError):
+                            # Handle dict operations
                             pass
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle forced removal loop failures
                 pass
             # Explicit forced removal pass (covers predicate drift)
             try:
@@ -1293,9 +1302,11 @@ class MetricsRegistry:
                             'after_groups': sorted(list(getattr(self,'_metric_groups',{}).values())),
                             'disabled_set': sorted(list(disabled_set)) if isinstance(disabled_set,set) else [],
                         })
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Handle logging failures
                         pass
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle explicit forced removal failures
                 pass
             after_mapping = getattr(self, '_metric_groups', {})
             # Applied structured log
@@ -1312,7 +1323,8 @@ class MetricsRegistry:
                         'disabled_count': len(disabled_set) if isinstance(disabled_set, set) else 0,
                     }
                 )
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
         after = len(after_mapping)
         removed_attrs = [a for a in snapshot.keys() if a not in after_mapping]
@@ -1355,7 +1367,8 @@ def get_metrics_metadata(reg: "MetricsRegistry" = None) -> dict | None:  # type:
             reg_fallback = get_metrics()
             if reg_fallback is not None:
                 meta.setdefault('groups', list(getattr(reg_fallback, '_metric_groups', {}).values()))
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle registry access failures
             meta.setdefault('groups', [])
         return meta
 
@@ -1445,7 +1458,8 @@ def get_init_trace(copy: bool = True):  # pragma: no cover - facade helper
         return []
     try:
         return reg.get_init_trace(copy=copy)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle method call failures
         return []
 
 
@@ -1454,7 +1468,8 @@ def prune_metrics_groups(reload_filters: bool = True, *, dry_run: bool = False):
     try:
         from .pruning import prune_metrics_groups as _pg  # type: ignore
         return _pg(reload_filters=reload_filters, dry_run=dry_run)
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle import or pruning failures
         return {}
 
 
@@ -1462,7 +1477,8 @@ def preview_prune_metrics_groups(reload_filters: bool = True):  # pragma: no cov
     try:
         from .pruning import preview_prune_metrics_groups as _pp  # type: ignore
         return _pp(reload_filters=reload_filters)
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle import or preview failures
         return {}
 
 
@@ -1526,11 +1542,13 @@ def set_provider_mode(mode: str) -> None:  # pragma: no cover - thin helper
                     print("[metrics-init-basic] provider_mode_set_label_done", flush=True)
                 except (AttributeError, TypeError, ValueError, KeyError, ImportError, IOError, OSError) as e:
                     pass  # Generic error handler
-        except Exception:  # Generic error handler
+        except (AttributeError, TypeError, ValueError, RuntimeError):  # Generic error handler
+            # Handle label or gauge operation failures
             if _simple_trace:
                 try:
                     print("[metrics-init-basic] provider_mode_seed_error", flush=True)
-                except Exception:
+                except (AttributeError, TypeError, OSError):
+                    # Handle print failures
                     pass  # Generic error handler
             return
         if _simple_trace:
@@ -1546,9 +1564,11 @@ def set_provider_mode(mode: str) -> None:  # pragma: no cover - thin helper
             if not fams or not fams[0].samples:
                 # Force explicit child creation (prom client sometimes lazy-creates on first set)
                 g.labels(mode=str(mode)).set(1)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Handle collection or gauge operation failures
             pass  # Generic error handler
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle provider mode setting failures
         pass  # Generic error handler
 
 
@@ -1597,7 +1617,8 @@ def isolated_metrics_registry():  # pragma: no cover - thin helper, exercised in
         for coll in list(original.values()):
             try:
                 REGISTRY.unregister(coll)  # type: ignore[arg-type]
-            except (AttributeError, TypeError, ValueError, KeyError, ImportError, IOError, OSError) as e:
+            except (ValueError, KeyError):
+                # Handle collector not registered or already removed
                 pass  # Generic error handler
     except (AttributeError, TypeError, ValueError, KeyError, ImportError, IOError, OSError) as e:
         pass  # Generic error handler
@@ -1634,7 +1655,8 @@ def isolated_metrics_registry():  # pragma: no cover - thin helper, exercised in
             for name, collector in current.items():
                 try:
                     REGISTRY.unregister(collector)  # type: ignore[arg-type]
-                except (AttributeError, TypeError, ValueError, KeyError, ImportError, IOError, OSError) as e:
+                except (ValueError, KeyError):
+                    # Handle collector not registered or already removed
                     pass  # Generic error handler
         except (AttributeError, TypeError, ValueError, KeyError, ImportError, IOError, OSError) as e:
             pass  # Generic error handler
@@ -1643,7 +1665,8 @@ def isolated_metrics_registry():  # pragma: no cover - thin helper, exercised in
             for coll in original.values():
                 try:
                     REGISTRY.register(coll)
-                except (AttributeError, TypeError, ValueError, KeyError, ImportError, IOError, OSError) as e:
+                except (ValueError, KeyError, AttributeError):
+                    # Handle duplicate registration or collector issues
                     pass  # Generic error handler
         except (AttributeError, TypeError, ValueError, KeyError, ImportError, IOError, OSError) as e:
             pass  # Generic error handler
