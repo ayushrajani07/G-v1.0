@@ -58,7 +58,8 @@ if _PHASE_METRICS:
             _phase_duration_observer = get_histogram('pipeline_phase_duration_seconds', 'Pipeline phase durations', ['phase'])
         else:
             _phase_duration_observer = None
-    except Exception:  # pragma: no cover
+    except (ImportError, AttributeError, TypeError):  # pragma: no cover
+        # Metrics module not available or incompatible - skip metrics
         _phase_duration_observer = None
 
 _dedup_lock = threading.Lock()
@@ -113,7 +114,8 @@ def phase_log(phase: str, ctx: Any = None, rule: str = '', index: str = '') -> I
                 dt = (time.time() - rec.started)
                 if hasattr(_phase_duration_observer, 'labels'):
                     _phase_duration_observer.labels(phase=rec.phase).observe(dt)
-            except Exception:  # pragma: no cover
+            except (AttributeError, TypeError, ValueError):  # pragma: no cover
+                # Metrics observation failed - non-critical
                 pass
 
 class PhaseLogger:
@@ -145,7 +147,8 @@ class PhaseLogger:
             if extra_meta_provider:
                 try:
                     rec.add_meta(**(extra_meta_provider() or {}))
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Extra meta provider failed - skip meta addition
                     pass
             # Merge meta (later keys won't overwrite required ones)
             for k,v in rec.meta.items():
@@ -185,7 +188,7 @@ class PhaseLogger:
         line = ' '.join(parts)
         try:
             self._logger.log(level, line)
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             # Never allow logging failures to break pipeline
             pass
 

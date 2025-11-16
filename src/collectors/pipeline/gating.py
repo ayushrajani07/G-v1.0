@@ -277,7 +277,8 @@ def decide(index: str, rule: str, meta: Mapping[str, Any], *, config: GatingConf
                     hseg = ph[:4] or '0'
                     bucket = int(hseg, 16) / 0xFFFF
                     allowed = bucket <= config.canary_pct
-                except Exception:
+                except (ValueError, TypeError, ZeroDivisionError):
+                    # Hash parsing or bucket calculation failed - exclude from canary
                     allowed = False
         if not allowed:
             decision['reason'] = 'canary_excluded'
