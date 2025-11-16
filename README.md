@@ -44,11 +44,25 @@ VS Code Tasks (recommended):
 * `Smoke: Summary (panels mode)` → interactive summary
 * `G6: Init Menu` → interactive configuration & launch helper
 
+## Documentation
+
+**📚 Complete documentation available in [docs/](docs/README.md)**
+
+Quick links:
+- **[Documentation Index](docs/README.md)** - Complete categorized documentation
+- **[Operator Manual](docs/guides/OPERATOR_MANUAL.md)** - Production operations guide
+- **[Development Guidelines](docs/development/DEVELOPMENT_GUIDELINES.md)** - Contributing guide
+- **[Testing Guide](docs/development/TESTING.md)** - Running tests
+- **[Deployment Guide](docs/guides/DEPLOYMENT_GUIDE.md)** - Deployment procedures
+- **[Architecture Overview](docs/architecture/ADVISOR_ARCHITECTURE.md)** - System design
+- **[Metrics Catalog](docs/dashboards/METRICS_CATALOG.md)** - Available metrics
+- **[Configuration Guide](docs/operations/ENV_FLAGS_TABLES.md)** - Environment variables
+- **[Local Installation Paths](docs/operations/LOCAL_PATHS.md)** - Prometheus, Grafana, Python paths
+
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)
 - Archive (legacy utilities): [archive/README.md](archive/README.md)
 - Archived README variants: [archive/readmes/](archive/readmes/)
-- **Local Installation Paths**: [LOCAL_PATHS.md](LOCAL_PATHS.md) – Reference for Prometheus, Grafana, Python paths and service endpoints
 
 
 ### Testing (two-phase recommended)

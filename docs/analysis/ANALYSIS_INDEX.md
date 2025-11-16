@@ -21,7 +21,7 @@ Three comprehensive documents have been created to provide:
 
 ### 📊 Quick Start: Read This First
 
-**[ANALYSIS_SUMMARY.md](./ANALYSIS_SUMMARY.md)** (8KB, 15 min read)
+**[ANALYSIS_SUMMARY.md](ANALYSIS_SUMMARY.md)** (8KB, 15 min read)
 - Executive overview
 - Key findings at a glance
 - Critical metrics and timeline
@@ -34,7 +34,7 @@ Three comprehensive documents have been created to provide:
 
 ### 📖 Complete Analysis: Deep Dive
 
-**[CORE_PROJECT_ANALYSIS.md](./CORE_PROJECT_ANALYSIS.md)** (26KB, 45 min read)
+**[CORE_PROJECT_ANALYSIS.md](CORE_PROJECT_ANALYSIS.md)** (26KB, 45 min read)
 - Comprehensive technical analysis
 - 12 major issue categories
 - Root cause analysis
@@ -62,7 +62,7 @@ Three comprehensive documents have been created to provide:
 
 ### 🔧 Action Plan: Implementation Guide
 
-**[ANALYSIS_ACTION_PLAN.md](./ANALYSIS_ACTION_PLAN.md)** (17KB, 30 min read)
+**[ANALYSIS_ACTION_PLAN.md](docs/planning/ANALYSIS_ACTION_PLAN.md)** (17KB, 30 min read)
 - 4-phase remediation plan (20 weeks)
 - Week-by-week tasks
 - Code patterns and examples
@@ -82,7 +82,7 @@ Three comprehensive documents have been created to provide:
 
 ### ⚠️ Execution Guide: Precautions & Fallout Management
 
-**[REMEDIATION_EXECUTION_GUIDE.md](./REMEDIATION_EXECUTION_GUIDE.md)** (27KB, 40 min read) **← NEW**
+**[REMEDIATION_EXECUTION_GUIDE.md](docs/guides/REMEDIATION_EXECUTION_GUIDE.md)** (27KB, 40 min read) **← NEW**
 - **Pre-execution checklist** - What to do BEFORE starting
 - **Precautions** for each phase - Safety nets and risk mitigation
 - **Potential fallout scenarios** - What can go wrong and how to handle it

@@ -322,7 +322,7 @@ Complete guide for historical data aggregation.
 
 | Document | Description | Link |
 |----------|-------------|------|
-| **ENV_FLAGS_TABLES.md** | Complete catalog of 200+ environment variables with types, defaults, descriptions | [View](../ENV_FLAGS_TABLES.md) |
+| **ENV_FLAGS_TABLES.md** | Complete catalog of 200+ environment variables with types, defaults, descriptions | [View](operations/ENV_FLAGS_TABLES.md) |
 | **ENV_VARS_CATALOG.md** | Auto-generated environment variables catalog with usage examples | [View](ENV_VARS_CATALOG.md) |
 | **ENV_VARS_AUTO.md** | Machine-readable environment variables (JSON format) | [View](ENV_VARS_AUTO.md) |
 | **ENV_LIFECYCLE.md** | Environment variable lifecycle management and deprecation policy | [View](ENV_LIFECYCLE.md) |
@@ -372,8 +372,8 @@ G6_ADAPTIVE_CONTROLLER=0       # Enable adaptive controller (experimental)
 
 | Document | Description | Link |
 |----------|-------------|------|
-| **METRICS_CATALOG.md** | Complete catalog of 145+ Prometheus metrics with types, labels, cardinality, example queries | [View](METRICS_CATALOG.md) |
-| **METRICS_GOVERNANCE.md** | Cardinality governance policies and best practices | [View](../METRICS_GOVERNANCE.md) |
+| **METRICS_CATALOG.md** | Complete catalog of 145+ Prometheus metrics with types, labels, cardinality, example queries | [View](dashboards/METRICS_CATALOG.md) |
+| **METRICS_GOVERNANCE.md** | Cardinality governance policies and best practices | [View](operations/METRICS_GOVERNANCE.md) |
 | **METRICS_USAGE.md** | Metrics usage patterns and integration examples | [View](METRICS_USAGE.md) |
 | **metrics_spec.yaml** | Machine-readable metrics specification (YAML format) | [View](metrics_spec.yaml) |
 
@@ -434,7 +434,7 @@ process_resident_memory_bytes                      # Memory usage
 | **RETENTION_POLICY.md** | Data retention policies and archival procedures | [View](RETENTION_POLICY.md) |
 | **ERROR_HANDLING.md** | Error handling patterns and recovery procedures | [View](ERROR_HANDLING.md) |
 | **GOVERNANCE.md** | Platform governance policies and standards | [View](GOVERNANCE.md) |
-| **DEPRECATIONS.md** | Deprecated features and migration paths | [View](DEPRECATIONS.md) |
+| **DEPRECATIONS.md** | Deprecated features and migration paths | [View](reference/DEPRECATIONS.md) |
 
 ---
 
@@ -945,7 +945,7 @@ When adding new features:
 - [README.md](../README.md) - Project overview and quick start
 - [ARCHITECTURE.md](ARCHITECTURE.md) - Detailed architecture documentation
 - [GOVERNANCE.md](GOVERNANCE.md) - Project governance and policies
-- [DEPRECATIONS.md](DEPRECATIONS.md) - Deprecated features
+- [DEPRECATIONS.md](reference/DEPRECATIONS.md) - Deprecated features
 
 ### External Links
 

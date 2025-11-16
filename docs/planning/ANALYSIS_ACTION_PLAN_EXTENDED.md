@@ -653,7 +653,7 @@ docs/architecture/system-overview.md
 
 ## 🔍 Quick Links
 
-- [Changelog](../CHANGELOG.md)
+- [Changelog](docs/reference/CHANGELOG.md)
 - [Current Roadmap](roadmaps/current-quarter.md)
 - [Known Issues](https://github.com/ayushrajani07/G-v1.0/issues)
 ```

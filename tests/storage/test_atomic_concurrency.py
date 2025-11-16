@@ -9,8 +9,13 @@ import pytest
 from src.storage.csvio import api as csvio_api
 
 
-@pytest.mark.serial
 def test_atomic_backend_concurrent_append(tmp_path, monkeypatch):
+    """Test concurrent writes to CSV using atomic backend.
+    
+    This test spawns multiple threads writing simultaneously to verify
+    atomic file operations work correctly under concurrency. Uses tmp_path
+    for isolation, so it's safe to run in parallel with other tests.
+    """
     # Force facade + atomic backend
     monkeypatch.setenv("G6_USE_CSVIO_FACADE", "1")
     monkeypatch.setenv("G6_CSVIO_BACKEND", "atomic")

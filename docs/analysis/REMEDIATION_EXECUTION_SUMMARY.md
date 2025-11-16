@@ -360,7 +360,7 @@ These failures existed before remediation and are not related to parallel execut
 ## References
 
 ### Documentation
-- **Main Guide:** [REMEDIATION_EXECUTION_GUIDE.md](./REMEDIATION_EXECUTION_GUIDE.md)
+- **Main Guide:** [REMEDIATION_EXECUTION_GUIDE.md](docs/guides/REMEDIATION_EXECUTION_GUIDE.md)
 - **Baseline Files:** `audit/exceptions_baseline.txt`, `baselines/pytest_*.txt`
 - **Git Tag:** `pre-remediation-20251115`
 

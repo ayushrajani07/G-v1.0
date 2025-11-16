@@ -583,7 +583,7 @@ curl http://localhost:9108/metrics | grep influx
 
 ### Complete Environment Variables
 
-See **[ENV_FLAGS_TABLES.md](ENV_FLAGS_TABLES.md)** for full catalog (200+ variables).
+See **[ENV_FLAGS_TABLES.md](operations/ENV_FLAGS_TABLES.md)** for full catalog (200+ variables).
 
 ### Config File Schema
 

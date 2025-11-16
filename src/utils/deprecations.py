@@ -22,9 +22,11 @@ logger = logging.getLogger(__name__)
 _EMITTED: set[str] = set()
 
 # Legacy per-script suppression env vars to fold into unified G6_SUPPRESS_DEPRECATIONS.
+# NOTE: G6_SUPPRESS_DEPRECATED_RUN_LIVE and G6_SUPPRESS_BENCHMARK_DEPRECATED
+#       were REMOVED 2025-10-01. Kept here for backward compatibility checks only.
 _LEGACY_SUPPRESS_VARS = [
-    "G6_SUPPRESS_DEPRECATED_RUN_LIVE",
-    "G6_SUPPRESS_BENCHMARK_DEPRECATED",
+    # "G6_SUPPRESS_DEPRECATED_RUN_LIVE",  # REMOVED 2025-10-01
+    # "G6_SUPPRESS_BENCHMARK_DEPRECATED",  # REMOVED 2025-10-01
     "G6_SUPPRESS_DEPRECATED_WARNINGS",
 ]
 

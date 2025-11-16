@@ -19,35 +19,17 @@ The following execution paths or scripts are deprecated or have been removed. Hi
 | Item | Replacement | First Warn Release | Earliest Removal* | Migration Guidance | Notes |
 |------|-------------|--------------------|-------------------|--------------------|-------|
 | `unified_main.collection_loop` (legacy orchestration loop) | `src.orchestrator.loop.run_loop` + `run_cycle` | 2025-09-26 (post parity harness) | GATED (R+1 removal target) | Use orchestrator bootstrap; set `G6_ENABLE_LEGACY_LOOP=1` only for transitional tests. | Disabled by default; temporary enable: `G6_ENABLE_LEGACY_LOOP=1`; suppress warn: `G6_SUPPRESS_LEGACY_LOOP_WARN=1`. Max cycles env alias resolved (`G6_LOOP_MAX_CYCLES` prefers, `G6_MAX_CYCLES` still honored). |
-| (REMOVED) `scripts/run_live.py` | `scripts/run_orchestrator_loop.py` | 2025-09-26 | REMOVED 2025-10-01 | Use orchestrator runner: `python scripts/run_orchestrator_loop.py --config ... --interval 30 --cycles 5` | Removed; fully replaced. |
-| (REMOVED) `scripts/terminal_dashboard.py` | `scripts/summary_view.py` | 2025-09-30 | REMOVED 2025-10-01 | Use summary view: `python scripts/summary_view.py --refresh 1` | Removed; unified summary preferred. |
-| (REMOVED) `scripts/summary_view.py` | `scripts/summary/app.py` (unified) | 2025-10-01 | REMOVED 2025-10-03 | Use unified summary application: `python -m scripts.summary.app --refresh 1`; legacy plain fallback consolidated (StatusCache + plain_fallback now in app). | File deleted; launcher scripts updated (g6, dev_tools, launch_platform). |
-| (REMOVED) `--no-unified` flag & summary legacy fallback (StatusCache/plain_fallback) | Always-on unified loop + PlainRenderer for --no-rich | 2025-10-03 (post consolidation) | REMOVED 2025-10-03 | Remove flag usage; call `python -m scripts.summary.app` directly. Non-rich mode auto-selects PlainRenderer; failures return exit code 1. | Fast-path removal (N+0) justified: zero external test references; parity harness green; improves failure visibility. |
 | `start_live_dashboard_v2.ps1` (deprecated launcher) | `scripts/start_live_dashboard.ps1` | 2025-10-01 | R+1 | Use canonical launcher: `powershell -File scripts/start_live_dashboard.ps1` | Shim prints deprecation banner; scheduled removal next release. |
-| `scripts/benchmark_cycles.py` (cycle timing script) | `scripts/bench_tools.py` / `profile_unified_cycle.py` | 2025-09-30 (Phase 1 cleanup) | 2025-10-31 | Use bench_tools aggregate/diff/verify or profile_unified_cycle for timing | Stub emits deprecation; removal after 2025-10-31. |
-| (REMOVED) `G6_SUMMARY_REWRITE` (enable new summary path) | Always-on unified summary | 2025-10-03 | REMOVED 2025-10-03 | Remove env export; no effect | Path permanently enabled. |
-| (REMOVED) `G6_SUMMARY_PLAIN_DIFF` (suppress unchanged plain frames) | Always-on diff suppression (hash reuse) | 2025-10-03 | REMOVED 2025-10-03 | Remove env; behavior default; no opt-out implemented | Stable hashing validated; revisit only if operational issue arises. |
-| (REMOVED) `G6_SSE_ENABLED` (enable SSE publisher) | Auto activation when SSE HTTP/panels active | 2025-10-03 | REMOVED 2025-10-03 | Remove env; publisher constructed automatically via unified app when `G6_SSE_HTTP=1` | Env gate eliminated; code path unconditional on instantiation. |
-| (REMOVED) `G6_SUMMARY_RESYNC_HTTP` (enable resync HTTP server) | Auto-on with SSE (opt-out via `G6_DISABLE_RESYNC_HTTP=1`) | 2025-10-03 | REMOVED 2025-10-03 | Remove env; use opt-out variable if needed | Simplifies enablement surface. |
-| (REMOVED) `scripts/summary_view.py` (legacy summary shim) | `scripts/summary/app.py` unified modular summary | 2025-10-03 | REMOVED 2025-10-03 | Replace panel & derive imports with modular equivalents (`scripts.summary.panels.*`, `scripts.summary.derive`) | Completed early after consolidation; zero external import telemetry. |
+
 | `G6_DISABLE_RESYNC_HTTP` (new) | (Opt-out only) | 2025-10-03 | — | Set `G6_DISABLE_RESYNC_HTTP=1` to suppress resync server when SSE active | Not a deprecation; governance listing for discoverability. |
 | `g6_vol_surface_quality_score_legacy` (duplicate gauge) | `g6_vol_surface_quality_score` | 2025-10-02 (metrics modularization cleanup) | R+1 | Dashboards should reference canonical `g6_vol_surface_quality_score`; update panels/alerts. | Duplicate maintained for one release window; removal planned after confirming no external scrapes rely on legacy name. |
-| (REMOVED) `src.providers.kite_provider` shim | `src.broker.kite_provider` | 2025-10-01 (warning via docs) | REMOVED 2025-10-07 (A24) | Update imports to broker namespace; shim now raises ImportError | Hard removal part of A24 cleanup. |
 | (UPDATED – synthetic removed) Consolidated env flags (`G6_LOOP_HEARTBEAT_INTERVAL`, outage, salvage, recovery, quiet/trace; former synthetic) direct hot-path parsing | `CollectorSettings` hydrated once | 2025-10-06 (post consolidation) | REMOVED synthetic flag 2025-10-08 | Remove synthetic fallback related exports; other flags unchanged | Synthetic fallback flag eliminated; no further action for remaining flags. |
 | `src/metrics/cache.py` direct registrations | `src/metrics/cache_metrics.py` (`init_cache_metrics`) | 2025-10-02 | R+1 | Import stays valid; no action unless depending on internal implementation details. | File now a thin shim delegating to new module (no behavior change). |
-| (REMOVED) Cycle tables output (Prefilter / Option Match) | Structured events only | 2025-10-07 | REMOVED 2025-10-07 | Remove table-related env vars; rely on STRUCT lines & metrics | Human tables deleted; stub module retained temporarily. |
 | G6_DISABLE_CYCLE_TABLES (no-op) | (None – removed feature) | 2025-10-07 | 2025-11 (final removal) | Remove from environments; has no effect | Marked deprecated; scheduled purge after one release if unset in telemetry. |
 | G6_DEFER_CYCLE_TABLES (no-op) | (None) | 2025-10-07 | 2025-11 | Remove env/export | Deferral logic removed. |
 | G6_CYCLE_TABLE_GRACE_MS / G6_CYCLE_TABLE_GRACE_MAX_MS (no-op) | (None) | 2025-10-07 | 2025-11 | Remove env/export | Grace delay logic removed. |
-| (REMOVED) `scripts/bench_aggregate.py` / `bench_diff.py` / `bench_verify.py` | `scripts/bench_tools.py` | 2025-09-30 (Phase 2) | REMOVED 2025-10-05 | Use unified subcommands (aggregate, diff, verify) | Early removal (no direct test imports; consolidation complete). |
 | `--enhanced` flag (run_orchestrator_loop) | Unified collectors default | 2025-09-30 (Phase 2) | R+0 (removed) | Remove flag usage; no action required | CLI arg removed; tests adjusted if any. |
-| (REMOVED) `G6_SUMMARY_PANELS_MODE` (env toggle) | Auto-detect panels presence | 2025-09-30 (Phase 3) | REMOVED 2025-10-02 | Remove env; summarizer ignores it (auto-detect only) | Purged from code & docs; no runtime warning path remains. |
-| (REMOVED) `G6_SUMMARY_READ_PANELS` (legacy alias) | Auto-detect panels presence | 2025-09-30 (Phase 3) | REMOVED 2025-10-02 | Remove env; summarizer ignores alias | Purged from code & docs. |
 | `perf_cache` metrics group alias | `cache` metrics group | 2025-10-02 (post modularization) | R+1 | Switch dashboards / alerts to `cache` group naming if referencing alias | Alias internally mapped; removal after one release if no external dependency signals. |
-| (REMOVED) `scripts/quick_import_test.py` | `scripts/dev_smoke.py import-check` | 2025-09-30 (Phase 3) | REMOVED 2025-10-05 | Invoke consolidated multi-tool | Wrapper deleted after grace decision (early removal). |
-| (REMOVED) `scripts/quick_provider_check.py` | `scripts/dev_smoke.py provider-check` | 2025-09-30 (Phase 3) | REMOVED 2025-10-05 | Use dev_smoke subcommand | Wrapper deleted after grace decision (early removal). |
-| (REMOVED) `scripts/quick_cycle.py` | `scripts/dev_smoke.py one-cycle` | 2025-09-30 (Phase 3) | REMOVED 2025-10-05 | Use dev_smoke one-cycle | Wrapper deleted after grace decision (early removal). |
-| (REMOVED) `scripts/status_to_panels.py` (legacy panels bridge) | Unified loop `PanelsWriter` + `StreamGaterPlugin` | 2025-10-05 (Phase 1 stream gater) | REMOVED 2025-10-05 (Phase 3 accelerated) | Use unified summary: `python -m scripts.summary.app --refresh 1` | Tombstone stub exits(2); opt-out flag cleanup pending (Phase 4). |
 | Legacy unified snapshot adapter (`from_legacy_unified_snapshot`) | Native `assemble_model_snapshot` | 2025-09-30 (native builder intro) | REMOVED 2025-10-01 | Remove any internal reliance; always call `assemble_model_snapshot` | Adapter & fallback path deleted; failures now return minimal snapshot with `native_fail` warning. |
 | `assemble_unified_snapshot` (legacy assembler) | `assemble_model_snapshot` | 2025-10-01 (post adapter removal) | REMOVED 2025-10-01 | Use `assemble_model_snapshot`; file & tests deleted | Final removal completed (no runtime fallback). |
 | Legacy snapshot internal fields (`panels_generation`, `rolling`) | N/A (removed) | 2025-10-01 | REMOVED 2025-10-01 | No action required; fields were never part of stable surface. | Pruned from `UnifiedSnapshot` dataclass to reduce surface area before full removal. |
@@ -80,10 +62,6 @@ The following flags are now no-ops; underlying table system removed. They will b
 
 | Deprecated Env Var | Replacement | First Warn | Grace Window | Removal Target* | Planned Action |
 |--------------------|-------------|------------|--------------|-----------------|----------------|
-| (REMOVED) `G6_SUPPRESS_DEPRECATED_RUN_LIVE` | `G6_SUPPRESS_DEPRECATIONS` | 2025-09-26 | REMOVED 2025-10-01 | Use unified suppression only | Code & docs purged. |
-| (REMOVED) `G6_SUPPRESS_BENCHMARK_DEPRECATED` | `G6_SUPPRESS_DEPRECATIONS` | 2025-09-30 | REMOVED 2025-10-01 | Use unified suppression only | Code & docs purged. |
-| (REMOVED) `G6_SUMMARY_PANELS_MODE` | Auto-detect (no env) | 2025-09-30 | Completed | 2025-10 | Removed (2025-10-02) – env references & warnings eliminated. |
-| (REMOVED) `G6_SUMMARY_READ_PANELS` | Auto-detect (no env) | 2025-09-30 | Completed | 2025-10 | Removed (2025-10-02) – env references & warnings eliminated. |
 | `perf_cache` group alias | Use `cache` group | 2025-10-02 | 1 release (R+1) | 2025-11 | Planned removal if no usage telemetry flags dependency. |
 
 *Removal Target assumes no blocking feedback; any discovered external dependency extends window by one release.
@@ -98,6 +76,32 @@ Post-removal checklist (apply per batch PR):
 Rollback plan: If removal causes unexpected operational regression, re-introduce a shim reading the env (no warning) for one hotfix release, paired with an advisory note.
 
 *Earliest Removal is contingent on: (a) parity harness stability, (b) no undiscovered semantic gaps, (c) updated operational run-books.
+
+---
+
+## Historical Removals (Completed)
+
+Items that have been successfully removed from the codebase (for audit trail):
+
+| Item | Removed Date | Replacement |
+|------|--------------|-------------|
+| `scripts/run_live.py` | 2025-10-01 | `scripts/run_orchestrator_loop.py` |
+| `scripts/terminal_dashboard.py` | 2025-10-01 | `scripts/summary_view.py` |
+| `scripts/summary_view.py` | 2025-10-03 | `scripts/summary/app.py` |
+| `scripts/quick_import_test.py` | 2025-10-05 | `scripts/dev_smoke.py import-check` |
+| `scripts/quick_provider_check.py` | 2025-10-05 | `scripts/dev_smoke.py provider-check` |
+| `scripts/quick_cycle.py` | 2025-10-05 | `scripts/dev_smoke.py one-cycle` |
+| `scripts/bench_aggregate.py` / `bench_diff.py` / `bench_verify.py` | 2025-10-05 | `scripts/bench_tools.py` |
+| `scripts/benchmark_cycles.py` | 2025-11-16 | `scripts/bench_tools.py` / `profile_unified_cycle.py` |
+| `G6_SUMMARY_REWRITE` | 2025-10-03 | N/A (always-on) |
+| `G6_SUMMARY_PLAIN_DIFF` | 2025-10-03 | N/A (always-on) |
+| `G6_SSE_ENABLED` | 2025-10-03 | Auto-activation |
+| `G6_SUPPRESS_DEPRECATED_RUN_LIVE` | 2025-10-01 | `G6_SUPPRESS_DEPRECATIONS` |
+| `G6_SUPPRESS_BENCHMARK_DEPRECATED` | 2025-10-01 | `G6_SUPPRESS_DEPRECATIONS` |
+| `G6_SUMMARY_PANELS_MODE` | 2025-10-02 | Auto-detect |
+| `G6_SUMMARY_READ_PANELS` | 2025-10-02 | Auto-detect |
+| `src.providers.kite_provider` shim | 2025-10-07 | `src.broker.kite_provider` |
+| Cycle tables output | 2025-10-07 | Structured events |
 
 ## Monitoring & Acceptance Criteria
 - Parity harness (`tests/test_orchestrator_parity.py`) remains green across releases.

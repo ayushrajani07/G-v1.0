@@ -19,16 +19,116 @@ This avoids shell quoting pitfalls and ensures G6_INFLUX_OPTIONAL=1 during tests
 
 This project splits tests into **core** and **optional** categories to minimize interference with normal development while still offering richer integration coverage when desired.
 
-## Categories & Markers
+## Test Markers Strategy (Simplified - Phase 2.1)
 
-| Marker | Purpose | Default | Enable Condition |
-|--------|---------|---------|------------------|
-| `optional` | Developer / exploratory or heavier integration flows (mock multi-cycles) | Skipped | `G6_ENABLE_OPTIONAL_TESTS=1` |
-| `slow` | Longer-running variants (more cycles / timing dependent) | Skipped | `G6_ENABLE_SLOW_TESTS=1` or `-m slow` |
-| `integration` | Higher-level orchestration tests (may spin threads) | Included (unless also optional/slow) | N/A |
-| `perf` | Lightweight performance smoke tests (timing ceilings) | Skipped | `G6_ENABLE_OPTIONAL_TESTS=1` (perf tests are also marked optional) |
+**Core Markers** (Recommended for all tests):
+
+| Marker | Purpose | When to Use | Default Behavior |
+|--------|---------|-------------|------------------|
+| `unit` | Fast, isolated unit tests | Testing single functions/classes with mocks | ✅ Always run |
+| `integration` | Tests involving multiple components | Testing interactions between modules | ✅ Always run |
+| `slow` | Long-running tests | Tests taking >2s, network calls, heavy computation | ⏭️ Skip by default |
+
+**Additional Markers** (Legacy/Special Cases):
+
+| Marker | Purpose | Enable Condition |
+|--------|---------|------------------|
+| `optional` | Developer/exploratory tests (legacy) | `G6_ENABLE_OPTIONAL_TESTS=1` |
+| `perf` | Performance benchmarks | `G6_ENABLE_OPTIONAL_TESTS=1` |
+| `serial` | Must run without xdist | Automatically excluded from parallel runs |
+| `asyncio` | Async test function | Automatic via pytest-asyncio |
+| `metrics_no_reset` | Skip metrics reset | Test-specific isolation needs |
+
+**Default Test Run:**
+```bash
+# Fast feedback loop (unit + integration, excludes slow)
+pytest
+
+# Include slow tests
+pytest -m slow
+
+# Or use environment variable
+G6_ENABLE_SLOW_TESTS=1 pytest
+```
+
+**Test Selection Examples:**
+```bash
+# Only unit tests (fastest)
+pytest -m unit
+
+# Unit + integration (default)
+pytest -m "unit or integration"
+
+# Everything including slow
+pytest -m "unit or integration or slow"
+
+# Or simply:
+G6_ENABLE_SLOW_TESTS=1 pytest
+```
 
 Core unit-style and fast integration tests run with plain `pytest` and no env flags.
+
+## CI Configuration
+
+**Parallel Test Execution:**
+
+For CI environments, enable parallel test execution with pytest-xdist:
+
+```yaml
+# GitHub Actions example
+- name: Run Tests (Parallel)
+  run: |
+    pytest -n auto -m "not serial" --maxfail=3
+  env:
+    G6_INFLUX_OPTIONAL: "1"
+    G6_ENABLE_SLOW_TESTS: "1"
+
+- name: Run Serial Tests
+  run: |
+    pytest -m serial
+  env:
+    G6_INFLUX_OPTIONAL: "1"
+```
+
+**Windows PowerShell (using wrapper):**
+```powershell
+# Parallel execution (excludes serial tests automatically)
+python scripts/pytest_run.py parallel-subset
+
+# Full serial execution
+python scripts/pytest_run.py serial
+
+# Fast inner loop (excludes slow/integration/perf/serial)
+python scripts/pytest_run.py fast-inner
+```
+
+**Recommended CI Matrix:**
+
+```yaml
+strategy:
+  matrix:
+    test-suite:
+      - name: "Fast (unit + integration)"
+        command: "pytest -n auto -m 'not serial and not slow'"
+        
+      - name: "Slow tests"
+        command: "pytest -m slow"
+        
+      - name: "Serial tests"
+        command: "pytest -m serial"
+```
+
+**Benefits:**
+- ✅ **Faster feedback** - parallel execution reduces CI time by 3-5x
+- ✅ **Isolation** - serial tests run separately to avoid conflicts
+- ✅ **Selective execution** - run only relevant test categories
+- ✅ **Better resource usage** - `-n auto` adapts to available CPUs
+
+**Performance Tips:**
+- Use `-n auto` to automatically detect CPU cores
+- Use `--maxfail=3` to fail fast on critical errors
+- Split slow and fast tests into separate jobs for better parallelization
+- Use test result caching in CI for unchanged code
 
 ## Environment Flags
 

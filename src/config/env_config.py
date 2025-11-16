@@ -268,6 +268,35 @@ class EnvConfig:
             g6_vars = EnvConfig.get_all('G6_')
         """
         return {k: v for k, v in os.environ.items() if k.startswith(prefix)}
+    
+    @classmethod
+    def validate_known(cls, *, strict: bool = False) -> list[str]:
+        """Validate all G6_ environment variables at startup.
+        
+        Uses G6ConfigValidator to check for unknown variables and typos.
+        Should be called once during application startup.
+        
+        Args:
+            strict: If True, raise RuntimeError on unknown variables
+            
+        Returns:
+            List of warning messages
+            
+        Raises:
+            RuntimeError: If strict=True and unknown variables found
+            
+        Example:
+            # At startup:
+            warnings = EnvConfig.validate_known()
+            if warnings:
+                logger.warning("Configuration warnings: %d issues", len(warnings))
+        """
+        try:
+            from src.config.env_validator import G6ConfigValidator
+            return G6ConfigValidator.validate_startup(strict=strict)
+        except ImportError:
+            logger.warning("G6ConfigValidator not available, skipping validation")
+            return []
 
 
 # Convenience functions for common patterns

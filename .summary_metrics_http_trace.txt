@@ -1594,3 +1594,10 @@ body_len=47997
 normalized_body
 injected=True
 wrote_body
+start_do_GET
+wrote_scrape_sentinel
+imports_ok
+body_len=48020
+normalized_body
+injected=True
+wrote_body
