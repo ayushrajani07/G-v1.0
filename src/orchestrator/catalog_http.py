@@ -53,7 +53,8 @@ _get_event_bus: Any = None
 try:  # Optional dependency to keep bootstrap lightweight when events unused
     from src.events.event_bus import get_event_bus as __get_event_bus
     _get_event_bus = __get_event_bus
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     pass
 
 # Expose a patchable alias for tests; default delegates to the imported symbol above.
@@ -87,7 +88,8 @@ try:
     from src.collectors.env_adapter import (
         get_str as _env_str,
     )
-except Exception:  # pragma: no cover - fallback to EnvConfig
+except (ImportError, AttributeError):  # pragma: no cover - fallback to EnvConfig
+    # Handle missing module or function
     def _env_str(name, default=""):
         return EnvConfig.get_str(name, default) or ""
     def _env_int(name: str, default: int) -> int:
@@ -99,7 +101,8 @@ except Exception:  # pragma: no cover - fallback to EnvConfig
 # adaptive severity configuration (e.g., trend window) is reflected.
 try:
     ThreadingHTTPServer.allow_reuse_address = True
-except Exception:
+except (AttributeError, TypeError):
+    # Handle attribute assignment failures
     pass
 
 # Typed wrapper to allow attaching generation marker without mypy complaints
@@ -142,10 +145,12 @@ def _hot_reload_if_requested(headers: Any = None, path: str | None = None) -> bo
             if hasattr(severity, 'reset_for_hot_reload'):
                 try:
                     severity.reset_for_hot_reload()
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle missing method or reset failures
                     pass
             importlib.reload(severity)
-        except Exception:
+        except (ImportError, AttributeError, RuntimeError):
+            # Handle module reload failures
             logger.debug('catalog_http: severity_reload_failed', exc_info=True)
         # Reload catalog module and update function bindings
         try:
@@ -153,7 +158,8 @@ def _hot_reload_if_requested(headers: Any = None, path: str | None = None) -> bo
             _cat_mod = importlib.reload(_cat_mod)
             globals()['build_catalog'] = _cat_mod.build_catalog
             globals()['CATALOG_PATH'] = _cat_mod.CATALOG_PATH
-        except Exception:
+        except (ImportError, AttributeError, RuntimeError, KeyError):
+            # Handle module reload or globals update failures
             logger.debug('catalog_http: catalog_reload_failed', exc_info=True)
         # Update FORCED_WINDOW from env or severity
         try:
@@ -162,7 +168,8 @@ def _hot_reload_if_requested(headers: Any = None, path: str | None = None) -> bo
             if env_raw not in (None, ''):
                 try:
                     forced = int(env_raw)
-                except Exception:
+                except (ValueError, TypeError):
+                    # Handle int conversion failures
                     forced = None
             if forced is None:
                 try:
@@ -172,11 +179,13 @@ def _hot_reload_if_requested(headers: Any = None, path: str | None = None) -> bo
                         forced = int(val)
                     else:
                         forced = None
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
+                    # Handle attribute access, type conversion, or function call failures
                     forced = None
             if isinstance(forced, int):
                 globals()['FORCED_WINDOW'] = forced
-        except Exception:
+        except (KeyError, TypeError):
+            # Handle globals update failures
             pass
         # Clear TTL cache and advance generation
         try:
@@ -184,10 +193,12 @@ def _hot_reload_if_requested(headers: Any = None, path: str | None = None) -> bo
             _THEME_CACHE_PAYLOAD = None
             _THEME_CACHE_TS = 0.0
             _GENERATION += 1
-        except Exception:
+        except (NameError, TypeError):
+            # Handle global variable access failures
             pass
         return True
-    except Exception:
+    except (ImportError, AttributeError, TypeError, ValueError, RuntimeError, KeyError):
+        # Handle any hotreload operation failures
         return False
 
 def _theme_ttl_seconds() -> float:
@@ -226,7 +237,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
         except self._BENIGN_ERRORS as e:  # pragma: no cover - timing dependent
             try:
                 logger.debug("catalog_http: benign socket error suppressed: %s", e)
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle logging failures
                 pass
         except Exception as e:  # pragma: no cover
             # Fallback: suppress noisy teardown exceptions but keep debug trace
@@ -301,7 +313,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                     body = json.dumps(snap, separators=(',',':')).encode('utf-8')
                     self._set_headers(200)
                     self.wfile.write(body)
-                except Exception:
+                except (AttributeError, TypeError, json.JSONEncodeError, RuntimeError, OSError):
+                    # Handle bus access, JSON encoding, or stats retrieval failures
                     logger.exception("catalog_http: failure building events stats")
                     self._set_headers(500)
                     self.wfile.write(b'{"error":"events_stats_failed"}')
@@ -315,7 +328,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                 try:
                     from . import catalog as _cat_mod
                     build_fn = getattr(_cat_mod, 'build_catalog', build_catalog)
-                except Exception:  # pragma: no cover
+                except (ImportError, AttributeError):  # pragma: no cover
+                    # Handle module import or attribute access failures
                     build_fn = build_catalog
                 runtime_status = (
                     _env_str('G6_RUNTIME_STATUS_FILE', 'data/runtime_status.json')
@@ -333,7 +347,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                         events_path,
                         limit=200_000,
                     )
-                except Exception:
+                except (OSError, IOError, ValueError, RuntimeError):
+                    # Handle file I/O or integrity computation failures
                     logger.debug('catalog_http: inline_integrity_override_failed', exc_info=True)
                 # Minimal final fallback if somehow integrity is still absent
                 if 'integrity' not in catalog:
@@ -346,12 +361,14 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                         integ = integrity_from_events(events_path, limit=100_000)
                         integ['source'] = 'fallback_final'
                         catalog['integrity'] = integ
-                    except Exception:
+                    except (OSError, IOError, ValueError, RuntimeError, KeyError):
+                        # Handle file I/O, integrity computation, or dict update failures
                         logger.debug('catalog_http: integrity_fallback_final_failed', exc_info=True)
                 body = json.dumps(catalog).encode('utf-8')
                 self._set_headers(200)
                 self.wfile.write(body)
-            except Exception:
+            except (OSError, IOError, json.JSONEncodeError, TypeError, ValueError, RuntimeError, KeyError):
+                # Handle file I/O, JSON encoding, or catalog build failures
                 logger.exception("catalog_http: failure building catalog")
                 self._set_headers(500)
                 self.wfile.write(b'{"error":"catalog_build_failed"}')
@@ -391,7 +408,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                         filtered = [s for s in snap_list if isinstance(s, dict) and s.get('index') == index_filter]
                         snap_dict['snapshots'] = filtered
                         snap_dict['count'] = len(filtered)
-                    except Exception:
+                    except (KeyError, TypeError, ValueError):
+                        # Handle dict operations or list filtering failures
                         pass
                 try:
                     logger.debug(
@@ -399,13 +417,15 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                         snap_dict.get('count'),
                         list(snap_dict.keys()),
                     )
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle logging or dict operations failures
                     pass
                 body = json.dumps(snap_dict).encode('utf-8')
                 self._set_headers(200)
                 self.wfile.write(body)
-            except Exception:
-                logger.exception('catalog_http: snapshots_serve_failed')
+            except (json.JSONEncodeError, TypeError, OSError, IOError):
+                # Handle JSON encoding or I/O failures
+                logger.exception('catalog_http: snapshots_serve_failed'}
                 self._set_headers(500)
                 self.wfile.write(b'{"error":"snapshots_serve_failed"}')
             return
@@ -415,7 +435,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
             hot = False
             try:
                 hot = _hot_reload_if_requested(self.headers, self.path)
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
+                # Handle hot reload failures
                 hot = False
             # Test-only short-circuit: when running under pytest or when tests request
             # a forced reload, return a deterministic
@@ -432,7 +453,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                     try:
                         tw_env = EnvConfig.get_str('G6_ADAPTIVE_SEVERITY_TREND_WINDOW', '')
                         win = int(tw_env) if tw_env not in (None, '') else 5
-                    except Exception:
+                    except (ValueError, TypeError, KeyError):
+                        # Handle int conversion or config access failures
                         win = 5
                     palette = {
                         'info': _env_str('G6_ADAPTIVE_ALERT_COLOR_INFO', '#6BAF92') or '#6BAF92',
@@ -464,13 +486,14 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                     try:
                         if hot:
                             self.send_header('X-G6-HotReloaded','1')
-                    except Exception:
+                    except (AttributeError, TypeError, OSError):
+                        # Handle header send failures
                         pass
                     self.send_header('Content-Length', str(len(body_raw)))
                     self.end_headers()
                     self.wfile.write(body_raw)
                     return
-            except Exception:
+            except (ImportError, AttributeError, TypeError, ValueError, json.JSONEncodeError, OSError):
                 # Fall through to normal handler on any error
                 pass
             # Distinguish /adaptive/theme/stream for SSE
@@ -516,7 +539,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                             )
                             if isinstance(cached_win, int) and cached_win != desired:
                                 use_cache = False
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        # Handle window comparison or dict access failures
                         pass
                     payload = _THEME_CACHE_PAYLOAD if use_cache else _build_adaptive_payload()
                     if not use_cache and ttl > 0:
@@ -535,7 +559,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                                 if isinstance(tr, dict) and tw >= 0:
                                     tr['window'] = tw
                                     payload['trend'] = tr
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        # Handle window update or dict operations failures
                         pass
                     if ttl > 0:
                         _THEME_CACHE_PAYLOAD = payload
@@ -555,7 +580,8 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                                 payload['trend'] = trx
                                 # Mark header later via a side channel (custom field)
                                 payload['_deterministic_warn_ratio'] = True
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError):
+                    # Handle dict operations or type conversion failures
                     pass
                 # Final safety: if we have snapshots, ensure window reflects at least their count
                 try:
@@ -569,13 +595,13 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                                     cur_w_int = int(cur_w) if cur_w is not None else 0
                                 except Exception:
                                     cur_w_int = 0
-                                # If env explicitly set, prefer that, else use snapshots length
                                 tw_env = EnvConfig.get_str('G6_ADAPTIVE_SEVERITY_TREND_WINDOW', '')
                                 desired = None
                                 if tw_env not in (None, ''):
                                     try:
                                         desired = int(tw_env)
-                                    except Exception:
+                                    except (ValueError, TypeError, KeyError):
+                                        # Handle int conversion failures
                                         desired = None
                                 desired_ok = desired if isinstance(desired, int) and desired >= 0 else len(snaps)
                                 safe_w = max(cur_w_int, desired_ok)
@@ -688,14 +714,16 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                         pdata = json.loads(body_raw.decode('utf-8'))
                         if isinstance(pdata, dict) and pdata.get('_deterministic_warn_ratio'):
                             self.send_header('X-G6-Deterministic', '1')
-                    except Exception:
+                    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError, KeyError, OSError):
+                        # Handle JSON parsing or header send failures
                         pass
                     if hot:
                         self.send_header('X-G6-HotReloaded','1')
                     self.send_header('Content-Length', str(len(body_raw)))
                     self.end_headers()
                     self.wfile.write(body_raw)
-            except Exception:
+            except (json.JSONEncodeError, TypeError, OSError, IOError, RuntimeError):
+                # Handle JSON encoding, I/O, or runtime failures
                 logger.exception("catalog_http: failure serving adaptive theme")
                 self._set_headers(500)
                 self.wfile.write(b'{"error":"adaptive_theme_failed"}')
@@ -714,17 +742,20 @@ def shutdown_http_server(timeout: float = 2.0) -> None:
     if server:
         try:
             server.shutdown()
-        except Exception:
+        except (AttributeError, OSError, RuntimeError):
+            # Handle server shutdown failures
             pass
         # Ensure underlying socket fully released (prevents ResourceWarning)
         try:
             server.server_close()
-        except Exception:
+        except (AttributeError, OSError, RuntimeError):
+            # Handle server close failures
             pass
     if th:
         try:
             th.join(timeout=timeout)
-        except Exception:
+        except (AttributeError, RuntimeError):
+            # Handle thread join failures
             pass
     _set_http_server(None)
     _set_server_thread(None)
@@ -750,7 +781,8 @@ def start_http_server_in_thread() -> None:
     if not is_truthy_env('G6_CATALOG_HTTP') and force_reload:
         try:
             os.environ['G6_CATALOG_HTTP'] = '1'
-        except Exception:
+        except (TypeError, KeyError, OSError):
+            # Handle environment variable set failures
             pass
     rebuild_flag = is_truthy_env('G6_CATALOG_HTTP_REBUILD')
     if rebuild_flag:
@@ -759,15 +791,14 @@ def start_http_server_in_thread() -> None:
     if rebuild_flag:
         try:
             shutdown_http_server()
-        except Exception:
-            pass
-    # Auto reload if adaptive trend window changed (test isolation convenience)
+        except (AttributeError, OSError, RuntimeError):\n            # Handle shutdown failures during rebuild\n            pass\n    # Auto reload if adaptive trend window changed (test isolation convenience)
     try:
         _tw = getattr(severity, '_trend_window', None)
         _val: Any = _tw() if callable(_tw) else None
         current_window: int | None
         current_window = int(_val) if isinstance(_val, (int, float, str)) else None
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
+        # Handle attribute access or type conversion failures
         current_window = None
     global _LAST_WINDOW
     if _LAST_WINDOW is not None and current_window is not None and current_window != _LAST_WINDOW:
@@ -781,12 +812,14 @@ def start_http_server_in_thread() -> None:
             if env_raw not in (None, ''):
                 try:
                     forced = int(env_raw)
-                except Exception:
+                except (ValueError, TypeError):
+                    # Handle int conversion failures
                     forced = None
             if forced is None:
                 forced = _LAST_WINDOW
             globals()['FORCED_WINDOW'] = forced
-        except Exception:
+        except (KeyError, TypeError):
+            # Handle globals update failures
             pass
     th_existing = _get_server_thread()
     if th_existing and th_existing.is_alive():
@@ -799,27 +832,32 @@ def start_http_server_in_thread() -> None:
                     req_host = _env_str('G6_CATALOG_HTTP_HOST', '127.0.0.1') or '127.0.0.1'
                     try:
                         req_port = _env_int('G6_CATALOG_HTTP_PORT', 9315)
-                    except Exception:
+                    except (ValueError, TypeError, KeyError):
+                        # Handle port parsing failures
                         req_port = 9315
                     if srv_host != req_host or srv_port != req_port:
                         force_reload = True
-            except Exception:
+            except (AttributeError, TypeError, ValueError, IndexError):
+                # Handle server address access or comparison failures
                 pass
         if not force_reload:
             return
         # Perform reload (already shut down earlier if rebuild_flag; but ensure)
         try:
             shutdown_http_server()
-        except Exception:
+        except (AttributeError, OSError, RuntimeError):
+            # Handle shutdown failures during reload
             pass
         try:
             time.sleep(0.05)
-        except Exception:
+        except (OSError, InterruptedError):
+            # Handle sleep interruption
             pass
     host = _env_str('G6_CATALOG_HTTP_HOST', '127.0.0.1') or '127.0.0.1'
     try:
         port = _env_int('G6_CATALOG_HTTP_PORT', 9315)
-    except Exception:
+    except (ValueError, TypeError, KeyError):
+        # Handle port parsing failures
         port = 9315
     def _run():
         try:
@@ -831,10 +869,12 @@ def start_http_server_in_thread() -> None:
                     if hasattr(severity, 'reset_for_hot_reload'):
                         try:
                             severity.reset_for_hot_reload()
-                        except Exception:
+                        except (AttributeError, TypeError, RuntimeError):
+                            # Handle reset failures
                             pass
                     importlib.reload(severity)
-                except Exception:
+                except (ImportError, AttributeError, RuntimeError):
+                    # Handle module reload failures
                     logger.debug('catalog_http: severity_reload_at_start_failed', exc_info=True)
                 from . import catalog as _cat_mod
                 _cat_mod = importlib.reload(_cat_mod)
@@ -845,9 +885,11 @@ def start_http_server_in_thread() -> None:
                     _mod = importlib.import_module('src.orchestrator.catalog_http')
                     _mod = importlib.reload(_mod)
                     HandlerCls = getattr(_mod, '_CatalogHandler', _CatalogHandler)
-                except Exception:
+                except (ImportError, AttributeError):
+                    # Handle module reload or attribute access failures
                     HandlerCls = _CatalogHandler
-            except Exception:
+            except (ImportError, AttributeError, RuntimeError, KeyError):
+                # Handle catalog reload failures
                 logger.debug('catalog_http: catalog_reload_failed', exc_info=True)
                 HandlerCls = _CatalogHandler
             # Capture initial snapshot cache env state for runtime transition detection
@@ -855,7 +897,8 @@ def start_http_server_in_thread() -> None:
             _SNAPSHOT_CACHE_ENV_INITIAL = EnvConfig.get_str('G6_SNAPSHOT_CACHE', '')
             httpd = G6ThreadingHTTPServer((host, port), HandlerCls)
             _set_http_server(httpd)
-        except Exception:
+        except (OSError, IOError):
+            # Handle server bind failures
             logger.exception("catalog_http: failed to bind %s:%s", host, port)
             return
         # Increment generation marker for debug; attach to server for introspection
@@ -863,7 +906,8 @@ def start_http_server_in_thread() -> None:
         _GENERATION += 1
         try:
             httpd._g6_generation = _GENERATION
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle attribute assignment failures
             pass
         logger.info(
             "catalog_http: serving on %s:%s (gen=%s rebuild=%s force_reload=%s)",
@@ -875,13 +919,15 @@ def start_http_server_in_thread() -> None:
         )
         try:
             httpd.serve_forever(poll_interval=0.5)
-        except Exception:
+        except (OSError, RuntimeError, KeyboardInterrupt):
+            # Handle server runtime failures
             logger.exception("catalog_http: server crashed")
         finally:
             # Ensure socket fully released (mitigate ResourceWarning)
             try:
                 httpd.server_close()
-            except Exception:
+            except (AttributeError, OSError, RuntimeError):
+                # Handle server close failures
                 pass
     t = threading.Thread(target=_run, name="g6-catalog-http", daemon=True)
     t.start()
