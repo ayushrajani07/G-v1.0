@@ -151,11 +151,11 @@ def get_collector_settings(force_reload: bool = False) -> Any:  # pragma: no cov
             try:
                 if hasattr(CollectorSettings, 'load'):
                     settings_obj = CollectorSettings.load()  # may raise if stub; ignored
-            except Exception:
+            except (AttributeError, TypeError):
                 settings_obj = None
             globals()[cache_name] = settings_obj
         return globals().get(cache_name)
-    except Exception:
+    except (KeyError, AttributeError, TypeError):
         return None
 
 from src.error_handling import handle_collector_error
@@ -169,13 +169,13 @@ def _coerce_mapping(obj: Any) -> dict[str, Any]:  # pragma: no cover
     try:
         if not isinstance(obj, dict):
             obj = dict(obj)
-    except Exception:
+    except (TypeError, ValueError):
         return {}
     out = {}
     for k,v in list(obj.items()):
         try:
             sk = str(k)
-        except Exception:
+        except (TypeError, ValueError):
             continue
         out[sk] = v
     return out
@@ -205,15 +205,15 @@ def apply_basic_filters(
         return (enriched_data or {}), meta
     try:
         min_vol = int(getattr(settings, 'min_volume', 0) or 0)
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         min_vol = 0
     try:
         min_oi = int(getattr(settings, 'min_oi', 0) or 0)
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         min_oi = 0
     try:
         vol_pct = float(getattr(settings, 'volume_percentile', 0.0) or 0.0)
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         vol_pct = 0.0
     meta.update({'min_volume': min_vol, 'min_oi': min_oi, 'volume_percentile': vol_pct})
     # Safe local mutable reference; guarantee dict after guard above
@@ -230,20 +230,20 @@ def apply_basic_filters(
                 if isinstance(v, dict):
                     try:
                         vols.append(int(v.get('volume', 0) or 0))
-                    except Exception:
+                    except (TypeError, ValueError):
                         continue
             vols.sort()
             if vols:
                 try:
                     cutoff = vols[int(len(vols) * vol_pct)]
-                except Exception:
+                except (IndexError, TypeError, ValueError):
                     cutoff = vols[-1]
                 pre_cnt2 = len(data)
                 data = {k: v for k, v in data.items() if isinstance(v, dict) and int(v.get('volume', 0) or 0) >= cutoff}
                 logger.debug('enhanced_filters_percentile index=%s rule=%s before=%d after=%d pct=%.3f cutoff=%d', index_symbol, expiry_rule, pre_cnt2, len(data), vol_pct, cutoff)
                 meta['applied'] = True
                 meta['pct_cutoff'] = cutoff
-    except Exception:
+    except (TypeError, ValueError, KeyError, AttributeError):
         logger.debug('apply_basic_filters_failed index=%s rule=%s', index_symbol, expiry_rule, exc_info=True)
         return (enriched_data, meta)
     meta['after'] = len(data)
@@ -315,7 +315,7 @@ def process_expiry(
         try:
             val = _cov_metrics_raw(ctx, *a, **k)
             return float(val) if val is not None else 0.0
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return 0.0
 
     def _field_coverage_metrics(ctx: Any, *a: Any, **k: Any) -> float:
@@ -324,7 +324,7 @@ def process_expiry(
         try:
             val = _field_cov_metrics_raw(ctx, *a, **k)
             return float(val) if val is not None else 0.0
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return 0.0
     # Synthetic fallback & classification removed (2025-10-08 aggressive cleanup)
     def _classify_expiry_result(*_a: Any, **_k: Any) -> str:  # legacy stub
@@ -351,7 +351,7 @@ def process_expiry(
                         right = []
                     return left, right
                 return {}, []
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return {}, []
         return {}, []
 
@@ -362,7 +362,7 @@ def process_expiry(
             res = run_expiry_consistency(dq, options_data, index_price, expiry_rule)
             if isinstance(res, list):
                 return res
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return []
         return []
     # Start trace marker for observability
@@ -437,7 +437,7 @@ def process_expiry(
                     clamp_meta = None
             else:
                 clamp_meta = None
-        except Exception:
+        except (TypeError, ValueError, AttributeError, KeyError):
             logger.debug('prefilter_clamp_logic_failed', exc_info=True); clamp_meta = None
         # Fill real values now that we have instruments
         expiry_rec.update({
@@ -457,13 +457,13 @@ def process_expiry(
                     else:
                         try:
                             ctx.no_instruments_dedup.add(dedup_key)
-                        except Exception:
+                        except (AttributeError, TypeError):
                             pass
                 if not suppress:
                     logger.warning("No option instruments found for %s expiry %s", index_symbol, expiry_date)
                 else:
                     logger.debug("suppressed_no_instruments_warning key=%s", dedup_key)
-            except Exception:
+            except (AttributeError, TypeError, KeyError):
                 logger.warning("No option instruments found for %s expiry %s", index_symbol, expiry_date)
             try:
                 if isnan:  # Module-level optional import (Phase 3)
@@ -472,20 +472,20 @@ def process_expiry(
                     atm_val = atm_strike if isinstance(atm_strike,(int,float)) else None
                 if _emit_zero_data_struct:  # Module-level optional import (Phase 3)
                     _emit_zero_data_struct(index=index_symbol, expiry=str(expiry_date), rule=expiry_rule, atm=atm_val, strike_count=len(strikes))
-            except Exception:
+            except (TypeError, ValueError, AttributeError):
                 logger.debug('zero_data_struct_emit_failed', exc_info=True)
             if not suppress:  # only escalate to error bridge the first time per cycle
                 if report_no_instruments:  # Module-level optional import (Phase 3)
                     try:
                         report_no_instruments(index_symbol, expiry_rule, expiry_date, strikes, NoInstrumentsError)
-                    except Exception:
+                    except (TypeError, ValueError, AttributeError):
                         handle_collector_error(NoInstrumentsError(f"No instruments for {index_symbol} expiry {expiry_date} (rule: {expiry_rule}) with strikes={strikes}"), component='collectors.expiry_processor', index_name=index_symbol, context={'stage':'get_option_instruments','rule':expiry_rule,'expiry':str(expiry_date),'strikes':strikes},)
             outcome['expiry_rec']=expiry_rec
             try:
                 # Augment expiry_rec with provider error classification for downstream outage analytics
                 expiry_rec.setdefault('provider_error', True)
                 expiry_rec.setdefault('provider_reason', 'no_instruments')
-            except Exception:
+            except (TypeError, AttributeError):
                 pass
             return outcome
         with ctx.time_phase('enrich_quotes'):
@@ -496,7 +496,7 @@ def process_expiry(
             elif isinstance(raw_enriched, list):
                 try:
                     enriched_data = {str(i.get('symbol') or i.get('tradingsymbol') or idx): i for idx, i in enumerate(raw_enriched) if isinstance(i, dict)}
-                except Exception:
+                except (TypeError, ValueError, KeyError, AttributeError):
                     enriched_data = {}
             else:
                 enriched_data = {}
@@ -518,7 +518,7 @@ def process_expiry(
         if not isinstance(enriched_data, dict):  # fallback normalization already attempted above for list
             try:
                 enriched_data = dict(enriched_data)  # runtime best-effort normalization
-            except Exception:
+            except (TypeError, ValueError):
                 enriched_data = {}
         # Defensive: ensure string keys
         # No further normalization; static type checker inconsistencies tolerated via ignores where needed.
@@ -530,7 +530,7 @@ def process_expiry(
         if collector_settings is None:
             try:
                 collector_settings = get_collector_settings()
-            except Exception:
+            except (AttributeError, TypeError, ImportError):
                 collector_settings = None
         # Apply centralized basic filters (volume / OI / percentile) – behavior parity with legacy inline logic.
         # NOTE: Intentionally AFTER normalization and before DQ so DQ runs on filtered universe (unchanged from legacy order).
@@ -549,7 +549,7 @@ def process_expiry(
                         run_option_quality=_run_option_quality,
                         run_expiry_consistency=_run_expiry_consistency,
                     )
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('dq_flow_apply_failed', exc_info=True)
         # Synthetic metric pop removed
         try:
@@ -561,13 +561,13 @@ def process_expiry(
                 expiry_rec['prefilter_max_allowed'] = max_allowed
                 if strict_mode:
                     expiry_rec.setdefault('partial_reason','prefilter_clamp')
-        except Exception:
+        except (TypeError, ValueError, KeyError, IndexError):
             logger.debug('prefilter_clamp_expiry_rec_augment_failed', exc_info=True)
         # Normalize enriched_data to dict; some provider enrich paths might return list
         if isinstance(enriched_data, list):  # rare path
             try:
                 enriched_data = {str(i.get('symbol') or i.get('tradingsymbol') or idx): i for idx,i in enumerate(enriched_data) if isinstance(i, dict)}
-            except Exception:
+            except (TypeError, ValueError, KeyError, AttributeError):
                 enriched_data = {}
         # Final type normalization for static typing & downstream helpers: ensure mapping[str]->dict
         try:
@@ -575,7 +575,7 @@ def process_expiry(
                 enriched_data = {str(k): v for k, v in enriched_data.items() if isinstance(v, dict)}
             else:
                 enriched_data = {}
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             enriched_data = {}
         # Synthetic fallback branch removed – if no enriched_data remains empty.
         # Preserve original enriched snapshot for potential salvage of foreign_expiry-only drops
@@ -584,7 +584,7 @@ def process_expiry(
             if run_preventive_validation:  # Module-level optional import (Phase 3)
                 try:
                     cleaned_data, prevent_report = run_preventive_validation(index_symbol, expiry_rule, expiry_date, instruments, enriched_data, index_price)
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('preventive_validation_module_failed', exc_info=True); prevent_report={'error':True}; cleaned_data=enriched_data
             else:
                 prevent_report={'error':True}; cleaned_data=enriched_data
@@ -619,7 +619,7 @@ def process_expiry(
                         precomputed_strikes=strikes or [],
                         legacy_snapshot=legacy_snapshot,
                     )
-        except Exception:
+        except (TypeError, ValueError, AttributeError, KeyError):
             logger.debug('expiry.shadow.invoke_failed index=%s rule=%s', index_symbol, expiry_rule, exc_info=True)
         try:
             logger.debug('expiry_stage_counts index=%s rule=%s stage=post_validate remaining=%d', index_symbol, expiry_rule, len(enriched_data or {}))
@@ -637,7 +637,7 @@ def process_expiry(
                 salvage_flag = bool(getattr(collector_settings, 'foreign_expiry_salvage', False) or getattr(collector_settings, 'salvage_enabled', False))
             else:
                 salvage_flag = is_truthy_env('G6_FOREIGN_EXPIRY_SALVAGE')
-        except Exception:
+        except (AttributeError, TypeError):
             salvage_flag = False
         # Salvage / rehydrate logic (Option A): always attempt parity-preserving rehydrate on pure foreign expiry drop.
         # A20: RecoveryStrategy integration (flag gated)
@@ -646,7 +646,7 @@ def process_expiry(
                 use_recovery_strategy = bool(collector_settings.recovery_strategy_legacy)
             else:
                 use_recovery_strategy = is_truthy_env('G6_RECOVERY_STRATEGY_LEGACY')
-        except Exception:
+        except (AttributeError, TypeError):
             use_recovery_strategy = is_truthy_env('G6_RECOVERY_STRATEGY_LEGACY')
         recovery_invoked = False
         if (not enriched_data and _orig_enriched_snapshot):
@@ -656,13 +656,13 @@ def process_expiry(
                     cand = prevent_report.get('issues', [])
                     if isinstance(cand, (list, tuple, set)):
                         issues = list(cand)
-            except Exception:
+            except (TypeError, ValueError, AttributeError, KeyError):
                 issues = []
             salvage_only = False
             if issues:
                 try:
                     salvage_only = all(i in ('foreign_expiry','insufficient_strike_coverage') for i in issues) and any(i=='foreign_expiry' for i in issues)
-                except Exception:
+                except (TypeError, ValueError):
                     salvage_only = False
             if salvage_only:
                 if use_recovery_strategy:
@@ -677,7 +677,7 @@ def process_expiry(
                             # Currently attempt_salvage just checks meta; we call it for parity of side-effects
                             strat.attempt_salvage(ctx=None, settings=collector_settings, state=_shim)
                             recovery_invoked = True
-                        except Exception:
+                        except (TypeError, ValueError, AttributeError):
                             logger.debug('recovery_strategy_invoke_failed index=%s rule=%s', index_symbol, expiry_rule, exc_info=True)
                 distinct_foreign: set = set()
                 for _sym, _row in _orig_enriched_snapshot.items():
@@ -691,7 +691,7 @@ def process_expiry(
                         else:
                             try:
                                 distinct_foreign.add(_dt.date.fromisoformat(str(raw_exp)))
-                            except Exception:
+                            except (TypeError, ValueError):
                                 continue
                 if len(distinct_foreign) <= 3:  # accept small distinct set
                     if salvage_flag:
@@ -724,15 +724,15 @@ def process_expiry(
                     if metrics and MetricsAdapter:  # Module-level optional import (Phase 3)
                         try:
                             MetricsAdapter(metrics).record_empty_quote_fields(index_symbol, expiry_rule)
-                        except Exception:
+                        except (TypeError, AttributeError):
                             logger.debug('empty_quote_metric_adapter_failed', exc_info=True)
-        except Exception:
+        except (TypeError, ValueError, AttributeError, KeyError):
             logger.debug('empty_quote_diagnostics_failed', exc_info=True)
         with ctx.time_phase('iv_estimation'):
             if run_iv_estimation:  # Module-level optional import (Phase 3)
                 try:
                     run_iv_estimation(ctx, enriched_data, index_symbol, expiry_rule, expiry_date, index_price, greeks_calculator, local_estimate_iv, risk_free_rate, None, None, None, None)
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('iv_estimation_module_failed', exc_info=True)
         with ctx.time_phase('greeks_compute'):
             if run_greeks_compute:  # Module-level optional import (Phase 3)
@@ -752,7 +752,7 @@ def process_expiry(
                         mem_flags,
                         index_price,
                     )
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('greeks_compute_module_failed', exc_info=True)
         collection_time = per_index_ts
         if not ExpiryContext:  # Module-level optional import (Phase 3)
@@ -785,13 +785,13 @@ def process_expiry(
                         _trace,
                         concise_mode,
                     )
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('persist_flow_module_failed', exc_info=True)
                     if persist_with_context:  # Module-level optional import (Phase 3 - fallback)
                         try:
                             persist_result = persist_with_context(ctx, enriched_data, expiry_ctx, index_ohlc)
                             _trace('persist_done', index=index_symbol, rule=expiry_rule, options=persist_result.option_count, failed=persist_result.failed)
-                        except Exception:
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             persist_result = _PersistFailSurrogate()
         if persist_result.failed:
             outcome['expiry_rec']=expiry_rec
@@ -804,7 +804,7 @@ def process_expiry(
                 expiry_rec['pcr'] = int(pcr_val)
             else:
                 expiry_rec['pcr'] = pcr_val  # preserve original if non-numeric
-        except Exception:
+        except (TypeError, ValueError, KeyError):
             pass
         _classify_expiry_result(expiry_rec, enriched_data)
         # Normalize coverage metrics to numeric (int) when numeric; otherwise preserve original
@@ -832,7 +832,7 @@ def process_expiry(
             if metrics_payload:
                 pcr_snapshot[metrics_payload['expiry_code']] = metrics_payload['pcr']
                 aggregation_state.capture(metrics_payload)
-        except Exception as agg_e:
+        except (TypeError, ValueError, KeyError, AttributeError) as agg_e:
             logger.debug('Aggregation capture failed for %s %s: %s', index_symbol, expiry_rule, agg_e)
         if not concise_mode:
             logger.info("Successfully collected %s options for %s %s", len(enriched_data), index_symbol, expiry_rule)
@@ -850,17 +850,17 @@ def process_expiry(
                     for s in (precomputed_strikes or []):
                         try:
                             int_strikes.append(int(s))
-                        except Exception:
+                        except (TypeError, ValueError):
                             continue
                     finalize_expiry(expiry_rec, enriched_data, int_strikes, index_symbol, expiry_date, expiry_rule, metrics)
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('status_finalize_expiry_failed', exc_info=True)
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             logger.debug('option_match_stats_emit_failed', exc_info=True)
         try:
             if adaptive_post_expiry:  # Module-level optional import (Phase 3)
                 adaptive_post_expiry(ctx, index_symbol, expiry_rec, expiry_rule)
-        except Exception:
+        except (TypeError, ValueError, AttributeError, KeyError):
             logger.debug('adaptive_adjust_module_failed', exc_info=True)
         # Enhanced collector parity: optional domain model mapping before snapshot build.
         if collector_settings is not None:
@@ -875,10 +875,10 @@ def process_expiry(
                         try:
                             OptionQuote.from_raw(k, q)
                             mapped_cnt += 1
-                        except Exception:
+                        except (TypeError, ValueError, AttributeError, KeyError):
                             continue
                     logger.debug('domain_models_mapped index=%s rule=%s count=%d', index_symbol, expiry_rule, mapped_cnt)
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('domain_models_mapping_failed index=%s rule=%s', index_symbol, expiry_rule, exc_info=True)
 
         if build_snapshots:
@@ -887,7 +887,7 @@ def process_expiry(
                     snap_obj = build_expiry_snapshot(index_symbol, expiry_rule, expiry_date, atm_strike, enriched_data, per_index_ts)
                     if snap_obj is not None:
                         snapshots_accum.append(snap_obj)
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('snapshot_build_failed index=%s rule=%s', index_symbol, expiry_rule, exc_info=True)
         if concise_mode:
             if format_concise_expiry_row:  # Module-level optional import (Phase 3)
@@ -901,7 +901,7 @@ def process_expiry(
                         enriched_data=enriched_data,
                         strikes=strikes,
                     )
-                except Exception:
+                except (TypeError, ValueError, AttributeError, KeyError):
                     logger.debug('concise_row_format_failed index=%s rule=%s', index_symbol, expiry_rule, exc_info=True)
         outcome['success']=True
         outcome['option_count']=len(enriched_data or {})
@@ -912,12 +912,12 @@ def process_expiry(
         try:
             expiry_rec['failed']=True
             outcome['expiry_rec']=expiry_rec
-        except Exception:
+        except (KeyError, TypeError):
             pass
         if metrics:
             try:
                 metrics.collection_errors.labels(index=index_symbol, error_type='expiry_collection').inc(); metrics.total_errors.inc(); metrics.data_errors.inc()
-            except Exception:
+            except (AttributeError, TypeError):
                 logger.debug('Failed to increment collection errors metric')
     return outcome
 
