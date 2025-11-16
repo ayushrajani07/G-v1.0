@@ -85,7 +85,7 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.package-data]
 # Include grafana dashboards, prometheus rules, and panels assets in wheel
-"" = [
+"*" = [
   "grafana/dashboards/*.json",
   "prometheus/*.yml",
   "data/panels/*.json"
