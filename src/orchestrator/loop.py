@@ -20,7 +20,8 @@ from src.utils.env_flags import is_truthy_env  # type: ignore
 
 try:  # optional gating utilities (early slice)
     from src.orchestrator.gating import should_skip_cycle_market_hours  # type: ignore
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     def should_skip_cycle_market_hours(*_, **__):  # type: ignore
         return False
 
@@ -50,7 +51,8 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
                 logger.info("[loop] Max cycles limit enabled: %s", max_cycles)
             else:
                 logger.debug("[loop] Ignoring non-positive G6_LOOP_MAX_CYCLES=%s", max_cycles_raw)
-        except Exception:
+        except (ValueError, TypeError):
+            # Handle integer conversion failures
             logger.warning("[loop] Invalid G6_LOOP_MAX_CYCLES=%r (must be int)", max_cycles_raw)
     executed_cycles = 0
     try:
@@ -69,7 +71,8 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
                 logger.info("[loop] KeyboardInterrupt received inside cycle; initiating shutdown")
                 ctx.shutdown = True  # type: ignore[attr-defined]
                 break
-            except Exception:  # noqa
+            except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as e:  # noqa
+                # Handle cycle function failures
                 logger.exception("Cycle execution failed")
             elapsed = time.time() - start
             sleep_for = max(0.0, interval - elapsed)

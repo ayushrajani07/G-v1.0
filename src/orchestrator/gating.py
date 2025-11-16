@@ -32,7 +32,7 @@ try:
         is_premarket_window,
         sleep_until_market_open,
     )
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     # Provide precise fallback signatures to satisfy type checkers when import fails
     def is_market_open(*, market_type: str = "equity", session_type: str = "regular",
                        reference_time: _dt.datetime | None = None, holidays: list[Any] | None = None) -> bool:  # type: ignore[override]
@@ -98,7 +98,8 @@ def provider_readiness_probe(
         if isinstance(ltp, (int, float)) and ltp > 0:
             return True, f"LTP={ltp}"
         return False, f"Non-positive LTP={ltp}"
-    except Exception as e:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, RuntimeError) as e:  # pragma: no cover
+        # Handle provider access, type issues, or LTP retrieval failures
         if error_handler:
             try:
                 error_handler(
@@ -118,7 +119,8 @@ def provider_readiness_probe(
                     message="Provider readiness probe exception",
                     context={"symbol": symbol},
                 )
-            except Exception:
+            except (AttributeError, TypeError, ImportError, RuntimeError):
+                # Handle error handler invocation failures
                 pass
         return False, f"Exception {e}"
 
@@ -131,13 +133,15 @@ def should_skip_cycle_market_hours(only_during_market_hours: bool, *, log_prefix
     try:
         if is_truthy_env('G6_FORCE_MARKET_OPEN'):
             return False
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        # Handle environment variable access failures
         pass
     # Weekend mode support removed: collection always suppressed outside market hours based solely on is_market_open.
 
     try:
         open_now = is_market_open()
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, RuntimeError):  # pragma: no cover
+        # Handle market hours check failures
         open_now = True
     if open_now:
         return False
@@ -147,7 +151,8 @@ def should_skip_cycle_market_hours(only_during_market_hours: bool, *, log_prefix
         if is_premarket_window():  # type: ignore
             logger.debug("%s Premarket window active (init-only); allowing lightweight cycle", log_prefix)
             return False
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, RuntimeError):  # pragma: no cover
+        # Handle premarket window check failures
         pass
     logger.debug("%s Market closed; cycle skipped", log_prefix)
     return True
@@ -162,7 +167,8 @@ def market_will_be_closed(next_interval_seconds: float) -> bool:
     try:
         ref_time = _dt.datetime.now(_dt.UTC) + _dt.timedelta(seconds=next_interval_seconds)
         return not is_market_open(reference_time=ref_time)  # type: ignore[arg-type]
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, RuntimeError):  # pragma: no cover
+        # Handle time calculation or market check failures
         return False
 
 __all__ = [

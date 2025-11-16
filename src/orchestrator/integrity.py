@@ -32,7 +32,8 @@ def integrity_from_events(events_path: str, limit: int = 200_000) -> dict[str, A
             'status': 'OK',
             'source': 'http_inline',
         }
-    except Exception:
+    except (AttributeError, TypeError, OSError):
+        # Handle stat failures or attribute access issues
         mtime_ns = -1
         size = -1
 
@@ -52,7 +53,8 @@ def integrity_from_events(events_path: str, limit: int = 200_000) -> dict[str, A
                     continue
                 try:
                     obj = json.loads(line)
-                except Exception:
+                except (json.JSONDecodeError, ValueError, TypeError):
+                    # Handle JSON parse errors
                     continue
                 if obj.get('event') == 'cycle_start':
                     c = (obj.get('context') or {}).get('cycle')

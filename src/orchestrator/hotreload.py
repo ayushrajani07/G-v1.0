@@ -40,7 +40,8 @@ def detect_hotreload_trigger(headers: Any = None, path: str | None = None) -> bo
         except (AttributeError, TypeError, ValueError):
             pass
         return trigger
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle environment config, header, or query parsing failures
         return False
 
 

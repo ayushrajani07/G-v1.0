@@ -21,7 +21,8 @@ from src.config.env_config import EnvConfig
 
 try:  # psutil optional
     import psutil
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module
     psutil = None
 
 
@@ -31,7 +32,8 @@ def evaluate_memory_tier(ctx) -> None:
     if override:
         try:
             ctx.set_flag('memory_tier', int(override))
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
+            # Handle context access, type conversion, or set_flag failures
             pass
         return
     # Optional TTL cache to avoid repeated psutil.Process() creation and
@@ -44,7 +46,8 @@ def evaluate_memory_tier(ctx) -> None:
         else:
             s_str = EnvConfig.get_str('G6_MEMORY_TIER_TTL_SEC', '')
             _ttl = max(0.0, float(s_str)) if s_str else 0.0
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
+        # Handle float conversion or config access failures
         _ttl = 0.0
     # Module-level cache
     if _ttl:
@@ -56,10 +59,12 @@ def evaluate_memory_tier(ctx) -> None:
                 # reuse last-tier
                 try:
                     ctx.set_flag('memory_tier', int(cache.get('tier', 0)))
-                except Exception:
+                except (AttributeError, TypeError, ValueError):
+                    # Handle context access, type conversion, or set_flag failures
                     pass
                 return
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle cache access failures
             pass
     # If psutil missing, skip auto evaluation
     if psutil is None:
@@ -83,12 +88,15 @@ def evaluate_memory_tier(ctx) -> None:
                 cache = {'ts': time.time(), 'tier': int(tier)}
                 try:
                     ctx._memory_tier_cache = cache
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle cache assignment failures
                     pass
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle cache creation failures
             pass
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, RuntimeError, OSError):  # pragma: no cover
         # Silent failure acceptable; adaptive controller will fallback to default tier 0
+        # Handle psutil access, RSS retrieval, or tier calculation failures
         return
 
 __all__ = ["evaluate_memory_tier"]
