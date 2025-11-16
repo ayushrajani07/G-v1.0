@@ -38,7 +38,8 @@ from src.utils.env_flags import is_truthy_env  # type: ignore
 
 try:  # optional event dispatch (graceful if events module absent)
     from src.events.event_log import dispatch as emit_event  # type: ignore
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     def emit_event(*_, **__):  # type: ignore
         return None
 
@@ -134,7 +135,8 @@ def update_strike_scaling(ctx: Any, elapsed: float, interval: float) -> None:
                 if metrics and hasattr(metrics, 'strike_depth_scale_factor'):
                     try:
                         metrics.strike_depth_scale_factor.labels(index=idx).set(scale)
-                    except Exception:
+                    except (AttributeError, TypeError, RuntimeError):
+                        # Handle metric set failures
                         pass
                 if passthrough:
                     # Do NOT mutate depths; strike builders will read scale factor separately
@@ -159,14 +161,16 @@ def update_strike_scaling(ctx: Any, elapsed: float, interval: float) -> None:
                         "mode": "passthrough" if passthrough else "mutating",
                     },
                 )
-            except Exception:  # pragma: no cover
+            except (AttributeError, TypeError, RuntimeError):  # pragma: no cover
+                # Handle event emission failures
                 pass
         # Persist state
         ctx.set_flag('adaptive_scale_factor', scale)
         ctx.set_flag('adaptive_breach_streak', breach_streak)
         ctx.set_flag('adaptive_healthy_streak', healthy_streak)
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, KeyError, RuntimeError):  # pragma: no cover
         # Fail silent; adaptation is best-effort
+        # Handle config access, flag operations, or calculation failures
         pass
 
 __all__ = ["update_strike_scaling"]

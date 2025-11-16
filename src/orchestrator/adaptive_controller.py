@@ -66,9 +66,11 @@ def _get_metrics_counter_value(metrics, name: str) -> int:
                 from typing import Any as _Any
                 val: _Any = getter()
                 return int(val)
-            except Exception:
+            except (ValueError, TypeError, AttributeError):
+                # Handle type conversion failures
                 return 0
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle attribute access failures
         return 0
     return 0
 
@@ -81,13 +83,15 @@ def evaluate_adaptive_controller(ctx, elapsed: float, interval: float) -> None: 
     existing = None
     try:
         existing = ctx.flag('__adaptive_state__')  # stored in flags due to slots
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        # Handle flag access failures
         existing = None
     if existing is None or not isinstance(existing, AdaptiveState):
         state = AdaptiveState()
         try:
             ctx.set_flag('__adaptive_state__', state)
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Handle flag set failures
             pass
     else:
         state = existing
@@ -95,19 +99,23 @@ def evaluate_adaptive_controller(ctx, elapsed: float, interval: float) -> None: 
     # Load thresholds
     try:
         breach_streak_target = EnvConfig.get_int('G6_ADAPTIVE_SLA_BREACH_STREAK', 3)
-    except ValueError:
+    except (ValueError, TypeError, KeyError):
+        # Handle config parsing failures
         breach_streak_target = 3
     try:
         recovery_cycles = EnvConfig.get_int('G6_ADAPTIVE_RECOVERY_CYCLES', 5)
-    except ValueError:
+    except (ValueError, TypeError, KeyError):
+        # Handle config parsing failures
         recovery_cycles = 5
     try:
         max_detail_mode = EnvConfig.get_int('G6_ADAPTIVE_MAX_DETAIL_MODE', 0)
-    except ValueError:
+    except (ValueError, TypeError, KeyError):
+        # Handle config parsing failures
         max_detail_mode = 0
     try:
         min_detail_mode = EnvConfig.get_int('G6_ADAPTIVE_MIN_DETAIL_MODE', 2)
-    except ValueError:
+    except (ValueError, TypeError, KeyError):
+        # Handle config parsing failures
         min_detail_mode = 2
 
     # Memory tier (0 good, 1 warning, 2 critical).
@@ -115,10 +123,12 @@ def evaluate_adaptive_controller(ctx, elapsed: float, interval: float) -> None: 
     memory_tier = 0
     try:
         memory_tier = int(ctx.flag('memory_tier'))
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
+        # Handle flag access or type conversion failures
         try:
             memory_tier = EnvConfig.get_int('G6_MEMORY_TIER', 0)
-        except ValueError:
+        except (ValueError, TypeError, KeyError):
+            # Handle config parsing failures
             memory_tier = 0
 
     # Cardinality guard active?
@@ -191,7 +201,8 @@ def evaluate_adaptive_controller(ctx, elapsed: float, interval: float) -> None: 
     # Persist selected detail mode onto context for downstream components (e.g., strike builder, collectors)
     try:
         ctx.set_flag('option_detail_mode', state.detail_mode)
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        # Handle flag set failures
         pass
 
     # Emit metrics if possible
@@ -205,7 +216,8 @@ def evaluate_adaptive_controller(ctx, elapsed: float, interval: float) -> None: 
                     inc_fn = getattr(handle, 'inc', None)
                     if callable(inc_fn):
                         inc_fn()
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle metric increment failures
                 pass
         # Per-index gauge updates (if collector loop later wants per-index granularity, replicate for each)
         if hasattr(metrics, 'option_detail_mode'):
@@ -220,18 +232,21 @@ def evaluate_adaptive_controller(ctx, elapsed: float, interval: float) -> None: 
                     setter = getattr(handle, 'set', None)
                     if callable(setter):
                         setter(value)
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle metric setter failures
                     return
             try:
                 # If multiple indices, apply same mode uniformly (future: index-specific decisions)
                 indices = []
                 try:
                     indices = list(ctx.index_params.keys()) if getattr(ctx, 'index_params', None) else []
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle index params access failures
                     indices = []
                 for idx in indices:
                     _safe_set_mode(idx, state.detail_mode)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle mode setting failures
                 pass
 
 __all__ = ["evaluate_adaptive_controller", "AdaptiveState"]
