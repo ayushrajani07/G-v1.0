@@ -527,7 +527,8 @@ class MetricsRegistry:
                 if recreate:
                     try:
                         _R.unregister(existing)  # type: ignore[arg-type]
-                    except Exception:
+                    except (ValueError, KeyError):
+                        # Handle collector not registered or already removed
                         pass
                 if recreate or existing is None:
                     try:
@@ -537,22 +538,23 @@ class MetricsRegistry:
                             metric_obj.labels(**{l: '_seed' for l in labels})
                         setattr(self, attr, metric_obj)
                         try: self._metric_groups[attr] = 'panel_diff'  # type: ignore[attr-defined]
-                        except Exception: pass
+                        except (AttributeError, TypeError, KeyError): pass
                     except ValueError:
                         # Race recreate; bind whatever exists now
                         metric_obj = getattr(_R, '_names_to_collectors', {}).get(prom_name)
                         if metric_obj is not None:
                             try: setattr(self, attr, metric_obj)
-                            except Exception: pass
+                            except (AttributeError, TypeError): pass
                 else:
                     if not hasattr(self, attr):
                         try: setattr(self, attr, existing)
-                        except Exception: pass
+                        except (AttributeError, TypeError): pass
             _force_panel_metric('panel_diff_writes', 'g6_panel_diff_writes_total', _PCounter, ['type'], 'Panel diff snapshots written')
             _force_panel_metric('panel_diff_truncated', 'g6_panel_diff_truncated_total', _PCounter, ['reason'], 'Panel diff truncation events')
             _force_panel_metric('panel_diff_bytes_total', 'g6_panel_diff_bytes_total', _PCounter, ['type'], 'Total bytes of diff JSON written')
             _force_panel_metric('panel_diff_bytes_last', 'g6_panel_diff_bytes_last', _PGauge, ['type'], 'Bytes of last diff JSON written')
-        except Exception:
+        except (ImportError, ValueError, TypeError, RuntimeError):
+            # Handle import, duplicate registration, type issues, or metric creation failures
             pass
 
         # Fallback: guarantee core spec metrics exist (defensive against earlier registration exceptions)
@@ -578,7 +580,8 @@ class MetricsRegistry:
                         setattr(self, attr, ctor(name, doc, labels))  # type: ignore[arg-type]
                     else:
                         setattr(self, attr, ctor(name, doc))  # type: ignore[arg-type]
-                except Exception:
+                except (ValueError, TypeError, RuntimeError):
+                    # Handle duplicate registration, type issues, or metric creation failures
                     pass
 
         # 4. Early create metric_group_state gauge (index_aggregate)
@@ -595,7 +598,8 @@ class MetricsRegistry:
             try:
                 from prometheus_client import Gauge as _Gmgs
                 self.metric_group_state = _Gmgs('g6_metric_group_state', 'Metric group activation flag', ['group'])  # type: ignore[attr-defined]
-            except Exception:
+            except (ImportError, ValueError, TypeError, RuntimeError):
+                # Handle import, duplicate registration, type issues, or gauge creation failures
                 pass
 
         # 5. Always-on placeholders (may set metric_group_state labels)
@@ -605,33 +609,40 @@ class MetricsRegistry:
             try:
                 from .sla import init_sla_placeholders as _init_sla  # type: ignore
                 _init_sla(self, self._group_allowed)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle import or initialization failures
                 pass
             # Initialize fault budget tracker immediately after SLA placeholder if enabled (ensures availability for early tests)
             try:
                 from .fault_budget import init_fault_budget as _ifb  # type: ignore
                 _ifb(self)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle import or initialization failures
                 pass
             try:
                 from .provider_failover import init_provider_failover_placeholders as _init_pf  # type: ignore
                 _init_pf(self, self._group_allowed)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle import or initialization failures
                 pass
             try:
                 from .scheduler import init_scheduler_placeholders as _init_sched  # type: ignore
                 _init_sched(self, self._group_allowed)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle import or initialization failures
                 pass
             try:
                 from .adaptive import init_adaptive_placeholders as _init_adap  # type: ignore
                 _init_adap(self, self._group_allowed)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle import or initialization failures
                 pass
-        except Exception:  # pragma: no cover
+        except (ImportError, AttributeError, TypeError, RuntimeError):  # pragma: no cover
+            # Handle placeholder initialization failures
             try:
                 logger.debug("init_always_on_placeholders failed", exc_info=True)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
 
         # 6. Category initialization (performance, api, resources, cache...)
@@ -658,39 +669,46 @@ class MetricsRegistry:
                     self.api_success_rate = _Gf('g6_api_success_rate_percent', 'Successful API call percentage (rolling window)')  # type: ignore[attr-defined]
                 if not hasattr(self, 'api_response_latency'):
                     self.api_response_latency = _Hf('g6_api_response_latency_ms', 'Upstream API response latency distribution (ms)', buckets=[5,10,20,50,100,200,400,800,1600,3200])  # type: ignore[attr-defined]
-        except Exception:
+        except (ImportError, ValueError, TypeError, RuntimeError):
+            # Handle import, duplicate registration, type issues, or metric creation failures
             pass
         try:
             from .resource_category import init_resource_metrics as _res  # type: ignore
             _res(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or initialization failures
             pass
         try:
             from .cache_error import init_cache_error_metrics as _cache  # type: ignore
             _cache(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or initialization failures
             pass
         try:
             from .storage_category import init_storage_metrics as _stor  # type: ignore
             _stor(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or initialization failures
             pass
         # Lifecycle hygiene metrics (extracted from storage)
         try:
             if self._group_allowed('lifecycle'):
                 from .lifecycle_category import init_lifecycle_metrics as _life  # type: ignore
                 _life(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or initialization failures
             pass
         try:
             from .memory_pressure import init_memory_pressure_metrics as _mem  # type: ignore
             _mem(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or initialization failures
             pass
         try:
             from .atm import init_atm_metrics as _atm  # type: ignore
             _atm(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or initialization failures
             pass
 
         # 7. Greeks (after core specs & categories)
@@ -700,7 +718,8 @@ class MetricsRegistry:
         except Exception:
             try:
                 logger.debug("init_greek_metrics external module failed", exc_info=True)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
 
         # 8. Backward compatible group_registry invocation (may add extras)
@@ -709,12 +728,14 @@ class MetricsRegistry:
             _rgm(self)
             try:
                 logger.debug("group_registry invoked; groups now: %s", sorted(set(self._metric_groups.values())))
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle dict access or logging failures
                 pass
         except Exception:
             try:
                 logger.warning("group_registry invocation failed", exc_info=True)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
 
         # 9. Apply pruning (after all registrations)
@@ -724,7 +745,8 @@ class MetricsRegistry:
         except Exception:
             try:
                 self._apply_group_filters(CONTROLLED_GROUPS, enabled_set, disabled_set)  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle missing method or pruning failures
                 pass
 
         # 10. Spec minimum / recovery
@@ -734,14 +756,16 @@ class MetricsRegistry:
         except Exception:
             try:
                 logger.debug("ensure_spec_minimum external call failed", exc_info=True)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
 
         # Diagnostic warning if no controlled groups survived
         if not any(g in CONTROLLED_GROUPS for g in self._metric_groups.values()):
             try:
                 logger.warning("No controlled metric groups registered; check _maybe_register flow")
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
 
         # 11. Populate metric_group_state gauge samples
