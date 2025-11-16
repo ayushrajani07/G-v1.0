@@ -25,7 +25,7 @@ def format_concise_expiry_row(
     # Time (UTC HH:MM)
     try:
         ts_local = per_index_ts.astimezone(datetime.UTC).strftime('%H:%M')
-    except Exception:
+    except (AttributeError, ValueError, OSError):
         ts_local = '--:--'
     # Price formatting
     if isinstance(index_price,(int,float)):
@@ -36,7 +36,7 @@ def format_concise_expiry_row(
     if isinstance(atm_strike,(int,float)):
         try:
             atm_disp = f"{int(atm_strike)}"
-        except Exception:
+        except (ValueError, OverflowError):
             atm_disp = '-'
     else:
         atm_disp = '-'
@@ -46,16 +46,16 @@ def format_concise_expiry_row(
     for _q in enriched_data.values():
         try:
             _t = (_q.get('instrument_type') or _q.get('type') or '').upper()
-        except Exception:
+        except (AttributeError, TypeError):
             continue
         if _t == 'CE':
             ce_count += 1
             try: call_oi += float(_q.get('oi',0) or 0)
-            except Exception: pass
+            except (ValueError, TypeError): pass
         elif _t == 'PE':
             pe_count += 1
             try: put_oi += float(_q.get('oi',0) or 0)
-            except Exception: pass
+            except (ValueError, TypeError): pass
     if call_oi > 0:
         pcr_val = (put_oi / call_oi)
     else:
@@ -66,7 +66,7 @@ def format_concise_expiry_row(
     if strikes:
         try:
             strike_list = list(strikes)
-        except Exception:
+        except (TypeError, ValueError):
             strike_list = []
     if strike_list:
         try:
@@ -74,7 +74,7 @@ def format_concise_expiry_row(
             diffs_f = [int(b-a) for a,b in zip(strike_list, strike_list[1:], strict=False) if b > a]
             step_val_h = min(diffs_f) if diffs_f else 0
             rng_disp = f"{rng_min}\u2013{rng_max}"
-        except Exception:
+        except (ValueError, TypeError, OverflowError):
             rng_disp='-'; step_val_h=0
     tag_map={'this_week':'This week','next_week':'Next week','this_month':'This month','next_month':'Next month'}
     tag = tag_map.get(expiry_rule, expiry_rule) or '-'

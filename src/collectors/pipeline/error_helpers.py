@@ -51,7 +51,7 @@ def add_phase_error(state: ExpiryState, phase: str, classification: str, message
                     except re.error:
                         # Skip invalid regex silently
                         continue
-            except Exception:
+            except (TypeError, AttributeError, ValueError):
                 pass
         # Optional enrichment: provider names / traceback (guarded by env)
         if EnvConfig.get_bool('G6_PIPELINE_STRUCT_ERROR_ENRICH', False):
@@ -64,14 +64,14 @@ def add_phase_error(state: ExpiryState, phase: str, classification: str, message
                         extra['providers'] = [getattr(p, 'name', str(p))[:40] for p in providers][:10]
                     else:
                         extra['providers'] = [getattr(providers, 'name', str(providers))[:40]]
-            except Exception:
+            except (AttributeError, TypeError, KeyError):
                 pass
             # Traceback (short form) if classification is unexpected or fatal
             if classification in ('fatal','unknown'):
                 try:
                     exc_tb = traceback.format_exc(limit=3)
                     extra['trace'] = exc_tb[-800:]
-                except Exception:
+                except (ValueError, TypeError):
                     pass
         # Basic structured record (dedup: avoid multiple entries for same phase+classification+message)
         try:
@@ -85,7 +85,7 @@ def add_phase_error(state: ExpiryState, phase: str, classification: str, message
                     try:
                         if attempt > existing.attempt:
                             existing.attempt = attempt  # type: ignore[attr-defined]
-                    except Exception:
+                    except (AttributeError, TypeError):
                         pass
                     rec = None  # signal skip append
                     break
@@ -100,7 +100,7 @@ def add_phase_error(state: ExpiryState, phase: str, classification: str, message
                     extra=extra,
                 )
                 state.error_records.append(rec)
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
             # Fallback without dedup if inspection failed
             try:
                 rec = PhaseErrorRecord(
@@ -113,7 +113,7 @@ def add_phase_error(state: ExpiryState, phase: str, classification: str, message
                     extra=extra,
                 )
                 state.error_records.append(rec)
-            except Exception:
+            except (AttributeError, TypeError):
                 pass
         # Conditional metrics increment
         if EnvConfig.get_bool('G6_PIPELINE_STRUCT_ERROR_METRIC', False) and get_metrics is not None:
@@ -122,9 +122,9 @@ def add_phase_error(state: ExpiryState, phase: str, classification: str, message
                 m = getattr(reg, 'pipeline_phase_error_records', None)
                 if m is not None:
                     m.labels(phase=phase, classification=classification).inc()
-            except Exception:
+            except (AttributeError, TypeError, KeyError, ValueError):
                 pass
-    except Exception:
+    except (AttributeError, TypeError, KeyError, ValueError):
         # Fail closed: never raise during error path instrumentation
         pass
 

@@ -102,7 +102,7 @@ except ImportError:
 try:  # canonical generator (Phase 2 centralization)
     # Import may fail in stripped-down environments (tests / minimal builds).
     from src.utils.strikes import build_strikes as _base_build_strikes  # pragma: no cover
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     _base_build_strikes = None  # fallback placeholder
 
 __all__ = [
@@ -178,7 +178,7 @@ def _resolve_step(index_symbol: str, atm: float, explicit_step: float | None, po
         val = EnvConfig.get_float(env_key, 0.0)
         if val > 0:
             return val, "env"
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
         pass
     # 3. policy
     if policy is not None:
@@ -186,7 +186,7 @@ def _resolve_step(index_symbol: str, atm: float, explicit_step: float | None, po
             v = float(policy.compute_step(index_symbol, atm))
             if v > 0:
                 return v, getattr(policy, "name", policy.__class__.__name__)
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
             pass
     # 4. index registry
     if get_index_meta is not None:
@@ -194,7 +194,7 @@ def _resolve_step(index_symbol: str, atm: float, explicit_step: float | None, po
             v = float(get_index_meta(index_symbol).step)
             if v > 0:
                 return v, "registry"
-        except Exception:  # pragma: no cover - fallback path
+        except (ValueError, TypeError, AttributeError, KeyError):  # pragma: no cover - fallback path
             pass
     # 5. heuristic fallback
     return (100.0 if index_symbol.upper() in ("BANKNIFTY", "SENSEX") else 50.0), "heuristic"
@@ -284,16 +284,16 @@ def build_strike_universe(
                 if inc_hits is not None:
                     try:
                         inc_hits.inc()
-                    except Exception:
+                    except (AttributeError, TypeError):
                         pass
             else:
                 inc_miss = getattr(metrics, "strike_universe_cache_miss", None)
                 if inc_miss is not None:
                     try:
                         inc_miss.inc()
-                    except Exception:
+                    except (AttributeError, TypeError):
                         pass
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError):  # pragma: no cover
             pass
 
     return StrikeUniverseResult(strikes, meta)
@@ -306,7 +306,7 @@ def _generate_strikes(atm: float, itm: int, otm: int, index_symbol: str, step: f
         try:
             res = _base_build_strikes(atm, itm, otm, index_symbol, step=step)
             return [float(x) for x in list(res)]
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             return []
     # Fallback simplified generation
     if atm <= 0:
