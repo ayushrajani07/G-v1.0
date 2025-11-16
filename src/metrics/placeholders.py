@@ -42,7 +42,8 @@ def init_always_on_placeholders(reg: Any, group_allowed: Callable[[str], bool]) 
         strict = False
         try:
             strict = os.getenv('G6_METRICS_STRICT_EXCEPTIONS','').lower() in {'1','true','yes','on'}
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle attribute or type errors in env parsing
             pass
         try:
             metric = ctor(prom_name, doc, labels) if labels else ctor(prom_name, doc)
@@ -53,9 +54,10 @@ def init_always_on_placeholders(reg: Any, group_allowed: Callable[[str], bool]) 
                     if prom_name in names:
                         metric = coll
                         break
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle missing registry attribute or type issues
                 pass
-        except Exception as e:  # unexpected
+        except (TypeError, RuntimeError) as e:  # unexpected type or runtime errors
             # Use existing logger rather than function-scoped import
             log.error("placeholder metric create failed %s (%s): %s", attr, prom_name, e, exc_info=True)
             if strict:
@@ -69,7 +71,8 @@ def init_always_on_placeholders(reg: Any, group_allowed: Callable[[str], bool]) 
                     reg._metric_groups[attr] = group  # type: ignore[attr-defined]
                     if hasattr(reg, 'metric_group_state'):
                         reg.metric_group_state.labels(group=group).set(1)  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, KeyError, ValueError, RuntimeError):
+                    # Handle missing attributes, type issues, dict operations, invalid values, or metric failures
                     pass
 
     # Expiry remediation
@@ -90,9 +93,11 @@ def init_always_on_placeholders(reg: Any, group_allowed: Callable[[str], bool]) 
             if group_allowed('iv_estimation'):
                 try:
                     reg._metric_groups['iv_iterations_histogram'] = 'iv_estimation'  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle missing attributes, type issues, or dict operations
                     pass
-    except Exception:
+    except (ValueError, TypeError, RuntimeError):
+        # Handle duplicate registration, type issues, or histogram creation failures
         pass
 
     # SLA health moved to sla.init_sla_placeholders (extracted)

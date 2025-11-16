@@ -80,7 +80,8 @@ def _warn_legacy_perf_cache(raw: str) -> None:
             logger.warning(
                 "metrics.perf_cache_legacy_reference: 'perf_cache' alias removed; use 'cache' in G6_ENABLE_METRIC_GROUPS / G6_DISABLE_METRIC_GROUPS"
             )
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle logging failures
             pass
 
 
@@ -131,7 +132,8 @@ def configure_registry_groups(reg: MetricsRegistryLike | Any) -> tuple[set[str],
         reg._enabled_groups = enabled_set  # type: ignore[attr-defined]
         reg._disabled_groups = disabled_set  # type: ignore[attr-defined]
         reg._effective_enabled_groups = effective_enabled  # type: ignore[attr-defined]
-    except (AttributeError, TypeError, ValueError):
+    except (AttributeError, TypeError):
+        # Handle attribute assignment failures or type issues
         pass
 
     _trace = EnvConfig.get_bool('G6_METRICS_GATING_TRACE', False)
@@ -142,7 +144,8 @@ def configure_registry_groups(reg: MetricsRegistryLike | Any) -> tuple[set[str],
             if _trace:
                 try:
                     print(f"[metrics-gating] name={name} enabled_mode=1 in_enabled={name in effective_enabled} disabled={name in disabled_set} -> {allowed}", flush=True)
-                except Exception:
+                except (OSError, ValueError):
+                    # Handle print failures or value formatting errors
                     pass
             return allowed
         # No enable list: all controlled groups allowed unless disabled
@@ -150,13 +153,15 @@ def configure_registry_groups(reg: MetricsRegistryLike | Any) -> tuple[set[str],
             if _trace:
                 try:
                     print(f"[metrics-gating] name={name} enabled_mode=0 disabled=1 -> False", flush=True)
-                except Exception:
+                except (OSError, ValueError):
+                    # Handle print failures or value formatting errors
                     pass
             return False
         if _trace:
             try:
                 print(f"[metrics-gating] name={name} enabled_mode=0 disabled=0 -> True", flush=True)
-            except Exception:
+            except (OSError, ValueError):
+                # Handle print failures or value formatting errors
                 pass
         return True
 
@@ -181,8 +186,10 @@ def configure_registry_groups(reg: MetricsRegistryLike | Any) -> tuple[set[str],
             try:
                 reg._group_filters_structured_emitted = True  # type: ignore[attr-defined]
             except (AttributeError, TypeError):
+                # Handle attribute assignment failures
                 pass
-    except (Exception,):
+    except (AttributeError, TypeError):
+        # Handle logging or config access failures
         pass
     return CONTROLLED_GROUPS, enabled_set, disabled_set
 

@@ -31,7 +31,8 @@ def init_provider_failover_placeholders(reg: Any, group_allowed: Callable[[str],
         strict = False
         try:
             strict = os.getenv('G6_METRICS_STRICT_EXCEPTIONS','').lower() in {'1','true','yes','on'}
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle attribute or type errors in env parsing
             pass
         metric = None
         try:
@@ -42,9 +43,10 @@ def init_provider_failover_placeholders(reg: Any, group_allowed: Callable[[str],
                     if 'g6_provider_failover_total' in names:
                         metric = coll
                         break
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle missing registry attribute or type issues
                 pass
-        except Exception as e:
+        except (TypeError, RuntimeError) as e:
             logger.error("init_provider_failover_placeholders failed creating provider_failover: %s", e, exc_info=True)
             if strict:
                 raise
@@ -57,9 +59,12 @@ def init_provider_failover_placeholders(reg: Any, group_allowed: Callable[[str],
                     if hasattr(reg, 'metric_group_state'):
                         try:
                             reg.metric_group_state.labels(group='provider_failover').set(1)  # type: ignore[attr-defined]
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError, RuntimeError):
+                            # Handle missing method, type issues, invalid values, or metric operation failures
                             pass
-            except Exception:
+            except (AttributeError, TypeError, KeyError, RuntimeError):
+                # Handle missing attributes, type issues, dict operations, or predicate call failures
                 pass
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle unexpected attribute, type, or runtime errors
         logger.debug("init_provider_failover_placeholders unexpected failure", exc_info=True)

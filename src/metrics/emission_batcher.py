@@ -152,7 +152,8 @@ class EmissionBatcher:
         # Track counter object for dynamic lookup on flush (supports test-created counters not in generated module)
         try:  # pragma: no cover - defensive
             _COUNTERS[counter._name] = counter  # type: ignore[attr-defined]
-        except (AttributeError, TypeError, ValueError):
+        except (AttributeError, TypeError):
+            # Handle missing attribute or type issues
             pass
         key = (counter._name, label_items)  # type: ignore[attr-defined]
         with self._lock:
@@ -302,7 +303,8 @@ class _InternalBatchMetrics:
                 self._utilization_gauge = self._Gauge("g6_metrics_batch_adaptive_utilization", "Adaptive batch utilization (last_flush_size / adaptive_target)")
                 self._dropped_ratio_gauge = self._Gauge("g6_metrics_batch_dropped_ratio", "Dropped increments / merged increments (cumulative ratio)")
             _InternalBatchMetrics._registered = True
-        except Exception:
+        except (ValueError, TypeError, RuntimeError):
+            # Handle duplicate registration, type issues, or metric creation failures
             pass
 
     def inc_flush(self, applied: int, queue_depth: int):
@@ -351,7 +353,8 @@ class _InternalBatchMetrics:
                 dropped_val = self._dropped_total._value.get()  # type: ignore
                 ratio = dropped_val / merged_val if merged_val else 0.0
                 self._dropped_ratio_gauge.set(ratio)
-            except Exception:
+            except (AttributeError, TypeError, ZeroDivisionError):
+                # Handle missing attributes, type issues, or division errors
                 pass
 
     def last_utilization(self) -> float | None:
@@ -376,7 +379,8 @@ def _metric_lookup(name: str):
         gen = getattr(generated, name, None)
         if gen is not None:
             return gen
-    except Exception:
+    except (ImportError, AttributeError):
+        # Handle missing module or attribute
         pass
     # Last resort: proxy (no-op if metric missing)
     return _GeneratedAccessorProxy(name)

@@ -36,7 +36,8 @@ def _get_existing(name: str):  # best-effort internal helper
     try:
         names_map = getattr(REGISTRY, "_names_to_collectors", {})  # type: ignore[attr-defined]
         return names_map.get(name)
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError):  # pragma: no cover
+        # Handle missing registry attribute or type issues
         return None
 
 
@@ -79,10 +80,12 @@ def register_build_info(metrics: Any, version: str | None = None, git_commit: st
                         if metrics_dict:
                             relabeled = True
                         metrics_dict.clear()
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle missing attribute or type issues
                     pass
                 gauge.labels(version=v, git_commit=gc, config_hash=ch).set(1)  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
+                # Handle missing method, type issues, invalid values, or label operation failures
                 pass
             # Structured log for machine parsing (best-effort)
             try:
@@ -96,8 +99,9 @@ def register_build_info(metrics: Any, version: str | None = None, git_commit: st
                         "relabeled": relabeled,
                     },
                 )
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
-    except Exception:
-        # Silent resilience; downstream observation remains best-effort
+    except (ImportError, AttributeError, TypeError, ValueError, RuntimeError):
+        # Silent resilience; handle import, attribute, type, value, or runtime errors
         pass
