@@ -53,7 +53,7 @@ def apply_memory_and_adaptive_scaling(
             local_estimate_iv = False
         if mem_flags.get('drop_per_option_metrics'):
             allow_per_option_metrics = False
-    except Exception:
+    except (TypeError, ValueError, AttributeError, KeyError):
         logger.debug('memory_adjust_scale_failed', exc_info=True)
 
     # Adaptive passthrough
@@ -67,7 +67,7 @@ def apply_memory_and_adaptive_scaling(
             else:
                 raw = getattr(flags, 'adaptive_scale_factor', 1.0)
             passthrough_scale_factor = float(raw)
-        except Exception:
+        except (TypeError, ValueError, AttributeError):
             passthrough_scale_factor = 1.0
 
     return (

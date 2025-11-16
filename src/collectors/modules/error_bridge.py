@@ -15,12 +15,12 @@ from typing import Any
 
 try:  # direct import if available
     from src.error_handling import handle_collector_error
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     # Fallback: dynamic import or None
     try:
         _m = importlib.import_module('src.error_handling')
         handle_collector_error = getattr(_m, 'handle_collector_error', None)
-    except Exception:
+    except (ImportError, ModuleNotFoundError, AttributeError):
         handle_collector_error = None
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def _safe_handle(exc: Exception, context: dict[str, Any]) -> None:
         return
     try:
         handle_collector_error(exc, component=_COMPONENT, index_name=context.get('index',''), context=context)
-    except Exception:  # pragma: no cover
+    except (TypeError, AttributeError, KeyError):  # pragma: no cover
         logger.debug("collector_error_bridge_failure", exc_info=True)
 
 
@@ -58,7 +58,7 @@ def report_quote_enrich_error(exc: Exception, index: str, rule: str, expiry: Any
 def report_no_instruments(index: str, rule: str, expiry: Any, strikes: Any, exc_type: type[Exception]) -> None:
     try:
         exc = exc_type(f"No instruments for {index} expiry {expiry} (rule: {rule}) with strikes={strikes}")
-    except Exception:  # pragma: no cover
+    except (TypeError, ValueError):  # pragma: no cover
         exc = Exception(f"No instruments for {index} expiry {expiry} (rule: {rule})")
     _safe_handle(exc, {"stage": "get_option_instruments", "rule": rule, "expiry": str(expiry), "strikes": strikes, "index": index})
 

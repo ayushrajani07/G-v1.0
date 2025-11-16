@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 try:  # pragma: no cover
     # Import real helper; fallback to no-op on failure
     from src.collectors.helpers.greeks import compute_greeks_block as _compute_greeks_block_raw
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     def _compute_greeks_block_raw(*a: Any, **k: Any) -> None:
         return None
 
@@ -97,9 +97,9 @@ def run_greeks_compute(
                 trace = getattr(mod, "trace", None)
                 if callable(trace):
                     trace("greeks_compute_done", index=index_symbol, rule=expiry_rule)
-            except Exception:
+            except (ImportError, ModuleNotFoundError, AttributeError):
                 pass
-    except Exception:
+    except (TypeError, ValueError, KeyError, AttributeError):
         logger.debug("greeks_compute_failed", exc_info=True)
 
 

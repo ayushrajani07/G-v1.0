@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 try:  # local import protective wrapper
     from src.utils.memory_pressure import MemoryPressureManager  # type: ignore
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     MemoryPressureManager = None  # type: ignore
 
 __all__ = ["evaluate_memory_pressure"]
@@ -49,7 +49,7 @@ def _mp_cache_ttl_seconds() -> float:
         s = os.environ.get('G6_MEMORY_PRESSURE_TTL_SEC')
         if s is not None:
             return max(0.0, float(s))
-    except Exception:
+    except (ValueError, TypeError):
         pass
     return 0.0
 
@@ -74,7 +74,7 @@ def evaluate_memory_pressure(metrics) -> dict[str, Any]:  # pragma: no cover (th
             # update metrics reference in case caller provides a metrics object
             try:
                 mp_manager.metrics = metrics
-            except Exception:
+            except (AttributeError, TypeError):
                 pass
             logger.debug('memory_pressure_cache_hit')
         else:
@@ -90,6 +90,6 @@ def evaluate_memory_pressure(metrics) -> dict[str, Any]:  # pragma: no cover (th
             flags[k] = bool(act.get(k, False))
         if flags['slow_cycles']:
             logger.debug("Memory pressure slow_cycles active (tier=%s)", getattr(tier, 'name', None))
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
         logger.debug('memory_pressure_bridge_failed', exc_info=True)
     return flags

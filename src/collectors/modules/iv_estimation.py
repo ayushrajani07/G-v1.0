@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover
     from src.collectors.helpers.iv_greeks import iv_estimation_block as _iv_estimation_block
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     def _iv_estimation_block(*a: Any, **k: Any) -> None:
         return None
 
@@ -83,8 +83,8 @@ def run_iv_estimation(
             trace = getattr(mod, "trace", None)
             if callable(trace):
                 trace("iv_estimation_done", index=index_symbol, rule=expiry_rule)
-        except Exception:
+        except (ImportError, ModuleNotFoundError, AttributeError):
             pass
-    except Exception:
+    except (TypeError, ValueError, KeyError, AttributeError):
         logger.debug("iv_estimation_failed", exc_info=True)
     return None

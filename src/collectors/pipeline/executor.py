@@ -455,7 +455,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             for _p in [p.strip() for p in _redact_patterns.split(',') if p.strip()]:
                                 try:
                                     msg = _re.sub(_p, _redact_repl, msg)
-                                except Exception:
+                                except (TypeError, ValueError, AttributeError):
                                     continue
                             return msg
                         export = {

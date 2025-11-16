@@ -79,7 +79,7 @@ def _percent_drift(a: Any, b: Any) -> float | None:
       return 0.0
     base = max(1.0, a_f)
     return abs(a_f - b_f)/base
-  except Exception:
+  except (TypeError, ValueError, ZeroDivisionError):
     return None
 
 

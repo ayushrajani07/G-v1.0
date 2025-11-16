@@ -44,7 +44,7 @@ def _safe_float(v: Any) -> float | None:
         if math.isnan(f):  # pragma: no cover
             return None
         return f
-    except Exception:  # pragma: no cover
+    except (TypeError, ValueError):  # pragma: no cover
         return None
 
 
@@ -77,7 +77,7 @@ def compute_index_coverage(index_symbol: str, expiries: Iterable[Mapping[str, An
         opts = ex.get('options')
         try:
             opts_int = int(opts) if opts is not None else 0
-        except Exception:  # pragma: no cover
+        except (TypeError, ValueError):  # pragma: no cover
             opts_int = 0
         if opts_int > 0:
             expiries_with_options += 1
