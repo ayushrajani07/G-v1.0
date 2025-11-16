@@ -37,14 +37,14 @@ def _threshold() -> float:
     raw = os.getenv('G6_PARITY_ALERT_ANOMALY_THRESHOLD','-1').strip()
     try:
         return float(raw)
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
         return -1.0
 
 def _min_total() -> int:
     raw = os.getenv('G6_PARITY_ALERT_ANOMALY_MIN_TOTAL','3').strip()
     try:
         return int(raw)
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
         return 3
 
 def maybe_emit_alert_parity_anomaly(parity: dict[str, Any]) -> bool:
@@ -73,7 +73,7 @@ def maybe_emit_alert_parity_anomaly(parity: dict[str, Any]) -> bool:
                 return False
         try:
             weighted = float(weighted)
-        except Exception:
+        except (ValueError, TypeError):
             return False
         if weighted < thr:
             return False
@@ -105,10 +105,11 @@ def maybe_emit_alert_parity_anomaly(parity: dict[str, Any]) -> bool:
             # Also write to stdout as JSON line if operator wants to tee (optional best-effort)
             if os.getenv('G6_STRUCT_LOG','0').lower() in ('1','true','yes','on'):
                 print(json.dumps(payload, separators=(',',':')))
-        except Exception:
+        except (TypeError, ValueError, OSError, AttributeError):
+            # Failed to write to stdout - ignore
             pass
         return True
-    except Exception:
+    except (KeyError, AttributeError, ValueError, TypeError):
         logger.debug('parity_anomaly_emit_failed', exc_info=True)
         return False
 

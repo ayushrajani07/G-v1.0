@@ -48,7 +48,8 @@ def update_per_index_metrics(
         else:
             try:
                 metrics.collection_errors.labels(index=index_symbol, error_type='no_options').inc()
-            except Exception:
+            except (AttributeError, KeyError, ValueError):
+                # Metrics object doesn't support this label or method - skip
                 pass
         metrics.index_last_collection_unixtime.labels(index=index_symbol).set(int(time.time()))
         metrics.index_current_atm.labels(index=index_symbol).set(float(atm_strike))
@@ -56,10 +57,11 @@ def update_per_index_metrics(
             metrics.mark_index_cycle(
                 index=index_symbol, attempts=per_index_attempts, failures=per_index_failures
             )
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError):
+            # mark_index_cycle not available - fallback to direct gauge
             rate = 100.0 if per_index_success else 0.0
             metrics.index_success_rate.labels(index=index_symbol).set(rate)
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError, ZeroDivisionError):
         logger.debug("Failed index aggregate metrics for %s", index_symbol, exc_info=True)
 
 
@@ -87,17 +89,20 @@ def finalize_cycle_metrics(
                 options_processed=getattr(metrics, '_last_cycle_options', 0) or 0,
                 option_processing_seconds=getattr(metrics, '_last_cycle_option_seconds', 0.0) or 0.0,
             )
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError):
+            # mark_cycle not available - fallback to direct gauges
             metrics.avg_cycle_time.set(total_elapsed)
             if total_elapsed > 0:
                 try:
                     metrics.cycles_per_hour.set(3600.0 / total_elapsed)
-                except Exception:
+                except (AttributeError, KeyError, ValueError, TypeError, ZeroDivisionError):
+                    # cycles_per_hour gauge not available or calculation failed
                     pass
         if hasattr(metrics, 'collection_cycle_in_progress'):
             try:
                 metrics.collection_cycle_in_progress.set(0)
-            except Exception:
+            except (AttributeError, ValueError, TypeError):
+                # Failed to clear cycle in progress - ignore
                 pass
-    except Exception as e:  # pragma: no cover
+    except (AttributeError, KeyError, ValueError, TypeError, ZeroDivisionError) as e:  # pragma: no cover
         logger.error("Failed to update collection metrics: %s", e)

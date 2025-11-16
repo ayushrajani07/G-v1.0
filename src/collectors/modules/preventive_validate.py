@@ -52,7 +52,8 @@ try:  # pragma: no cover
                 enriched,
                 index_price if index_price is not None else 0.0,
             )
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError):
+            # Preventive validation failed - return original enriched data
             return enriched, {'error': True}
         # Normalize cleaned
         if not isinstance(cleaned, dict):
@@ -61,12 +62,14 @@ try:  # pragma: no cover
         if hasattr(report, 'as_dict'):
             try:
                 report = report.as_dict()
-            except Exception:
+            except (AttributeError, KeyError, ValueError, TypeError):
+                # Failed to convert report to dict - use error dict
                 report = {'error': True}
         if not isinstance(report, dict):
             report = {'malformed_report': True}
         return cleaned, report
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Preventive validation module not available - use stub
     def _preventive_validation_stage(
         index_symbol: str,
         rule: str,
@@ -101,7 +104,7 @@ def run_preventive_validation(
             head = list(enriched.items())[:500]
             with open(snap_root / f'{ts_key}_02_enriched_head.json','w', encoding='utf-8') as f:
                 json.dump({'index': index_symbol,'expiry_rule': rule,'sample_count': len(head),'records': [{k:v} for k,v in head]}, f, indent=2)
-        except Exception as e:
+        except (OSError, IOError, ValueError, TypeError) as e:
             logger.debug('preventive_snapshot_failed', exc_info=True)
             # Route snapshot write failure as FILE_IO LOW per test expectations
             try:
@@ -115,11 +118,12 @@ def run_preventive_validation(
                     message='preventive snapshot write failed',
                     context={'index': index_symbol, 'rule': rule, 'path': str(snap_root) if snap_root else None}
                 )
-            except Exception:
+            except (ImportError, AttributeError, KeyError, ValueError, TypeError):
+                # Failed to route error - ignore
                 pass
     try:
         cleaned_data, report = _preventive_validation_stage(index_symbol, rule, expiry_date, instruments, enriched, index_price)
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError):
         logger.debug('preventive_validation_failed', exc_info=True)
         cleaned_data, report = enriched, { 'error': True }
     return cleaned_data, report

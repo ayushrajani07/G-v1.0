@@ -27,7 +27,8 @@ def _sync_enrich_func() -> Callable[[str, str, Any, list[dict[str, Any]], Any, A
     try:
         mod = importlib.import_module(_SYNC_IMPORT_PATH)
         return getattr(mod, 'enrich_quotes', None)
-    except Exception:
+    except (ImportError, AttributeError):
+        # Failed to import sync enrichment module - return None
         return None
 
 __all__ = [
@@ -117,7 +118,8 @@ def enrich_quotes_async(
                 effective_batch = int(effective_batch)
             else:
                 effective_batch = None
-    except Exception:
+    except (ValueError, TypeError):
+        # Failed to parse batch size - use None (no batching)
         effective_batch = None
 
     if not _async_enabled() or not instruments:
@@ -151,7 +153,8 @@ def enrich_quotes_async(
         # Perform a single bulk provider call (no threading) but still classify as async-single
         try:
             merged = providers.enrich_with_quotes(instruments)
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError, OSError, IOError) as e:
+            logger.warning("Provider enrichment failed: %s", e)
             has_error = True
             merged = {}
             # fallback sync attempt if provider path failed
@@ -160,7 +163,8 @@ def enrich_quotes_async(
                 try:
                     merged = _sync(index_symbol, expiry_rule, expiry_date, instruments, providers, metrics)
                     mode = 'sync-fallback'
-                except Exception:
+                except (AttributeError, KeyError, ValueError, TypeError, OSError, IOError):
+                    # Sync fallback also failed - continue with empty result
                     pass
     else:
         mode = 'async-batch'
@@ -176,7 +180,8 @@ def enrich_quotes_async(
                     for sym, row in part.items():
                         if sym not in merged:
                             merged[sym] = row
-            except Exception:
+            except (TimeoutError, AttributeError, KeyError, ValueError, TypeError):
+                # Future timed out or result processing failed - skip this batch
                 has_error = True
                 continue
 
@@ -189,7 +194,8 @@ def enrich_quotes_async(
             if _sync:
                 merged = _sync(index_symbol, expiry_rule, expiry_date, instruments, providers, metrics)
                 mode = 'sync-fallback'
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError, OSError, IOError):
+            # Sync fallback failed - return empty result
             merged = {}
 
     if return_meta:

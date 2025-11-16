@@ -66,7 +66,8 @@ def derive_severity_map(categories: Mapping[str, int]) -> dict[str, str]:
                 for k, v in override.items():
                     if k in default and isinstance(v, str) and v.lower() in ('info','warning','critical'):
                         default[k] = v.lower()
-        except Exception:
+        except (json.JSONDecodeError, ValueError, TypeError, AttributeError):
+            # Failed to parse severity override - use defaults
             pass
     return default
 
@@ -75,7 +76,8 @@ def _env_float(name: str, default: float) -> float:
     try:
         val = EnvConfig.get_float(name, default)
         return val
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
+        # Failed to parse float from env - use default
         return default
 
 
@@ -113,15 +115,15 @@ def aggregate_alerts(indices_struct: list[dict[str, Any]], *, strike_cov_min: fl
         # Thresholds for new taxonomy (env or defaults)
         try:
             liq_min_ratio = EnvConfig.get_float('G6_ALERT_LIQUIDITY_MIN_RATIO', 0.05)  # volume/oi or volume/notional heuristic
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
             liq_min_ratio = 0.05
         try:
             stale_age_s = EnvConfig.get_float('G6_ALERT_QUOTE_STALE_AGE_S', 45.0)  # seconds since last trade/quote
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
             stale_age_s = 45.0
         try:
             spread_pct_max = EnvConfig.get_float('G6_ALERT_WIDE_SPREAD_PCT', 5.0)  # percent
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
             spread_pct_max = 5.0
         enable_extended = EnvConfig.get_bool('G6_ALERT_TAXONOMY_EXTENDED', False)
 
@@ -168,7 +170,8 @@ def aggregate_alerts(indices_struct: list[dict[str, Any]], *, strike_cov_min: fl
                     if isinstance(spread_pct, (int,float)) and spread_pct > spread_pct_max:
                         counts['wide_spread'] += 1
                         triggers['wide_spread'].add(index_symbol)
-                except Exception:
+                except (KeyError, AttributeError, ValueError, TypeError, ZeroDivisionError):
+                    # Extended taxonomy evaluation failed for this expiry - skip
                     pass
 
     total = sum(counts.values())
