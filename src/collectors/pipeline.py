@@ -103,8 +103,7 @@ class ProvidersAdapter:
                 logger.warning(
                     "TRACE_PIPELINE_RESOLVE index=%s rule=%s resolved=%s", wi.index, wi.expiry_rule, getattr(expiry_date,'isoformat',lambda:expiry_date)()
                 )
-        except (AttributeError, TypeError):
-            # Trace logging failed, not critical
+        except (AttributeError, TypeError, ImportError):
             pass
         return wi
 
@@ -156,8 +155,7 @@ class IVEstimationBlock(AnalyticsBlock):
                     if iv_res < self.iv_min: iv_res = self.iv_min
                     elif iv_res > self.iv_max: iv_res = self.iv_max
                     data['iv'] = iv_res
-            except (ValueError, TypeError, KeyError, ZeroDivisionError):
-                # IV estimation failed for this option, skip
+            except (ValueError, TypeError, KeyError, AttributeError):
                 continue
 
 class GreeksBlock(AnalyticsBlock):
@@ -189,8 +187,7 @@ class GreeksBlock(AnalyticsBlock):
                         data[k_dst] = greeks.get(k_src,0)
                 if float(data.get('iv',0)) == 0 and iv_fraction:
                     data['iv'] = iv_fraction
-            except (ValueError, TypeError, KeyError, ZeroDivisionError):
-                # Greeks computation failed for this option, skip
+            except (ValueError, TypeError, KeyError, AttributeError):
                 continue
 
 class CsvPersistAdapter(PersistenceBlock):
@@ -224,8 +221,7 @@ class CsvPersistAdapter(PersistenceBlock):
                 day_width = metrics_payload.get("day_width")
                 ts = metrics_payload.get("timestamp")
                 expiry_code = metrics_payload.get("expiry_code")
-        except (AttributeError, TypeError, KeyError):
-            # Failed to extract metrics payload fields
+        except (AttributeError, KeyError, TypeError):
             pass
         return PersistOutcome(option_count=len(ee.enriched), pcr=pcr, failed=False, day_width=day_width, snapshot_timestamp=ts, expiry_code=expiry_code)
 
