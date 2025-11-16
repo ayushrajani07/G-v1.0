@@ -15,7 +15,8 @@ __all__ = ["register_cache_metrics"]
 def register_cache_metrics(reg: Any, maybe_register: Callable | None = None) -> None:  # pragma: no cover - thin adapter
     try:
         from .cache_metrics import init_cache_metrics as _init  # type: ignore
-    except Exception:
+    except ImportError:
+        # Handle missing cache_metrics module
         return
     # The new initializer expects the registry object only (it resolves _maybe_register itself)
     _init(reg)

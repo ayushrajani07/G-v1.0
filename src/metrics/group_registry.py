@@ -28,7 +28,8 @@ from src.config.env_config import EnvConfig
 
 try:  # pragma: no cover - defensive import guard
     from .spec import GROUPED_METRIC_SPECS  # type: ignore
-except Exception:  # pragma: no cover - extremely defensive: treat as empty
+except ImportError:  # pragma: no cover - extremely defensive: treat as empty
+    # Handle missing spec module
     GROUPED_METRIC_SPECS = []  # type: ignore
 
 __all__ = ["register_group_metrics"]
@@ -47,8 +48,9 @@ def register_group_metrics(reg: Any) -> None:  # pragma: no cover - exercised vi
         try:
             spec.register(reg)
             registered += 1
-        except Exception:  # pragma: no cover - robustness
-            _log.warning("Failed registering grouped metric spec %s", getattr(spec, 'attr', '?'), exc_info=True)
+        except (AttributeError, TypeError, ValueError, RuntimeError) as e:  # pragma: no cover - robustness
+            # Handle missing attributes, type issues, value errors, or registration failures
+            _log.warning("Failed registering grouped metric spec %s: %s", getattr(spec, 'attr', '?'), e, exc_info=True)
 
     # Optional hard suppression (beyond generic noise filter first-occurrence behavior)
     suppress = EnvConfig.get_bool('G6_SUPPRESS_GROUPED_METRICS_BANNER', False)

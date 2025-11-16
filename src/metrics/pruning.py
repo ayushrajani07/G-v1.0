@@ -19,7 +19,8 @@ def _get_registry():  # lazy import to avoid cycles
     try:
         from .metrics import get_metrics_singleton  # type: ignore
         return get_metrics_singleton()
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle missing module, attribute access, type issues, or initialization failures
         return None
 
 
@@ -29,7 +30,8 @@ def prune_metrics_groups(reload_filters: bool = True, *, dry_run: bool = False) 
         return {}
     try:
         return reg.prune_groups(reload_filters=reload_filters, dry_run=dry_run)  # type: ignore[attr-defined]
-    except Exception as e:  # pragma: no cover
+    except (AttributeError, TypeError, RuntimeError) as e:  # pragma: no cover
+        # Handle missing method, type issues, or pruning operation failures
         logger.debug("prune_metrics_groups failed: %s", e)
         return {}
 
@@ -37,5 +39,6 @@ def prune_metrics_groups(reload_filters: bool = True, *, dry_run: bool = False) 
 def preview_prune_metrics_groups(reload_filters: bool = True) -> dict[str, Any]:  # pragma: no cover - thin facade
     try:
         return prune_metrics_groups(reload_filters=reload_filters, dry_run=True)
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle method call failures
         return {}

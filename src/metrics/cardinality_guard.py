@@ -369,7 +369,7 @@ class _RegistryGuard:
                             inc = getattr(c, 'inc', None)
                             if callable(inc):
                                 inc()  # type: ignore[misc]
-                    except (ImportError, AttributeError, TypeError, RuntimeError):or, AttributeError, TypeError, RuntimeError):
+                    except (ImportError, AttributeError, TypeError, RuntimeError):
                         # As a last resort, try to bump internal sample value if reachable
                         try:
                             from src.metrics.generated import m_metric_duplicates_total_labels as _dup_lbl  # type: ignore

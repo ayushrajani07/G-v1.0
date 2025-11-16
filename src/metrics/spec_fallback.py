@@ -24,7 +24,8 @@ def ensure_spec_minimum(registry) -> None:
     try:
         from prometheus_client import Counter as _C  # type: ignore
         from prometheus_client import Gauge as _G
-    except Exception as e:  # pragma: no cover - defensive
+    except ImportError as e:  # pragma: no cover - defensive
+        # Handle missing prometheus_client module
         logger.warning("Spec minimum import failed; prometheus_client missing? %s", e)
         return
     strict = os.getenv('G6_METRICS_STRICT_EXCEPTIONS','').lower() in {'1','true','yes','on'}
@@ -39,10 +40,11 @@ def ensure_spec_minimum(registry) -> None:
             try:
                 names_map = getattr(REGISTRY, '_names_to_collectors', {})
                 inst = names_map.get(name)
-            except Exception as e:  # pragma: no cover
+            except (AttributeError, TypeError) as e:  # pragma: no cover
+                # Handle missing attribute or type issues in registry lookup
                 logger.debug("Spec minimum lookup failed for %s: %s", name, e)
                 inst = None
-        except Exception as e:
+        except (ImportError, RuntimeError) as e:
             logger.error("Spec minimum creation failed for %s: %s", name, e, exc_info=True)
             if strict:
                 raise
@@ -51,5 +53,6 @@ def ensure_spec_minimum(registry) -> None:
             setattr(registry, attr, inst)
             try:
                 registry._metric_groups[attr] = grp  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError, KeyError):
+                # Handle missing attribute, type issues, or dict access failures
                 pass

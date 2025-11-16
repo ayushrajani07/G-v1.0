@@ -32,7 +32,8 @@ def init_adaptive_placeholders(reg: Any, group_allowed: Callable[[str], bool]) -
                 ['index']
             )
             # Not grouped historically (left untagged intentionally)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle attribute access, type issues, or counter creation failures
         logger.debug("init_adaptive_placeholders failed", exc_info=True)
 
 
@@ -49,5 +50,6 @@ def register_adaptive_group_metrics(reg: Any) -> None:
       # Avoid re-registering here to prevent duplicate attribute names pointing to same collector.
         maybe('adaptive_controller', 'option_detail_mode', Gauge,
               'g6_option_detail_mode', 'Current option detail mode (0=full,1=medium,2=low)', ['index'])
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle attribute access, type issues, or registration failures
         logger.debug("register_adaptive_group_metrics failure", exc_info=True)

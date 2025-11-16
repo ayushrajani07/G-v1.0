@@ -430,11 +430,11 @@ class SanitizingFormatter(logging.Formatter):
 **Goal:** Proper layering without circular dependencies
 
 **Action Items:**
-- [ ] Weeks 12-13: Design layered architecture
-- [ ] Weeks 14-15: Extract domain models
-- [ ] Weeks 16-17: Break circular dependencies
-- [ ] Weeks 18-19: Migrate to new architecture
-- [ ] Week 20: Remove facade band-aids
+-  Design layered architecture
+- Extract domain models
+-  Break circular dependencies
+-  Migrate to new architecture
+-Remove facade band-aids
 
 **Target Architecture:**
 ```

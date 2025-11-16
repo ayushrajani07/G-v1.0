@@ -30,7 +30,8 @@ def _new_registry() -> MetricsRegistry:
     reg = MetricsRegistry()
     try:  # publish to central anchor only if empty to avoid clobbering active server singleton
         _anchor.set_singleton(reg)
-    except Exception:  # pragma: no cover - defensive
+    except (AttributeError, TypeError, RuntimeError):  # pragma: no cover - defensive
+        # Handle missing method, type mismatch, or singleton operation failure
         pass
     return reg
 
@@ -59,7 +60,8 @@ def get_registry(reset: bool = False) -> MetricsRegistry:
         if reg is None:  # legacy path failed (should be rare) -> direct new registry
             reg = _new_registry()
         return reg
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle missing module/method, type issues, or operation failures
         return _new_registry()
 
 __all__ = ["MetricsRegistry", "get_registry"]

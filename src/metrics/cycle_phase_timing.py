@@ -139,7 +139,8 @@ class PhaseTimer:
             duration = time.time() - self._start
             try:
                 self.histogram.labels(index=self.index).observe(duration)
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
+                # Handle missing method, type issues, invalid values, or metric operation failures
                 pass
         return False
 

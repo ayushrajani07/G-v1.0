@@ -52,7 +52,8 @@ def post_init_recovery(registry: Any) -> None:
                 'g6_panel_diff_truncated_total',
                 'Panel diff truncation events'
             )
-    except Exception as e:  # pragma: no cover
+    except (ImportError, AttributeError, TypeError, RuntimeError, ValueError) as e:  # pragma: no cover
+        # Handle missing prometheus_client, attribute access, type issues, or registration failures
         if STRICT:
             raise
         logger.error("panel_diff_truncated recovery failed: %s", e)
@@ -69,7 +70,8 @@ def post_init_recovery(registry: Any) -> None:
                 'Vol surface quality score (0-100)',
                 ['index']
             )
-    except Exception as e:  # pragma: no cover
+    except (ImportError, AttributeError, TypeError, RuntimeError, ValueError) as e:  # pragma: no cover
+        # Handle missing prometheus_client, attribute access, type issues, or registration failures
         if STRICT:
             raise
         logger.error("vol_surface_quality_score recovery failed: %s", e)
@@ -78,7 +80,8 @@ def post_init_recovery(registry: Any) -> None:
     try:
         try:
             import src.events.event_bus  # noqa: F401
-        except Exception:
+        except ImportError:
+            # Handle missing event bus module
             pass
         # Avoid duplicate registration if metric name already exists in global registry even if attribute missing
         from prometheus_client import REGISTRY as _R
@@ -91,9 +94,11 @@ def post_init_recovery(registry: Any) -> None:
             )
             try:  # set immediate timestamp value
                 registry.events_last_full_unixtime.set(time.time())  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle missing method, type issues, or metric operation failures
                 pass
-    except Exception as e:  # pragma: no cover
+    except (ImportError, AttributeError, TypeError, RuntimeError, ValueError) as e:  # pragma: no cover
+        # Handle missing prometheus_client, attribute access, type issues, or registration failures
         if STRICT:
             raise
         logger.error("events_last_full_unixtime recovery failed: %s", e)

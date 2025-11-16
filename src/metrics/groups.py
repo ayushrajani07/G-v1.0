@@ -44,7 +44,8 @@ from dataclasses import dataclass
 _env_str: Callable[[str, str], str]
 try:
     from src.collectors.env_adapter import get_str as _env_str  # type: ignore
-except Exception:  # pragma: no cover - fallback
+except ImportError:  # pragma: no cover - fallback
+    # Handle missing env_adapter module
     def _fallback_env_str(name: str, default: str = "") -> str:
         v = os.getenv(name, default)
         return v or ""

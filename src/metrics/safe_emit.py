@@ -55,7 +55,8 @@ def safe_emit(_func: Callable | None = None, *, emitter: str | None = None) -> C
                 # Increment per-failure counter
                 try:
                     m.m_emission_failures_total_labels(ident).inc()  # type: ignore[attr-defined]
-                except Exception:  # safeguard against metric registration issues
+                except (AttributeError, TypeError, RuntimeError):  # safeguard against metric registration issues
+                    # Handle missing metric, type issues, or metric operation failures
                     pass
                 # First-failure path
                 first = False
@@ -64,7 +65,8 @@ def safe_emit(_func: Callable | None = None, *, emitter: str | None = None) -> C
                     first = True
                     try:
                         m.m_emission_failure_once_total_labels(ident).inc()  # type: ignore[attr-defined]
-                    except Exception:
+                    except (AttributeError, TypeError, RuntimeError):
+                        # Handle missing metric, type issues, or metric operation failures
                         pass
                 if first:
                     _log.warning("[safe_emit] emitter=%s first failure: %s", ident, exc, exc_info=True)

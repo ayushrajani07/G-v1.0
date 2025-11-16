@@ -55,9 +55,10 @@ def init_scheduler_placeholders(reg: Any, group_allowed: Callable[[str], bool]) 
                     if prom_name in names:
                         metric = coll
                         break
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle missing attribute or type issues in collector lookup
                 pass
-        except Exception as e:  # unexpected
+        except (ImportError, RuntimeError) as e:  # unexpected import or runtime errors
             log.error("scheduler metric create failed %s (%s): %s", attr, prom_name, e, exc_info=True)
             if strict:
                 raise
@@ -68,7 +69,8 @@ def init_scheduler_placeholders(reg: Any, group_allowed: Callable[[str], bool]) 
                     reg._metric_groups[attr] = group  # type: ignore[attr-defined]
                     if hasattr(reg, 'metric_group_state'):
                         reg.metric_group_state.labels(group=group).set(1)  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, KeyError, RuntimeError):
+                    # Handle missing attributes, type issues, dict access, or metric operation failures
                     pass
 
     _ensure('missing_cycles', 'g6_missing_cycles_total', 'Detected missing cycles (scheduler gaps)', group='scheduler')
