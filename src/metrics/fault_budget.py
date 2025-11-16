@@ -137,13 +137,13 @@ class FaultBudgetTracker:
             # Gauge updates
             if self.g_remaining is not None:
                 try: self.g_remaining.set(remaining)  # type: ignore[attr-defined]
-                except (AttributeError, TypeError, ValueError): pass
+                except (AttributeError, TypeError, ValueError, RuntimeError): pass  # Handle missing method, type issues, invalid values, or gauge operation failures
             if self.g_breaches is not None:
                 try: self.g_breaches.set(within)  # type: ignore[attr-defined]
-                except (AttributeError, TypeError, ValueError): pass
+                except (AttributeError, TypeError, ValueError, RuntimeError): pass  # Handle missing method, type issues, invalid values, or gauge operation failures
             if self.g_consumed is not None:
                 try: self.g_consumed.set(round(consumed_pct,2))  # type: ignore[attr-defined]
-                except (AttributeError, TypeError, ValueError): pass
+                except (AttributeError, TypeError, ValueError, RuntimeError): pass  # Handle missing method, type issues, invalid values, or gauge operation failures
             # Edge detection logs
             if remaining == 0 and not self.exhausted:
                 self.exhausted = True
@@ -155,7 +155,7 @@ class FaultBudgetTracker:
                         'window_sec': self.window_sec,
                         'within': within,
                     })
-                except (Exception,): pass
+                except (AttributeError, TypeError, ValueError): pass  # Handle logging failures
             elif remaining > 0 and self.exhausted:
                 self.exhausted = False
                 try:
@@ -164,7 +164,7 @@ class FaultBudgetTracker:
                         'remaining': remaining,
                         'within': within,
                     })
-                except (Exception,): pass
+                except (AttributeError, TypeError, ValueError): pass  # Handle logging failures
             elif self.debug:
                 try:
                     logger.debug('metrics.fault_budget.update remaining=%d within=%d consumed=%.2f%%', remaining, within, consumed_pct, extra={
@@ -173,9 +173,9 @@ class FaultBudgetTracker:
                         'within': within,
                         'consumed_percent': consumed_pct,
                     })
-                except (Exception,): pass
-        except Exception:
-            # Governance feature must never raise
+                except (AttributeError, TypeError, ValueError): pass  # Handle logging failures
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Governance feature must never raise; handle attribute, type, value, or runtime errors
             pass
 
 
@@ -204,16 +204,17 @@ def init_fault_budget(registry) -> None:
         g_consumed = Gauge('g6_cycle_fault_budget_consumed_percent', 'Percent of cycle SLA breach budget consumed in window (0-100)')
         # Expose as attributes for tests and introspection (best-effort)
         try: registry.cycle_fault_budget_remaining = g_remaining  # type: ignore[attr-defined]
-        except Exception: pass
+        except (AttributeError, TypeError): pass  # Handle attribute assignment failures
         try: registry.cycle_fault_budget_breaches_window = g_breaches  # type: ignore[attr-defined]
-        except Exception: pass
+        except (AttributeError, TypeError): pass  # Handle attribute assignment failures
         try: registry.cycle_fault_budget_window_seconds = g_window  # type: ignore[attr-defined]
-        except Exception: pass
+        except (AttributeError, TypeError): pass  # Handle attribute assignment failures
         try: registry.cycle_fault_budget_consumed_percent = g_consumed  # type: ignore[attr-defined]
-        except Exception: pass
+        except (AttributeError, TypeError): pass  # Handle attribute assignment failures
         try:
             g_window.set(window_sec)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Handle missing method, type issues, invalid values, or gauge operation failures
             pass
         tracker = FaultBudgetTracker(window_sec=window_sec, allowed=allowed, strict=strict, debug=debug,
                                      g_remaining=g_remaining, g_breaches=g_breaches, g_window=g_window, g_consumed=g_consumed)

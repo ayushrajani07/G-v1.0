@@ -45,13 +45,15 @@ def build_introspection_inventory(registry: Any) -> list[dict[str, Any]]:  # pra
     try:
         # The registry mapping can be useful for future enrichment; retained for parity
         _ = getattr(REGISTRY, "_names_to_collectors", {}) if REGISTRY else {}
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle missing registry attribute or type issues
         pass
     metric_groups = getattr(registry, "_metric_groups", {})
     for attr, value in registry.__dict__.items():
         try:
             metric_name = getattr(value, "_name", None)
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle missing attribute or type issues
             metric_name = None
         if not metric_name or not isinstance(metric_name, str) or not metric_name.startswith("g6_"):
             continue
@@ -64,7 +66,8 @@ def build_introspection_inventory(registry: Any) -> list[dict[str, Any]]:  # pra
                     if isinstance(ln, (list, tuple, set)):
                         labels = list(ln)
                         break
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle missing attribute or type issues
                 pass
         doc = getattr(value, "_documentation", "")
         group = metric_groups.get(attr)
@@ -88,7 +91,8 @@ def get_metrics_introspection(registry: Any) -> list[dict[str, Any]]:  # pragma:
     if inv is None:
         try:
             registry._metrics_introspection = build_introspection_inventory(registry)  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle attribute assignment, type issues, or inventory build failures
             registry._metrics_introspection = []  # type: ignore[attr-defined]
         inv = registry._metrics_introspection
         # Structured log indicating lazy construction
@@ -100,7 +104,8 @@ def get_metrics_introspection(registry: Any) -> list[dict[str, Any]]:  # pragma:
                     "metric_count": len(inv) if inv else 0,
                 },
             )
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle logging failures
             pass
     # Return a shallow copy so callers don't mutate internal cache
     return list(inv)

@@ -31,7 +31,8 @@ import os as _os
 _env_str: Callable[[str, str], str]
 try:
     from src.collectors.env_adapter import get_str as _env_str  # type: ignore
-except Exception:  # pragma: no cover - fallback
+except ImportError:  # pragma: no cover - fallback
+    # Handle missing env_adapter module
     def _fallback_env_str(name: str, default: str = "") -> str:
         # Read directly from process env to avoid cached values during tests
         return _os.environ.get(name, default)
@@ -60,7 +61,8 @@ def reload_group_filters(reg: Any) -> None:  # pragma: no cover - thin adapter
 def dump_metrics_metadata(reg: Any) -> dict[str, object]:  # noqa: C901 - legacy complexity retained
     try:
         reload_group_filters(reg)
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle attribute access or type issues in filter reload
         pass
     type_counts = {'counter':0,'gauge':0,'histogram':0,'summary':0}
     total = 0
@@ -89,7 +91,8 @@ def dump_metrics_metadata(reg: Any) -> dict[str, object]:  # noqa: C901 - legacy
                     setattr(reg, attr, ctor(mname, help_text, labels))
                 else:
                     setattr(reg, attr, ctor(mname, help_text))
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle duplicate registration, type issues, or metric creation failures
                 pass
 
     # Build filtered mapping of metric attribute -> group (preserve attribute names; prior regression produced only group name collisions)
@@ -100,7 +103,8 @@ def dump_metrics_metadata(reg: Any) -> dict[str, object]:  # noqa: C901 - legacy
         try:
             if _allow(grp):
                 filtered_groups[attr] = grp
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle missing attributes, type issues, or predicate call failures
             continue
     if getattr(reg, '_enabled_groups', None) is None:  # synthetic supplementation when no enable list
         synth = {
@@ -120,7 +124,8 @@ def dump_metrics_metadata(reg: Any) -> dict[str, object]:  # noqa: C901 - legacy
                 filtered_groups['panel_diff_writes'] = 'panel_diff_synthetic'
             if 'provider_failover' in reg._enabled_groups and 'provider_failover' not in filtered_groups:
                 filtered_groups['provider_failover'] = 'provider_failover_synthetic'
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle missing attributes or type issues
             pass
     # Strict filtering when enable/disable lists active
     try:
@@ -137,7 +142,8 @@ def dump_metrics_metadata(reg: Any) -> dict[str, object]:  # noqa: C901 - legacy
                 base = g[:-10] if g.endswith('_synthetic') else g
                 if base in reg._disabled_groups:
                     filtered_groups.pop(a, None)
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        # Handle missing attributes, type issues, or dict operations
         pass
 
     meta: dict[str, object] = {
