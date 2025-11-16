@@ -37,7 +37,8 @@ try:
     from src.collectors.env_adapter import (
         get_str as _env_str,
     )
-except Exception:  # pragma: no cover - defensive
+except (ImportError, AttributeError):  # pragma: no cover - defensive
+    # Handle missing module or attributes
     _env_bool = lambda k, d=False: (os.getenv(k, '1' if d else '').strip().lower() in {'1','true','yes','on'})
     _env_int = lambda k, d=0: int(os.getenv(k, str(d)) or d)
     _env_float = lambda k, d=0.0: float(os.getenv(k, str(d)) or d)
@@ -93,7 +94,8 @@ if _is_truthy_env('G6_QUIET_LOGS') or 'G6_QUIET_LOGS' not in os.environ:
     if not any(isinstance(f, _NoiseFilter) for f in getattr(root, 'filters', [])):
         try:
             root.addFilter(_NoiseFilter())
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle filter addition failures
             pass
 
 # Sentinel of metric names created to avoid duplicate registration if metrics module
@@ -112,7 +114,8 @@ if not _suppress_legacy and _import_ctx != 'facade':
             DeprecationWarning,
             stacklevel=2,
         )
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError):  # pragma: no cover
+        # Handle warnings system failures
         pass
 
 # ----------------------------------------------------------------------------
@@ -150,7 +153,8 @@ _METRICS_META: dict | None = None
 try:  # pragma: no cover - defensive import wrapper
     from .groups import ALWAYS_ON as _ALWAYS_ON_ENUM  # type: ignore
     ALWAYS_ON_GROUPS: set[str] = {g.value for g in _ALWAYS_ON_ENUM}
-except Exception:  # fallback if groups import fails extremely early
+except (ImportError, AttributeError):  # fallback if groups import fails extremely early
+    # Handle missing module or attribute
     ALWAYS_ON_GROUPS: set[str] = {
         'expiry_remediation',
         'provider_failover',
@@ -166,7 +170,7 @@ class MetricsRegistry:
     def __getattr__(self, name: str):  # type: ignore[override]
         try:
             return self.__dict__[name]
-        except Exception:
+        except KeyError:
             # Defer to default behavior for special attributes
             raise AttributeError(name)
 
@@ -190,7 +194,8 @@ class MetricsRegistry:
                 raise
             try:
                 logger.error("_maybe_register suppressed error for %s/%s: %s", group, name, e)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
             return None
 
@@ -208,7 +213,8 @@ class MetricsRegistry:
                     dt = (_prof_time.perf_counter() - started_at) * 1000.0
                     self._init_profile['phases_ms'][label] = dt  # type: ignore[index]
                     self._init_profile['total_ms'] = (_prof_time.perf_counter() - _prof_start) * 1000.0  # type: ignore[index]
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle profiling dict access failures
                     pass
         else:
             _prof_time = None  # type: ignore
@@ -221,7 +227,8 @@ class MetricsRegistry:
             try:
                 extra = ' '.join(f"{k}={v}" for k,v in kw.items()) if kw else ''
                 print(f"[metrics-init-basic] {label}{(' ' + extra) if extra else ''}", flush=True)
-            except Exception:
+            except (AttributeError, TypeError, OSError):
+                # Handle print failures or I/O errors
                 pass
         _pt('begin')
         _trace_enabled = _is_truthy_env('G6_METRICS_INIT_TRACE')
@@ -242,7 +249,8 @@ class MetricsRegistry:
             def _end(ok: bool = True, **info):
                 try:
                     self._init_trace.append({'step': label, 'ok': ok, 'dt': round(_t.time()-start, 6), **info})
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle trace append failures
                     pass
             return _end
 
@@ -306,7 +314,8 @@ class MetricsRegistry:
                 os.environ['G6_METRICS_SKIP_PROVIDER_MODE_SEED'] = '1'
                 if _trace_simple:
                     _pt('auto_skip_provider_mode_seed_enabled')
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Handle environment variable or module access failures
             pass
 
         # 3. Register declarative spec metrics FIRST (core invariants)
@@ -324,7 +333,8 @@ class MetricsRegistry:
             for _spec in GROUPED_METRIC_SPECS:
                 try:
                     _spec.register(self); scount += 1
-                except Exception:
+                except (ValueError, TypeError, RuntimeError):
+                    # Handle duplicate registration, type issues, or registration failures
                     pass
             _end(ok=True, count=scount)
             _pt('spec_registration_ok', count=scount)
@@ -335,7 +345,8 @@ class MetricsRegistry:
             _pt('spec_registration_fail', error=str(_e))
             try:
                 logger.debug("Spec metric registration failed", exc_info=True)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle logging failures
                 pass
             if _prof_enabled:
                 _prof_mark('spec_registration', _prof_t)
@@ -343,14 +354,16 @@ class MetricsRegistry:
         if _trace_simple:
             try:
                 _pt('post_spec_segment_enter')
-            except Exception:
+            except (AttributeError, TypeError, OSError):
+                # Handle print failures
                 pass
         # Structured gating log now emitted (deduplicated) in gating.configure_registry_groups and facade fallback.
         # Retain sentinel attribute for backward compatibility; do not emit here to reduce spam.
         if not hasattr(self, '_group_filters_log_emitted'):
             try:
                 self._group_filters_log_emitted = False  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle attribute assignment failures
                 pass
         # Fallback: guarantee provider_mode exists for one-hot setter & tests (skippable)
         _force_provider_seed = _is_truthy_env('G6_METRICS_FORCE_PROVIDER_MODE_SEED')
@@ -376,22 +389,27 @@ class MetricsRegistry:
                         for child in list(child_map.values()):
                             try:
                                 child.set(0)  # type: ignore[attr-defined]
-                            except Exception:
+                            except (AttributeError, TypeError, ValueError, RuntimeError):
+                                # Handle gauge operation failures
                                 pass
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Handle child map access failures
                         pass
                     # Create primary label sample
                     try:
                         g.labels(mode='primary').set(1)  # type: ignore[attr-defined]
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError, RuntimeError):
+                        # Handle label or gauge operation failures
                         pass
                 # Deadline enforcement (soft): emit trace marker if exceeded; we do not raise
                 if _t.time() > seed_deadline and _trace_simple:
                     try:
                         print('[metrics-init-basic] provider_mode_seed_slow', flush=True)
-                    except Exception:
+                    except (AttributeError, TypeError, OSError):
+                        # Handle print failures
                         pass
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle provider mode seed failures
                 pass
         if _trace_simple:
             _pt('provider_mode_seed_done', skipped=_skip_provider_seed)
@@ -405,7 +423,8 @@ class MetricsRegistry:
         try:
             from .aliases import ensure_canonical_counters as _early_ecc  # type: ignore
             _early_ecc(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or canonicalization failures
             pass
         if _trace_simple:
             _pt('aliases_canonicalize_done')
@@ -418,13 +437,15 @@ class MetricsRegistry:
                 fam_count = -1
                 try:
                     fam_count = len(list(REGISTRY.collect()))
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle registry collection failures
                     pass
                 profile_total = None
                 try:
                     if hasattr(self, '_init_profile'):
                         profile_total = round(float(self._init_profile.get('total_ms', 0.0)), 2)  # type: ignore
-                except Exception:
+                except (AttributeError, TypeError, ValueError, KeyError):
+                    # Handle profile dict access or conversion failures
                     profile_total = None
                 logger.info(
                     "metrics.registry.summary families=%s always_on_groups=%s prof_total_ms=%s strict=%s",
@@ -451,7 +472,8 @@ class MetricsRegistry:
                             ],
                             logger_override=logger
                         )
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle JSON emission failures
                     pass
                 if _is_truthy_env('G6_METRICS_SUMMARY_HUMAN'):
                     try:
@@ -466,16 +488,19 @@ class MetricsRegistry:
                             ],
                             logger
                         )
-                    except Exception:
+                    except (AttributeError, TypeError, RuntimeError):
+                        # Handle human summary emission failures
                         pass
                     else:
                         # Ensure dispatcher registration even if summary emitted earlier (e.g., before integration test attached handler)
                         try:
                             if _register_or_note_summary_import:
                                 _register_or_note_summary_import('metrics.registry', emitted=True)
-                        except Exception:
+                        except (AttributeError, TypeError, RuntimeError):
+                            # Handle registration failures
                             pass
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle summary emission failures
             pass
 
         # Early deterministic rebind of panel diff metrics (ensures correct labels before spec tests enumerate).
