@@ -235,12 +235,11 @@ def dump_metrics():
 			coll_map = getattr(items, '_collector_to_names', None) if items is not None else None
 			if coll_map is not None:
 				for collector, c_names in list(coll_map.items()):
-				for nm in c_names:
-					if nm not in names:
-						names.append(nm)
+					for nm in c_names:
+						if nm not in names:
+							names.append(nm)
 	except (AttributeError, TypeError):
 		# Handle missing attributes or type issues
-		passndle missing attributes or type issues
 		pass
 	# Global registry
 	try:
@@ -248,9 +247,9 @@ def dump_metrics():
 			coll_map2 = getattr(_GLOBAL_REG, '_collector_to_names', None)
 			if coll_map2 is not None:
 				for collector, c_names in list(coll_map2.items()):
-				for nm in c_names:
-					if nm not in names:
-						names.append(nm)
+					for nm in c_names:
+						if nm not in names:
+							names.append(nm)
 	except (AttributeError, TypeError):
 		# Handle missing attributes or type issues
 		pass
@@ -274,8 +273,8 @@ def get_counter(name: str, documentation: str, labels: list[str] | None):
 				coll_map = getattr(prom_reg, '_collector_to_names', None)
 				if coll_map is not None:
 					for collector, names in list(coll_map.items()):
-				if name in names:
-					return collector
+						if name in names:
+							return collector
 			except (AttributeError, TypeError):
 				# Handle missing attributes or type issues
 				pass
@@ -343,11 +342,11 @@ def get_metrics_singleton():
 					from .cardinality_guard import check_cardinality as _cc
 					try:
 						summary = _cc(existing)
-					if summary is not None:
-						existing._cardinality_guard_summary = summary
-				except (AttributeError, TypeError):
-					# Handle attribute assignment failures
-					pass
+						if summary is not None:
+							existing._cardinality_guard_summary = summary
+					except (AttributeError, TypeError):
+						# Handle attribute assignment failures
+						pass
 		except (ImportError, AttributeError, TypeError, OSError):
 			# Handle import, attribute, or file access failures
 			pass
@@ -382,8 +381,8 @@ def get_metrics_singleton():
 					# Handle import, attribute, type, or registration failures
 					pass
 		except (ImportError, AttributeError, TypeError):
-		# Handle import or summary emission failures
-		pass
+			# Handle import or summary emission failures
+			pass
 		# If env flags request dump/suppression markers but registry pre-existed (created before flags
 		# were set), tests that reload the module still expect marker lines. Mirror logic here.
 		try:  # pragma: no cover - defensive wrapper
@@ -412,8 +411,8 @@ def get_metrics_singleton():
 					# Handle attribute assignment failures
 					pass
 		except (ImportError, AttributeError, TypeError):
-		# Handle import or logging failures
-		pass
+			# Handle import or logging failures
+			pass
 		return existing
 	from . import metrics as _m  # late import to avoid circular
 	reg = _m.get_metrics_singleton()
@@ -571,10 +570,10 @@ def _reset_metrics_summary_state():  # pragma: no cover - test-only helper
     this helper preserves the ability to force a fresh summary emission
     while allowing tests to remain on the facade.
     """
-    try:
-        from . import metrics as _m  # type: ignore
-        if '_G6_METRICS_SUMMARY_EMITTED' in _m.__dict__:
-            try:
+	try:
+		from . import metrics as _m  # type: ignore
+		if '_G6_METRICS_SUMMARY_EMITTED' in _m.__dict__:
+			try:
 				del _m.__dict__['_G6_METRICS_SUMMARY_EMITTED']
 			except (KeyError, AttributeError):
 				# Handle missing key or attribute
