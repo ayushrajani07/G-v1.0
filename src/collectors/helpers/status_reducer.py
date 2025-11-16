@@ -4,9 +4,12 @@ Phase 10 enhancements: partial reason tokens & configurable coverage thresholds.
 """
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any
 from src.config.env_config import EnvConfig
+
+logger = logging.getLogger(__name__)
 
 # Default thresholds (can be overridden via environment variables)
 STRIKE_COVERAGE_OK = 0.75  # 75% of requested strikes realized
@@ -87,7 +90,8 @@ def derive_partial_reason(expiry_rec: dict[str, Any]) -> str | None:
             return 'low_strike'
         if field_bad:
             return 'low_field'
-    except Exception:
+    except (ValueError, TypeError, KeyError) as e:
+        logger.debug("Failed to derive partial reason: %s", e)
         return 'unknown'
     return 'unknown'
 

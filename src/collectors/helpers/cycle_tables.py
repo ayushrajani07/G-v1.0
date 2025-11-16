@@ -50,8 +50,8 @@ def record_phase_timing(name: str, duration_s: float) -> None:  # pragma: no cov
     """Retained for compatibility; stores timing silently for potential debug."""
     try:
         _PHASES.append({'name': name, 'dur': round(float(duration_s), 3)})
-    except Exception:
-        pass
+    except (ValueError, TypeError) as e:
+        pass  # Silently ignore timing errors
 
 # --------------- Emission ---------------
 
@@ -67,16 +67,16 @@ def emit_cycle_tables(cycle_payload: dict[str, Any]) -> None:  # pragma: no cove
     try:
         if EnvConfig.get_bool('G6_CYCLE_TABLES_PIPELINE_INTEGRATION', False) and _PIPELINE_SUMMARY:
             cycle_payload['pipeline_summary'] = _PIPELINE_SUMMARY
-    except Exception:
-        pass
+    except (ValueError, TypeError, KeyError) as e:
+        pass  # Silently ignore integration errors
 
 def record_pipeline_summary(summary: dict[str, Any]) -> None:  # pragma: no cover
     """Record latest pipeline summary for optional legacy integration layer."""
     global _PIPELINE_SUMMARY
     try:
         _PIPELINE_SUMMARY = dict(summary)  # shallow copy for isolation
-    except Exception:
-        pass
+    except (TypeError, ValueError) as e:
+        pass  # Silently ignore summary copy errors
 
 def get_pipeline_summary() -> dict[str, Any] | None:  # pragma: no cover
     """Return last recorded pipeline summary (or None)."""

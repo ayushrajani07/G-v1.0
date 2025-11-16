@@ -37,8 +37,8 @@ def persist_and_metrics(ctx, enriched_data: dict[str, dict[str, Any]], index_sym
             metrics = getattr(ctx, 'metrics', None) or getattr(getattr(ctx, 'csv_sink', None), 'metrics', None)
             if metrics is not None and hasattr(metrics, 'csv_write_errors'):
                 metrics.csv_write_errors.inc()  # type: ignore[call-arg]
-        except Exception:
-            pass
+        except (AttributeError, TypeError) as e:
+            pass  # Silently ignore metric errors
         handle_collector_error(
             CsvWriteError(f"CSV write failed for {index_symbol} {expiry_rule} (expiry {expiry_date}): {e}"),
             component="collectors.unified_collectors", index_name=index_symbol,
@@ -67,17 +67,17 @@ def persist_and_metrics(ctx, enriched_data: dict[str, dict[str, Any]], index_sym
             metrics.options_processed_total.inc(len(enriched_data))
             try:
                 metrics.index_options_processed_total.labels(index=index_symbol).inc(len(enriched_data))
-            except Exception:
-                pass
-        except Exception:
-            logger.debug("Failed options_collected metric for %s", index_symbol)
+            except (AttributeError, TypeError) as e:
+                pass  # Silently ignore label-specific metric errors
+        except (AttributeError, TypeError) as e:
+            logger.debug("Failed options_collected metric for %s: %s", index_symbol, e)
         try:
             call_oi = sum(float(d.get('oi',0)) for d in enriched_data.values() if (d.get('instrument_type') or d.get('type') or '').upper()=='CE')
             put_oi = sum(float(d.get('oi',0)) for d in enriched_data.values() if (d.get('instrument_type') or d.get('type') or '').upper()=='PE')
             pcr = put_oi / call_oi if call_oi>0 else 0
             metrics.pcr.labels(index=index_symbol, expiry=expiry_rule).set(pcr)
-        except Exception:
-            logger.debug("Failed PCR metric for %s", index_symbol)
+        except (ValueError, TypeError, ZeroDivisionError, AttributeError) as e:
+            logger.debug("Failed PCR metric for %s: %s", index_symbol, e)
         try:
             if allow_per_option_metrics:
                 mgr = None
@@ -86,7 +86,7 @@ def persist_and_metrics(ctx, enriched_data: dict[str, dict[str, Any]], index_sym
                         mgr = get_cardinality_manager()
                         if hasattr(mgr, 'set_metrics'):
                             mgr.set_metrics(metrics)
-                    except Exception:
+                    except (AttributeError, TypeError) as e:
                         mgr = None
                 atm_reference = None
                 for symbol, data in enriched_data.items():
@@ -99,7 +99,7 @@ def persist_and_metrics(ctx, enriched_data: dict[str, dict[str, Any]], index_sym
                     if mgr and getattr(mgr, 'enabled', False):
                         try:
                             emit = mgr.should_emit(index=index_symbol, expiry=expiry_rule, strike=float(strike_val), opt_type=opt_type, atm_strike=atm_reference, value=representative_price)
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError) as e:
                             emit = True
                     if not emit:
                         continue
@@ -113,16 +113,16 @@ def persist_and_metrics(ctx, enriched_data: dict[str, dict[str, Any]], index_sym
                         if 'theta' in data: metrics.option_theta.labels(index=index_symbol, expiry=expiry_rule, strike=str(strike_val), type=opt_type).set(float(data.get('theta') or 0))
                         if 'vega' in data: metrics.option_vega.labels(index=index_symbol, expiry=expiry_rule, strike=str(strike_val), type=opt_type).set(float(data.get('vega') or 0))
                         if 'rho' in data: metrics.option_rho.labels(index=index_symbol, expiry=expiry_rule, strike=str(strike_val), type=opt_type).set(float(data.get('rho') or 0))
-                    except Exception:
-                        logger.debug("Per-option metric emission failure", exc_info=True)
-        except Exception:
-            logger.debug("Failed per-option metrics for %s", index_symbol, exc_info=True)
+                    except (AttributeError, TypeError, ValueError) as e:
+                        logger.debug("Per-option metric emission failure: %s", e, exc_info=True)
+        except (AttributeError, TypeError, ValueError, KeyError) as e:
+            logger.debug("Failed per-option metrics for %s: %s", index_symbol, e, exc_info=True)
     pcr_val = None
     try:
         if metrics_payload:
             pcr_val = metrics_payload.get('pcr')
-    except Exception:
-        pass
+    except (AttributeError, TypeError) as e:
+        pass  # Silently ignore PCR extraction errors
     return PersistResult(option_count=len(enriched_data), pcr=pcr_val, metrics_payload=metrics_payload, failed=False)
 
 

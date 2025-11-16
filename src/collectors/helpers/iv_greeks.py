@@ -46,8 +46,8 @@ def iv_estimation_block(ctx, enriched_data, index_symbol, expiry_rule, expiry_da
                     if metrics and hasattr(metrics, 'iv_iterations_histogram') and iters is not None:
                         try:
                             metrics.iv_iterations_histogram.labels(index=index_symbol, expiry=expiry_rule).observe(iters)
-                        except Exception:
-                            pass
+                        except (AttributeError, TypeError, ValueError) as e:
+                            logger.debug("Failed to observe IV iterations: %s", e)
                     if iv_est > 0:
                         if iv_est < solver_min_iv:
                             iv_est = solver_min_iv
@@ -72,9 +72,9 @@ def iv_estimation_block(ctx, enriched_data, index_symbol, expiry_rule, expiry_da
                     try:
                         avg_iters = total_iter / max(1, (iv_success + iv_fail))
                         metrics.iv_solver_iterations.observe(avg_iters)  # type: ignore[attr-defined]
-                    except Exception:
-                        pass
-            except Exception:
-                logger.debug("Failed updating IV estimation metrics", exc_info=True)
+                    except (AttributeError, TypeError, ZeroDivisionError) as e:
+                        logger.debug("Failed to observe IV solver iterations: %s", e)
+            except (AttributeError, TypeError) as e:
+                logger.debug("Failed updating IV estimation metrics: %s", e, exc_info=True)
     except Exception as batch_e:
         logger.error("IV estimation batch failed for %s %s: %s", index_symbol, expiry_rule, batch_e)

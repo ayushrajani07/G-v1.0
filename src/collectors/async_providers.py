@@ -18,8 +18,8 @@ class AsyncProviders:
     async def close(self):  # pragma: no cover - trivial
         try:
             await self.primary_provider.close()
-        except Exception:
-            pass
+        except (AttributeError, TypeError):
+            pass  # Silently ignore close errors
 
     async def get_index_data(self, index_symbol: str):
         # Map index symbol to exchange:symbol tuple used by provider
@@ -105,14 +105,13 @@ class AsyncProviders:
                             if ap > 0:
                                 data['avg_price'] = ap
                                 data['avg_price_fallback_used'] = True
-                    except Exception as e:
+                    except (ValueError, TypeError, KeyError, ZeroDivisionError) as e:
                         handle_data_collection_error(e, component="collectors.async_providers", index_name=inst.get('index',''), data_type='avg_price_fallback')
-                        pass
             # Sanitize before returning (consistent with sync path)
             try:
                 data = sanitize_option_fields(data)
-            except Exception:
-                pass
+            except (TypeError, ValueError, KeyError) as e:
+                pass  # Silently ignore sanitization errors
             enriched[symbol] = data
         return enriched
 

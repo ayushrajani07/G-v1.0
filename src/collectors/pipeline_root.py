@@ -102,13 +102,16 @@ class CollectorPipeline:
             for block in self.analytics:
                 try:
                     block.apply(ee)
-                except Exception:
-                    logger.debug("analytics block failure", exc_info=True)
+                except (AttributeError, TypeError, ValueError) as e:
+                    logger.debug("analytics block failure: %s", e, exc_info=True)
             outcome = self.persistence.persist(ee)
             return ee, outcome
-        except Exception:
-            logger.error("Pipeline expiry failure", exc_info=True)
+        except (AttributeError, TypeError, ValueError, KeyError) as e:
+            logger.error("Pipeline expiry failure: %s", e, exc_info=True)
             return None, None
+        except Exception as e:
+            logger.critical("Unexpected pipeline expiry failure: %s", e, exc_info=True)
+            raise
 
 def build_default_pipeline(
     providers: Any,
@@ -143,7 +146,11 @@ def build_default_pipeline(
                     return_metrics=True,
                     expiry_rule_tag=ee.work.expiry_rule,
                 )
-            except Exception:
+            except (AttributeError, TypeError, ValueError, KeyError) as e:
+                logger.error("CSV write failed: %s", e, exc_info=True)
+                return PersistOutcome(option_count=0, pcr=None, failed=True)
+            except Exception as e:
+                logger.critical("Unexpected CSV write error: %s", e, exc_info=True)
                 return PersistOutcome(option_count=0, pcr=None, failed=True)
             pcr: float | None = None
             day_width: int | None = None
