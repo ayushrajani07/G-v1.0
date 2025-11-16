@@ -278,7 +278,8 @@ class MetricsRegistry:
                 def group_allowed(name: str) -> bool:  # type: ignore
                     try:
                         return bool(self._group_allowed(name))  # type: ignore[attr-defined]
-                    except Exception:
+                    except (AttributeError, TypeError, RuntimeError):
+                        # Handle missing or failing predicate
                         return True
                 self.group_allowed = group_allowed  # type: ignore[attr-defined]
             self._group_allowed = self._group_allowed  # ensure alias stability
@@ -291,7 +292,8 @@ class MetricsRegistry:
             try:
                 from .gating import CONTROLLED_GROUPS_FALLBACK as _CGF  # type: ignore
                 CONTROLLED_GROUPS = set(_CGF)
-            except Exception:
+            except (ImportError, AttributeError):
+                # Handle missing module or attribute
                 CONTROLLED_GROUPS = set()  # last-resort empty set
             enabled_set = None
             disabled_set = set()
@@ -328,7 +330,8 @@ class MetricsRegistry:
             for _spec in METRIC_SPECS:
                 try:
                     _spec.register(self); scount += 1
-                except Exception:
+                except (ValueError, TypeError, RuntimeError):
+                    # Handle duplicate registration, type issues, or registration failures
                     pass
             for _spec in GROUPED_METRIC_SPECS:
                 try:
@@ -379,7 +382,8 @@ class MetricsRegistry:
                 if not hasattr(self, 'provider_mode'):
                     try:
                         self.provider_mode = Gauge('g6_provider_mode', 'Current provider mode (one-hot gauge)', ['mode'])  # type: ignore[attr-defined]
-                    except Exception:
+                    except (ValueError, TypeError, RuntimeError):
+                        # Handle duplicate registration, type issues, or gauge creation failures
                         self.provider_mode = None  # type: ignore[attr-defined]
                 g = getattr(self, 'provider_mode', None)
                 if g is not None and hasattr(g, 'labels'):
@@ -456,7 +460,8 @@ class MetricsRegistry:
                 try:
                     if _register_or_note_summary_import:
                         _register_or_note_summary_import('metrics.registry', emitted=True)
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle registration failures
                     pass
                 # JSON variant
                 try:
@@ -522,7 +527,8 @@ class MetricsRegistry:
                         current = list(getattr(existing, '_labelnames', []) or [])  # type: ignore[attr-defined]
                         if current != labels:
                             recreate = True
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Handle missing attribute or type issues
                         recreate = True
                 if recreate:
                     try:
@@ -715,7 +721,8 @@ class MetricsRegistry:
         try:
             from .greeks import init_greek_metrics as _init_greeks  # type: ignore
             _init_greeks(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or initialization failures
             try:
                 logger.debug("init_greek_metrics external module failed", exc_info=True)
             except (AttributeError, TypeError):
@@ -731,7 +738,8 @@ class MetricsRegistry:
             except (AttributeError, TypeError):
                 # Handle dict access or logging failures
                 pass
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or group registry failures
             try:
                 logger.warning("group_registry invocation failed", exc_info=True)
             except (AttributeError, TypeError):
@@ -742,7 +750,8 @@ class MetricsRegistry:
         try:
             from .gating import apply_pruning as _apply_pruning  # type: ignore
             _apply_pruning(self, CONTROLLED_GROUPS, enabled_set, disabled_set)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or pruning failures
             try:
                 self._apply_group_filters(CONTROLLED_GROUPS, enabled_set, disabled_set)  # type: ignore[attr-defined]
             except (AttributeError, TypeError, RuntimeError):
@@ -753,7 +762,8 @@ class MetricsRegistry:
         try:
             from .spec_fallback import ensure_spec_minimum as _esm  # type: ignore
             _esm(self)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle import or spec minimum failures
             try:
                 logger.debug("ensure_spec_minimum external call failed", exc_info=True)
             except (AttributeError, TypeError):
@@ -938,7 +948,7 @@ class MetricsRegistry:
         try:
             from .derived import update_cycle_metrics as _ucm  # type: ignore
             _ucm(self, success, cycle_seconds, options_processed, option_processing_seconds)  # type: ignore[arg-type]
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
             # Fail silent to preserve previous resilience semantics
             pass
         # Invoke fault budget tracker (after cycle metrics so breach counter may have been incremented)
@@ -961,7 +971,7 @@ class MetricsRegistry:
         try:
             from .introspection import get_metrics_introspection as _gmi  # type: ignore
             return _gmi(self)  # type: ignore[return-value]
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
             # Fallback: if cache already exists return copy; else empty list
             inv = getattr(self, '_metrics_introspection', [])
             try:
@@ -1141,7 +1151,8 @@ class MetricsRegistry:
             from .gating import CONTROLLED_GROUPS as _CG
             from .gating import apply_pruning as _apply
             from .gating import configure_registry_groups as _cfg  # type: ignore
-        except Exception:
+        except (ImportError, AttributeError):
+            # Handle missing module or attributes
             return {"error": "gating import failed"}
 
         # Optionally reload filters. When False we keep PRIOR predicate and sets exactly
@@ -1149,7 +1160,8 @@ class MetricsRegistry:
         if reload_filters:
             try:
                 _cfg(self)
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle configuration failures
                 pass
         enabled_set = getattr(self, '_enabled_groups', None)
         disabled_set = getattr(self, '_disabled_groups', set())
@@ -1163,7 +1175,8 @@ class MetricsRegistry:
             if staged:
                 try:
                     from prometheus_client import REGISTRY as _PROM_REG  # type: ignore
-                except Exception:
+                except (ImportError, AttributeError):
+                    # Handle import failures
                     _PROM_REG = None  # type: ignore
                 removed_attrs = []
                 for attr, grp in list(metric_groups.items()):
@@ -1213,7 +1226,8 @@ class MetricsRegistry:
             try:
                 predicate = getattr(self, '_group_allowed', lambda n: True)
                 always_on = getattr(self, '_always_on_groups', set())
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle attribute access failures
                 predicate = lambda _n: True  # type: ignore
                 always_on = set()
             prospective_removed = [a for a, g in snapshot.items() if g not in always_on and (g in (disabled_set or set()) or (enabled_set is not None and g not in enabled_set))]
@@ -1244,14 +1258,16 @@ class MetricsRegistry:
             # Perform pruning
             try:
                 _apply(self, _CG, enabled_set, disabled_set)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle pruning application failures
                 pass
             # Defensive forced removal pass to ensure attributes & collectors removed
             try:
                 always_on = getattr(self, '_always_on_groups', set())
                 predicate = getattr(self, '_group_allowed', lambda n: True)
                 from prometheus_client import REGISTRY as _PROM_REG  # type: ignore
-            except Exception:  # pragma: no cover
+            except (ImportError, AttributeError, TypeError):  # pragma: no cover
+                # Handle import or attribute access failures
                 always_on = set()
                 predicate = lambda _n: True  # type: ignore
                 _PROM_REG = None  # type: ignore
@@ -1286,15 +1302,18 @@ class MetricsRegistry:
                         if _PROM_REG is not None and coll is not None:
                             try:
                                 _PROM_REG.unregister(coll)  # type: ignore[arg-type]
-                            except Exception:
+                            except (ValueError, KeyError):
+                                # Handle collector not registered or already removed
                                 pass
                         try:
                             delattr(self, attr)
-                        except Exception:
+                        except (AttributeError, TypeError):
+                            # Handle attribute deletion failures
                             pass
                         try:
                             del self._metric_groups[attr]  # type: ignore[index]
-                        except Exception:
+                        except (KeyError, TypeError):
+                            # Handle dict operations
                             pass
                 if _env_str('G6_DEBUG_PRUNE',''):
                     try:
@@ -1360,7 +1379,8 @@ def get_metrics_metadata(reg: "MetricsRegistry" = None) -> dict | None:  # type:
         if _METRICS_META:
             meta.update({k: v for k, v in _METRICS_META.items() if k not in meta})
         return meta
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle import or metadata access failures
         base = _METRICS_META or {}
         meta = dict(base)
         try:
@@ -1433,7 +1453,7 @@ def get_metrics_singleton() -> MetricsRegistry | None:  # pragma: no cover - thi
         metrics, _closer = setup_metrics_server()
         _METRICS_SINGLETON = metrics
         return metrics
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
         # Fallback atomic create (without server) if server bootstrap fails early
         try:
             def _build():
@@ -1441,7 +1461,8 @@ def get_metrics_singleton() -> MetricsRegistry | None:  # pragma: no cover - thi
             metrics = _singleton.create_if_absent(_build)
             _METRICS_SINGLETON = metrics
             return metrics
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle atomic create failures
             return None
 
 
@@ -1492,7 +1513,8 @@ def set_provider_mode(mode: str) -> None:  # pragma: no cover - thin helper
     if _simple_trace:
         try:
             print(f"[metrics-init-basic] provider_mode_seed_entry mode={mode}", flush=True)
-        except Exception:
+        except (AttributeError, TypeError, OSError):
+            # Handle print failures
             pass  # Generic error handler
     try:
         metrics = get_metrics()
@@ -1527,7 +1549,8 @@ def set_provider_mode(mode: str) -> None:  # pragma: no cover - thin helper
                     print("[metrics-init-basic] provider_mode_zero_children_done", flush=True)
                 except (AttributeError, TypeError, ValueError, KeyError, ImportError, IOError, OSError) as e:
                     pass  # Generic error handler
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle child map access failures
             pass  # Generic error handler
         # Set requested mode
         try:
