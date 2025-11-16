@@ -55,7 +55,8 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
         try:
             canonical_exists = canonical in names_map
             legacy_exists = legacy in names_map
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Handle missing attributes, type issues, or dict operations
             canonical_exists = False
             legacy_exists = False
         # Determine metric group from attr heuristic
@@ -64,7 +65,8 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
             try:
                 if not reg.group_allowed(group_hint):  # type: ignore[attr-defined]
                     continue  # Skip alias creation for disabled group
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle missing method, type issues, or predicate execution failures
                 pass
         if canonical_exists:
             # Ensure an attribute referencing canonical collector exists (prefer attr name for canonical)
@@ -76,16 +78,19 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
                     if existing_attr_obj is not None and getattr(existing_attr_obj,'_name','')==legacy:
                         try:
                             setattr(reg, f'legacy_{attr}', existing_attr_obj)
-                        except Exception:
+                        except (AttributeError, TypeError):
+                            # Handle attribute assignment failures
                             pass
                     setattr(reg, attr, canon_obj)
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle attribute assignment failures
                     pass
             # Also expose attr_total alias if not present AND attr does not already end with _total
             try:
                 if not attr.endswith('_total') and not hasattr(reg, f'{attr}_total'):
                     setattr(reg, f'{attr}_total', canon_obj)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle attribute assignment failures
                 pass
             continue
 
@@ -96,12 +101,14 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
         if existing is not None:
             try:
                 doc = getattr(existing, '_documentation', canonical)
-            except Exception:  # pragma: no cover
+            except (AttributeError, TypeError):  # pragma: no cover
+                # Handle missing attribute or type issues
                 pass
             try:
                 if hasattr(existing, '_labelnames') and existing._labelnames:  # type: ignore[attr-defined]
                     labels = list(existing._labelnames)  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle missing attributes or type issues
                 labels = []
         try:
             if labels:
@@ -112,7 +119,8 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
             # Race: another path created it after check; recover reference
             nc = names_map.get(canonical)
             new_counter = cast(Any, nc)
-        except Exception:
+        except (TypeError, RuntimeError):
+            # Handle type issues or counter creation failures
             continue
 
         if not isinstance(new_counter, Counter):
@@ -132,7 +140,8 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
                         if first and isinstance(first, tuple) and len(first) >= 3:
                             # tuple form: (name, labels_dict, value, ...)
                             sample_labels = first[1]
-                    except Exception:
+                    except (AttributeError, TypeError, StopIteration):
+                        # Handle missing attributes, type issues, or empty generator
                         sample_labels = None
                 if sample_labels and all(k in sample_labels for k in labels):
                     new_counter.labels(**{k: sample_labels[k] for k in labels}).inc(0)
@@ -141,7 +150,8 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
                     new_counter.labels(**placeholder).inc(0)
             else:
                 new_counter.inc(0)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Handle missing attributes, type issues, invalid values, or counter operation failures
             pass
 
         # Attach canonical: if existing legacy present, shift it to legacy_<attr>
@@ -149,17 +159,20 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
             if existing is not None and getattr(existing,'_name','')==legacy:
                 try:
                     reg._legacy_metrics[attr] = existing  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle missing attributes, type issues, or dict operations
                     pass
                 try:
                     setattr(reg, f'legacy_{attr}', existing)
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle attribute assignment failures
                     pass
             setattr(reg, attr, new_counter)
             # Only add attr_total alias if base attr is not already suffixed with _total
             if not attr.endswith('_total') and not hasattr(reg, f'{attr}_total'):
                 setattr(reg, f'{attr}_total', new_counter)
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle attribute assignment failures
             pass
         # Ensure metric group tag retained (best-effort)
         try:
@@ -169,7 +182,8 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
             else:
                 grp = 'panel_diff' if 'panel_diff' in attr else ('panels_integrity' if 'panels_integrity' in attr else 'adaptive_controller')
                 reg._metric_groups[attr] = reg._metric_groups.get(attr, grp)  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Handle missing attributes, type issues, or dict operations
             pass
         try:
             logger.debug("alias.ensure_canonical", extra={
@@ -178,7 +192,8 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
                 "legacy_present": legacy_exists,
                 "labels": labels,
             })
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle logging failures
             pass
 
 __all__ = ["ensure_canonical_counters"]

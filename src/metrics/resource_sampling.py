@@ -17,7 +17,8 @@ def start_resource_sampler(metrics, sampler_interval: int, fancy: bool) -> threa
     except ImportError:
         try:
             logger.warning("psutil not installed; resource sampler disabled")
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle logging failures
             pass
         return None
 
@@ -31,7 +32,8 @@ def start_resource_sampler(metrics, sampler_interval: int, fancy: bool) -> threa
                 try:
                     metrics.memory_usage_mb.set(mem_mb)
                     metrics.cpu_usage_percent.set(cpu_percent)
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
+                    # Handle missing attributes, type issues, invalid values, or gauge operation failures
                     pass
                 # Network delta
                 try:
@@ -41,10 +43,12 @@ def start_resource_sampler(metrics, sampler_interval: int, fancy: bool) -> threa
                     d_recv = max(0, net.bytes_recv - prev_net[1])
                     try:
                         metrics.network_bytes_transferred.inc(d_sent + d_recv)
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError, RuntimeError):
+                        # Handle missing attributes, type issues, invalid values, or counter operation failures
                         pass
                     metrics._prev_net_bytes = net.bytes_sent, net.bytes_recv
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle missing attributes or type issues
                     pass
                 # Disk ops delta
                 try:
@@ -54,12 +58,15 @@ def start_resource_sampler(metrics, sampler_interval: int, fancy: bool) -> threa
                             d_ops = max(0, (dio.read_count + dio.write_count) - metrics._prev_disk_ops)
                             try:
                                 metrics.disk_io_operations.inc(d_ops)
-                            except Exception:
+                            except (AttributeError, TypeError, ValueError, RuntimeError):
+                                # Handle missing attributes, type issues, invalid values, or counter operation failures
                                 pass
                         metrics._prev_disk_ops = dio.read_count + dio.write_count
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle missing attributes or type issues
                     pass
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle sampling failures
                 logger.debug("Resource sampling iteration failed", exc_info=True)
             time.sleep(sampler_interval)
     t = threading.Thread(target=_sample, name="g6-resource-sampler", daemon=True)
@@ -69,7 +76,8 @@ def start_resource_sampler(metrics, sampler_interval: int, fancy: bool) -> threa
             logger.debug("Resource sampler thread started (interval=%ss)" % sampler_interval)
         else:
             logger.info("Resource sampler thread started (interval=%ss)" % sampler_interval)
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle logging failures
         pass
     return t
 
@@ -88,7 +96,8 @@ def start_watchdog(metrics, sampler_interval: int) -> threading.Thread:
                 try:
                     if hasattr(metrics, 'collection_cycle_in_progress'):
                         in_progress = 1 if getattr(metrics.collection_cycle_in_progress, '_value', None) else 0
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle missing attributes or type issues
                     pass
                 progressed = False
                 if current_cycles is not None and current_cycles > last_cycle:
@@ -104,10 +113,12 @@ def start_watchdog(metrics, sampler_interval: int) -> threading.Thread:
                     if stale_intervals >= 6:
                         try:
                             metrics.metric_stall_events.labels(metric='collection').inc()
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError, RuntimeError):
+                            # Handle missing attributes, type issues, invalid values, or counter operation failures
                             pass
                         stale_intervals = 0
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle watchdog iteration failures
                 logger.debug("Watchdog iteration failed", exc_info=True)
             time.sleep(check_interval)
     t = threading.Thread(target=_watchdog, name="g6-watchdog", daemon=True)
