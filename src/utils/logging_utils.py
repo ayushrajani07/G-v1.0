@@ -46,17 +46,20 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
     def _safe_close_handler(h: logging.Handler) -> None:
         try:
             h.flush()
-        except Exception:
+        except (OSError, IOError, ValueError):
+            # Handle flush failures (closed handlers, I/O errors)
             return
         try:
             h.close()
-        except Exception:
+        except (OSError, IOError, ValueError):
+            # Handle close failures (closed handlers, I/O errors)
             return
 
     for h in root.handlers[:]:
         try:
             root.removeHandler(h)
-        except Exception:
+        except (ValueError, AttributeError):
+            # Handle handler removal failures
             pass
         _safe_close_handler(h)
 
@@ -66,7 +69,8 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
             verbose_console_env = is_truthy_env('G6_VERBOSE_CONSOLE')
             minimal_disabled_env = is_truthy_env('G6_DISABLE_MINIMAL_CONSOLE')
             json_console_env = is_truthy_env('G6_JSON_LOGS')
-        except Exception:
+        except (AttributeError, TypeError, KeyError, ValueError):
+            # Handle env flag access failures
             verbose_console_env = EnvConfig.get_bool('G6_VERBOSE_CONSOLE', False)
             minimal_disabled_env = EnvConfig.get_bool('G6_DISABLE_MINIMAL_CONSOLE', False)
             json_console_env = EnvConfig.get_bool('G6_JSON_LOGS', False)
@@ -91,7 +95,8 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
                 import orjson as _orjson  # type: ignore
                 _json_dumps = _orjson.dumps
                 _is_orjson = True
-            except Exception:  # pragma: no cover
+            except (ImportError, AttributeError):  # pragma: no cover
+                # Handle missing orjson module
                 import json as _json  # type: ignore
                 _json_dumps = _json.dumps
                 _is_orjson = False
@@ -104,7 +109,8 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
                     try:
                         from . import log_context as _lc  # type: ignore
                         ctx = _lc.get_context()
-                    except Exception:
+                    except (ImportError, AttributeError, TypeError):
+                        # Handle log_context module or access failures
                         ctx = {}
                     payload = {
                         'ts': getattr(record, 'created', _time.time()),
@@ -122,10 +128,12 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
                         else:
                             s = _json_dumps(payload)  # type: ignore[call-arg]
                             return s if isinstance(s, str) else str(s)
-                    except Exception:
+                    except (TypeError, ValueError, AttributeError):
+                        # Handle JSON serialization failures
                         return str(payload)
             console.setFormatter(_JsonFormatter())
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError):
+            # Handle JSON formatter setup failures
             console.setFormatter(logging.Formatter(console_fmt))
     else:
         # Enrich plain text logs with selected context fields by adding a filter
@@ -138,7 +146,8 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
                     for k in ("run_id", "component", "cycle", "index", "provider"):
                         if k in ctx and not hasattr(record, k):
                             setattr(record, k, ctx[k])
-                except Exception:
+                except (ImportError, AttributeError, TypeError, KeyError):
+                    # Handle log_context or attribute access failures
                     pass
                 return True
         console.addFilter(_CtxFilter())
@@ -155,7 +164,8 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
                         record.msg = record.msg.translate(self._MAP)
                     return True
             console.addFilter(_AsciiSanitizer())
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle encoding check or filter setup failures
         pass
     root.addHandler(console)
 
@@ -173,7 +183,8 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
                         for k in ("run_id", "component", "cycle", "index", "provider"):
                             if k in ctx and not hasattr(record, k):
                                 setattr(record, k, ctx[k])
-                    except Exception:
+                    except (ImportError, AttributeError, TypeError, KeyError):
+                        # Handle log_context or attribute access failures
                         pass
                     return True
             fh.addFilter(_FileCtxFilter())
@@ -191,7 +202,8 @@ def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = D
                         context={"op": "create_file_handler", "path": log_file},
                         suppress=True
                     )
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle error handler invocation failures
                     pass
 
     for name in SUPPRESSED_LOGGERS:
@@ -210,18 +222,22 @@ try:
         try:
             root = logging.getLogger()
             handlers = list(root.handlers[:])
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle logging shutdown issues
             handlers = []
         for h in handlers:
             try:
                 h.flush()
-            except Exception:
+            except (OSError, IOError, ValueError, AttributeError):
+                # Handle flush failures during shutdown
                 pass
             try:
                 h.close()
-            except Exception:
+            except (OSError, IOError, ValueError, AttributeError):
+                # Handle close failures during shutdown
                 pass
-except Exception:
+except (ImportError, AttributeError, RuntimeError):
+    # Handle atexit module or registration failures
     pass
 
 __all__ = ["setup_logging"]
