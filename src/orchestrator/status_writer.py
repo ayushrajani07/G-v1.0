@@ -534,7 +534,8 @@ def write_runtime_status(
                 message="Failed to write runtime status snapshot",
                 context={"path": path},
             )
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle error handler access failures
             pass
         logger.debug("Runtime status write failure: %s", e)
 
