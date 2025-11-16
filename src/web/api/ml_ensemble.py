@@ -16,7 +16,7 @@ import json
 import logging
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -79,7 +79,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
         """Basic health check endpoint."""
         return jsonify({
             'status': 'ok',
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'service': 'ml_ensemble_api'
         })
     
@@ -133,7 +133,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
             response = ForecastResponse(
                 index=index,
                 horizon=horizon,
-                timestamp=datetime.utcnow().isoformat(),
+                timestamp=datetime.now(timezone.utc).isoformat(),
                 forecast=forecast_data,
                 confidence=confidence,
                 metadata=metadata
@@ -218,7 +218,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
             # Mock confidence data
             response = {
                 'index': index,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'confidence': 0.75,
                 'factors': {
                     'gbrt_oob_score': 0.82,
