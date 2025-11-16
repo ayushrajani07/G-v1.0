@@ -31,7 +31,8 @@ def update_cycle_metrics(registry: _RegistryLike, success: bool, cycle_seconds: 
         registry._cycle_success += 1
         try:
             registry.last_success_cycle_unixtime.set(time.time())  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Handle missing attribute, type issues, invalid values, or gauge operation failures
             pass
     # EMA update
     if registry._ema_cycle_time is None:
@@ -44,14 +45,16 @@ def update_cycle_metrics(registry: _RegistryLike, success: bool, cycle_seconds: 
             registry.avg_cycle_time.set(registry._ema_cycle_time)  # type: ignore[attr-defined]
             if registry._ema_cycle_time > 0:
                 registry.cycles_per_hour.set(3600.0 / registry._ema_cycle_time)  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError, ZeroDivisionError):
+            # Handle missing attributes, type issues, invalid values, gauge failures, or division errors
             pass
     # Success rate
     try:
         if registry._cycle_total > 0:
             rate = (registry._cycle_success / registry._cycle_total) * 100.0
             registry.collection_success_rate.set(rate)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError, ZeroDivisionError):
+        # Handle missing attributes, type issues, invalid values, gauge failures, or division errors
         pass
     # Throughput
     registry._last_cycle_options = options_processed
@@ -62,7 +65,8 @@ def update_cycle_metrics(registry: _RegistryLike, success: bool, cycle_seconds: 
             registry.options_per_minute.set(per_min)  # type: ignore[attr-defined]
         if options_processed > 0 and option_processing_seconds > 0:
             registry.processing_time_per_option.set(option_processing_seconds / options_processed)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError, ZeroDivisionError):
+        # Handle missing attributes, type issues, invalid values, gauge failures, or division errors
         pass
 
 
@@ -78,7 +82,8 @@ def update_index_cycle_metrics(registry: Any, index: str, attempts: int, failure
             registry.index_attempts_total.labels(index=index).inc(attempts)
         if failures > 0:
             registry.index_failures_total.labels(index=index, error_type='cycle').inc(failures)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle missing attributes, type issues, invalid values, or counter operation failures
         pass
     try:
         registry.index_cycle_attempts.labels(index=index).set(attempts)
@@ -89,7 +94,9 @@ def update_index_cycle_metrics(registry: Any, index: str, attempts: int, failure
         else:
             try:
                 registry.index_cycle_success_percent.labels(index=index).set(float('nan'))
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
+                # Handle missing method, type issues, invalid values, or gauge operation failures
                 pass
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError, ZeroDivisionError):
+        # Handle missing attributes, type issues, invalid values, gauge failures, or division errors
         pass

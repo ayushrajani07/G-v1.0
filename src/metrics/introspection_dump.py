@@ -65,7 +65,8 @@ def maybe_dump_introspection(registry: Any) -> None:
                 from .introspection import build_introspection_inventory as _bii  # type: ignore
                 registry._metrics_introspection = _bii(registry)  # type: ignore[attr-defined]
                 inv = registry._metrics_introspection
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle missing module, attribute access, type issues, or build failures
                 inv = []
                 registry._metrics_introspection = []  # type: ignore[attr-defined]
         payload = {
@@ -85,7 +86,8 @@ def maybe_dump_introspection(registry: Any) -> None:
             try:
                 with open(out_path, "w", encoding="utf-8") as fh:  # pragma: no cover
                     json.dump(payload, fh, indent=2, sort_keys=True)
-            except Exception as e:  # pragma: no cover
+            except (OSError, IOError, ValueError, TypeError) as e:  # pragma: no cover
+                # Handle file I/O errors, JSON serialization errors
                 try:
                     get_error_handler().handle_error(
                         e,
@@ -96,7 +98,8 @@ def maybe_dump_introspection(registry: Any) -> None:
                         message="introspection_write_failed",
                         context={"path": out_path},
                     )
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle error handler failures
                     pass
             logger.info(
                 "Metrics introspection written to %s (%d metrics)",
@@ -114,12 +117,15 @@ def maybe_dump_introspection(registry: Any) -> None:
                     "output": flag,
                 },
             )
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError):
+            # Handle logging failures
             pass
-    except Exception as e:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, RuntimeError) as e:  # pragma: no cover
+        # Handle attribute access, type issues, value errors, or dump failures
         try:
             logger.warning("Failed to dump metrics introspection (%s): %s", flag, e)
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle logging failures
             pass
 
 
@@ -150,7 +156,8 @@ def maybe_dump_init_trace(registry: Any) -> None:
             try:
                 with open(out_path, "w", encoding="utf-8") as fh:  # pragma: no cover
                     json.dump(tdump, fh, indent=2, sort_keys=True)
-            except Exception as e:  # pragma: no cover
+            except (OSError, IOError, ValueError, TypeError) as e:  # pragma: no cover
+                # Handle file I/O errors, JSON serialization errors
                 try:
                     get_error_handler().handle_error(
                         e,
@@ -161,7 +168,8 @@ def maybe_dump_init_trace(registry: Any) -> None:
                         message="init_trace_write_failed",
                         context={"path": out_path},
                     )
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle error handler failures
                     pass
             logger.info(
                 "Metrics init trace written to %s (%d steps)", out_path, len(trace)
@@ -177,12 +185,15 @@ def maybe_dump_init_trace(registry: Any) -> None:
                     "output": flag,
                 },
             )
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError):
+            # Handle logging failures
             pass
-    except Exception as e:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, RuntimeError) as e:  # pragma: no cover
+        # Handle attribute access, type issues, value errors, or dump failures
         try:
             logger.warning("Failed to dump metrics init trace (%s): %s", flag, e)
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle logging failures
             pass
 
 
