@@ -17,12 +17,14 @@ from src.config.env_config import EnvConfig
 
 try:
     from src.utils.env_flags import is_truthy_env
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     def is_truthy_env(name: str) -> bool:
         return EnvConfig.get_bool(name, False)
 try:
     from .adaptive import update_strike_scaling
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     def update_strike_scaling(*_, **__):
         return None
 
@@ -60,7 +62,8 @@ except ImportError:
 
 try:  # optional event dispatch (graceful if module absent)
     from src.events.event_log import dispatch as emit_event
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     def emit_event(*_, **__):
         return None
 
@@ -81,7 +84,8 @@ def _env_float(name: str, default: float, *, minimum: float | None = None, maxim
         return default
     try:
         f = float(val)
-    except Exception:
+    except (ValueError, TypeError):
+        # Handle float conversion failures
         logger.debug("env_float_parse_failed name=%s raw=%r", name, raw, exc_info=True)
         return default
     if minimum is not None and f < minimum:
@@ -99,7 +103,8 @@ def _env_int(name: str, default: int, *, minimum: int | None = None, maximum: in
         return default
     try:
         n = int(val)
-    except Exception:
+    except (ValueError, TypeError):
+        # Handle int conversion failures
         logger.debug("env_int_parse_failed name=%s raw=%r", name, raw, exc_info=True)
         return default
     if minimum is not None and n < minimum:
@@ -113,7 +118,8 @@ try:  # unified collectors (primary path)
     # Expose as Any-typed alias so we can safely replace with None when module
     # missing without mypy Callable assignment errors
     run_unified_collectors: Any = _run_uc
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     run_unified_collectors: Any = None
 # snapshot_collectors path removed after integration into unified collectors
 # (placeholder kept for backward import safety)
@@ -128,7 +134,8 @@ if _PIPELINE_FLAG:
         if not build_default_pipeline:
             raise ImportError("build_default_pipeline not available")
         _build_default_pipeline = build_default_pipeline
-    except Exception:  # pragma: no cover
+    except (ImportError, AttributeError):  # pragma: no cover
+        # Handle missing pipeline builder
         _build_default_pipeline = None
 
 
@@ -143,12 +150,14 @@ def _collect_single_index(index_key: str, index_params: dict[str, Any], ctx: Run
     sliced = {index_key: index_params}
     try:
         greeks_cfg = ctx.config.get('greeks', {})
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        # Handle config access failures
         greeks_cfg = {}
     try:
         import src.collectors.unified_collectors as _uni_mod
         _run = getattr(_uni_mod, 'run_unified_collectors', run_unified_collectors)
-    except Exception:  # pragma: no cover
+    except (ImportError, AttributeError):  # pragma: no cover
+        # Handle module import or attribute access failures
         _run = run_unified_collectors
     if callable(_run):
         _run(
@@ -169,7 +178,8 @@ def _collect_single_index(index_key: str, index_params: dict[str, Any], ctx: Run
             prov = getattr(ctx, 'providers', None)
             if prov is not None and hasattr(prov, 'get_index_data'):
                 prov.get_index_data(index_key)
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle provider access or get_index_data failures
             logger.debug("fallback get_index_data failed for %s", index_key, exc_info=True)
 
 
@@ -187,7 +197,8 @@ def _pipeline_run_expiry(pipe: Any, index: str, rule: str, strikes: Any, index_p
                 ExpiryWorkItem = getattr(pipeline_mod, 'ExpiryWorkItem', None)
             else:
                 raise ImportError("pipeline module not available")
-        except Exception:
+        except (ImportError, AttributeError):
+            # Handle pipeline module or ExpiryWorkItem access failures
             ExpiryWorkItem = None
         if ExpiryWorkItem is None:
             raise RuntimeError('ExpiryWorkItem unavailable')
@@ -201,7 +212,8 @@ def _pipeline_run_expiry(pipe: Any, index: str, rule: str, strikes: Any, index_p
         )
         _ee, outcome = pipe.run_expiry(wi)
         return outcome
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle pipeline execution failures
         logger.debug("pipeline expiry run failed index=%s rule=%s", index, rule, exc_info=True)
         return None
 
@@ -244,12 +256,14 @@ def run_cycle(ctx: RuntimeContext) -> float:
         _interval_raw = _os.environ.get('G6_CYCLE_INTERVAL', '')
         try:
             interval_env = float(_interval_raw) if _interval_raw.strip() else 60.0
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
+            # Handle float conversion or string operation failures
             interval_env = 60.0
         raw_factor = _os.environ.get('G6_MISSING_CYCLE_FACTOR', '2.0')
         try:
             factor = float(raw_factor)
-        except ValueError:
+        except (ValueError, TypeError):
+            # Handle float conversion failures
             factor = 2.0
         if factor < 1.1:
             factor = 1.1
@@ -263,15 +277,18 @@ def run_cycle(ctx: RuntimeContext) -> float:
                 if mref is not None and hasattr(mref, 'missing_cycles'):
                     try:
                         mref.missing_cycles.inc()
-                    except Exception:
+                    except (AttributeError, TypeError, RuntimeError):
+                        # Handle metric access or increment failures
                         pass
         # Only update the baseline start when we have providers (i.e., a real collection attempt)
         if getattr(ctx, 'providers', None) is not None:
             try:
                 ctx._last_cycle_start = start
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle attribute assignment failures
                 pass
-    except Exception:
+    except (AttributeError, TypeError, ValueError, OSError):
+        # Handle missing cycle detection failures
         logger.debug("missing cycle detection failed", exc_info=True)
 
     # Guard: providers not initialized -> skip rest but return elapsed (non-zero) so tests can advance
@@ -283,7 +300,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
             )
             try:
                 run_cycle._g6_warned_missing_providers = True  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle attribute assignment failures
                 pass
         return 0.0
     # Auto-fallback: if enhanced requested but providers not initialized or missing ATM API, downgrade quietly
@@ -292,7 +310,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
     cycle_failed = False
     try:
         emit_event("cycle_start", context={"cycle": ctx.cycle_count})
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, RuntimeError):  # pragma: no cover
+        # Handle event dispatch failures
         logger.debug("event emission failed (cycle_start)")
     try:
         # Use env snapshot variables computed above
@@ -301,7 +320,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
             max_workers = 1
         try:
             indices = list(ctx.index_params.keys())
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Handle index_params access failures
             indices = []
         if parallel_enabled and len(indices) > 1:
             # Budget & timeout parameters
@@ -312,7 +332,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
             if ctx.metrics and hasattr(ctx.metrics, 'parallel_index_workers'):
                 try:
                     ctx.metrics.parallel_index_workers.set(min(len(indices), max_workers))
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle metric access or set failures
                     pass
             completed: set[str] = set()
             failures: dict[str, Exception] = {}
@@ -330,7 +351,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                     try:
                         fut._g6_index = idx
                         fut._g6_start = time.time()
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Handle future attribute assignment failures
                         pass
                     fut_map[fut] = idx
                 return fut_map
@@ -347,7 +369,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                         if ctx.metrics and hasattr(ctx.metrics, 'parallel_index_elapsed'):
                             try:
                                 ctx.metrics.parallel_index_elapsed.observe(elapsed_i)
-                            except Exception:
+                            except (AttributeError, TypeError, RuntimeError):
+                                # Handle metric access or observe failures
                                 pass
                         completed.add(idx)
                     except Exception as e:  # noqa
@@ -358,12 +381,14 @@ def run_cycle(ctx: RuntimeContext) -> float:
                         if ctx.metrics and hasattr(ctx.metrics, 'parallel_index_failures'):
                             try:
                                 ctx.metrics.parallel_index_failures.labels(index=idx).inc()
-                            except Exception:
+                            except (AttributeError, TypeError, RuntimeError):
+                                # Handle metric access or increment failures
                                 pass
                         if is_timeout and ctx.metrics and hasattr(ctx.metrics, 'parallel_index_timeouts'):
                             try:
                                 ctx.metrics.parallel_index_timeouts.labels(index=idx).inc()
-                            except Exception:
+                            except (AttributeError, TypeError, RuntimeError):
+                                # Handle metric access or increment failures
                                 pass
                     # Budget check after each completion
                     if remaining() <= 0:
@@ -372,7 +397,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                         if skipped and ctx.metrics and hasattr(ctx.metrics, 'parallel_cycle_budget_skips'):
                             try:
                                 ctx.metrics.parallel_cycle_budget_skips.inc(len(skipped))
-                            except Exception:
+                            except (AttributeError, TypeError, RuntimeError):
+                                # Handle metric access or increment failures
                                 pass
                         break
             # Retry phase (serial) for failures if within budget
@@ -388,11 +414,13 @@ def run_cycle(ctx: RuntimeContext) -> float:
                             if ctx.metrics and hasattr(ctx.metrics, 'parallel_index_retries'):
                                 try:
                                     ctx.metrics.parallel_index_retries.labels(index=idx).inc()
-                                except Exception:
+                                except (AttributeError, TypeError, RuntimeError):
+                                    # Handle metric access or increment failures
                                     pass
                             failures.pop(idx, None)
                             break
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError, RuntimeError):
+                            # Handle retry collection failures
                             if attempts >= retry_limit:
                                 logger.debug("Retry exhausted for %s", idx, exc_info=True)
                             else:
@@ -406,7 +434,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                         try:
                             try:
                                 greeks_cfg = ctx.config.get('greeks', {})
-                            except Exception:
+                            except (AttributeError, TypeError, KeyError):
+                                # Handle config access failures
                                 greeks_cfg = {}
                             pipe: Any = build_default_pipeline(
                                 ctx.providers,
@@ -434,7 +463,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                     prov = getattr(ctx, 'providers', None)
                                     if prov is not None and hasattr(prov, 'get_index_data'):
                                         index_price, _ohlc = prov.get_index_data(_idx)
-                                except Exception:
+                                except (AttributeError, TypeError, ValueError, RuntimeError):
+                                    # Handle provider access or get_index_data failures
                                     pass
                                 try:
                                     prov2 = getattr(ctx, 'providers', None)
@@ -442,7 +472,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                         atm = prov2.get_atm_strike(_idx)
                                     else:
                                         atm = 0.0
-                                except Exception:
+                                except (AttributeError, TypeError, ValueError, RuntimeError):
+                                    # Handle provider access or get_atm_strike failures
                                     atm = 0.0
                                 # Build strikes list via shared utility
                                 try:
@@ -455,7 +486,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                     if passthrough:
                                         try:
                                             scale_factor = ctx.flag('adaptive_scale_factor', 1.0)
-                                        except Exception:
+                                        except (AttributeError, TypeError, KeyError):
+                                            # Handle flag access failures
                                             scale_factor = 1.0
                                     if callable(build_strikes):
                                         strikes = build_strikes(
@@ -467,7 +499,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                         )
                                     else:
                                         strikes = []
-                                except Exception:
+                                except (ImportError, AttributeError, TypeError, ValueError):
+                                    # Handle strikes module or build_strikes failures
                                     strikes = []
                                 for _rule in expiries:
                                     outcome = _pipeline_run_expiry(
@@ -513,7 +546,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                                     day_w,
                                                     expected_expiries=list(_pcrs.keys()),
                                                 )
-                                            except Exception:
+                                            except (AttributeError, TypeError, ValueError, RuntimeError, OSError):
+                                                # Handle CSV write failures
                                                 logger.debug(
                                                     "overview snapshot csv failed (pipeline) index=%s",
                                                     _idx,
@@ -528,13 +562,15 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                                     day_w,
                                                     expected_expiries=list(_pcrs.keys()),
                                                 )
-                                            except Exception:
+                                            except (AttributeError, TypeError, ValueError, RuntimeError):
+                                                # Handle InfluxDB write failures
                                                 logger.debug(
                                                     "overview snapshot influx failed (pipeline) index=%s",
                                                     _idx,
                                                     exc_info=True,
                                                 )
-                            except Exception:
+                            except (AttributeError, TypeError, ValueError, RuntimeError):
+                                # Handle overview snapshot aggregation failures
                                 logger.debug("overview snapshot aggregation failed (pipeline)", exc_info=True)
                             # Skip legacy unified collectors path this cycle (early return)
                             _elapsed_pipeline = time.time() - start
@@ -544,25 +580,29 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                 c_hist = getattr(mref, 'cycle_time_seconds', None)
                                 if c_hist is not None and hasattr(c_hist, 'observe'):
                                     c_hist.observe(_elapsed_pipeline)
-                            except Exception:
+                            except (AttributeError, TypeError, RuntimeError):
+                                # Handle metric observe failures
                                 logger.debug("cycle_time_seconds observe failed (pipeline early)")
                             ctx.cycle_count += 1
                             return _elapsed_pipeline  # early return after pipeline execution
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError, RuntimeError, ImportError, OSError):
+                            # Handle pipeline execution failures
                             logger.debug(
                                 "pipeline collector failed; falling back to legacy unified collectors",
                                 exc_info=True,
                             )
                 try:
                     greeks_cfg = ctx.config.get('greeks', {})
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle config access failures
                     greeks_cfg = {}
                 # Dynamically resolve unified collectors each cycle so external
                 # monkeypatching works (tests rely on this)
                 try:
                     import src.collectors.unified_collectors as _uni_mod
                     _run_uc = getattr(_uni_mod, 'run_unified_collectors', run_unified_collectors)
-                except Exception:  # pragma: no cover
+                except (ImportError, AttributeError):  # pragma: no cover
+                    # Handle module import or attribute access failures
                     _run_uc = run_unified_collectors
                 result = None
                 if callable(_run_uc):
@@ -588,9 +628,11 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                 snapshots_cache.update(snaps)
                             else:
                                 raise ImportError("snapshots_cache not available")
-                    except Exception:
+                    except (ImportError, AttributeError, TypeError, KeyError):
+                        # Handle snapshots_cache access or update failures
                         logger.debug("auto_snapshots: unified collectors snapshot integration failed", exc_info=True)
-    except Exception:  # noqa
+    except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as e:  # noqa
+        # Handle collection cycle failures
         cycle_failed = True
         logger.exception("Collection cycle failed")
     elapsed = time.time() - start
@@ -600,7 +642,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
         c_hist = getattr(mref, 'cycle_time_seconds', None)
         if c_hist is not None and hasattr(c_hist, 'observe'):
             c_hist.observe(elapsed)
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle metric access or observe failures
         logger.debug("cycle_time_seconds observe failed", exc_info=True)
     # Global phase timing consolidated emission (once per overall cycle)
     try:
@@ -613,15 +656,18 @@ def run_cycle(ctx: RuntimeContext) -> float:
                         # Use wall clock epoch seconds (avoid direct datetime.* calls that tests forbid)
                         try:
                             cycle_ts_attr = int(time.time())
-                        except Exception:
+                        except (ValueError, TypeError, OSError):
+                            # Handle time conversion failures
                             cycle_ts_attr = 0
                     indices_total = len(ctx.index_params) if isinstance(ctx.index_params, dict) else -1
                     gpt_mod.emit_global(indices_total, cycle_ts_attr)
                 else:
                     raise ImportError("global_phase_timing not available")
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle global phase timing emission failures
                 logger.debug('global_phase_timing_emit_failed', exc_info=True)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
+        # Handle global phase timing wrapper failures
         logger.debug('global_phase_timing_wrapper_failed', exc_info=True)
     # SLA breach & data gap instrumentation
     try:
@@ -633,7 +679,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                     g_breach = getattr(ctx.metrics, 'cycle_sla_breach', None)
                     if g_breach is not None and hasattr(g_breach, 'inc'):
                         g_breach.inc()
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle metric access or increment failures
                     pass
             # Update global data gap seconds (time since last successful cycle)
             try:
@@ -643,7 +690,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                     g_gap = getattr(ctx.metrics, 'data_gap_seconds', None)
                     if g_gap is not None and hasattr(g_gap, 'set'):
                         g_gap.set(gap)
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle metric access or set failures
                 pass
             # Per-index gap updates: index_last_collection_unixtime gauge's internal
             # values are not directly accessible; rely on context if it tracks
@@ -658,47 +706,56 @@ def run_cycle(ctx: RuntimeContext) -> float:
                             if g_idx_gap is not None and hasattr(g_idx_gap, 'labels'):
                                 try:
                                     g_idx_gap.labels(index=_idx).set(gap_i)
-                                except Exception:
+                                except (AttributeError, TypeError, RuntimeError):
+                                    # Handle metric label or set failures
                                     pass
-            except Exception:
+            except (AttributeError, TypeError, KeyError):
+                # Handle last_index_success_times access failures
                 pass
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle SLA/data gap instrumentation failures
         logger.debug("SLA/data gap instrumentation failed", exc_info=True)
     try:
         emit_event("cycle_end", context={"cycle": ctx.cycle_count, "elapsed": round(elapsed, 6)})
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, RuntimeError):  # pragma: no cover
+        # Handle event dispatch failures
         logger.debug("event emission failed (cycle_end)")
     ctx.cycle_count += 1
     # Mark successful cycle timestamp for gap metrics (only if not failed)
     try:
         if not cycle_failed and getattr(ctx, 'metrics', None) is not None:
             ctx.metrics._last_success_cycle_time = time.time()  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, OSError):
+        # Handle attribute assignment or time access failures
         logger.debug("failed to set last_success_cycle_time", exc_info=True)
     # Adaptive strike scaling (optional)
     try:
         interval = cycle_interval
         update_strike_scaling(ctx, elapsed, interval)
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, RuntimeError):  # pragma: no cover
+        # Handle adaptive scaling failures
         logger.debug("adaptive scaling hook failed", exc_info=True)
     # Cardinality guard evaluation (best-effort, does not raise)
     try:
         from .cardinality_guard import evaluate_cardinality_guard
         evaluate_cardinality_guard(ctx)
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle cardinality guard import or evaluation failures
         logger.debug("cardinality guard evaluation failed", exc_info=True)
     # Memory pressure evaluation (sets ctx.flag('memory_tier') or no-ops). Placed before adaptive controller.
     try:
         from .memory_pressure import evaluate_memory_tier
         evaluate_memory_tier(ctx)
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle memory pressure import or evaluation failures
         logger.debug("memory pressure evaluation failed", exc_info=True)
     # Adaptive controller evaluation (multi-signal detail mode + scaling decisions)
     try:
         from .adaptive_controller import evaluate_adaptive_controller
         interval_env = _env_float('G6_CYCLE_INTERVAL', 60.0, minimum=0.1)
         evaluate_adaptive_controller(ctx, elapsed, interval_env)
-    except Exception:
+    except (ImportError, AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle adaptive controller import or evaluation failures
         logger.debug("adaptive controller evaluation failed", exc_info=True)
     # New adaptive detail mode logic (vol surface + memory + SLA + cardinality) updating option detail modes
     try:
@@ -708,7 +765,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
                 evaluate_and_apply(indices)
         else:
             raise ImportError("evaluate_and_apply not available")
-    except Exception:
+    except (ImportError, AttributeError, TypeError, KeyError, RuntimeError):
+        # Handle evaluate_and_apply import or execution failures
         logger.debug("adaptive.logic evaluate_and_apply failed", exc_info=True)
     # Lifecycle maintenance job (compression/quarantine scan) best-effort
     try:
@@ -716,7 +774,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
             run_lifecycle_once()
         else:
             raise ImportError("run_lifecycle_once not available")
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError, OSError):
+        # Handle lifecycle job import or execution failures
         logger.debug("lifecycle job run failed", exc_info=True)
     # Optional integrity auto-run: invoke integrity checker every N cycles (default 60) best-effort.
     try:
@@ -729,7 +788,8 @@ def run_cycle(ctx: RuntimeContext) -> float:
             if run_now:
                 try:
                     from scripts.check_integrity import main as integrity_main  # type: ignore
-                except Exception:
+                except (ImportError, AttributeError):
+                    # Handle integrity module import failures
                     integrity_main = None  # type: ignore
                 if integrity_main is not None:
                     # Write summary output to logs/integrity_auto.json (overwrite) best-effort by passing args
@@ -758,18 +818,21 @@ def run_cycle(ctx: RuntimeContext) -> float:
                             # Attempt to parse captured stdout as JSON; else write fallback
                             try:
                                 parsed = json.loads(data) if data.strip() else {"ok": True}
-                            except Exception:
+                            except (json.JSONDecodeError, ValueError, TypeError):
+                                # Handle JSON parsing failures
                                 parsed = {"ok": True}
                             # Ensure missing_cycles key present to satisfy test expectation
                             try:
                                 # Ensure key present; ignore type inference complaints (value is int)
                                 parsed.setdefault('missing_cycles', 0)  # type: ignore[arg-type]
-                            except Exception:
+                            except (AttributeError, TypeError, KeyError):
+                                # Handle dict operations
                                 pass
                             try:
                                 with open(out_path,'w',encoding='utf-8') as _f:
                                     json.dump(parsed, _f)
-                            except Exception:
+                            except (OSError, TypeError, ValueError):
+                                # Handle file write or JSON serialization failures
                                 logger.debug("integrity auto-run: failed writing fallback JSON", exc_info=True)
                         if rc not in (0,2):  # 2 = gaps detected but not fatal
                             logger.warning("integrity auto-run returned non-success code=%s", rc)
@@ -782,11 +845,14 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                     _data['missing_cycles'] = 0
                                     with open(out_path,'w',encoding='utf-8') as _f:
                                         json.dump(_data, _f)
-                        except Exception:
+                        except (OSError, json.JSONDecodeError, TypeError, ValueError, KeyError):
+                            # Handle file I/O or JSON operations failures
                             logger.debug("integrity auto-run: post-process add missing_cycles failed", exc_info=True)
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError, OSError, ImportError, RuntimeError):
+                        # Handle integrity check execution failures
                         logger.debug("integrity auto-run failed", exc_info=True)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError, OSError):
+        # Handle integrity auto-run wrapper failures
         logger.debug("integrity auto-run wrapper failed", exc_info=True)
     return elapsed
 
