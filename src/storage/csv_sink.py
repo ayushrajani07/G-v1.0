@@ -1817,7 +1817,7 @@ class CsvSink:
                                         dt = datetime.datetime.strptime(ts_str, fmt)
                                         row_time = dt.time()
                                         break
-                                    except:
+                                    except ValueError:
                                         continue
                                 
                                 if row_time:
@@ -1827,7 +1827,7 @@ class CsvSink:
                                     if min_time_diff is None or time_diff < min_time_diff:
                                         min_time_diff = time_diff
                                         closest_row = r
-                            except:
+                            except (ValueError, TypeError, AttributeError):
                                 # If timestamp parsing fails, keep last row as fallback
                                 closest_row = r
                         

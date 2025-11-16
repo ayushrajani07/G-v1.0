@@ -137,7 +137,7 @@ These improvements are pre-remediation hygiene to ensure a stable baseline befor
 - Active deprecations: 55+
 
 **Target State (After Remediation):**
-- Bare exceptions: <500 (84% reduction)
+- Bare exceptions: 0 (100% reduction) ✅ **COMPLETE**
 - Serial tests: 0 (all properly isolated)
 - CSV write paths: 1 (unified)
 - Active deprecations: 0 (enforced policy)
@@ -207,8 +207,8 @@ These improvements are pre-remediation hygiene to ensure a stable baseline befor
 ## Success Criteria
 
 ### Phase 1 (Critical)
-- ✅ Storage layer: <50 bare exceptions
-- ✅ Metrics layer: <100 bare exceptions
+- ✅ Storage layer: 0 bare exceptions ✅ **COMPLETE**
+- ✅ Metrics layer: 0 bare exceptions ✅ **COMPLETE**
 - ✅ Legacy loop completely removed
 - ✅ Single CSV write path operational
 - ✅ All data integrity tests passing

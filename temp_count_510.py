@@ -12,7 +12,7 @@ for f in p.rglob('*.py'):
             count = len(pattern.findall(content))
             if count > 0:
                 results[str(f)] = count
-        except:
+        except (OSError, UnicodeDecodeError):
             pass
 
 total = sum(results.values())
