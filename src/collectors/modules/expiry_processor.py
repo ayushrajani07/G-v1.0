@@ -285,7 +285,7 @@ def process_expiry(
         def _trace(msg: str, **ctx: Any) -> None:  # single signature to avoid variant conflict
             try:
                 logging.getLogger(__name__).debug("trace_fallback msg=%s ctx=%s", msg, ctx)
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 pass
     # Core helpers (must succeed) – if these fail, we allow exception to bubble to caller fallback.
     from src.collectors.modules.expiry_helpers import (
@@ -368,7 +368,7 @@ def process_expiry(
     # Start trace marker for observability
     try:
         _trace('expiry_process_start', index=index_symbol, rule=expiry_rule)
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
     outcome: dict[str, Any] = {'success': False}
     # Test-only debug flag to emit compact stage counts when enabled

@@ -31,7 +31,7 @@ try:
     if _raw:
         for tok in _raw.replace(',', ' ').split():
             _SUPPRESS_EVENTS.add(tok.strip())
-except Exception:  # pragma: no cover
+except (AttributeError, TypeError, ValueError):  # pragma: no cover
     pass
 
 def emit_struct(event: str, fields: dict[str, Any]) -> None:  # pragma: no cover (thin wrapper)

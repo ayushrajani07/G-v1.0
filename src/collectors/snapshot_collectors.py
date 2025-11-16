@@ -161,12 +161,12 @@ def _load_instruments(providers: Providers, index_symbol: str, expiry_date: date
     try:
         if hasattr(providers, 'option_instruments'):
             return providers.option_instruments(index_symbol, expiry_date, strikes)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
         pass
     try:
         if hasattr(providers, 'get_option_instruments'):
             return providers.get_option_instruments(index_symbol, expiry_date, strikes)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
         pass
     return []
 
@@ -199,7 +199,7 @@ def _partition_instruments(instruments):
 def _load_quotes(providers: Providers, symbols):
     try:
         return providers.get_quote(symbols)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
         return {}
 
 def _build_synthetic_quotes(symbols, now):
