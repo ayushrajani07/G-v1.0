@@ -37,7 +37,7 @@ else:
     PersistResult = _PersistResultStub
 try:  # pragma: no cover
     from src.collectors.helpers.persist import persist_with_context
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     def persist_with_context(*a: Any, **kw: Any) -> PersistResult:  # fallback
         raise RuntimeError("persist_with_context unavailable")
 
@@ -82,7 +82,7 @@ def run_persist_flow(
     if sink is not None:
         try:
             sink.allowed_expiry_dates = allowed_expiry_dates
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError):  # pragma: no cover
             logger.debug('persist_flow_set_allowed_expiry_dates_failed', exc_info=True)
 
     # Emit pre-write verbose line (mirrors previous behavior)
@@ -91,7 +91,7 @@ def run_persist_flow(
             logger.info("Writing %s records to CSV sink", len(enriched_data))
         else:
             logger.debug("Writing %s records to CSV sink", len(enriched_data))
-    except Exception:  # pragma: no cover
+    except (TypeError, ValueError, OSError):  # pragma: no cover
         pass
 
     try:

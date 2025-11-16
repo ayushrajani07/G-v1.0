@@ -114,8 +114,8 @@ def adaptive_strike_retry(ctx: AdaptiveCtxLike | Any, index_symbol: str, expiry_
                     idx_params[index_symbol]['strikes_itm'] = new_itm
                     idx_params[index_symbol]['strikes_otm'] = new_otm
                     _acs[index_symbol]['had_expansion_this_cycle'] = True
-            except Exception:
-                logger.debug("adaptive_strike_param_update_failed", exc_info=True)
+            except (AttributeError, KeyError, TypeError) as e:
+                logger.debug(f"adaptive_strike_param_update_failed: {e}", exc_info=True)
             # Structured event emit left inline (import deferred to avoid cycles)
             if emit_strike_depth_adjustment is not None:
                 try:
@@ -131,8 +131,8 @@ def adaptive_strike_retry(ctx: AdaptiveCtxLike | Any, index_symbol: str, expiry_
                         expiry_rule=expiry_rule,
                         min_threshold=trigger,
                     )
-                except Exception:
-                    logger.debug("emit_strike_depth_adjustment_failed", exc_info=True)
+                except (TypeError, ValueError, AttributeError) as e:
+                    logger.debug(f"emit_strike_depth_adjustment_failed: {e}", exc_info=True)
     else:
         if strike_cov_local is not None and strike_cov_local < trigger:
             _acs[index_symbol]['had_low_cov'] = True
@@ -169,7 +169,7 @@ def adaptive_contraction(ctx: AdaptiveCtxLike | Any, index_symbol: str, expiry_r
     try:
         if cycle_count and hasattr(cycle_count, 'count'):
             cur_cycle_num = int(cycle_count.count)
-    except Exception:
+    except (ValueError, TypeError, AttributeError):
         cur_cycle_num = None
     if cur_cycle_num is None:
         interval_s = EnvConfig.get_int('G6_CYCLE_INTERVAL', 60)
@@ -187,8 +187,8 @@ def adaptive_contraction(ctx: AdaptiveCtxLike | Any, index_symbol: str, expiry_r
             idx_params[index_symbol]['strikes_otm'] = new_otm
             st['cycle_last_action'] = cur_cycle_num
             st['healthy_streak'] = 0
-    except Exception:
-        logger.debug("adaptive_contraction_param_update_failed", exc_info=True)
+    except (AttributeError, KeyError, TypeError) as e:
+        logger.debug(f"adaptive_contraction_param_update_failed: {e}", exc_info=True)
     if emit_strike_depth_adjustment is not None:
         try:
             # Signature parity: keep only parameters supported by existing struct event helper
@@ -203,8 +203,8 @@ def adaptive_contraction(ctx: AdaptiveCtxLike | Any, index_symbol: str, expiry_r
                 strike_coverage=expiry_rec.get('strike_coverage'),
                 field_coverage=expiry_rec.get('field_coverage'),
             )
-        except Exception:
-            logger.debug("emit_contraction_event_failed", exc_info=True)
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.debug(f"emit_contraction_event_failed: {e}", exc_info=True)
 
 
 def adaptive_post_expiry(ctx: AdaptiveCtxLike | Any, index_symbol: str, expiry_rec: ExpiryRecordLike, expiry_rule: str) -> None:
@@ -214,9 +214,9 @@ def adaptive_post_expiry(ctx: AdaptiveCtxLike | Any, index_symbol: str, expiry_r
     """
     try:
         adaptive_strike_retry(ctx, index_symbol, expiry_rec, expiry_rule)
-    except Exception:
-        logger.debug("adaptive_strike_retry_logic_failed", exc_info=True)
+    except (AttributeError, KeyError, TypeError, ValueError) as e:
+        logger.debug(f"adaptive_strike_retry_logic_failed: {e}", exc_info=True)
     try:
         adaptive_contraction(ctx, index_symbol, expiry_rec, expiry_rule)
-    except Exception:
-        logger.debug("adaptive_strike_contraction_logic_failed", exc_info=True)
+    except (AttributeError, KeyError, TypeError, ValueError) as e:
+        logger.debug(f"adaptive_strike_contraction_logic_failed: {e}", exc_info=True)

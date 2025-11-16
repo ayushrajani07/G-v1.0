@@ -1499,8 +1499,8 @@ def run_unified_collectors(
                                 metrics.stale_system_cycles_total.labels(mode=stale_mode).inc()
                             except (AttributeError, ValueError, KeyError) as e:
                                 logger.debug(f"Failed to increment stale_system_cycles_total: {e}")
-                    except Exception:
-                        logger.debug('stale_system_metrics_failed', exc_info=True)
+                    except (AttributeError, ValueError, KeyError, TypeError) as e:
+                        logger.debug(f'stale_system_metrics_failed: {e}', exc_info=True)
                 # Mark that we evaluated stale abort logic in this path
                 stale_abort_evaluated = True
                 if stale_mode == 'abort' and stale_present and consec >= abort_cycles:
@@ -1514,8 +1514,8 @@ def run_unified_collectors(
                         logger.error(f"Failed to execute sys.exit: {e}")
             except (AttributeError, TypeError, NameError) as e:
                 logger.debug(f"Failed stale abort evaluation: {e}", exc_info=True)
-        except Exception:
-            logger.debug("Failed to emit human summary footer", exc_info=True)
+        except (AttributeError, TypeError, KeyError, ValueError, OSError) as e:
+            logger.debug(f"Failed to emit human summary footer: {e}", exc_info=True)
         _trace("concise_footer_emitted", total_legs=overall_legs_total, total_fails=overall_fail_total)
     else:
         # If we didn’t emit the concise footer block, still enforce stale abort logic here.
@@ -1627,8 +1627,8 @@ def run_unified_collectors(
                         stall_flag=None,
                         extra=extra_cycle,
                     )
-            except Exception:
-                logger.debug("Failed to format raw cycle line", exc_info=True)
+            except (TypeError, ValueError, AttributeError, KeyError) as e:
+                logger.debug(f"Failed to format raw cycle line: {e}", exc_info=True)
         if mode in ('pretty','both') and not legacy_disable:
             try:
                 header_line, value_line = format_cycle_table(
@@ -1645,8 +1645,8 @@ def run_unified_collectors(
                 )
                 # For now log both header and value every cycle; future: track last header to avoid repetition.
                 pretty_line = f"{header_line}\n{value_line}"
-            except Exception:
-                logger.debug("Failed to format pretty cycle table", exc_info=True)
+            except (TypeError, ValueError, AttributeError, KeyError) as e:
+                logger.debug(f"Failed to format pretty cycle table: {e}", exc_info=True)
 
         # Emit in deterministic order: raw then pretty if both
         try:
@@ -1748,8 +1748,8 @@ def run_unified_collectors(
                     snapshot_summary['alerts_total'] = alerts_block['total']
                     for k, v in alerts_block['categories'].items():
                         snapshot_summary[f'alert_{k}'] = v
-            except Exception:
-                logger.debug('legacy_alert_snapshot_merge_failed', exc_info=True)
+            except (KeyError, TypeError, AttributeError) as e:
+                logger.debug(f'legacy_alert_snapshot_merge_failed: {e}', exc_info=True)
         # Expose provider outage flag & threshold (best-effort; may be absent if earlier failure)
     # provider_outage already defined above; leave as-is
         ret_obj = {
@@ -1802,8 +1802,8 @@ def run_unified_collectors(
                         if c:
                             try: c.inc(int(val) if isinstance(val, (int, float, str)) else 1)
                             except (AttributeError, TypeError, ValueError): pass  # Metric increment failed
-        except Exception:
-            logger.debug('legacy_operational_metrics_failed', exc_info=True)
+        except (AttributeError, TypeError, KeyError, ImportError) as e:
+            logger.debug(f'legacy_operational_metrics_failed: {e}', exc_info=True)
         # Shadow diff attachment removed with rollout mode deprecation.
         # Phase 8: add coverage rollups at index level if not already present
         try:
@@ -1816,13 +1816,13 @@ def run_unified_collectors(
                     cov_roll = compute_index_coverage(index_sym, expiries_list)
                     ix['strike_coverage_avg'] = cov_roll.get('strike_coverage_avg')
                     ix['field_coverage_avg'] = cov_roll.get('field_coverage_avg')
-        except Exception:
-            logger.debug('legacy_coverage_rollup_failed', exc_info=True)
+        except (ImportError, TypeError, AttributeError, KeyError) as e:
+            logger.debug(f'legacy_coverage_rollup_failed: {e}', exc_info=True)
         return ret_obj
-    except Exception:
+    except (KeyError, TypeError, AttributeError, ValueError) as e:
         # Structured return build failed late; preserve best-effort indices_struct so callers/tests
         # can still introspect outcomes instead of receiving an incomplete dict.
-        logger.debug('structured_return_build_failed', exc_info=True)
+        logger.debug(f'structured_return_build_failed: {e}', exc_info=True)
         try:
             return {
                 'status': 'ok',
@@ -1832,7 +1832,8 @@ def run_unified_collectors(
                 'snapshots': snapshots_accum if ("snapshots_accum" in locals() and build_snapshots) else None,
                 'snapshot_count': (len(snapshots_accum) if ("snapshots_accum" in locals() and build_snapshots) else 0),
             }
-        except Exception:
+        except (NameError, TypeError, AttributeError) as e:
+            logger.debug(f'fallback_return_build_failed: {e}', exc_info=True)
             return {
                 'status': 'ok',
                 'indices_processed': len(index_params or {}),

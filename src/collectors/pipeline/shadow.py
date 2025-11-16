@@ -64,7 +64,7 @@ def _compute_parity_hash(shadow_snap: Mapping[str, Any], meta: Mapping[str, Any]
         }
         encoded = json.dumps(payload, sort_keys=True, separators=(',',':')).encode('utf-8')
         return hashlib.sha256(encoded).hexdigest()[:16]
-    except Exception:  # pragma: no cover
+    except (TypeError, ValueError, AttributeError, KeyError):  # pragma: no cover
         return 'na'
 
 
@@ -133,7 +133,7 @@ def run_shadow_pipeline(
         else:
             state.meta['parity_diff_fields'] = ()
             state.meta['parity_diff_count'] = 0
-    except Exception:  # pragma: no cover
+    except (TypeError, AttributeError, KeyError):  # pragma: no cover
         pass
     # Placeholder: future instrumentation hook (avoid prometheus import here to keep lightweight)
     # Example (planned): metrics.shadow_parity_diff_total.labels(field=...).inc() per field in diffs
@@ -142,7 +142,7 @@ def run_shadow_pipeline(
         try:
             parts = [f"{k}={v['legacy']}|{v['shadow']}" for k,v in diffs.items()]
             logger.debug('expiry.shadow.diff index=%s rule=%s hash=%s %s', index, rule, parity_hash, ' '.join(parts))
-        except Exception:  # pragma: no cover
+        except (TypeError, KeyError, AttributeError, ValueError):  # pragma: no cover
             logger.debug('expiry.shadow.diff_emit_failed index=%s rule=%s hash=%s diffs=%s', index, rule, parity_hash, diffs)
     else:
         logger.debug('expiry.shadow.ok index=%s rule=%s hash=%s', index, rule, parity_hash)
@@ -150,7 +150,8 @@ def run_shadow_pipeline(
     try:  # pragma: no cover - decision logic unit tested separately
         decision = gating.decide(index, rule, state.meta)
         state.meta['gating_decision'] = decision
-    except Exception:
+    except (AttributeError, TypeError, KeyError, ValueError) as e:
+        logger.debug(f"gating_decision_failed: {e}", exc_info=True)
         decision = None
         state.meta['gating_decision'] = {'mode':'error','promote':False,'reason':'exception'}
     # Structured decision log (single line JSON style for auditability)
@@ -172,7 +173,7 @@ def run_shadow_pipeline(
                 'reason': decision.get('reason'),
             }
             logger.debug('shadow.gate.decision index=%s rule=%s %s', index, rule, json.dumps(log_payload, separators=(',',':'), sort_keys=True))
-    except Exception:  # pragma: no cover
+    except (TypeError, ValueError, KeyError, AttributeError):  # pragma: no cover
         logger.debug('shadow.gate.decision_emit_failed index=%s rule=%s', index, rule, exc_info=True)
     # Emit structured snapshot/parity event
     try:
@@ -188,7 +189,7 @@ def run_shadow_pipeline(
             },
             state=state,
         )
-    except Exception:
+    except (TypeError, ValueError, AttributeError, KeyError):
         pass
     # Emit shadow parity metrics (best-effort) via MetricsAdapter if metrics registry present on ctx
     if MetricsAdapter:
@@ -205,7 +206,7 @@ def run_shadow_pipeline(
                 # Protected field diff counters (optional allowlist)
                 try:
                     protected_fields = tuple(getattr(decision, 'protected_fields', ()))  # not stored; fallback to env parse
-                except Exception:
+                except (TypeError, AttributeError):
                     protected_fields = ()
                 # Reconstruct protected fields from gating config env (avoids importing config object)
                 if not protected_fields:
@@ -214,8 +215,8 @@ def run_shadow_pipeline(
                     protected_fields = cfg.protected_fields
                 diff_fields = state.meta.get('parity_diff_fields') or ()
                 adapter.record_shadow_protected_field_diffs(index, rule, diff_fields, protected_fields=protected_fields)
-        except Exception:
-            logger.debug('shadow_parity_metrics_emit_failed', exc_info=True)
+        except (AttributeError, TypeError, KeyError, ValueError, ImportError) as e:
+            logger.debug(f'shadow_parity_metrics_emit_failed: {e}', exc_info=True)
     return state
 
 __all__ = ["run_shadow_pipeline", "_compute_parity_hash"]
