@@ -31,7 +31,7 @@ import time
 
 try:
     from src.metrics import generated as m  # runtime-provided metrics family
-except Exception:  # pragma: no cover - defensive fallback
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover - defensive fallback
     class _Dummy:
         def __getattr__(self, name: str):  # returns no-op callables preserving chain
             def _f(*_a: Any, **_k: Any):
@@ -135,14 +135,16 @@ class ColumnStorePipeline:
             backpressure_active = 1 if backlog >= self.cfg.high_watermark_rows else 0
             _g2 = _safe(m.m_cs_ingest_backpressure_flag_labels(self.cfg.table))
             if _g2: _g2.set(backpressure_active)
-        except Exception:
+        except (AttributeError, TypeError, ValueError) as e:
+            # Metrics operations may fail if metrics not initialized or types invalid
             pass
 
     def _run(self):  # pragma: no cover - timing loop
         while not self._stop.is_set():
             try:
                 self._maybe_flush()
-            except Exception:
+            except (RuntimeError, OSError, ValueError) as e:
+                # Suppress flush errors in background thread to prevent thread termination
                 pass
             self._stop.wait(0.25)
 
@@ -176,7 +178,8 @@ class ColumnStorePipeline:
                     est_bytes = 0
                     try:
                         est_bytes = sum(sum(len(str(v)) for v in r.values()) for r in batch)
-                    except Exception:
+                    except (TypeError, ValueError, AttributeError):
+                        # Row values may not be string-convertible
                         pass
                     _c_rows = _safe(m.m_cs_ingest_rows_total_labels(self.cfg.table))
                     if _c_rows: _c_rows.inc(rows)
@@ -191,7 +194,8 @@ class ColumnStorePipeline:
                 bp = 1 if backlog_now >= self.cfg.high_watermark_rows else 0
                 _g_bp = _safe(m.m_cs_ingest_backpressure_flag_labels(self.cfg.table))
                 if _g_bp: _g_bp.set(bp)
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
+                # Metrics emission may fail if metrics not initialized or types invalid
                 pass
         _emit_batch_metrics()
 
@@ -205,7 +209,8 @@ class ColumnStorePipeline:
         # Final flush
         try:
             self.flush()
-        except Exception:
+        except (RuntimeError, OSError, ValueError):
+            # Suppress flush errors during shutdown
             pass
 
 # Simple factory (singleton per table)
