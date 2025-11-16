@@ -391,8 +391,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             _pcerw = getattr(_m, 'pipeline_cycle_error_rate_window', None)
                             if _pcerw is not None:
                                 try: _pcerw.set(1 - (sum(window)/len(window)))
-                                except Exception: pass
-                        except Exception:
+                                except (ZeroDivisionError, AttributeError, TypeError): pass
+                        except (AttributeError, TypeError, ValueError):
                             pass
                     # Trends file ingestion (long horizon gauges) gated by env flag
                     if _env_bool('G6_PIPELINE_TRENDS_METRICS', False):  # lightweight file read

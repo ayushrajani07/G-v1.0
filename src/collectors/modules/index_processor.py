@@ -117,7 +117,7 @@ def _p(obj: Any, name: str, default: T) -> T:
         if val is None:
             return default
         return cast(T, val)
-    except Exception:
+    except (AttributeError, KeyError, TypeError):
         return default
 
 def process_index(
@@ -193,7 +193,7 @@ def process_index(
     def _truthy_env(name: str) -> bool:
         try:
             return _env_bool(name, False)
-        except Exception:
+        except (ValueError, TypeError):
             return False
     _test_debug = _truthy_env('G6_TEST_DEBUG')
     # Weekend mode short-circuit removed; rely solely on market_hours gating at higher level.
@@ -254,7 +254,7 @@ def process_index(
             try:
                 if isinstance(params, dict):
                     extra = {k: v for k, v in params.items() if k not in ('strikes_itm','strikes_otm','expiries','enable')}
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 extra = {}
             trace(
                 "index_config",
@@ -264,8 +264,8 @@ def process_index(
                 expiries=_p(params,'expiries', None),
                 extra=extra,
             )
-        except Exception:
-            pass
+        except (AttributeError, TypeError) as e:
+            logger.debug("Failed to trace index_config: %s", e)
     if not concise_mode:
         logger.info("Collecting data for %s", index_symbol)
     else:
@@ -306,14 +306,15 @@ def process_index(
                 if hasattr(providers, 'get_ltp'):
                     try:
                         index_price = providers.get_ltp(index_symbol)
-                    except Exception:
+                    except (KeyError, ValueError, TypeError, AttributeError):
                         index_price = 0
                 index_ohlc = {}
             if metrics and hasattr(metrics, 'mark_api_call'):
                 metrics.mark_api_call(success=bool(index_price), latency_ms=(time.time()-_t0)*1000.0)
             logger.debug("Providers facade missing get_index_data; used fallback path for %s price=%s", index_symbol, index_price)
             trace("index_get_data_fallback", index=index_symbol, price=index_price)
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError) as e:
+        logger.warning("Failed to get index data for %s: %s", index_symbol, e, exc_info=True)
         if metrics and hasattr(metrics, 'mark_api_call'):
             metrics.mark_api_call(success=False, latency_ms=(time.time()-_t0)*1000.0)
         # continue with downstream logic using default index_price/ohlc (fail-soft)
@@ -322,8 +323,8 @@ def process_index(
             _ok_idx, _idx_issues = run_index_quality(dq_checker, index_price, index_ohlc)
             if _idx_issues:
                 logger.debug("DQ index issues index=%s issues=%s", index_symbol, _idx_issues)
-        except Exception:
-            logger.debug('dq_index_evaluation_failed', exc_info=True)
+        except (AttributeError, KeyError, ValueError, TypeError) as e:
+            logger.debug('dq_index_evaluation_failed: %s', e, exc_info=True)
 
     # Always fetch/derive ATM strike regardless of DQ settings
     _t0 = time.time()
@@ -337,7 +338,8 @@ def process_index(
         except (KeyError, ValueError, TypeError) as e2:  # pragma: no cover
             try:
                 report_atm_fallback_error(e2, index_symbol)
-            except Exception:
+            except (AttributeError, TypeError) as e3:
+                logger.debug("Failed to report ATM fallback error: %s", e3)
                 handle_collector_error(e2, component="collectors.index_processor", index_name=index_symbol, context={"stage":"atm_strike","fallback":True})
             atm_strike = 0
     except Exception as e:  # final safety net
@@ -349,12 +351,12 @@ def process_index(
                 try:
                     _meta_step = float(get_index_meta(index_symbol).step)
                     if _meta_step <=0: _meta_step = 50.0 if index_symbol not in ("BANKNIFTY","SENSEX") else 100.0
-                except Exception:
+                except (AttributeError, KeyError, ValueError, TypeError):
                     _meta_step = 50.0 if index_symbol not in ("BANKNIFTY","SENSEX") else 100.0
                 atm_strike = round(float(index_price)/_meta_step)*_meta_step
                 logger.debug("Derived ATM from index_price for %s using step %s: %s", index_symbol, _meta_step, atm_strike)
-        except Exception:
-            pass
+        except (ValueError, TypeError, ZeroDivisionError) as e:
+            logger.debug("Failed to derive ATM from index_price for %s: %s", index_symbol, e)
     if metrics and hasattr(metrics,'mark_api_call'):
         success_flag = isinstance(atm_strike,(int,float)) and atm_strike>0
         metrics.mark_api_call(success=success_flag, latency_ms=(time.time()-_t0)*1000.0)
@@ -375,7 +377,8 @@ def process_index(
         logger.warning("Skipping %s: ATM strike invalid (%s); marking expiries failed", index_symbol, atm_strike)
         if metrics and hasattr(metrics,'index_errors_total'):
             try: metrics.index_errors_total.labels(index=index_symbol, reason=reason).inc()
-            except Exception: logger.debug('Failed to inc index_errors_total for atm_zero', exc_info=True)
+            except (AttributeError, TypeError, ValueError) as e: 
+                logger.debug('Failed to inc index_errors_total for atm_zero: %s', e, exc_info=True)
         result['summary_rows_entry'] = {
             'index': index_symbol,
             'timestamp': per_index_ts,
@@ -399,15 +402,15 @@ def process_index(
             elif getattr(prov,'_auth_failed',False): mode='auth-failed-synthetic'
             else: mode='real'
         logger.debug("INDEX_DIAG index=%s mode=%s price=%s atm=%s", index_symbol, mode, index_price, atm_strike)
-    except Exception:
-        logger.debug('Index diagnostics emission failed', exc_info=True)
+    except (AttributeError, TypeError) as e:
+        logger.debug('Index diagnostics emission failed: %s', e, exc_info=True)
 
     if metrics:
         try:
             metrics.index_price.labels(index=index_symbol).set(index_price)
             metrics.index_atm.labels(index=index_symbol).set(atm_strike)
-        except Exception:
-            logger.debug("Failed to update metrics for %s", index_symbol)
+        except (AttributeError, ValueError, TypeError) as e:
+            logger.debug("Failed to update metrics for %s: %s", index_symbol, e)
 
     pcr_snapshot = {}
     aggregation_state = AggregationState()
@@ -445,13 +448,15 @@ def process_index(
         )
         precomputed_strikes = su_result.strikes
         _strike_meta = su_result.meta
-    except Exception:
+    except (AttributeError, ImportError, KeyError, ValueError, TypeError) as e:
+        logger.debug("build_strike_universe failed, trying fallback: %s", e)
         try:
             # Fallback to earlier thin wrapper (Phase 3) if available
             precomputed_strikes, _strike_meta = compute_strike_universe(
                 atm_strike, effective_strikes_itm, effective_strikes_otm, index_symbol, scale=scale_factor,
             )
-        except Exception:
+        except (AttributeError, ImportError, KeyError, ValueError, TypeError) as e2:
+            logger.debug("compute_strike_universe failed, using legacy fallback: %s", e2)
             # Last resort legacy inline builder passed in via deps
             precomputed_strikes = build_strikes_fallback(
                 atm_strike, effective_strikes_itm, effective_strikes_otm, index_symbol, scale=scale_factor,
@@ -492,24 +497,26 @@ def process_index(
                     }
                     try:
                         emit_strike_cluster(cluster_struct)
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError) as e:
+                        logger.debug('emit_strike_cluster failed: %s', e)
                         try:
                             import json as _json
                             logger.info('STRUCT strike_cluster | %s', _json.dumps(cluster_struct, default=str))
-                        except Exception:
-                            logger.debug('Failed to emit strike_cluster struct', exc_info=True)
-    except Exception:
-        logger.debug('Strike clustering diagnostics failed', exc_info=True)
+                        except (TypeError, ValueError) as e2:
+                            logger.debug('Failed to emit strike_cluster struct: %s', e2, exc_info=True)
+    except (AttributeError, ValueError, TypeError, KeyError) as e:
+        logger.debug('Strike clustering diagnostics failed: %s', e, exc_info=True)
 
     # Allowed expiries and adaptive summary should run regardless of strike_universe import outcome
     try:
         allowed_expiry_dates = set(ctx.providers.get_expiry_dates(index_symbol))
-    except Exception:
+    except (AttributeError, TypeError, KeyError) as e:
+        logger.debug('Failed to get expiry dates for %s: %s', index_symbol, e)
         allowed_expiry_dates = set()
     try:
         emit_adaptive_summary(ctx, index_symbol)
-    except Exception:
-        logger.debug('adaptive_summary_module_failed', exc_info=True)
+    except (AttributeError, TypeError) as e:
+        logger.debug('adaptive_summary_module_failed: %s', e, exc_info=True)
     expiry_details: list[ExpiryDetail] = []
     expiry_universe_map: dict[Any, Any] | None = None  # keys may be date objects
     # Initialize stale flags early to avoid unbound branches
@@ -525,7 +532,7 @@ def process_index(
                     # Ensure universe is iterable of dicts; if not, skip building.
                     if not isinstance(universe, Iterable):
                         raise TypeError('universe_not_iterable')
-                except Exception:
+                except TypeError:
                     universe = []
                 # _build_expiry_map already imported at module level
                 if not _build_expiry_map:
@@ -539,11 +546,11 @@ def process_index(
                             trace('expiry_map_build', index=index_symbol, unique=len(expiry_universe_map) if expiry_universe_map else 0, stats=map_stats)
                         if metrics and hasattr(metrics,'expiry_map_build_seconds'):
                             try: metrics.expiry_map_build_seconds.labels(index=index_symbol).observe(time.time()-_t_um)
-                            except Exception: pass
-                    except Exception:
-                        logger.debug('Expiry map build inner failed', exc_info=True)
-    except Exception:
-        logger.debug('Expiry map build failed (non-fatal)', exc_info=True)
+                            except (AttributeError, ValueError, TypeError): pass
+                    except (AttributeError, KeyError, TypeError, ValueError) as e:
+                        logger.debug('Expiry map build inner failed: %s', e, exc_info=True)
+    except (AttributeError, ValueError, TypeError) as e:
+        logger.debug('Expiry map build failed (non-fatal): %s', e, exc_info=True)
 
     # ------------------------------------------------------------------
     # Expiry Rules Resolution (with optional expansion)
@@ -571,18 +578,18 @@ def process_index(
                         logger.debug(log_msg)
                     else:
                         logger.info(log_msg)
-                except Exception:
-                    pass
-    except Exception:
+                except (ValueError, TypeError) as e:
+                    logger.debug('Failed to log expiry expansion: %s', e)
+    except (OSError, ValueError, KeyError, TypeError) as e:
         # Non-fatal; keep original list
-        pass
+        logger.debug('Expiry expansion failed: %s', e)
 
     for expiry_rule in final_expiries:
         per_index_attempts += 1
         if _test_debug:
             try:
                 print(f"[G6_TEST_DEBUG] stage=pre_expiry_call index={index_symbol} rule={expiry_rule} strikes={len(precomputed_strikes or [])}")
-            except Exception:
+            except (ValueError, TypeError):
                 pass
         expiry_outcome = process_expiry(
             ctx=ctx,
@@ -617,7 +624,7 @@ def process_index(
                 rec = expiry_outcome.get('expiry_rec') or {}
                 inst = int(rec.get('instruments') or 0) if isinstance(rec, dict) else None
                 print(f"[G6_TEST_DEBUG] stage=post_expiry_call index={index_symbol} rule={expiry_rule} success={succ} option_count={oc} instruments={inst}")
-            except Exception:
+            except (ValueError, TypeError, KeyError):
                 pass
         if expiry_outcome.get('success'):
             per_index_option_count += expiry_outcome.get('option_count',0)
@@ -626,7 +633,7 @@ def process_index(
         if 'expiry_rec' in expiry_outcome:
             try:
                 expiry_details.append(expiry_outcome['expiry_rec'])
-            except Exception:
+            except (KeyError, TypeError):
                 pass
         hr = expiry_outcome.get('human_row')
         if hr and isinstance(hr, (list, tuple)):
@@ -642,7 +649,7 @@ def process_index(
         if field_thr_raw:
             try:
                 stale_field_thr = max(0.0, min(1.0, float(field_thr_raw)))
-            except Exception:
+            except (ValueError, TypeError):
                 stale_field_thr = 0.0
         # Build a simple view of field coverage across expiries.
         _expiry_field_cov = []
@@ -650,7 +657,7 @@ def process_index(
             fc = _exp.get('field_coverage')
             try:
                 fc_f = float(fc) if fc is not None else -1.0
-            except Exception:
+            except (ValueError, TypeError):
                 fc_f = -1.0
             _expiry_field_cov.append(fc_f)
         index_stale = False
@@ -662,7 +669,8 @@ def process_index(
         # Also precompute cycle_status for structured result: mark as STALE when stale regardless of write mode.
         # This ensures visibility even when we still perform writes in 'mark'/'abort' modes.
         cycle_status = 'STALE' if index_stale else None
-    except Exception:
+    except (AttributeError, ValueError, TypeError) as e:
+        logger.debug('Stale detection failed: %s', e)
         index_stale = False
         stale_mode = 'mark'
         stale_field_thr = 0.0
@@ -681,7 +689,7 @@ def process_index(
                         'Count of cycles where index or system classified stale',
                         ['index','mode'],
                     )
-                except Exception:
+                except (AttributeError, ValueError, TypeError):
                     pass
             if not hasattr(metrics, 'stale_active'):
                 try:
@@ -690,20 +698,20 @@ def process_index(
                         'Whether index stale in current cycle (1 stale, 0 ok)',
                         ['index'],
                     )
-                except Exception:
+                except (AttributeError, ValueError, TypeError):
                     pass
             # Update gauges & counters (best-effort)
             try:
                 metrics.stale_active.labels(index=index_symbol).set(1 if index_stale else 0)
-            except Exception:
+            except (AttributeError, ValueError, TypeError):
                 pass
             if index_stale:
                 try:
                     metrics.stale_cycles_total.labels(index=index_symbol, mode=stale_mode).inc()
-                except Exception:
+                except (AttributeError, ValueError, TypeError):
                     pass
-        except Exception:
-            logger.debug('stale_metrics_update_failed', exc_info=True)
+        except (AttributeError, ImportError, ValueError, TypeError) as e:
+            logger.debug('stale_metrics_update_failed: %s', e, exc_info=True)
 
     # overview snapshot write (skip when stale_mode=skip and index_stale)
     if not (stale_mode == 'skip' and index_stale):
@@ -716,14 +724,15 @@ def process_index(
                 per_index_ts,
                 expected_expiries,
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError) as e:
+            logger.debug('emit_overview_aggregation failed: %s', e)
             # aggregation_state.representative_day_width may be None; treat as Optional[int]
             representative_day_width = aggregation_state.representative_day_width  # type: ignore[assignment]
             snapshot_base_time = aggregation_state.snapshot_base_time or per_index_ts
             try:
                 if pcr_snapshot:
                     ctx.csv_sink.write_overview_snapshot(index_symbol, pcr_snapshot, snapshot_base_time, representative_day_width, expected_expiries=expected_expiries)
-            except Exception as snap_e:  # pragma: no cover
+            except (OSError, AttributeError, TypeError, ValueError) as snap_e:  # pragma: no cover
                 logger.error("Failed to write aggregated overview snapshot for %s: %s", index_symbol, snap_e)
     else:
         logger.warning("stale_write_skip index=%s mode=skip field_cov_thr=%s", index_symbol, stale_field_thr)
@@ -740,7 +749,8 @@ def process_index(
                     per_index_success=per_index_success,
                     atm_strike=atm_strike,
                 )
-            except Exception:
+            except (AttributeError, TypeError, ValueError) as e:
+                logger.debug('update_per_index_metrics failed: %s', e)
                 try:
                     elapsed_index = time.time() - per_index_start
                     _ = elapsed_index
@@ -749,14 +759,15 @@ def process_index(
                         metrics.index_avg_processing_time.labels(index=index_symbol).set(per_index_option_processing_seconds / max(per_index_option_count,1))
                     else:
                         try: metrics.collection_errors.labels(index=index_symbol, error_type='no_options').inc()
-                        except Exception: pass
+                        except (AttributeError, ValueError, TypeError): pass
                     metrics.index_last_collection_unixtime.labels(index=index_symbol).set(int(time.time()))
                     metrics.index_current_atm.labels(index=index_symbol).set(float(atm_strike))
                     try: metrics.mark_index_cycle(index=index_symbol, attempts=per_index_attempts, failures=per_index_failures)
-                    except Exception:
+                    except (AttributeError, TypeError):
                         rate = 100.0 if per_index_success else 0.0
                         metrics.index_success_rate.labels(index=index_symbol).set(rate)
-                except Exception: logger.debug("Failed index aggregate metrics for %s", index_symbol)
+                except (AttributeError, ValueError, TypeError, ZeroDivisionError) as e2: 
+                    logger.debug("Failed index aggregate metrics for %s: %s", index_symbol, e2)
         # Initialize to a sane default; override below
         cycle_status = 'unknown'
         try:
@@ -765,7 +776,7 @@ def process_index(
             try:
                 if pcr_snapshot:
                     first_key = sorted(pcr_snapshot.keys())[0]; pcr_val = pcr_snapshot[first_key]
-            except Exception:
+            except (KeyError, IndexError, AttributeError):
                 pass
             # Ensure each expiry_detail has a definitive status reflecting coverage metrics.
             for _exp in expiry_details:
@@ -774,7 +785,7 @@ def process_index(
                     _exp_status = _exp.get('status')
                     if not _exp_status or _exp_status.lower() in ('bad','unknown'):
                         _exp['status'] = compute_expiry_status(_exp)
-                except Exception:
+                except (AttributeError, KeyError, TypeError):
                     continue
             cycle_status = aggregate_cycle_status(expiry_details)
             if index_stale:
@@ -815,15 +826,15 @@ def process_index(
                 result['human_block'] = "\n".join(block_lines)
                 result['overall_legs'] += per_index_option_count
                 result['overall_fails'] += per_index_failures
-        except Exception as e:  # ensure we always return a result structure
+        except (AttributeError, ValueError, TypeError, KeyError) as e:  # ensure we always return a result structure
             logger.error("Error processing index %s: %s", index_symbol, e)
             try: trace('index_error', index=index_symbol, error=str(e))
-            except Exception: pass
+            except (AttributeError, TypeError): pass
     # Always set overall legs/fails on the result (used by callers for rollups)
     try:
         result['overall_legs'] = int(per_index_option_count)
         result['overall_fails'] = int(per_index_failures)
-    except Exception:
+    except (ValueError, TypeError):
         # Leave defaults from initialization
         pass
 
@@ -836,7 +847,7 @@ def process_index(
         if not _expiries and per_index_attempts > 0:
             try:
                 _rule = (_p(params,'expiries',['this_week']) or ['this_week'])[0]
-            except Exception:
+            except (IndexError, KeyError, TypeError):
                 _rule = 'this_week'
             _expiries = [{'rule': _rule, 'status': 'empty', 'options': 0, 'failed': True}]
         # Prefer the computed cycle_status if available; default to 'unknown'
@@ -857,11 +868,12 @@ def process_index(
         try:
             if 'index_stale' in locals():
                 entry['stale'] = bool(index_stale)
-        except Exception:
+        except (NameError, TypeError):
             pass
         result['indices_struct_entry'] = entry
-    except Exception:
+    except (AttributeError, ValueError, TypeError, KeyError) as e:
         # Keep result without indices_struct_entry on unexpected failure
+        logger.debug('Failed to build indices_struct_entry: %s', e)
         logger.debug('build_indices_struct_entry_failed', exc_info=True)
     return result
 
