@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """Unified Benchmark Tools (Consolidated Phase 2)
 
-Replaces legacy separate scripts:
-  - bench_aggregate.py
-  - bench_diff.py
-  - bench_verify.py
+Replaced legacy separate scripts:
+  - bench_aggregate.py (removed)
+  - bench_diff.py (removed)
+  - bench_verify.py (removed)
 
 Subcommands:
   aggregate  -> Aggregate artifacts to CSV / stats / markdown
   diff       -> Human-readable diff between two artifacts
   verify     -> Digest verification over artifact directory
-
-During grace period the original script names remain as thin deprecation
-wrappers importing and delegating into this module.
 """
 from __future__ import annotations
 

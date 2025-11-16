@@ -84,12 +84,12 @@ def cmd_test(ns: argparse.Namespace) -> None:
 
 
 def cmd_quick_cycle(_: argparse.Namespace) -> None:
-    # Provide minimal simulation: run summary view once (existing script) using test runtime status
+    # Provide minimal simulation: run unified summary app once using test runtime status
     status_file = REPO_ROOT / "data" / "runtime_status_test.json"
     if not status_file.exists():
         print(f"[dev_tasks] status file not found: {status_file} (ensure tests ran or generate one)")
     py = sys.executable
-    script = REPO_ROOT / "scripts" / "summary_view.py"
+    script = REPO_ROOT / "scripts" / "summary" / "app.py"
     _run([py, str(script), "--no-rich", "--refresh", "1", "--status-file", str(status_file)])
 
 

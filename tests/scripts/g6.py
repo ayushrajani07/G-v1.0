@@ -84,14 +84,11 @@ def cmd_simulate(args: argparse.Namespace) -> int:
 
 
 def cmd_panels_bridge(args: argparse.Namespace) -> int:
-    # Invoke tombstone stub to preserve exit semantics (always non-zero) while
-    # also printing immediate guidance here for clarity.
+    # Legacy panels bridge has been removed. Print guidance and redirect to summary app.
     if os.getenv('G6_SUPPRESS_LEGACY_CLI','').lower() not in {'1','true','yes','on'}:
         print(f'[REMOVED] panels-bridge: use `python -m scripts.summary.app --refresh {args.refresh}` (panels emitted in-process)', file=sys.stderr)
-    base = [sys.executable, str(ROOT / 'scripts' / 'status_to_panels.py'), '--status-file', args.status_file, '--refresh', str(args.refresh)]
-    if args.once:
-        base.append('--once')  # retained for stub parity; has no effect
-    return _run(base)
+    # Redirect to unified summary app instead
+    return cmd_summary(args)
 
 
 def cmd_integrity(args: argparse.Namespace) -> int:

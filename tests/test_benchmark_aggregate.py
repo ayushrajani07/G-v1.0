@@ -40,8 +40,8 @@ def test_bench_aggregate_basic(tmp_path):
         if i == 0:
             time.sleep(0.002)  # ensure distinct timestamp
     out_csv = tmp_path / 'out.csv'
-    from scripts.bench_aggregate import main as agg_main
-    agg_main(['--dir', str(dump_dir), '--out', str(out_csv)])
+    from scripts.bench_tools import main as bench_main
+    bench_main(['aggregate', '--dir', str(dump_dir), '--out', str(out_csv)])
     text = out_csv.read_text(encoding='utf-8').splitlines()
     assert text, 'CSV should not be empty'
     header = text[0].split(',')
@@ -56,8 +56,8 @@ def test_bench_aggregate_with_index_breakdown(tmp_path):
     dump_dir = tmp_path / 'bench'
     _run_cycle(dump_dir)
     out_csv = tmp_path / 'out_idx.csv'
-    from scripts.bench_aggregate import main as agg_main
-    agg_main(['--dir', str(dump_dir), '--out', str(out_csv), '--include-index-breakdown'])
+    from scripts.bench_tools import main as bench_main
+    bench_main(['aggregate', '--dir', str(dump_dir), '--out', str(out_csv), '--include-index-breakdown'])
     header = out_csv.read_text(encoding='utf-8').splitlines()[0].split(',')
     assert any(h.startswith('per_index_NIFTY_') for h in header)
 

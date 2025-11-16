@@ -1,7 +1,7 @@
 """
 status_simulator.py
 
-Generates a realistic runtime_status.json for demo/testing the summary_view.
+Generates a realistic runtime_status.json for demo/testing the unified summary app.
 - Periodically writes JSON to the given path
 - Randomizes prices and ages per index
 - Can include dummy analytics

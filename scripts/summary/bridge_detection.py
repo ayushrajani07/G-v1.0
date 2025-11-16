@@ -4,11 +4,11 @@ Used by unified loop to avoid double-writing panel JSON artifacts. The
 heuristic intentionally favors *not* blocking (warn & disable PanelsWriter)
 vs. terminating the unified loop.
 
-Deprecation Reference:
-    The legacy bridge (`scripts/status_to_panels.py`) is now an immediately
-    blocked stub unless `G6_ALLOW_LEGACY_PANELS_BRIDGE=1` is set. This detection
-    helper remains temporarily to avoid double-writing when users explicitly
-    opt into the legacy path during short transitional windows.
+Historical Note:
+    The legacy bridge (`scripts/status_to_panels.py`) has been fully removed.
+    This detection helper remains for backward compatibility in case any
+    external processes still attempt to run the old script path. In practice,
+    this should always return no active bridge.
 """
 from __future__ import annotations
 

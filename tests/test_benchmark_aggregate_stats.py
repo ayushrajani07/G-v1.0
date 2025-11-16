@@ -1,6 +1,11 @@
 import os, json, pathlib
 from src.collectors.unified_collectors import run_unified_collectors
-from scripts.bench_aggregate import main as agg_main
+from scripts.bench_tools import main as bench_main
+
+
+def agg_main(args):
+    """Wrapper to match old API."""
+    return bench_main(['aggregate'] + args)
 
 class _Csv:  # noop
     def write_options_data(self,*a,**k): return None
