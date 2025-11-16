@@ -1018,9 +1018,209 @@ BASELINE_K_COEFFICIENT = 1.0
 
 1. ML_ARM_REFACTORING_ANALYSIS.md - Primary analysis
 2. ML_ROADMAP_TP_FORECAST.md - Existing ML roadmap
-3. scikit-learn Quantile Regression Documentation
-4. Conformal Prediction: Vovk et al. (2005)
-5. Time Series Cross-Validation: scikit-learn
+3. ML_ARM_CLARIFICATIONS.md - Feature clarifications and FAQ
+4. scikit-learn Quantile Regression Documentation
+5. Conformal Prediction: Vovk et al. (2005)
+6. Time Series Cross-Validation: scikit-learn
+
+---
+
+## Phase 7: Model Enhancements (Post-Launch)
+
+**Duration:** 2 weeks  
+**Priority:** Medium  
+**Owner:** ML Engineering Team  
+**Timing:** After Phase 4 deployment and initial monitoring
+
+### Objectives
+- Extend training data to include near-strike options (±2 strikes)
+- Implement corrected index price relationship in feature engineering
+- Validate performance improvements via A/B testing
+
+### 7.1 Near-Strike Data Integration
+
+**Rationale:**
+- ATM-only data may miss valuable information from near-the-money options
+- Including ATM±1 and ATM±2 strikes can capture:
+  - Strike skew information
+  - Local volatility surface structure
+  - Greeks gradient effects (Gamma, Vanna)
+  - Improved regime detection
+
+**Implementation Tasks:**
+
+#### 7.1.1 Data Collection Enhancement
+**File:** Enhance existing data collection pipeline
+
+```python
+# Current: Collect only ATM strike
+strikes_to_collect = [atm_strike]
+
+# Enhanced: Collect ATM ± 2 strikes
+strike_step = get_strike_step(index)  # e.g., 50 for NIFTY
+strikes_to_collect = [
+    atm_strike - 2 * strike_step,  # ATM-2
+    atm_strike - 1 * strike_step,  # ATM-1
+    atm_strike,                     # ATM
+    atm_strike + 1 * strike_step,  # ATM+1
+    atm_strike + 2 * strike_step   # ATM+2
+]
+```
+
+**New Features (15 additional):**
+1. **Premium Ratios (4):**
+   - `ce_atm1_ratio = ce_atm1_premium / ce_atm_premium`
+   - `pe_atm1_ratio = pe_atm1_premium / pe_atm_premium`
+   - `ce_atm2_ratio = ce_atm2_premium / ce_atm_premium`
+   - `pe_atm2_ratio = pe_atm2_premium / pe_atm_premium`
+
+2. **Strike Skew (4):**
+   - `ce_iv_skew = (ce_atm1_iv - ce_atm_minus1_iv) / atm_iv`
+   - `pe_iv_skew = (pe_atm1_iv - pe_atm_minus1_iv) / atm_iv`
+   - `total_iv_skew = avg(ce_iv_skew, pe_iv_skew)`
+   - `iv_smile_curvature = (ce_atm1_iv + ce_atm_minus1_iv - 2*ce_atm_iv)`
+
+3. **Greeks Gradients (3):**
+   - `gamma_gradient = (gamma_atm1 - gamma_atm_minus1) / (2*strike_step)`
+   - `vega_gradient = (vega_atm1 - vega_atm_minus1) / (2*strike_step)`
+   - `theta_gradient = (theta_atm1 - theta_atm_minus1) / (2*strike_step)`
+
+4. **Liquidity Indicators (4):**
+   - `volume_concentration = atm_volume / total_5_strikes_volume`
+   - `oi_concentration = atm_oi / total_5_strikes_oi`
+   - `bid_ask_spread_avg = avg(spread across 5 strikes)`
+   - `liquidity_score = f(volume, oi, spread)`
+
+**Dataset Updates:**
+- Update `generate_training_dataset.py` to fetch ±2 strikes
+- Extend feature engineering to compute 15 new features
+- Total features: 24 (original) + 15 (near-strike) = **39 features**
+
+**Success Criteria:**
+- [ ] Data collection includes ATM±2 strikes with >95% availability
+- [ ] New features computed without NaN/Inf values
+- [ ] Feature importance analysis shows ≥3 new features in top 20
+
+---
+
+### 7.2 Index Price Relationship Correction
+
+**Issue Identified:**
+Original assumption: "higher index → higher ATM premium" is **oversimplified**
+
+**Corrected Understanding:**
+- **Absolute Index Level**: Used in baseline formula as scaling factor
+  - `baseline_tp = k * index_price * iv * sqrt(T)`
+  - Higher index → proportionally higher baseline (ceteris paribus)
+
+- **Index Price Dynamics**: Affects residual via:
+  - **Returns**: `index_return_1min`, `index_return_5min` capture momentum
+  - **Volatility**: `index_vol_5min` captures realized volatility
+  - **Correlation with IV**: Index drops often coincide with IV spikes
+
+**Feature Engineering Corrections:**
+
+#### 7.2.1 Enhanced Index Features (5 new)
+
+```python
+# 1. Signed vs. Unsigned Returns
+features['index_return_1min_abs'] = abs(index_return_1min)  # Magnitude
+features['index_return_1min_sign'] = sign(index_return_1min)  # Direction
+
+# 2. Index-IV Correlation
+features['index_iv_correlation_5min'] = rolling_corr(index_returns, iv_changes, window=5)
+
+# 3. Realized vs. Implied Vol Ratio
+features['rv_iv_ratio'] = rolling_std(index_returns, 5) / avg_iv
+
+# 4. Index Price Percentile (Regime)
+features['index_price_percentile'] = percentile_rank(index_price, lookback=60min)
+```
+
+#### 7.2.2 Baseline Formula Validation
+
+**Current Baseline:**
+```python
+baseline_tp = k * index_price * avg_iv * sqrt(T)
+```
+
+**Validation Tasks:**
+- [ ] Backtest correlation: baseline_tp vs. actual_tp (target: >0.85)
+- [ ] Test alternative formulas:
+  - `baseline_tp = k * sqrt(index_price) * avg_iv * sqrt(T)`  # Sub-linear scaling
+  - `baseline_tp = k * log(index_price) * avg_iv * T`  # Log scaling
+- [ ] Compare MAE of residuals across formulas
+- [ ] Document best-performing formula in `baseline.py`
+
+#### 7.2.3 Model Training Updates
+
+**Residual Definition:**
+```python
+# Current (correct):
+residual = actual_tp - baseline_tp
+
+# Ensure GBRT trains on residual, not raw TP:
+y_train = residuals  # NOT actual_tp
+```
+
+**Feature Interactions to Test:**
+```python
+# Interaction features capturing index dynamics:
+features['index_return_x_iv'] = index_return_1min * avg_iv
+features['index_return_x_gamma'] = index_return_1min * gamma
+features['index_vol_x_vega'] = index_vol_5min * vega
+```
+
+**A/B Test Plan:**
+- **Variant A (Current)**: Original index features only
+- **Variant B (Enhanced)**: + 5 new index features + 3 interactions
+- **Metric**: Validation MAE, Coverage accuracy
+- **Decision**: Deploy Variant B if MAE improves by >2%
+
+---
+
+### 7.3 Implementation Schedule
+
+**Week 1: Near-Strike Data**
+- **Day 1-2**: Update data collection to fetch ATM±2
+- **Day 3-4**: Implement 15 new features
+- **Day 5**: Generate updated training datasets
+
+**Week 2: Index Corrections & Testing**
+- **Day 1-2**: Implement 5 new index features
+- **Day 3**: Validate baseline formula alternatives
+- **Day 4**: Train models with enhanced features
+- **Day 5**: A/B testing and validation
+
+### 7.4 Success Criteria
+
+- [ ] Near-strike data integrated with >95% availability
+- [ ] 15 new strike-based features computed successfully
+- [ ] 5 new index features implemented
+- [ ] Baseline formula validated (correlation >0.85)
+- [ ] A/B test shows ≥2% MAE improvement OR no degradation
+- [ ] Feature importance analysis confirms value-add
+- [ ] All tests pass with updated features
+
+### 7.5 Rollback Plan
+
+**If enhancements degrade performance:**
+1. Keep ATM-only mode as fallback configuration
+2. Disable near-strike features via config flag:
+   ```json
+   "use_near_strikes": false
+   ```
+3. Revert to original baseline formula
+4. Document findings in post-mortem
+
+### 7.6 Risk Mitigation
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Near-strike data gaps | High | Fallback to ATM-only mode |
+| Increased overfitting | Medium | Regularization, feature selection |
+| Higher latency | Low | Feature caching, batch computation |
+| Baseline formula instability | Medium | A/B test before full rollout |
 
 ---
 
