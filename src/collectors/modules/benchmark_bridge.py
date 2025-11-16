@@ -130,9 +130,9 @@ def _annotate_anomalies(payload: dict[str, Any], dump_root: pathlib.Path, detect
                     dur = data.get('duration_s')
                     if isinstance(dur, (int, float)):
                         prev_durs.append(float(dur))
-            except Exception:
+            except (OSError, json.JSONDecodeError, gzip.BadGzipFile):
                 continue
-    except Exception:
+    except (OSError, RuntimeError):
         pass
     cur_opts_series = prev_opts + [float(payload.get('options_total') or 0)]
     cur_dur_series = prev_durs + [float(payload.get('duration_s') or 0.0)]
@@ -148,7 +148,7 @@ def _annotate_anomalies(payload: dict[str, Any], dump_root: pathlib.Path, detect
                 'history_len': len(cur_opts_series),
                 'recent_flags': int(sum(flags)),
             }
-    except Exception:
+    except (ValueError, TypeError, IndexError, RuntimeError):
         if logger:
             logger.debug('benchmark_anomaly_options_failed', exc_info=True)
     try:
@@ -161,7 +161,7 @@ def _annotate_anomalies(payload: dict[str, Any], dump_root: pathlib.Path, detect
                 'history_len': len(cur_dur_series),
                 'recent_flags': int(sum(flags)),
             }
-    except Exception:
+    except (ValueError, TypeError, IndexError, RuntimeError):
         if logger:
             logger.debug('benchmark_anomaly_duration_failed', exc_info=True)
     if anomalies_struct:
@@ -172,11 +172,11 @@ def _annotate_anomalies(payload: dict[str, Any], dump_root: pathlib.Path, detect
                 try:
                     total_flags += 1 if meta.get('is_anomaly') else 0
                     max_sev = max(max_sev, abs(float(meta.get('score') or 0.0)))
-                except Exception:
+                except (ValueError, TypeError):
                     pass
             payload['anomalies'] = anomalies_struct
             payload['anomaly_summary'] = {'active_flags': total_flags, 'max_severity': max_sev}
-        except Exception:
+        except (ValueError, TypeError, KeyError):
             payload['anomalies'] = anomalies_struct
 
 
@@ -198,13 +198,13 @@ def write_benchmark_artifact(indices_struct: list[dict[str, Any]], total_elapsed
         if detect_anomalies_fn and _bool_env('G6_BENCHMARK_ANNOTATE_OUTLIERS'):
             try:
                 _annotate_anomalies(payload, root, detect_anomalies_fn, logger)
-            except Exception:
+            except (OSError, RuntimeError, ValueError):
                 pass
         # Digest computed before pretty dump
         try:
             canonical = json.dumps(payload, sort_keys=True, separators=(',',':'), ensure_ascii=False)
             payload['digest_sha256'] = hashlib.sha256(canonical.encode('utf-8')).hexdigest()
-        except Exception:
+        except (TypeError, ValueError):
             payload['digest_sha256'] = None
         compress = _bool_env('G6_BENCHMARK_COMPRESS')
         suffix = 'json.gz' if compress else 'json'
@@ -224,7 +224,7 @@ def write_benchmark_artifact(indices_struct: list[dict[str, Any]], total_elapsed
                     json.dump(payload, f, indent=2, ensure_ascii=False)
             if logger:
                 logger.debug("Benchmark baseline artifact written: %s", out_file)
-        except Exception:
+        except (OSError, PermissionError, TypeError, ValueError):
             if logger:
                 logger.debug('benchmark_dump_write_failed', exc_info=True)
         # Metrics (best-effort)
@@ -236,37 +236,37 @@ def write_benchmark_artifact(indices_struct: list[dict[str, Any]], total_elapsed
                 # Last options total gauge
                 if not hasattr(metrics, 'benchmark_last_options_total'):
                     try: metrics.benchmark_last_options_total = _G('g6_benchmark_last_options_total','Last cycle aggregate options_total')
-                    except Exception: pass
+                    except (ValueError, RuntimeError): pass
                 # Cycle duration summary
                 if not hasattr(metrics, 'benchmark_cycle_duration_seconds'):
                     try: metrics.benchmark_cycle_duration_seconds = _S('g6_benchmark_cycle_duration_seconds','Benchmark cycle duration seconds summary')
-                    except Exception: pass
+                    except (ValueError, RuntimeError): pass
                 # Anomaly metrics (if anomalies present)
                 if 'anomalies' in payload:
                     if not hasattr(metrics, 'benchmark_anomalies_total'):
                         try: metrics.benchmark_anomalies_total = _C('g6_benchmark_anomalies_total','Count of benchmark cycles with at least one anomaly detected')
-                        except Exception: pass
+                        except (ValueError, RuntimeError): pass
                     if not hasattr(metrics, 'benchmark_last_anomaly_severity'):
                         try: metrics.benchmark_last_anomaly_severity = _G('g6_benchmark_last_anomaly_severity','Max anomaly severity (abs robust z-score) for latest cycle')
-                        except Exception: pass
+                        except (ValueError, RuntimeError): pass
                 g_last = getattr(metrics, 'benchmark_last_options_total', None)
                 s_dur = getattr(metrics, 'benchmark_cycle_duration_seconds', None)
                 if g_last:
                     try: g_last.set(payload.get('options_total') or 0)
-                    except Exception: pass
+                    except (ValueError, RuntimeError): pass
                 if s_dur:
                     try: s_dur.observe(payload.get('duration_s') or 0)
-                    except Exception: pass
+                    except (ValueError, RuntimeError): pass
                 if 'anomalies' in payload:
                     c = getattr(metrics, 'benchmark_anomalies_total', None)
                     g = getattr(metrics, 'benchmark_last_anomaly_severity', None)
                     if c and any(m.get('is_anomaly') for m in payload.get('anomalies', {}).values()):
                         try: c.inc()
-                        except Exception: pass
+                        except (ValueError, RuntimeError): pass
                     if g and 'anomaly_summary' in payload:
                         try: g.set(payload['anomaly_summary'].get('max_severity') or 0)
-                        except Exception: pass
-            except Exception:
+                        except (ValueError, RuntimeError, TypeError): pass
+            except (ImportError, ValueError, RuntimeError):
                 if logger:
                     logger.debug('benchmark_cycle_metrics_failed', exc_info=True)
         # Retention pruning
@@ -277,24 +277,24 @@ def write_benchmark_artifact(indices_struct: list[dict[str, Any]], total_elapsed
                 if len(files) > keep_n:
                     for old in files[:len(files)-keep_n]:
                         try: old.unlink()
-                        except Exception: pass
+                        except (OSError, PermissionError): pass
                 if metrics is not None:
                     try:
                         from prometheus_client import Gauge as _G
                         if not hasattr(metrics, 'benchmark_artifacts_retained'):
                             try: metrics.benchmark_artifacts_retained = _G('g6_benchmark_artifacts_retained','Count of benchmark artifacts retained after pruning')
-                            except Exception: pass
+                            except (ValueError, RuntimeError): pass
                         g_art = getattr(metrics, 'benchmark_artifacts_retained', None)
                         if g_art:
                             remaining = [p for p in root.glob('benchmark_cycle_*.json*') if p.is_file()]
                             try: g_art.set(len(remaining))
-                            except Exception: pass
-                    except Exception:
+                            except (ValueError, RuntimeError): pass
+                    except (ImportError, ValueError, RuntimeError):
                         if logger:
                             logger.debug('benchmark_artifacts_retained_metric_failed', exc_info=True)
-            except Exception:
+            except (OSError, RuntimeError):
                 if logger:
                     logger.debug('benchmark_dump_retention_failed', exc_info=True)
-    except Exception:
+    except (OSError, RuntimeError, ValueError):
         if logger:
             logger.debug('benchmark_dump_failed', exc_info=True)
