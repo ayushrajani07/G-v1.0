@@ -55,7 +55,8 @@ def load_profiles(config_path: Optional[str]) -> Dict[str, Dict[str, float]]:
                 for name, cfg in data.items():
                     if isinstance(cfg, dict):
                         profiles[name] = {**profiles.get(name, {}), **cfg}
-    except Exception:
+    except (OSError, IOError, json.JSONDecodeError, ValueError):
+        # File access errors, JSON parsing errors - use defaults
         pass
     return profiles
 
@@ -115,7 +116,8 @@ def forecast_path_core(
             mode_used = "hybrid"
             try:
                 diag = dict(comp.last_meta or {})
-            except Exception:
+            except (AttributeError, TypeError):
+                # Missing last_meta attribute or type conversion error
                 diag = {}
         else:
             from pathlib import Path
