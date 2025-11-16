@@ -43,6 +43,6 @@ def emit_overview_aggregation(
                 )
             except Exception as inner:
                 logger.error("Failed to write aggregated overview snapshot for %s: %s", index_symbol, inner)
-    except Exception:  # pragma: no cover
+    except (TypeError, ValueError, AttributeError, OSError, IOError):  # pragma: no cover
         logger.debug("aggregation_overview_unexpected_failure", exc_info=True)
     return representative_day_width, snapshot_base_time

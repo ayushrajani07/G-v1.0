@@ -391,8 +391,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             _pcerw = getattr(_m, 'pipeline_cycle_error_rate_window', None)
                             if _pcerw is not None:
                                 try: _pcerw.set(1 - (sum(window)/len(window)))
-                                except Exception: pass
-                        except Exception:
+                                except (ZeroDivisionError, AttributeError, TypeError): pass
+                        except (AttributeError, TypeError, ValueError):
                             pass
                     # Trends file ingestion (long horizon gauges) gated by env flag
                     if _env_bool('G6_PIPELINE_TRENDS_METRICS', False):  # lightweight file read
@@ -408,29 +408,29 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             _ptc = getattr(_m, 'pipeline_trends_cycles', None)
                             if _ptc is not None:
                                 try: _ptc.set(cycles)
-                                except Exception: pass
+                                except (AttributeError, ValueError, TypeError): pass
                             _ptsr = getattr(_m, 'pipeline_trends_success_rate', None)
                             if _ptsr is not None:
                                 try: _ptsr.set(success_rate)
-                                except Exception: pass
-                        except Exception:
+                                except (AttributeError, ValueError, TypeError): pass
+                        except (AttributeError, TypeError, KeyError):
                             pass
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
                     pass
                 # Optional legacy cycle_tables integration
                 try:
                     if _env_bool('G6_CYCLE_TABLES_PIPELINE_INTEGRATION', False):
                         try:
                             record_pipeline_summary(summary)
-                        except Exception:
+                        except (OSError, ValueError, TypeError, AttributeError):
                             pass
-                except Exception:
+                except (ValueError, TypeError, AttributeError):
                     pass
                 if _env_bool('G6_PIPELINE_CYCLE_SUMMARY_STDOUT', False):
                     import json as _json
                     try:
                         print('pipeline.summary', _json.dumps(summary, separators=(',',':')))
-                    except Exception:
+                    except (ValueError, TypeError, OSError):
                         pass
                 # Panel export (errors + summary) if enabled
                 if _env_bool('G6_PIPELINE_PANEL_EXPORT', False):
@@ -441,7 +441,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                         hash_enabled = _env_bool('G6_PIPELINE_PANEL_EXPORT_HASH', True)
                         try:
                             history_limit = _env_int('G6_PIPELINE_PANEL_EXPORT_HISTORY_LIMIT', 20)
-                        except Exception:
+                        except (ValueError, TypeError):
                             history_limit = 20
                         if history_limit < 1:
                             history_limit = 1
@@ -455,7 +455,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             for _p in [p.strip() for p in _redact_patterns.split(',') if p.strip()]:
                                 try:
                                     msg = _re.sub(_p, _redact_repl, msg)
-                                except Exception:
+                                except (TypeError, ValueError, AttributeError):
                                     continue
                             return msg
                         export = {
@@ -485,13 +485,13 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                     'version': export['version'],
                                 }
                                 export['content_hash'] = _hashlib.sha256(_json2.dumps(content_projection, sort_keys=True).encode()).hexdigest()[:16]
-                            except Exception:
+                            except (ValueError, TypeError, KeyError, AttributeError):
                                 pass
                         export_path = os.path.join(panels_dir, 'pipeline_errors_summary.json')
                         try:
                             with open(export_path, 'w', encoding='utf-8') as fh:
                                 _json2.dump(export, fh, separators=(',',':'))
-                        except Exception as e:
+                        except (OSError, IOError, PermissionError, ValueError, TypeError) as e:
                             # Route panel export write failure
                             try:
                                 from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
@@ -504,7 +504,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                     message='pipeline panel export write failed',
                                     context={'path': export_path}
                                 )
-                            except Exception:
+                            except (ImportError, AttributeError, TypeError):
                                 pass
                             # Skip further history/trends processing on failure
                             history_enabled = False
@@ -524,7 +524,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                             try:
                                 with open(hist_path, 'w', encoding='utf-8') as fh2:
                                     _json2.dump(export, fh2, separators=(',',':'))
-                            except Exception:
+                            except (OSError, IOError, PermissionError, ValueError, TypeError):
                                 pass
                             # Build / update index file listing newest first
                             try:
@@ -537,7 +537,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                         core = fn[len('pipeline_errors_summary_'):-5]
                                         base_ts = core.split('_')[0]
                                         return int(base_ts)
-                                    except Exception:
+                                    except (ValueError, IndexError, TypeError):
                                         return 0
                                 all_hist.sort(key=_extract_ts, reverse=True)
                                 # Prune beyond limit
@@ -545,7 +545,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                     for old in all_hist[history_limit:]:
                                         try:
                                             os.remove(os.path.join(panels_dir, old))
-                                        except Exception:
+                                        except (OSError, IOError, PermissionError):
                                             pass
                                     all_hist = all_hist[:history_limit]
                                 index_entries = []
@@ -556,7 +556,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                             with open(os.path.join(panels_dir, fname), encoding='utf-8') as _rf:
                                                 _d = _json2.load(_rf)
                                             index_entries.append({'file': fname, 'hash': _d.get('content_hash'), 'ts': _d.get('exported_at')})
-                                        except Exception:
+                                        except (OSError, IOError, ValueError, TypeError, KeyError):
                                             index_entries.append({'file': fname})
                                 index_payload = {
                                     'version': 1,
@@ -566,13 +566,13 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                 }
                                 with open(os.path.join(panels_dir, 'pipeline_errors_history_index.json'), 'w', encoding='utf-8') as fh3:
                                     _json2.dump(index_payload, fh3, separators=(',',':'))
-                            except Exception:
+                            except (OSError, IOError, PermissionError, ValueError, TypeError):
                                 pass
                         # Trend Aggregation
                         if _env_bool('G6_PIPELINE_TRENDS_ENABLED', False):
                             try:
                                 trend_limit = _env_int('G6_PIPELINE_TRENDS_LIMIT', 200)
-                            except Exception:
+                            except (ValueError, TypeError):
                                 trend_limit = 200
                             if trend_limit < 1:
                                 trend_limit = 1
@@ -582,7 +582,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                 try:
                                     with open(trend_path, encoding='utf-8') as _tf:
                                         trend_doc = _json_tr.load(_tf)
-                                except Exception:
+                                except (OSError, IOError, ValueError, TypeError):
                                     trend_doc = {'version':1,'records':[]}
                                 rec = {
                                     'ts': export['exported_at'],
@@ -624,17 +624,17 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                                             message='pipeline trends write failed',
                                             context={'path': trend_path}
                                         )
-                                    except Exception:
+                                    except (ImportError, AttributeError, TypeError):
                                         pass
                                     # Abort further trend processing (no loop to continue; just skip)
                                     pass
-                            except Exception:
+                            except (OSError, IOError, ValueError, TypeError, KeyError):
                                 pass
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError):
                         pass
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
                 pass
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError):
         pass
     return state
 
@@ -654,7 +654,7 @@ def _log_phase(name: str, started: float, state: ExpiryState, outcome: str) -> N
             len(getattr(state, 'errors', []) or []),
             len(getattr(state, 'enriched', {}) or {}),
         )
-    except Exception:
+    except (AttributeError, TypeError, ValueError):
         pass
 
 __all__ = ['execute_phases','Phase']
@@ -667,7 +667,7 @@ def _truthy(v: str) -> bool:
 def _safe_int(v: str, default: int) -> int:
     try:
         return int(v)
-    except Exception:
+    except (ValueError, TypeError):
         return default
 
 def _sleep_backoff(base_ms: int, jitter_ms: int, attempt: int, phase: str | None = None, metrics_cache: dict | None = None) -> None:  # pragma: no cover (timing side effect)
@@ -681,8 +681,8 @@ def _sleep_backoff(base_ms: int, jitter_ms: int, attempt: int, phase: str | None
             h = metrics_cache.get('backoff_hist')
             if h:
                 try: h.labels(phase=phase).observe(delay_ms / 1000.0)
-                except Exception: pass
-        except Exception:
+                except (AttributeError, ValueError, TypeError): pass
+        except (AttributeError, ValueError, TypeError):
             pass
     time.sleep(delay_ms / 1000.0)
 
@@ -697,7 +697,7 @@ def _ensure_retry_metrics(cache: dict) -> None:
         g = getattr(reg, 'pipeline_phase_last_attempts', None)
         if g is not None:
             cache['last_attempts_gauge'] = g
-    except Exception:
+    except (AttributeError, TypeError, ImportError):
         pass
     cache['initialized'] = True
 
@@ -708,13 +708,13 @@ def _record_attempt_metrics(phase: str, attempts: int, final_if_known: str | Non
         _ppa = getattr(reg, 'pipeline_phase_attempts', None)
         if _ppa is not None:
             try: _ppa.labels(phase=phase).inc()
-            except Exception: pass
+            except (AttributeError, ValueError, TypeError): pass
         if attempts > 1:
             _ppr = getattr(reg, 'pipeline_phase_retries', None)
             if _ppr is not None:
                 try: _ppr.labels(phase=phase).inc()
-                except Exception: pass
-    except Exception:
+                except (AttributeError, ValueError, TypeError): pass
+    except (AttributeError, TypeError, ImportError):
         pass
 
 def _record_final_metrics(phase: str, duration_ms: float, final_outcome: str) -> None:
@@ -723,15 +723,15 @@ def _record_final_metrics(phase: str, duration_ms: float, final_outcome: str) ->
         _ppo = getattr(reg, 'pipeline_phase_outcomes', None)
         if _ppo is not None:
             try: _ppo.labels(phase=phase, final_outcome=final_outcome).inc()
-            except Exception: pass
+            except (AttributeError, ValueError, TypeError): pass
         _ppd = getattr(reg, 'pipeline_phase_duration_ms', None)
         if _ppd is not None:
             try: _ppd.labels(phase=phase, final_outcome=final_outcome).inc(duration_ms)
-            except Exception: pass
+            except (AttributeError, ValueError, TypeError): pass
         _ppruns = getattr(reg, 'pipeline_phase_runs', None)
         if _ppruns is not None:
             try: _ppruns.labels(phase=phase, final_outcome=final_outcome).inc()
-            except Exception: pass
+            except (AttributeError, ValueError, TypeError): pass
         # Histogram observation (seconds) with lazy env bucket override (set once)
         _ppds = getattr(reg, 'pipeline_phase_duration_seconds', None)
         if _ppds is not None:  # histogram
@@ -745,11 +745,11 @@ def _record_final_metrics(phase: str, duration_ms: float, final_outcome: str) ->
                             arr = [float(x.strip()) for x in b_env.split(',') if x.strip()]
                             if arr:
                                 pass  # Documented limitation; cannot mutate buckets at runtime.
-                        except Exception:
+                        except (ValueError, TypeError, AttributeError):
                             pass
                     hist._g6_buckets_overridden = True
                 hist.labels(phase=phase, final_outcome=final_outcome).observe(duration_ms / 1000.0)
-            except Exception:
+            except (AttributeError, ValueError, TypeError):
                 pass
-    except Exception:
+    except (AttributeError, TypeError, ImportError):
         pass

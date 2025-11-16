@@ -68,13 +68,13 @@ def coverage_metrics(
                 # Wrap mapping-like into a plain dict snapshot
                 try:
                     coerced.append(dict(inst))
-                except Exception:
+                except (TypeError, ValueError):
                     continue
         val = _legacy_coverage_metrics(ctx, coerced, norm_strikes, index_symbol, expiry_rule, expiry_date)
         if isinstance(val, (int, float)):
             return float(val)
         return None
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         return None
 
 def field_coverage_metrics(
@@ -96,11 +96,11 @@ def field_coverage_metrics(
         else:
             try:
                 edict = dict(enriched_data)
-            except Exception:
+            except (TypeError, ValueError):
                 edict = {}
         val = _legacy_field_coverage_metrics(ctx, edict, index_symbol, expiry_rule, expiry_date)
         if isinstance(val, (int, float)):
             return float(val)
         return None
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         return None

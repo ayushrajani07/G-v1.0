@@ -59,7 +59,7 @@ def _try_call(fn: Callable[..., Any], variants: Variants) -> Any | None:
         except TypeError:
             # Signature mismatch - try next variant
             continue
-        except Exception:
+        except (PhaseAbortError, PhaseRecoverableError, PhaseFatalError, NoInstrumentsError, NoQuotesError, ResolveExpiryError):
             # Actual error from function call - re-raise as-is
             raise
     # Final attempt: call with first variant (will raise original error)
@@ -374,7 +374,7 @@ def phase_iv(ctx: Any, state: ExpiryState) -> ExpiryState:
                 },
                 state=state,
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
             pass
         return state
     meta: dict[str, Any] = {'attempted': False}
@@ -443,7 +443,7 @@ def phase_greeks(ctx: Any, state: ExpiryState) -> ExpiryState:
                 },
                 state=state,
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
             pass
         return state
     meta: dict[str, Any] = {'attempted': False}

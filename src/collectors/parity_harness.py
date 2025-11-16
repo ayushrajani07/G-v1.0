@@ -24,7 +24,7 @@ __all__ = ["capture_parity_snapshot", "snapshot_hash"]
 def _stable_sorted_symbols(symbols: list[str]) -> list[str]:
     try:
         return sorted(symbols)
-    except Exception:
+    except (TypeError, ValueError):
         return list(symbols)
 
 

@@ -36,6 +36,6 @@ def run_prefilter_clamp(index_symbol: str, expiry_rule: str, expiry_date: Any, i
         return instruments, None
     try:
         return apply_prefilter_clamp(index_symbol, expiry_rule, expiry_date, instruments)
-    except Exception:
+    except (TypeError, ValueError, KeyError, AttributeError):
         logger.debug('prefilter_apply_failed', exc_info=True)
         return instruments, None

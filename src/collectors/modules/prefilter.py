@@ -85,7 +85,7 @@ def apply_prefilter_clamp(index_symbol: str, expiry_rule: str, expiry_date: Any,
             disabled=False,
             strict=strict,
             )
-    except Exception:
+    except (TypeError, AttributeError, KeyError):
         logger.debug("emit_prefilter_clamp_failed", exc_info=True)
 
     return kept, (original_count, dropped_count, max_allowed, strict)

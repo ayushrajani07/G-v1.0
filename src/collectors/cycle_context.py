@@ -72,7 +72,7 @@ class CycleContext:
                 parts.append(f"{phase}={secs:.3f}s({pct:.1f}%){'/F'+str(fail) if fail else ''}")
             line = "PHASE_TIMING " + " | ".join(parts) + f" | total={total:.3f}s"
             logger.info(line)
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError, ValueError, KeyError):  # pragma: no cover
             logger.debug("Failed consolidated phase log", exc_info=True)
 
     def emit_phase_metrics(self):
@@ -84,7 +84,7 @@ class CycleContext:
         for phase, secs in self.phase_times.items():
             try:
                 m.phase_duration_seconds.labels(phase=phase).observe(secs)
-            except Exception:  # pragma: no cover
+            except (AttributeError, TypeError, ValueError):  # pragma: no cover
                 logger.debug("Failed to observe phase duration", exc_info=True)
 
 
@@ -133,7 +133,7 @@ class _PhaseTimer:
             if m and hasattr(m, 'phase_failures_total'):
                 try:
                     m.phase_failures_total.labels(phase=self.name).inc()
-                except Exception:  # pragma: no cover
+                except (AttributeError, TypeError, ValueError):  # pragma: no cover
                     pass
         # Do not suppress exceptions
         return False

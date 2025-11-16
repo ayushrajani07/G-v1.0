@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 try:  # optional import (legacy path may run before module available during rollout)
     # Import via facade to keep types loose and avoid cross-module TypedDict mismatches
     from src.collectors.modules.status_finalize_core import compute_cycle_reason_totals
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     def compute_cycle_reason_totals(indices_struct: list[dict[str, Any]], metrics: Any | None) -> dict[str, int] | None:
         return None
 
@@ -80,7 +80,7 @@ def _compute_basic_counts(indices_struct: list[dict[str, Any]]) -> tuple[int,int
                 indices_ok += 1
             elif status == 'EMPTY':
                 indices_empty += 1
-        except Exception:  # pragma: no cover
+        except (TypeError, ValueError, AttributeError, KeyError):  # pragma: no cover
             pass
     return idx_count, opt_total, expiries_total, indices_ok, indices_empty
 
@@ -98,7 +98,7 @@ def build_snapshot(indices_struct: list[dict[str, Any]], index_param_count: int,
         try:
             # The facade returns a Dict[str,int] | None at runtime; cast for mypy harmony with dataclass field type.
             reason_totals = cast(dict[str, int] | None, compute_cycle_reason_totals(indices_struct, metrics))
-        except Exception:
+        except (TypeError, AttributeError, KeyError):
             logger.debug('compute_cycle_reason_totals_failed', exc_info=True)
             reason_totals = None
     snap = SnapshotSummary(

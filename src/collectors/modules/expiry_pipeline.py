@@ -75,7 +75,7 @@ class LegacyWrapperPhase:
                 os.environ.get('G6_COLLECTOR_PIPELINE_USE_ENRICHED','').lower() in {'1','true','yes','on'} and
                 os.environ.get('G6_COLLECTOR_PIPELINE_DIRECT_FINALIZE','').lower() in {'1','true','yes','on'}
             )
-        except Exception:
+        except (KeyError, AttributeError):
             use_direct = False
         # Defensive trace for decision (debug level to avoid noise in production by default)
         try:
@@ -89,7 +89,7 @@ class LegacyWrapperPhase:
                 fetched=len(state.fetched_instruments or []),
                 clamp_applied=state.clamp_applied,
             )
-        except Exception:
+        except (ValueError, TypeError, RuntimeError):
             pass
         if use_direct and state.validated_enriched and state.expiry_date is not None:
             try:
@@ -125,10 +125,10 @@ class LegacyWrapperPhase:
                     if rec:
                         state.instruments = int(rec.get('instruments', 0) or 0)
                         state.options = int(rec.get('options', 0) or out.get('option_count', 0) or 0)
-                except Exception:
+                except (ValueError, TypeError, KeyError):
                     pass
                 return state
-            except Exception:
+            except (ValueError, TypeError, KeyError, RuntimeError):
                 log_event(
                     "expiry.finalize.fail",
                     index=state.index_symbol,
@@ -145,7 +145,7 @@ class LegacyWrapperPhase:
                         rule=state.expiry_rule,
                         reason='flags_disabled' if not use_direct else 'missing_validated_or_expiry_date',
                     )
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 pass
         # Fallback to full legacy processing
         try:
@@ -155,13 +155,13 @@ class LegacyWrapperPhase:
                     import datetime
                     ts_fallback = getattr(ctx, 'start_ts', datetime.datetime.now(datetime.UTC))
                     ctx.per_index_ts = ts_fallback
-                except Exception:
+                except (ValueError, AttributeError):
                     pass
             # Ensure aggregation_state present for legacy metrics aggregation
             if not hasattr(ctx, 'aggregation_state') or ctx.aggregation_state is None:
                 try:
                     ctx.aggregation_state = AggregationState()
-                except Exception:
+                except (ImportError, ValueError, RuntimeError):
                     class _AggStub:  # minimal stub
                         representative_day_width = 0
                         snapshot_base_time = None
@@ -201,7 +201,7 @@ class LegacyWrapperPhase:
                     state.instruments = int(rec.get('instruments', 0) or 0)
                     state.options = int(rec.get('options', 0) or out.get('option_count', 0) or 0)
                     # Synthetic fallback propagation removed
-            except Exception:
+            except (ValueError, TypeError, KeyError):
                 pass
         except Exception as e:
             state.errors.append(str(e))
@@ -217,7 +217,7 @@ class LegacyWrapperPhase:
                     enriched=len(state.enriched_data or {}),
                     validated=len(state.validated_enriched or {}),
                 )
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 pass
         return state
 
@@ -250,7 +250,7 @@ class FetchPhase:
                     expiry_date=state.expiry_date,
                     strikes=len(state.strikes or []),
                 )
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 pass
             return state
         try:
@@ -269,7 +269,7 @@ class FetchPhase:
                     fetched=len(state.fetched_instruments or []),
                     strikes=len(state.strikes or []),
                 )
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 pass
         except Exception as e:
             state.errors.append(f"fetch:{e}")
@@ -292,7 +292,7 @@ class EnrichPhase:
                             key = str(i.get('symbol') or i.get('tradingsymbol') or idx)
                             tmp_map[key] = i  # value is a dict[str, Any]
                     enriched = tmp_map
-                except Exception:
+                except (ValueError, TypeError, KeyError):
                     enriched = {}
             if isinstance(enriched, dict):
                 state.enriched_data = enriched
@@ -319,7 +319,7 @@ class PrefilterClampPhase:
                     state.clamp_dropped = dropped_cnt
                     state.clamp_max_allowed = max_allowed
                     state.clamp_strict_mode = bool(strict_mode)
-                except Exception:
+                except (ValueError, TypeError):
                     logger.debug('prefilter_clamp_meta_capture_failed', exc_info=True)
             try:
                 log_event(
@@ -331,7 +331,7 @@ class PrefilterClampPhase:
                     clamped=state.clamp_applied,
                     dropped=state.clamp_dropped if state.clamp_applied else None,
                 )
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 pass
         except Exception as e:
             state.errors.append(f"prefilter_clamp:{e}")
@@ -373,19 +373,19 @@ class CoverageMetricsPhase:
             field_cov = None
             try:
                 strike_cov = coverage_metrics(ctx, state.fetched_instruments, state.strikes, state.index_symbol, state.expiry_rule, state.expiry_date)  # expects numeric coverage
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 try:
                     log_event("expiry.coverage.fail", component="strike", index=state.index_symbol, rule=state.expiry_rule)
-                except Exception:
+                except (ValueError, TypeError, RuntimeError):
                     pass
             try:
                 # prefer validated_enriched else enriched_data
                 data_map = state.validated_enriched or state.enriched_data
                 field_cov = field_coverage_metrics(ctx, data_map, state.index_symbol, state.expiry_rule, state.expiry_date)
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 try:
                     log_event("expiry.coverage.fail", component="field", index=state.index_symbol, rule=state.expiry_rule)
-                except Exception:
+                except (ValueError, TypeError, RuntimeError):
                     pass
             # Stash into preventive_report under a dedicated key to avoid expanding dataclass
             try:
@@ -395,7 +395,7 @@ class CoverageMetricsPhase:
                     state.preventive_report['coverage']['strike_coverage'] = strike_cov
                 if field_cov is not None:
                     state.preventive_report['coverage']['field_coverage'] = field_cov
-            except Exception:
+            except (ValueError, TypeError, KeyError):
                 pass
         except Exception as e:
             state.errors.append(f'coverage_metrics:{e}')
@@ -448,14 +448,14 @@ def process_expiry_v2(legacy_fn: Any, *, ctx: Any, index_symbol: str, expiry_rul
                 try:
                     if isinstance(issues, (list, tuple, set)):
                         diffs.append("preventive_issues=" + ','.join(list(issues)[:5]))
-                except Exception:
+                except (ValueError, TypeError):
                     pass
             # synthetic fallback indicator removed
             # direct finalize marker
             try:
                 if rec.get('pipeline_direct_finalize'):
                     diffs.append('pipeline_direct_finalize=1')
-            except Exception:
+            except (ValueError, TypeError, KeyError):
                 pass
             if diffs:
                 log_event(
@@ -466,13 +466,13 @@ def process_expiry_v2(legacy_fn: Any, *, ctx: Any, index_symbol: str, expiry_rul
                     diffs=';'.join(diffs),
                     phases=','.join(p.name for p in phases),
                 )
-    except Exception:
+    except (ValueError, TypeError, RuntimeError):
             log_event("expiry.pipeline.diff_fail", index=state.index_symbol, rule=state.expiry_rule)
     # Emit accumulated errors for diagnostics when any exist
     try:
         if state.errors:
             log_event("expiry.pipeline.errors", index=state.index_symbol, rule=state.expiry_rule, errors='|'.join(state.errors))
-    except Exception:
+    except (ValueError, TypeError, RuntimeError):
         pass
     return legacy
 

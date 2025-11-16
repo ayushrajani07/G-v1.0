@@ -31,7 +31,7 @@ try:  # pragma: no cover
     compute_cycle_reason_totals = cast(Any, _compute_cycle_reason_totals)
     PartialReasonTotals = cast(Any, _PartialReasonTotals)
     MetricsLike = cast(Any, _MetricsLike)
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     # Fallbacks: keep runtime behavior safe and names available
     def finalize_expiry(*args: Any, **kwargs: Any) -> None:
         return None
