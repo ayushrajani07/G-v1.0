@@ -292,14 +292,16 @@ def build_default_pipeline(
                     try:
                         if hasattr(providers, 'get_expiry_dates'):
                             cands = providers.get_expiry_dates(wi.index)
-                    except Exception:  # pragma: no cover
+                    except (AttributeError, KeyError, ValueError, TypeError):  # pragma: no cover
+                        # Provider method may fail or return unexpected data
                         cands = []
                     if not cands:
                         # fallback to provider resolution for this rule only
                         return adapter.resolve(wi)
                     wi.expiry_date = expiry_service.select(wi.expiry_rule, cands)
                     return wi
-                except Exception:
+                except (AttributeError, KeyError, ValueError, TypeError):
+                    # Expiry service selection may fail; fallback to adapter
                     return adapter.resolve(wi)
         resolver = ServiceResolver()
     else:

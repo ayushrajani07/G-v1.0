@@ -93,7 +93,7 @@ from src.collectors.pipeline.anomaly import maybe_emit_alert_parity_anomaly
 _resolve_strike_depth: Callable[[CollectorContext, str, dict[str, Any]], tuple[int, int]] | None = None
 try:  # optional runtime dependency
   from .strike_policy import resolve_strike_depth as _resolve_strike_depth  # noqa: F401
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
   _resolve_strike_depth = None  # fallback when unavailable
 from .coverage_eval import coverage_metrics, field_coverage_metrics
 from .enrichment import enrich_quotes
@@ -102,20 +102,20 @@ from .expiry_universe import build_expiry_map
 _enrich_quotes_async: Callable[[str, str, datetime.date, list[dict[str, Any]], Any, Any], dict[str, Any]] | None = None
 try:  # Phase 9 optional async enrichment (top-level import for clarity)
   from .enrichment_async import enrich_quotes_async as _enrich_quotes_async  # noqa: F401
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
   _enrich_quotes_async = None
 from .adaptive_adjust import adaptive_post_expiry
 
 # Phase 9 status finalization parity imports (lazy guarded inside loop if unavailable)
 try:  # compute PARTIAL / OK classification parity with legacy
   from src.collectors.helpers.status_reducer import compute_expiry_status as _compute_expiry_status  # noqa: F401
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
   # Optional – absence just disables status reduce refinement
   _compute_expiry_status = None
 _finalize_expiry: Callable[[dict[str, Any], dict[str, Any], list[int], str, datetime.date, str, Any], None] | None = None
 try:  # finalize_expiry attaches partial_reason + emits option_match stats (via facade)
   from .status_finalize_core import finalize_expiry as _finalize_expiry  # noqa: F401
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
   _finalize_expiry = None  # fallback when finalizer unavailable
 from .benchmark_bridge import write_benchmark_artifact
 from .preventive_validate import run_preventive_validation
@@ -166,7 +166,8 @@ def _parse_bench_output(out_txt: str) -> BenchCycleResult:
       'pipeline': data.get('pipeline', {}) if isinstance(data.get('pipeline'), dict) else {},
       'delta': data.get('delta', {}) if isinstance(data.get('delta'), dict) else {},
     }
-  except Exception:  # pragma: no cover
+  except (json.JSONDecodeError, ValueError, KeyError, TypeError):  # pragma: no cover
+    # JSON parsing or data extraction may fail
     return {}
 
 def _maybe_run_benchmark_cycle(metrics: BenchMetricsLike | None) -> None:
@@ -283,7 +284,7 @@ def _maybe_run_benchmark_cycle(metrics: BenchMetricsLike | None) -> None:
       g_thr = _lazy('bench_p95_regression_threshold_pct','Configured allowed p95 regression % threshold')
       if g_thr:
         try: g_thr.set(thr_val)
-        except Exception: pass
+        except (AttributeError, TypeError, ValueError): pass
   try:
     if g_legacy_p50 and legacy.get('p50_s') is not None: g_legacy_p50.set(float(legacy['p50_s']))
     if g_pipeline_p50 and pipeline.get('p50_s') is not None: g_pipeline_p50.set(float(pipeline['p50_s']))
@@ -292,7 +293,8 @@ def _maybe_run_benchmark_cycle(metrics: BenchMetricsLike | None) -> None:
     if g_delta_p50 and delta.get('p50_pct') is not None: g_delta_p50.set(float(delta['p50_pct']))
     if g_delta_p95 and delta.get('p95_pct') is not None: g_delta_p95.set(float(delta['p95_pct']))
     if g_delta_mean and delta.get('mean_pct') is not None: g_delta_mean.set(float(delta['mean_pct']))
-  except Exception:
+  except (AttributeError, TypeError, ValueError, KeyError):
+    # Metrics setting may fail if values are malformed or metrics not initialized
     logger.debug('benchmark_cycle_metric_set_failed', exc_info=True)
   logger.debug('benchmark_cycle_run_complete', extra={'cycles': cycles, 'indices': indices_spec})
 
@@ -378,7 +380,8 @@ def run_pipeline(
             atm = providers.get_atm_strike(index_symbol)
             provider_call_durations['atm'].append(time.time() - _t0_atm)
             rec.add_meta(found=bool(atm))
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError, RuntimeError):
+            # Provider ATM fetch may fail due to network, data format, or missing data
             atm = None
             rec.warn(reason='fetch_error')
             logger.debug('pipeline_atm_failed', exc_info=True)
@@ -393,7 +396,8 @@ def run_pipeline(
             provider_call_durations['instrument_fetch'].append(time.time() - _t0_fetch)
             fetched = True
             break
-          except Exception:
+          except (AttributeError, KeyError, ValueError, TypeError, RuntimeError):
+            # Provider instrument fetch may fail due to network, data format, or missing data
             logger.debug('pipeline_instruments_fetch_failed', extra={'method': meth_name}, exc_info=True)
       if not fetched:
         raise PhaseFatalError('instrument_fetch_failed')
@@ -404,7 +408,8 @@ def run_pipeline(
         try:
           expiry_map, expiry_stats = build_expiry_map(instruments)
           rec.add_meta(expiry_count=len(expiry_map))
-        except Exception:
+        except (KeyError, ValueError, TypeError, AttributeError):
+          # Expiry map building may fail due to malformed instrument data
           rec.fail(reason='map_error')
           logger.debug('pipeline_expiry_map_failed', exc_info=True)
           raise PhaseFatalError('expiry_map_error')
@@ -418,7 +423,8 @@ def run_pipeline(
             dynamic_itm, dynamic_otm = _resolve_strike_depth(ctx, index_symbol, cfg)
             strikes_itm = int(dynamic_itm)
             strikes_otm = int(dynamic_otm)
-          except Exception:
+          except (ValueError, TypeError, KeyError, AttributeError):
+            # Strike depth resolution may fail due to config or context issues
             logger.debug('pipeline_strike_policy_failed', exc_info=True)
             strikes_itm = int(cfg.get('strikes_itm', 2) or 2)
             strikes_otm = int(cfg.get('strikes_otm', 2) or 2)
@@ -429,7 +435,8 @@ def run_pipeline(
           try:
             strikes, strikes_meta = compute_strike_universe(atm or 0, strikes_itm, strikes_otm, index_symbol)
             rec.add_meta(strikes_itm=strikes_itm, strikes_otm=strikes_otm, strike_count=len(strikes))
-          except Exception:
+          except (ValueError, TypeError, KeyError, AttributeError):
+            # Strike universe computation may fail due to invalid ATM or parameters
             rec.fail(reason='strike_universe_error')
             logger.debug('pipeline_strike_universe_failed', exc_info=True)
             strikes = []
@@ -444,13 +451,15 @@ def run_pipeline(
           if async_flag and _enrich_quotes_async is not None:
             try:
               enriched = _enrich_quotes_async(index_symbol, rule, expiry_date, exp_instruments, providers, metrics)  # dynamic async enrichment call
-            except Exception:
+            except (AttributeError, KeyError, ValueError, TypeError, RuntimeError):
+              # Async enrichment may fail due to network, data format, or runtime issues
               rec.warn(reason='async_fail')
               logger.debug('pipeline_enrichment_async_failed', exc_info=True)
           if not enriched:
             try:
               enriched = enrich_quotes(index_symbol, rule, expiry_date, exp_instruments, providers, metrics)
-            except Exception:
+            except (AttributeError, KeyError, ValueError, TypeError, RuntimeError):
+              # Sync enrichment may fail due to network, data format, or runtime issues
               rec.fail(reason='sync_fail')
               logger.debug('pipeline_enrichment_failed', exc_info=True)
           rec.add_meta(enriched_count=len(enriched))
@@ -459,7 +468,8 @@ def run_pipeline(
         with phase_log('preventive_validate', index=index_symbol, rule=rule) as rec:
           try:
             cleaned_enriched, prevent_report = run_preventive_validation(index_symbol, rule, expiry_date, exp_instruments, enriched, None)
-          except Exception:
+          except (AttributeError, KeyError, ValueError, TypeError):
+            # Preventive validation may fail due to malformed data
             rec.warn(reason='validate_fail')
             logger.debug('pipeline_preventive_validation_failed', exc_info=True)
         strike_cov: float | None = None
@@ -472,7 +482,8 @@ def run_pipeline(
               _tmp_sc = cov_dict2.get('strike_coverage')
               if isinstance(_tmp_sc, (int, float)):
                 strike_cov = float(_tmp_sc)
-          except Exception:
+          except (AttributeError, KeyError, ValueError, TypeError):
+            # Coverage metrics calculation may fail due to malformed data
             rec.warn(reason='strike_cov_fail')
             logger.debug('pipeline_strike_coverage_failed', exc_info=True)
           try:
@@ -482,7 +493,8 @@ def run_pipeline(
               _tmp_fc = fcov_dict2.get('field_coverage')
               if isinstance(_tmp_fc, (int, float)):
                 field_cov = float(_tmp_fc)
-          except Exception:
+          except (AttributeError, KeyError, ValueError, TypeError):
+            # Field coverage metrics calculation may fail due to malformed data
             rec.warn(reason='field_cov_fail')
             logger.debug('pipeline_field_coverage_failed', exc_info=True)
           rec.add_meta(strike_cov=strike_cov, field_cov=field_cov)
@@ -504,7 +516,8 @@ def run_pipeline(
               status_val = _compute_expiry_status(expiry_rec)
               if isinstance(status_val, str):
                 expiry_rec['status'] = status_val
-            except Exception:
+            except (AttributeError, KeyError, ValueError, TypeError):
+              # Status computation may fail due to malformed expiry record
               rec.warn(reason='status_reduce_fail')
               logger.debug('pipeline_compute_expiry_status_failed', exc_info=True)
         if _finalize_expiry is not None:
@@ -515,11 +528,13 @@ def run_pipeline(
               for s in (strikes or []):
                 try:
                   int_strikes.append(int(s))
-                except Exception:
+                except (ValueError, TypeError):
+                  # Strike value may not be convertible to int
                   continue
               _finalize_expiry(expiry_rec, cleaned_enriched, int_strikes, index_symbol, expiry_date, rule, metrics)
               rec.add_meta(partial=bool(expiry_rec.get('partial_reason')))
-            except Exception as e:
+            except (AttributeError, KeyError, ValueError, TypeError, RuntimeError) as e:
+              # Finalize expiry may fail due to data issues or runtime errors
               rec.fail(reason='finalize_fail')
               logger.debug('pipeline_finalize_expiry_failed', exc_info=True)
               # Raise recoverable error for expiry-level failure
@@ -530,7 +545,8 @@ def run_pipeline(
         with phase_log('adaptive', index=index_symbol, rule=rule) as rec:
           try:
             adaptive_post_expiry(ctx, index_symbol, expiry_rec, rule)
-          except Exception:
+          except (AttributeError, KeyError, ValueError, TypeError):
+            # Adaptive adjustment may fail due to malformed data
             rec.warn(reason='adaptive_fail')
             logger.debug('pipeline_adaptive_post_failed', exc_info=True)
       status = 'OK' if option_count_total > 0 else 'EMPTY'
@@ -541,10 +557,12 @@ def run_pipeline(
         # Ensure registry exists so counter attaches to real registry rather than local fallback
         try:
           get_metrics_singleton()
-        except Exception:
+        except (AttributeError, RuntimeError):
+          # Metrics singleton may not be available
           pass
         get_counter('pipeline_expiry_recoverable_total','Recoverable expiry-level failures', []).inc()
-      except Exception:
+      except (AttributeError, RuntimeError, ValueError):
+        # Counter increment may fail if metrics not initialized
         pass
       if not expiries_out:
         expiries_out.append({'failed': True, 'reason': str(e)})
@@ -554,10 +572,12 @@ def run_pipeline(
       try:  # taxonomy counter increment (fatal)
         try:
           get_metrics_singleton()
-        except Exception:
+        except (AttributeError, RuntimeError):
+          # Metrics singleton may not be available
           pass
         get_counter('pipeline_index_fatal_total','Fatal index-level failures', []).inc()
-      except Exception:
+      except (AttributeError, RuntimeError, ValueError):
+        # Counter increment may fail if metrics not initialized
         pass
       if not expiries_out:
         expiries_out.append({'failed': True, 'reason': str(e)})
@@ -568,7 +588,8 @@ def run_pipeline(
       cov_rollup = compute_index_coverage(index_symbol, expiries_out)
       strike_cov_avg = cov_rollup.get('strike_coverage_avg')
       field_cov_avg = cov_rollup.get('field_coverage_avg')
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError):
+      # Coverage rollup may fail due to malformed expiry data
       logger.debug('pipeline_index_coverage_rollup_failed', exc_info=True)
       strike_cov_avg = None; field_cov_avg = None
     indices_struct.append({
@@ -588,12 +609,14 @@ def run_pipeline(
   # Benchmark artifact (anomalies) – pass anomaly detector
   try:
     write_benchmark_artifact(indices_struct, total_elapsed, ctx_like=ctx, metrics=metrics, detect_anomalies_fn=lambda series, thr: _detect_anomalies(series, thr))
-  except Exception:
+  except (AttributeError, KeyError, ValueError, TypeError, OSError):
+    # Benchmark artifact writing may fail due to data issues or I/O errors
     logger.debug('pipeline_benchmark_artifact_failed', exc_info=True)
   # Phase 9: alert aggregation prior to snapshot summary
   try:
     alert_summary = aggregate_alerts(indices_struct)
-  except Exception:
+  except (AttributeError, KeyError, ValueError, TypeError):
+    # Alert aggregation may fail due to malformed index data
     logger.debug('pipeline_alert_aggregation_failed', exc_info=True)
     alert_summary = None
   phase_timings['alerts'] = time.time() - start_wall - total_elapsed  # approximate post main loop delta
@@ -606,7 +629,8 @@ def run_pipeline(
       # Defensive: ensure int values (fallback to previous if unexpected types)
       try:
         partial_reason_totals = {k: int(v) for k, v in _prt.items()}
-      except Exception:
+      except (ValueError, TypeError):
+        # Partial reason values may not be convertible to int
         pass
   snapshot_summary = snap_summary.to_dict() if snap_summary else None
   # Parity scoring invocation (Wave 2 + rolling aggregation Wave 3 + alert parity enhancements)
@@ -617,7 +641,8 @@ def run_pipeline(
       try:
         if snapshot_summary and isinstance(snapshot_summary, dict) and 'alerts' in snapshot_summary:
           pipeline_view['alerts'] = snapshot_summary['alerts']
-      except Exception:
+      except (AttributeError, KeyError, TypeError):
+        # Snapshot summary access may fail
         pass
       parity_score = compute_parity_score(legacy_baseline, pipeline_view)
       score_val = parity_score.get('score')
@@ -625,7 +650,8 @@ def run_pipeline(
       alerts_detail = None
       try:
         alerts_detail = parity_score.get('details',{}).get('alerts')
-      except Exception:
+      except (AttributeError, KeyError, TypeError):
+        # Parity score details access may fail
         alerts_detail = None
       _plogger.info('pipeline_parity_score', extra={'score': score_val, 'components': parity_score.get('components'), 'missing': parity_score.get('missing'), 'version': parity_score.get('version'), 'rolling_avg': rolling_info.get('avg'), 'rolling_count': rolling_info.get('count'), 'rolling_window': rolling_info.get('window'), 'alerts_detail': alerts_detail})
       try:
@@ -633,18 +659,20 @@ def run_pipeline(
           from prometheus_client import Gauge as _G
           if not hasattr(metrics, 'pipeline_parity_rolling_avg'):
             try: metrics.pipeline_parity_rolling_avg = _G('g6_pipeline_parity_rolling_avg','Rolling average pipeline parity score')
-            except Exception: pass
+            except (AttributeError, ValueError, TypeError): pass
           g = getattr(metrics,'pipeline_parity_rolling_avg',None)
           if g:
             # rolling_info['avg'] is float | None; guard before coercion
             try:
               avg_val = rolling_info.get('avg')
-            except Exception:
+            except (AttributeError, KeyError):
+              # Rolling info access may fail
               avg_val = None
             if avg_val is not None:
               try:
                 g.set(float(avg_val))
-              except Exception:
+              except (AttributeError, ValueError, TypeError):
+                # Gauge set may fail
                 pass
         # Alert mismatch gauge
         try:
@@ -658,7 +686,7 @@ def run_pipeline(
             from prometheus_client import Gauge as _G
             if not hasattr(metrics, 'pipeline_alert_parity_diff'):
               try: metrics.pipeline_alert_parity_diff = _G('g6_pipeline_alert_parity_diff','Weighted normalized alert parity difference (0 perfect, 1 worst)')
-              except Exception: pass
+              except (AttributeError, ValueError, TypeError): pass
             _alerts = alerts_dict
             frac: float | None = None
             if _alerts is not None:
@@ -667,33 +695,39 @@ def run_pipeline(
                 try:
                   if frac_val is not None:
                     frac = float(frac_val)
-                except Exception:
+                except (ValueError, TypeError):
+                  # Fraction value may not be convertible to float
                   frac = None
               elif 'sym_diff' in _alerts and 'union' in _alerts:
                 try:
                   union = _alerts.get('union') or 0
                   sym = _alerts.get('sym_diff') or 0
                   frac = (sym / union) if union else 0.0
-                except Exception:
+                except (AttributeError, KeyError, ValueError, TypeError, ZeroDivisionError):
+                  # Alert metrics calculation may fail
                   frac = None
             if frac is not None:
               g2 = getattr(metrics,'pipeline_alert_parity_diff', None)
               if g2:
                 try: g2.set(float(frac))
-                except Exception: pass
+                except (AttributeError, ValueError, TypeError): pass
             # Anomaly structured event emission (Wave 4 W4-15)
             try:
               # ParityResult is a TypedDict-like dict; ensure plain dict for function expectation
               if isinstance(parity_score, dict):
                 from typing import cast as _cast
                 maybe_emit_alert_parity_anomaly(_cast(dict[str, Any], parity_score))
-            except Exception:
+            except (AttributeError, KeyError, ValueError, TypeError):
+              # Anomaly emission may fail due to malformed parity score
               _plogger.debug('pipeline_parity_anomaly_emit_failed', exc_info=True)
-        except Exception:
+        except (AttributeError, KeyError, ValueError, TypeError, RuntimeError):
+          # Alert parity metric emission may fail
           _plogger.debug('pipeline_alert_parity_metric_failed', exc_info=True)
-      except Exception:
+      except (AttributeError, KeyError, ValueError, TypeError, RuntimeError):
+        # Rolling metric emission may fail
         _plogger.debug('pipeline_parity_rolling_metric_failed', exc_info=True)
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError, RuntimeError):
+      # Parity score computation may fail
       _plogger.debug('pipeline_parity_score_failed', exc_info=True)
   if snapshot_summary is not None and alert_summary is not None:
     try:
@@ -713,7 +747,8 @@ def run_pipeline(
         snapshot_summary['alerts_total'] = alerts_block['total']
         for k, v in alerts_block['categories'].items():
           snapshot_summary[f'alert_{k}'] = v
-    except Exception:
+    except (AttributeError, KeyError, ValueError, TypeError):
+      # Alert merge may fail due to malformed alert summary
       logger.debug('pipeline_snapshot_alert_merge_failed', exc_info=True)
   # Operational metrics (Phase 10) – best-effort
   total_cycle_s: float = time.time() - start_wall
@@ -727,38 +762,38 @@ def run_pipeline(
       if not hasattr(metrics, 'pipeline_cycle_duration_seconds'):
         try:
           metrics.pipeline_cycle_duration_seconds = _H('g6_pipeline_cycle_duration_seconds','Pipeline cycle duration seconds', buckets=(0.05,0.1,0.25,0.5,1,2,5,10))
-        except Exception: pass
+        except (AttributeError, ValueError, TypeError): pass
       if not hasattr(metrics, 'pipeline_cycle_duration_summary'):
         try:
           metrics.pipeline_cycle_duration_summary = _S('g6_pipeline_cycle_duration_summary','Pipeline cycle duration summary')
-        except Exception: pass
+        except (AttributeError, ValueError, TypeError): pass
       h = getattr(metrics,'pipeline_cycle_duration_seconds',None)
       s_summary = getattr(metrics,'pipeline_cycle_duration_summary',None)
       if h:
         try: h.observe(total_cycle_s)
-        except Exception: pass
+        except (AttributeError, ValueError, TypeError): pass
       if s_summary:
         try: s_summary.observe(total_cycle_s)
-        except Exception: pass
+        except (AttributeError, ValueError, TypeError): pass
       # Phase latency histograms
       if not hasattr(metrics, 'pipeline_enrich_duration_seconds'):
         try:
           metrics.pipeline_enrich_duration_seconds = _H('g6_pipeline_enrich_duration_seconds','Per-expiry enrichment duration seconds', buckets=(0.001,0.005,0.01,0.02,0.05,0.1,0.25,0.5,1,2))
-        except Exception: pass
+        except (AttributeError, ValueError, TypeError): pass
       if not hasattr(metrics, 'pipeline_finalize_duration_seconds'):
         try:
           metrics.pipeline_finalize_duration_seconds = _H('g6_pipeline_finalize_duration_seconds','Per-expiry finalize_expiry duration seconds', buckets=(0.0005,0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.25))
-        except Exception: pass
+        except (AttributeError, ValueError, TypeError): pass
       _h_enrich = getattr(metrics,'pipeline_enrich_duration_seconds',None)
       _h_final = getattr(metrics,'pipeline_finalize_duration_seconds',None)
       if _h_enrich:
         for d in enrich_phase_durations:
           try: _h_enrich.observe(d)
-          except Exception: pass
+          except (AttributeError, ValueError, TypeError): pass
       if _h_final:
         for d in finalize_phase_durations:
           try: _h_final.observe(d)
-          except Exception: pass
+          except (AttributeError, ValueError, TypeError): pass
       # Alert category counters
       if alert_summary is not None:
         for cat, val in alert_summary.categories.items():
@@ -766,12 +801,13 @@ def run_pipeline(
           if not hasattr(metrics, metric_name):
             try:
               setattr(metrics, metric_name, _C(f'g6_{metric_name}','Count of pipeline cycles with occurrences for category'))
-            except Exception: pass
+            except (AttributeError, ValueError, TypeError): pass
           c = getattr(metrics, metric_name, None)
           if c and val>0:
             try: c.inc(val)
-            except Exception: pass
-  except Exception:
+            except (AttributeError, ValueError, TypeError): pass
+  except (AttributeError, ValueError, TypeError, RuntimeError):
+    # Operational metrics emission may fail
     logger.debug('pipeline_operational_metrics_failed', exc_info=True)
   # Wave 4 (W4-06): Memory footprint gauge (RSS in MB). Best-effort, gated.
   try:
@@ -780,7 +816,8 @@ def run_pipeline(
       if not hasattr(metrics, 'pipeline_memory_rss_mb'):
         try:
           metrics.pipeline_memory_rss_mb = _G('g6_pipeline_memory_rss_mb','Approximate process RSS memory (MB) for pipeline process')
-        except Exception:
+        except (AttributeError, ValueError, TypeError):
+          # Gauge creation may fail
           metrics.pipeline_memory_rss_mb = None
       gmem = getattr(metrics, 'pipeline_memory_rss_mb', None)
       if gmem:
@@ -791,7 +828,8 @@ def run_pipeline(
           import psutil
           p = psutil.Process()
           rss_mb = p.memory_info().rss / (1024*1024)
-        except Exception:
+        except (ImportError, AttributeError, OSError):
+          # psutil may not be available or process info may fail
           pass
         if rss_mb is None:
           # Try resource (Unix) - may not exist on Windows but harmless
@@ -810,7 +848,8 @@ def run_pipeline(
                   rss_mb = ru_maxrss_val / (1024*1024)
                 else:  # assume KB
                   rss_mb = ru_maxrss_val / 1024
-          except Exception:
+          except (ImportError, AttributeError, OSError):
+            # resource module may not be available on all platforms
             pass
         if rss_mb is None:
           # Fallback: parse /proc/self/status (Linux only)
@@ -824,14 +863,17 @@ def run_pipeline(
                       kb = float(parts[1])
                       rss_mb = kb / 1024
                       break
-          except Exception:
+          except (OSError, ValueError, IndexError):
+            # File read or parsing may fail
             pass
         if rss_mb is not None:
           try:
             gmem.set(float(rss_mb))
-          except Exception:
+          except (AttributeError, ValueError, TypeError):
+            # Gauge set may fail
             pass
-  except Exception:
+  except (AttributeError, ValueError, TypeError, RuntimeError, OSError):
+    # Memory gauge collection may fail
     logger.debug('pipeline_memory_gauge_failed', exc_info=True)
   # Compute percentile helper (local, no external deps)
   def _pct(vals: list[float], p: float) -> float | None:
@@ -841,7 +883,8 @@ def run_pipeline(
       vs = sorted(vals)
       k = int(round((len(vs)-1)*p))
       return vs[k]
-    except Exception:
+    except (ValueError, TypeError, IndexError):
+      # Percentile calculation may fail with invalid input
       return None
   diagnostics = {
     'phase_timings': {
@@ -876,14 +919,16 @@ def run_pipeline(
         ret_obj['partial_reason_groups'] = groups
         ret_obj['partial_reason_order'] = STABLE_REASON_ORDER
         ret_obj['partial_reason_group_order'] = STABLE_GROUP_ORDER
-  except Exception:
+  except (ImportError, AttributeError, KeyError, ValueError, TypeError):
+    # Partial reason grouping may fail due to import or data issues
     pass
   if _include_diag:
     ret_obj['diagnostics'] = diagnostics
   # W4-09: periodic benchmark cycle integration (best-effort, post main work)
   try:
     _maybe_run_benchmark_cycle(metrics)
-  except Exception:
+  except (AttributeError, ValueError, TypeError, RuntimeError, OSError):
+    # Benchmark cycle may fail due to various runtime issues
     logger.debug('benchmark_cycle_integration_failed', exc_info=True)
   return ret_obj
 
@@ -899,5 +944,6 @@ def _infer_expiry_rule(expiry_date: datetime.date) -> str:
     if expiry_date.weekday() == 3 and expiry_date.day == last_thu:
       return 'monthly'
     return 'this_week'
-  except Exception:
+  except (AttributeError, ValueError, TypeError, IndexError):
+    # Expiry date parsing may fail with invalid date
     return 'this_week'
