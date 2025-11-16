@@ -10,7 +10,7 @@ from src.error_handling import get_error_handler, initialize_error_handler, Erro
 
 
 @pytest.fixture(autouse=True)
-def _fresh_handler(monkeypatch):
+def _fresh_handler(monkeypatch, metrics_isolated):
     h = initialize_error_handler(max_errors=200)
     h.clear_errors()
     yield

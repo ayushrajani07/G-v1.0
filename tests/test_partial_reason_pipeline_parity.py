@@ -36,7 +36,7 @@ def _run(mode: str):
         os.environ['G6_PIPELINE_COLLECTOR'] = '1'
     else:
         os.environ.pop('G6_PIPELINE_COLLECTOR', None)
-    res = run_unified_collectors(params, prov, csv_sink=None, influx_sink=None, metrics=None, build_snapshots=False)
+    res = run_unified_collectors(params, prov, csv_sink=None, metrics=None, build_snapshots=False)
     return res
 
 

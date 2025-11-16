@@ -47,7 +47,7 @@ def test_weekend_degraded_when_empty_data(monkeypatch):
     providers=_WeekendProviders()
     csv_sink=_CsvSink()
     metrics=types.SimpleNamespace(collection_cycle_in_progress=types.SimpleNamespace(set=lambda *_: None))
-    res = run_unified_collectors(_PARAMS, providers, csv_sink, None, metrics, build_snapshots=True)
+    res = run_unified_collectors(_PARAMS, providers, csv_sink, metrics, build_snapshots=True)
     indices = res.get('indices') or []
     assert indices, 'expected at least one index'
     status = (indices[0].get('status') or '').upper()

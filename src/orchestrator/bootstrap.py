@@ -163,7 +163,7 @@ def bootstrap_runtime(config_path: str,
     if not EnvConfig.get_bool('G6_DISABLE_COMPONENTS', False):
         try:
             providers = init_providers(raw_cfg)
-            csv_sink = init_storage(raw_cfg)
+            csv_sink, _ = init_storage(raw_cfg)  # Returns (csv_sink, None)
             apply_circuit_breakers(raw_cfg, providers)
             health = init_health(raw_cfg, providers, csv_sink)
             ctx.providers = providers

@@ -6,7 +6,7 @@ Provides a single, stable entrypoint that can delegate to either the legacy
 parity validation without callers littering feature flag conditionals.
 
 Contract (stable):
-  run_collect_cycle(index_params, providers, csv_sink, influx_sink, metrics, *,
+  run_collect_cycle(index_params, providers, csv_sink, metrics, *,
                     mode='auto', parity_check=False, **kwargs) -> dict
 
   - Return shape mirrors legacy `run_unified_collectors` result for callers.
@@ -74,7 +74,7 @@ def _select_mode(requested: str) -> str:
     return "pipeline"
 
 
-def run_collect_cycle(index_params, providers, csv_sink, influx_sink, metrics=None, *,
+def run_collect_cycle(index_params, providers, csv_sink, metrics=None, *,
                       mode: str = "auto", parity_check: bool = False, **kwargs) -> dict[str, Any]:
     """Run a collection cycle via selected orchestration backend.
 
@@ -84,14 +84,14 @@ def run_collect_cycle(index_params, providers, csv_sink, influx_sink, metrics=No
     # Lazy imports (avoid circular heavy import at module import time)
     from src.collectors.unified_collectors import run_unified_collectors as _legacy  # type: ignore
     if effective == "legacy":
-        legacy_out = _legacy(index_params, providers, csv_sink, influx_sink, metrics, **kwargs)
+        legacy_out = _legacy(index_params, providers, csv_sink, metrics, **kwargs)
         return legacy_out or {}
 
     # Pipeline path
     from src.collectors.modules.pipeline import run_pipeline as _pipeline  # type: ignore
 
     if not parity_check:
-        pipe_out = _pipeline(index_params, providers, csv_sink, influx_sink, metrics, **kwargs)
+        pipe_out = _pipeline(index_params, providers, csv_sink, metrics, **kwargs)
         return pipe_out or {}
 
     # Parity mode: run pipeline then legacy; structural hash comparison deprecated.
@@ -99,8 +99,8 @@ def run_collect_cycle(index_params, providers, csv_sink, influx_sink, metrics=No
 
     # Deep copy index_params to avoid mutation side-effects across runs.
     idx_params_legacy = copy.deepcopy(index_params)
-    pipeline_result = _pipeline(index_params, providers, csv_sink, influx_sink, metrics, **kwargs) or {}
-    legacy_result = _legacy(idx_params_legacy, providers, csv_sink, influx_sink, metrics, **kwargs) or {}
+    pipeline_result = _pipeline(index_params, providers, csv_sink, metrics, **kwargs) or {}
+    legacy_result = _legacy(idx_params_legacy, providers, csv_sink, metrics, **kwargs) or {}
 
     try:
         pipe_idx = len(pipeline_result.get('indices', []) if isinstance(pipeline_result, dict) else [])

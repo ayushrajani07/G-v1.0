@@ -18,5 +18,4 @@ def init_cache_error_metrics(registry: MetricsRegistry) -> None:
     core('network_errors', Counter, 'g6_network_errors_total', 'Network related errors')
     core('data_errors', Counter, 'g6_data_errors_total', 'Data validation errors')
     core('error_rate_per_hour', Gauge, 'g6_error_rate_per_hour', 'Error rate per hour (derived)')
-    from prometheus_client import Counter as _C
-    registry.metric_stall_events = _C('g6_metric_stall_events_total', 'Metric stall detection events', ['metric'])
+    core('metric_stall_events', Counter, 'g6_metric_stall_events_total', 'Metric stall detection events', labels=['metric'])

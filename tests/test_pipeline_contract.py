@@ -12,9 +12,7 @@ def test_pipeline_return_shape_empty_indices(monkeypatch):
     result = run_pipeline(
         index_params={},
         providers=None,   # not used when no indices
-        csv_sink=None,
-        influx_sink=None,
-        metrics=None,
+        csv_sink=None, metrics=None,
         build_snapshots=False,
         legacy_baseline=None,
     )

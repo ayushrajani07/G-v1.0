@@ -167,7 +167,7 @@ class ParquetSink:
                     import pyarrow as pa
                     table = pa.concat_tables([existing_table, table])
                 except (OSError, IOError, ValueError) as e:
-                    logger.warning(f"Failed to read existing Parquet file {sink_file}, overwriting: {e}")
+                    logger.warning("Failed to read existing Parquet file %s, overwriting: %s", sink_file, e)
             pq.write_table(table, sink_file, compression=self.compression, use_dictionary=True)
             logger.debug("Wrote %d records to Parquet file: %s", len(records), sink_file)
         except (OSError, IOError, ValueError) as e:

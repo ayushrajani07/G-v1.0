@@ -51,9 +51,9 @@ def test_facade_auto_pipeline_default(monkeypatch, caplog):
         monkeypatch.delenv(k, raising=False)
     provider = DummyProvider()
     params = _index_params()
-    auto_res = run_collect_cycle(params, provider, None, None, None, mode='auto', build_snapshots=False)
+    auto_res = run_collect_cycle(params, provider, csv_sink=None, mode='auto', build_snapshots=False)
     # Force legacy path explicitly
-    legacy_res = run_collect_cycle(copy.deepcopy(params), provider, None, None, None, mode='legacy', build_snapshots=False)
+    legacy_res = run_collect_cycle(copy.deepcopy(params), provider, csv_sink=None, mode='legacy', build_snapshots=False)
     assert _capture_hash(auto_res) != -1
     assert _capture_hash(legacy_res) != -1
     # Expect pipeline (auto) != legacy structural fingerprint frequently (additional pipeline fields)
@@ -66,8 +66,8 @@ def test_facade_auto_force_legacy(monkeypatch):
     monkeypatch.setenv('G6_LEGACY_COLLECTOR','1')
     provider = DummyProvider()
     params = _index_params()
-    res = run_collect_cycle(params, provider, None, None, None, mode='auto', build_snapshots=False)
-    leg = run_collect_cycle(params, provider, None, None, None, mode='legacy', build_snapshots=False)
+    res = run_collect_cycle(params, provider, csv_sink=None, mode='auto', build_snapshots=False)
+    leg = run_collect_cycle(params, provider, csv_sink=None, mode='legacy', build_snapshots=False)
     assert _capture_hash(res) == _capture_hash(leg)
 
 
@@ -78,8 +78,8 @@ def test_facade_auto_deprecated_flag(monkeypatch, caplog):
     monkeypatch.setenv('G6_PIPELINE_COLLECTOR','1')
     provider = DummyProvider()
     params = _index_params()
-    res = run_collect_cycle(params, provider, None, None, None, mode='auto', build_snapshots=False)
+    res = run_collect_cycle(params, provider, csv_sink=None, mode='auto', build_snapshots=False)
     # Should still be pipeline; ensure warning emitted
     assert any('deprecated' in r.message for r in caplog.records)
-    leg = run_collect_cycle(params, provider, None, None, None, mode='legacy', build_snapshots=False)
+    leg = run_collect_cycle(params, provider, csv_sink=None, mode='legacy', build_snapshots=False)
     assert _capture_hash(res) >= _capture_hash(leg)

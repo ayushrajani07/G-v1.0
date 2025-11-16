@@ -61,7 +61,7 @@ class _Providers:
 def _run(mode, parity=False):
     providers = _Providers()
     index_params = {"TEST": {"strikes_itm": 1, "strikes_otm": 1}}
-    return run_collect_cycle(index_params, providers, csv_sink=None, influx_sink=None, metrics=None, mode=mode, parity_check=parity)
+    return run_collect_cycle(index_params, providers, csv_sink=None, metrics=None, mode=mode, parity_check=parity)
 
 
 def test_facade_pipeline_and_legacy_execute_and_parity_mode_runs():  # pragma: no cover - smoke style

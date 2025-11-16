@@ -34,7 +34,7 @@ def test_parallel_collector_with_mock_provider(tmp_path):
         }
     }
 
-    collector = ParallelCollector(aprov, csv_sink, influx_sink=None, metrics=None, max_workers=2)
+    collector = ParallelCollector(aprov, csv_sink, metrics=None, max_workers=2)
 
     async def _run():
         await collector.run_once(index_params)

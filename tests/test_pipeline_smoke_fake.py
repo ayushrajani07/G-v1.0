@@ -57,9 +57,7 @@ def test_pipeline_smoke_one_index(monkeypatch):
     res = pl.run_pipeline(
         index_params={'NIFTY': {'strikes_itm': 1, 'strikes_otm': 1, 'expiries': ['this_week']}},
         providers=fp,
-        csv_sink=None,
-        influx_sink=None,
-        metrics=SimpleNamespace(),
+        csv_sink=None, metrics=SimpleNamespace(),
         build_snapshots=False,
         legacy_baseline=None,
     )

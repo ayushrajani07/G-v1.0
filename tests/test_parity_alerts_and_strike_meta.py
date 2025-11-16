@@ -29,7 +29,7 @@ def _run(pipeline: bool):
             os.environ['G6_PIPELINE_COLLECTOR'] = '1'
         else:
             os.environ.pop('G6_PIPELINE_COLLECTOR', None)
-        return run_unified_collectors(params, prov, csv_sink=None, influx_sink=None, metrics=None, build_snapshots=False)
+        return run_unified_collectors(params, prov, csv_sink=None, metrics=None, build_snapshots=False)
     finally:
         if prev_flag is None:
             os.environ.pop('G6_PIPELINE_COLLECTOR', None)

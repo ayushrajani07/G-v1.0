@@ -1548,7 +1548,7 @@ def _build_output_rows_and_headers(idx_norm: str, rows: list[dict], times: list[
                         diag['ribbon_abs_floor'] = EnvConfig.get_float("G6_RIBBON_ABS_FLOOR", 1.0)
                 except (ValueError, TypeError, AttributeError):
                     # Config access error
-                    diag[\'ribbon_abs_floor\'] = 1.0
+                    diag['ribbon_abs_floor'] = 1.0
             except (ValueError, TypeError, KeyError, AttributeError, IndexError):
                 # Value, type, key, attribute, or index errors
                 pass

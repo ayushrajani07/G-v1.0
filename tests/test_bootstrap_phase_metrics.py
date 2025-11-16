@@ -70,7 +70,7 @@ def test_bootstrap_phase_recorded():
     influx = DummyInflux()
     metrics = MetricsBootstrap()
     index_params = { 'NIFTY': { 'enable': True, 'expiries': ['this_week'], 'strikes_itm': 0, 'strikes_otm': 0 } }
-    run_unified_collectors(index_params, providers, csv_sink, influx, metrics=metrics, compute_greeks=False, estimate_iv=False)
+    run_unified_collectors(index_params, providers, csv_sink, metrics=metrics, compute_greeks=False, estimate_iv=False)
     assert 'bootstrap' in metrics._phases, 'bootstrap phase missing from metrics observations'
     # bootstrap timing can be very small but should be present (>=0)
     assert metrics._phases['bootstrap'] >= 0.0

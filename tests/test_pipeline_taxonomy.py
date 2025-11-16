@@ -56,7 +56,7 @@ def patch_pipeline(monkeypatch):
 
 def test_recoverable_expiry_failure(caplog):
     caplog.set_level(logging.INFO, logger='src.collectors.pipeline')
-    out = pl.run_pipeline({'X': {}}, Providers(mode='ok'), None, None, metrics=None, legacy_baseline={'indices': []})
+    out = pl.run_pipeline({'X': {}}, Providers(mode='ok'), csv_sink=None, metrics=None, legacy_baseline={'indices': []})
     idx = out['indices'][0]
     assert idx['failures'] >= 1
     # Ensure failure logged as finalize_fail
@@ -66,7 +66,7 @@ def test_recoverable_expiry_failure(caplog):
 
 def test_fatal_index_failure(caplog):
     caplog.set_level(logging.DEBUG, logger='src.collectors.pipeline')
-    out = pl.run_pipeline({'Y': {}}, Providers(mode='fatal'), None, None, metrics=None, legacy_baseline={'indices': []})
+    out = pl.run_pipeline({'Y': {}}, Providers(mode='fatal'), csv_sink=None, metrics=None, legacy_baseline={'indices': []})
     idx = out['indices'][0]
     assert idx['failures'] >= 1
     msgs = [r.message for r in caplog.records if r.name == 'src.collectors.pipeline']

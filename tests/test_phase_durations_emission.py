@@ -13,7 +13,7 @@ def test_phase_durations_emitted_positive():
         def _record(self, phase, v):
             self._observed.setdefault(phase, []).append(v)
     m = Metrics()
-    ctx = CycleContext(index_params={}, providers=None, csv_sink=None, influx_sink=None, metrics=m, start_wall=time.time())
+    ctx = CycleContext(index_params={}, providers=None, csv_sink=None, metrics=m, start_wall=time.time())
     with ctx.time_phase('fetch'):
         time.sleep(0.002)
     with ctx.time_phase('enrich'):

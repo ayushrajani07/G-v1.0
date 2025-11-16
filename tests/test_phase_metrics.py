@@ -23,7 +23,7 @@ class DummyMetrics:
 
 def test_phase_duration_and_failure_tracking():
     metrics = DummyMetrics()
-    ctx = CycleContext(index_params={}, providers=None, csv_sink=None, influx_sink=None, metrics=metrics, start_wall=time.time())
+    ctx = CycleContext(index_params={}, providers=None, csv_sink=None, metrics=metrics, start_wall=time.time())
 
     # Successful phase
     with ctx.time_phase('alpha'):
@@ -59,7 +59,7 @@ def test_phase_duration_and_failure_tracking():
 
 def test_consolidated_log_emission(caplog):
     metrics = DummyMetrics()
-    ctx = CycleContext(index_params={}, providers=None, csv_sink=None, influx_sink=None, metrics=metrics, start_wall=time.time())
+    ctx = CycleContext(index_params={}, providers=None, csv_sink=None, metrics=metrics, start_wall=time.time())
 
     with ctx.time_phase('one'):
         time.sleep(0.005)

@@ -31,7 +31,6 @@ def _write_status(tmp_path: Path, mode: int, band_window: int):
         index_params={'NIFTY': {}},
         providers=DummyProviders(),
         csv_sink=DummySink(),
-        influx_sink=DummySink(),
         metrics=m,
         readiness_ok=True,
         readiness_reason='',

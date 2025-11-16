@@ -49,7 +49,7 @@ def patch(monkeypatch):
 
 def test_recoverable_counter(monkeypatch):
     # Run pipeline and then query metrics registry implicitly via second import of metrics facade
-    pl.run_pipeline({'IDX': {}}, Providers(), None, None, metrics=None, legacy_baseline={'indices': []})
+    pl.run_pipeline({'IDX': {}}, Providers(), csv_sink=None, metrics=None, legacy_baseline={'indices': []})
     # Import metrics facade last to avoid early registry clearing in some environments
     from src.metrics import dump_metrics  # type: ignore
     all_metrics = dump_metrics()  # assume returns a structure listing metric names & samples (facade contract)

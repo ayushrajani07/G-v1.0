@@ -34,7 +34,7 @@ class _Prov:
 
 
 def _run_cycle(params):
-    return run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_DummyCsv(), influx_sink=None, compute_greeks=False)
+    return run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_DummyCsv(), compute_greeks=False)
 
 
 def test_adaptive_contraction_returns_toward_baseline(monkeypatch):

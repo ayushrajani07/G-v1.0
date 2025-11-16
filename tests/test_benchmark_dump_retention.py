@@ -29,7 +29,7 @@ class _Prov:
 
 
 def _run_cycle(params):
-    return run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_DummyCsv(), influx_sink=None, compute_greeks=False)
+    return run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_DummyCsv(), compute_greeks=False)
 
 
 def test_benchmark_dump_compress_and_retention(tmp_path):

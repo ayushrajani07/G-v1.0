@@ -49,7 +49,7 @@ def persist_and_metrics(ctx, enriched_data: dict[str, dict[str, Any]], index_sym
         logger.error("Unexpected CSV write error %s %s: %s", index_symbol, expiry_rule, e)
         return PersistResult(option_count=0, pcr=None, metrics_payload=None, failed=True)
 
-    influx_sink = ctx.influx_sink
+    influx_sink = getattr(ctx, 'influx_sink', None)
     if influx_sink:
         try:
             influx_sink.write_options_data(index_symbol, expiry_date, enriched_data, collection_time)

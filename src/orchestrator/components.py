@@ -536,7 +536,7 @@ def init_storage(config) -> tuple[Any, Any]:
         pass
     csv_sink_ctor: Any = CsvSinkT
     csv_sink = csv_sink_ctor(base_dir=data_dir)
-    return csv_sink
+    return csv_sink, None  # Return tuple (csv_sink, influx_sink) - influx deprecated
 
 
 def init_health(config, providers, csv_sink) -> Any:

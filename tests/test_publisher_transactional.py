@@ -33,9 +33,7 @@ def test_publisher_writes_transactionally(monkeypatch, tmp_path):
         interval_sec=1.0,
         success_rate_pct=97.0,
         metrics=None,
-        csv_sink=None,
-        influx_sink=None,
-        providers=None,
+        csv_sink=None, providers=None,
     )
 
     # After call, panels dir should contain committed JSONs and a meta file

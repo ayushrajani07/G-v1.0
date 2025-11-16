@@ -41,7 +41,7 @@ def _run(mode: str):
             os.environ['G6_PIPELINE_COLLECTOR'] = '1'
         else:
             os.environ.pop('G6_PIPELINE_COLLECTOR', None)
-        return run_unified_collectors(index_params, provider, csv_sink=None, influx_sink=None, metrics=None, build_snapshots=False)
+        return run_unified_collectors(index_params, provider, csv_sink=None, metrics=None, build_snapshots=False)
     finally:
         if prev_pipeline is None:
             os.environ.pop('G6_PIPELINE_COLLECTOR', None)

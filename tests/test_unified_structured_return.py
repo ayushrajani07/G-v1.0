@@ -35,9 +35,8 @@ def test_unified_collectors_structured_return(monkeypatch):
     params = {"NIFTY": {"strikes_itm": 1, "strikes_otm": 1, "expiries": ["this_week"]}}
     providers = DummyProviders()
     csv_sink = DummyCsvSink()
-    influx_sink = None
     metrics = SimpleNamespace(collection_cycle_in_progress=SimpleNamespace(set=lambda *_: None))
-    result = run_unified_collectors(params, providers, csv_sink, influx_sink, metrics, build_snapshots=True)
+    result = run_unified_collectors(params, providers, csv_sink, metrics, build_snapshots=True)
     assert isinstance(result, dict)
     assert result.get('status') == 'ok'
     assert result.get('indices_processed') == 1

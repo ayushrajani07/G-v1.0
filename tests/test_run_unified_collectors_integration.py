@@ -144,7 +144,7 @@ def test_run_unified_collectors_end_to_end(monkeypatch):
     # Force memory pressure manager neutrality
     monkeypatch.setattr('src.utils.memory_pressure.MemoryPressureManager.evaluate', lambda self: types.SimpleNamespace(name='NORMAL'))
     monkeypatch.setattr('src.utils.memory_pressure.MemoryPressureManager.__init__', lambda self, metrics=None: None)
-    run_unified_collectors(index_params, providers, csv_sink, influx_sink, metrics=metrics, compute_greeks=False, estimate_iv=False)
+    run_unified_collectors(index_params, providers, csv_sink, metrics=metrics, compute_greeks=False, estimate_iv=False)
 
     # Assertions
     # Exactly one options batch persisted

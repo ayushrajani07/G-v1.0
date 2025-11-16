@@ -49,7 +49,7 @@ def test_trace_auto_disable(monkeypatch):
     prev_level = root.level
     root.setLevel(logging.INFO)
     try:
-        run_unified_collectors(_make_index_params(), providers, csv_sink=None, influx_sink=None, metrics=None)
+        run_unified_collectors(_make_index_params(), providers, csv_sink=None, metrics=None)
     finally:
         root.setLevel(prev_level)
         root.removeHandler(h)

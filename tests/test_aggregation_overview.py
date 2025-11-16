@@ -10,9 +10,8 @@ class DummySink:
         self.calls.append((index_symbol, pcr_snapshot, ts, day_width, tuple(expected_expiries)))
 
 class DummyCtx:
-    def __init__(self, csv_sink=None, influx_sink=None):
+    def __init__(self, csv_sink=None):
         self.csv_sink = csv_sink or DummySink()
-        self.influx_sink = influx_sink
 
 class FailingInflux:
     def write_overview_snapshot(self, *a, **k):
@@ -44,7 +43,7 @@ def test_emit_overview_no_snapshot():
 
 def test_emit_overview_influx_failure_graceful():
     csv = DummySink(); influx = FailingInflux()
-    ctx = DummyCtx(csv_sink=csv, influx_sink=influx)
+    ctx = DummyCtx(csv_sink=csv)
     agg_state = types.SimpleNamespace(representative_day_width=7, snapshot_base_time=None)
     rep_width, base_time = emit_overview_aggregation(
         ctx, 'FINNIFTY', {'W1': 2.34}, agg_state, datetime.datetime(2025,1,1,tzinfo=datetime.timezone.utc), ['this_week','next_week']

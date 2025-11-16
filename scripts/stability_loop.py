@@ -83,7 +83,7 @@ def run_cycle(mode: str, index_params, provider) -> dict[str, Any]:
     parity_check = (mode == 'parity')
     facade_mode = 'pipeline' if mode in ('pipeline','parity') else 'legacy'
     start = time.perf_counter()
-    result = run_collect_cycle(index_params, provider, None, None, None, mode=facade_mode, parity_check=parity_check, build_snapshots=False)
+    result = run_collect_cycle(index_params, provider, csv_sink=None, mode=facade_mode, parity_check=parity_check, build_snapshots=False)
     elapsed = time.perf_counter() - start
     os.environ.pop('G6_FORCE_MARKET_OPEN', None)
 

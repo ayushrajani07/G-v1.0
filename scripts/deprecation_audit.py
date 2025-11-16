@@ -22,7 +22,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import ClassVar
 
@@ -57,7 +57,7 @@ class DeprecatedItem:
         
         try:
             removal = datetime.strptime(self.removal_date, '%Y-%m-%d')
-            return datetime.now() > removal
+            return datetime.now(timezone.utc).replace(tzinfo=None) > removal
         except (ValueError, TypeError):
             return False
     
@@ -240,7 +240,7 @@ class DeprecationAuditor:
         """Generate comprehensive audit report."""
         lines = [
             "# Deprecation Audit Report",
-            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC",
             "",
             "## Summary",
             f"- Total deprecated items: {len(self.items)}",

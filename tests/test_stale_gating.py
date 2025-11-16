@@ -67,7 +67,7 @@ _PARAMS = {"NIFTY": {"strikes_itm": 1, "strikes_otm": 1, "expiries": ["this_week
 def test_stale_index_modes_mark_and_skip(monkeypatch, providers, csv_sink, metrics, mode):
     monkeypatch.setenv('G6_STALE_FIELD_COV_THRESHOLD','0.2')  # anything <=0.2 is stale
     monkeypatch.setenv('G6_STALE_WRITE_MODE', mode)
-    res = run_unified_collectors(_PARAMS, providers, csv_sink, None, metrics, build_snapshots=True)
+    res = run_unified_collectors(_PARAMS, providers, csv_sink, metrics, build_snapshots=True)
     indices = res.get('indices') or []
     assert indices, 'expected an index entry'
     entry = indices[0]
@@ -86,9 +86,9 @@ def test_stale_abort(monkeypatch, providers, csv_sink, metrics):
     monkeypatch.setenv('G6_STALE_WRITE_MODE','abort')
     monkeypatch.setenv('G6_STALE_ABORT_CYCLES','2')
     # Run first cycle (should not exit)
-    res1 = run_unified_collectors(_PARAMS, providers, csv_sink, None, metrics, build_snapshots=True)
+    res1 = run_unified_collectors(_PARAMS, providers, csv_sink, metrics, build_snapshots=True)
     assert res1.get('indices')[0].get('status') == 'STALE'
     # Second cycle should trigger SystemExit with code 32
     with pytest.raises(SystemExit) as exc:
-        run_unified_collectors(_PARAMS, providers, csv_sink, None, metrics, build_snapshots=True)
+        run_unified_collectors(_PARAMS, providers, csv_sink, metrics, build_snapshots=True)
     assert exc.value.code == 32

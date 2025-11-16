@@ -66,13 +66,13 @@ class DeterministicProvider(SimpleNamespace):
 def _run_legacy(index_params, providers):
     os.environ.pop('G6_PIPELINE_COLLECTOR', None)
     os.environ['G6_FORCE_MARKET_OPEN'] = '1'
-    return run_unified_collectors(index_params, providers, csv_sink=None, influx_sink=None, metrics=None, build_snapshots=False)
+    return run_unified_collectors(index_params, providers, csv_sink=None, metrics=None, build_snapshots=False)
 
 
 def _run_pipeline(index_params, providers):
     os.environ['G6_PIPELINE_COLLECTOR'] = '1'
     os.environ['G6_FORCE_MARKET_OPEN'] = '1'
-    return run_unified_collectors(index_params, providers, csv_sink=None, influx_sink=None, metrics=None, build_snapshots=False)
+    return run_unified_collectors(index_params, providers, csv_sink=None, metrics=None, build_snapshots=False)
 
 
 def normalize(res):

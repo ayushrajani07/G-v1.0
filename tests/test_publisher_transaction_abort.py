@@ -44,9 +44,7 @@ def test_publisher_transaction_abort_cleans_staging(monkeypatch, tmp_path):
             interval_sec=1.0,
             success_rate_pct=97.0,
             metrics=None,
-            csv_sink=None,
-            influx_sink=None,
-            providers=None,
+            csv_sink=None, providers=None,
         )
 
     # After abort, there should be no committed panel JSONs and no meta file

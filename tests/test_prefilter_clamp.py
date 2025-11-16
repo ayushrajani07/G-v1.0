@@ -75,9 +75,7 @@ def _run_cycle(instrument_count: int, env: dict[str,str]) -> dict:
         result = run_unified_collectors(
             index_params=params,
             providers=providers,
-            csv_sink=csv_sink,
-            influx_sink=influx,
-            compute_greeks=False,
+            csv_sink=csv_sink, compute_greeks=False,
             estimate_iv=False,
             build_snapshots=False,
         )

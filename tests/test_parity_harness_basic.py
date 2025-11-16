@@ -77,7 +77,7 @@ def test_parity_score_stable_with_repeat_unified_collectors_run():
     }
     providers = _Prov()
     csv_sink = _Csv()
-    unified_a = run_unified_collectors(index_params=index_params, providers=providers, csv_sink=csv_sink, influx_sink=None, compute_greeks=False, estimate_iv=False, build_snapshots=False)
+    unified_a = run_unified_collectors(index_params=index_params, providers=providers, csv_sink=csv_sink, compute_greeks=False, estimate_iv=False, build_snapshots=False)
     unified_b = copy.deepcopy(unified_a)
     assert isinstance(unified_a, dict)
     # Legacy baseline simulated as identical structure for deterministic score 1.0

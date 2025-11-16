@@ -24,7 +24,7 @@ def _emit_status(path: Path, metrics):
         interval=1.0,
         index_params={'NIFTY': {}},
         providers=DummyProviders(),
-        csv_sink=DummySink(), influx_sink=DummySink(), metrics=metrics,
+        csv_sink=DummySink(), metrics=metrics,
         readiness_ok=True, readiness_reason='', health_monitor=None)
 
 

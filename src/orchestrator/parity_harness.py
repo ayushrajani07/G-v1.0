@@ -131,7 +131,8 @@ def run_parity_cycle(config, use_enhanced: bool = False) -> dict[str, Any]:
     # Build shared sinks & providers through orchestrator bootstrap components to mirror prod semantics
     from .components import init_providers, init_storage  # type: ignore
     providers = init_providers(config)
-    csv_sink, influx_sink = init_storage(config)
+    csv_sink, _ = init_storage(config)  # influx_sink deprecated
+    influx_sink = None
     metrics = getattr(config, 'metrics', None)
 
     # Legacy execution (single cycle) -------------------------------------------------

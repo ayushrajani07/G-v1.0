@@ -151,7 +151,7 @@ def run_shadow_pipeline(
         decision = gating.decide(index, rule, state.meta)
         state.meta['gating_decision'] = decision
     except (AttributeError, TypeError, KeyError, ValueError) as e:
-        logger.debug(f"gating_decision_failed: {e}", exc_info=True)
+        logger.debug("gating_decision_failed: %s", e, exc_info=True)
         decision = None
         state.meta['gating_decision'] = {'mode':'error','promote':False,'reason':'exception'}
     # Structured decision log (single line JSON style for auditability)
@@ -216,7 +216,7 @@ def run_shadow_pipeline(
                 diff_fields = state.meta.get('parity_diff_fields') or ()
                 adapter.record_shadow_protected_field_diffs(index, rule, diff_fields, protected_fields=protected_fields)
         except (AttributeError, TypeError, KeyError, ValueError, ImportError) as e:
-            logger.debug(f'shadow_parity_metrics_emit_failed: {e}', exc_info=True)
+            logger.debug('shadow_parity_metrics_emit_failed: %s', e, exc_info=True)
     return state
 
 __all__ = ["run_shadow_pipeline", "_compute_parity_hash"]

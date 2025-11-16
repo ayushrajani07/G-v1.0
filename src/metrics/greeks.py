@@ -23,8 +23,19 @@ def init_greek_metrics(registry, greek_names: Sequence[str] = ('delta','theta','
         metric_name = f"option_{greek}"
         if hasattr(registry, metric_name):  # idempotent guard
             continue
+        prom_name = f'g6_option_{greek}'
+        # Check if already registered in Prometheus to avoid duplicates
+        try:
+            from prometheus_client import REGISTRY
+            existing = [c for c in REGISTRY._collector_to_names if prom_name in REGISTRY._collector_to_names.get(c, [])]
+            if existing:
+                # Already registered, reuse existing metric
+                setattr(registry, metric_name, existing[0])
+                continue
+        except (ImportError, AttributeError, KeyError):
+            pass
         g = Gauge(
-            f'g6_option_{greek}',
+            prom_name,
             f'Option {greek}',
             ['index', 'expiry', 'strike', 'type']
         )

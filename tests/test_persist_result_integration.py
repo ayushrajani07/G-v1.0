@@ -46,7 +46,7 @@ class DummyInflux:
 def test_persist_result_basic_increment():
     metrics = DummyMetrics()
     csv_sink = DummyCsvSink()
-    ctx = CycleContext(index_params={}, providers=None, csv_sink=csv_sink, influx_sink=DummyInflux(), metrics=metrics)
+    ctx = CycleContext(index_params={}, providers=None, csv_sink=csv_sink, metrics=metrics)
     enriched = {
         'OPT1': {'instrument_type':'CE','strike':100,'last_price':5,'oi':10,'volume':2,'iv':15},
         'OPT2': {'instrument_type':'PE','strike':100,'last_price':6,'oi':12,'volume':3,'iv':16},

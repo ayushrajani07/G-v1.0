@@ -97,7 +97,7 @@ class DummyProviders:
 def _run(mode, parity=False):
     index_params = {"TEST": {"strikes_itm": 1, "strikes_otm": 1}}
     providers = DummyProviders()
-    return run_collect_cycle(index_params, providers, csv_sink=None, influx_sink=None, metrics=None, mode=mode, parity_check=parity)
+    return run_collect_cycle(index_params, providers, csv_sink=None, metrics=None, mode=mode, parity_check=parity)
 
 
 def test_facade_pipeline_parity_mode_executes():

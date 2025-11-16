@@ -791,7 +791,10 @@ def start_http_server_in_thread() -> None:
     if rebuild_flag:
         try:
             shutdown_http_server()
-        except (AttributeError, OSError, RuntimeError):\n            # Handle shutdown failures during rebuild\n            pass\n    # Auto reload if adaptive trend window changed (test isolation convenience)
+        except (AttributeError, OSError, RuntimeError):
+            # Handle shutdown failures during rebuild
+            pass
+    # Auto reload if adaptive trend window changed (test isolation convenience)
     try:
         _tw = getattr(severity, '_trend_window', None)
         _val: Any = _tw() if callable(_tw) else None

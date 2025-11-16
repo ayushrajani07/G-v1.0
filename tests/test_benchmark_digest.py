@@ -30,7 +30,7 @@ def test_benchmark_artifact_has_digest_and_options(tmp_path):
     os.environ['G6_BENCHMARK_DUMP'] = str(dump_dir)
     try:
         params={'NIFTY':{'expiries':['this_week'],'strikes_itm':1,'strikes_otm':1}}
-        run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_Csv(), influx_sink=None, compute_greeks=False)
+        run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_Csv(), compute_greeks=False)
         f = next(iter(dump_dir.glob('benchmark_cycle_*.json')))
         data = json.loads(f.read_text(encoding='utf-8'))
         assert 'options_total' in data and isinstance(data['options_total'], (int,float))

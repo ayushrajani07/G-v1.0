@@ -64,7 +64,6 @@ def write_runtime_status(
     index_params: dict[str, Any],
     providers: Any,
     csv_sink: Any,
-    influx_sink: Any,
     metrics: Any,
     readiness_ok: bool | None,
     readiness_reason: str,
@@ -522,7 +521,7 @@ def write_runtime_status(
             except (AttributeError, TypeError, RuntimeError):
                 # Handle error handler access failures
                 pass
-    except (OSError, IOError, json.JSONEncodeError, TypeError) as e:  # pragma: no cover
+    except (OSError, IOError, json.JSONDecodeError, TypeError) as e:  # pragma: no cover
         # Handle file I/O, JSON encoding, or type errors
         try:
             get_error_handler().handle_error(

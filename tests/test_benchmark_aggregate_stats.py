@@ -33,7 +33,7 @@ class _Prov:
 def _run_cycle(dump_dir):
     os.environ['G6_BENCHMARK_DUMP']=str(dump_dir)
     params={'NIFTY':{'expiries':['this_week'],'strikes_itm':1,'strikes_otm':1}}
-    run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_Csv(), influx_sink=None, compute_greeks=False)
+    run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_Csv(), compute_greeks=False)
 
 
 def test_aggregate_stats_and_markdown(tmp_path):

@@ -70,7 +70,7 @@ def fake_index_params():
 def test_pipeline_phase_logging_success(caplog, fake_index_params):
     providers = FakeProviders()
     caplog.set_level(logging.INFO, logger='src.collectors.pipeline')
-    out = pl.run_pipeline(fake_index_params, providers, None, None, metrics=None, legacy_baseline={'indices': [{'index': 'BASE', 'status': 'OK'}]})
+    out = pl.run_pipeline(fake_index_params, providers, csv_sink=None, metrics=None, legacy_baseline={'indices': [{'index': 'BASE', 'status': 'OK'}]})
     # Basic assertions on output structure
     assert out.get('status') == 'ok'
     assert len(out.get('indices', [])) == 1
@@ -87,7 +87,7 @@ def test_pipeline_parity_score_log(caplog, fake_index_params, monkeypatch):
     providers = FakeProviders()
     caplog.set_level(logging.INFO, logger='src.collectors.pipeline')
     monkeypatch.setenv('G6_PIPELINE_PARITY_LOG', '1')
-    _ = pl.run_pipeline(fake_index_params, providers, None, None, metrics=None, legacy_baseline={'indices': [{'index': 'BASE', 'status': 'OK', 'option_count': 3}]})
+    _ = pl.run_pipeline(fake_index_params, providers, csv_sink=None, metrics=None, legacy_baseline={'indices': [{'index': 'BASE', 'status': 'OK', 'option_count': 3}]})
     parity_records = [r for r in caplog.records if r.name == 'src.collectors.pipeline' and r.getMessage() == 'pipeline_parity_score']
     assert parity_records, 'Expected pipeline_parity_score log record'
     # Check extra fields
@@ -100,7 +100,7 @@ def test_pipeline_taxonomy_fatal(monkeypatch, caplog, fake_index_params):
             raise RuntimeError('boom')
     caplog.set_level(logging.DEBUG, logger='src.collectors.pipeline')
     monkeypatch.setenv('G6_PIPELINE_PARITY_LOG', '0')
-    out = pl.run_pipeline(fake_index_params, FailingProviders(), None, None, metrics=None, legacy_baseline=None)
+    out = pl.run_pipeline(fake_index_params, FailingProviders(), csv_sink=None, metrics=None, legacy_baseline=None)
     indices = out.get('indices', [])
     assert indices, 'indices should be present'
     idx = indices[0]

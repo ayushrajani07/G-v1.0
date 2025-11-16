@@ -137,7 +137,7 @@ def test_run_unified_collectors_multi_expiry(monkeypatch):
         }
     }
 
-    run_unified_collectors(index_params, providers, csv_sink, influx_sink, metrics=metrics, compute_greeks=False, estimate_iv=False)
+    run_unified_collectors(index_params, providers, csv_sink, metrics=metrics, compute_greeks=False, estimate_iv=False)
 
     # Expect two option batches (two expiries)
     assert len(csv_sink.option_batches) == 2, f"Expected 2 option batches, got {len(csv_sink.option_batches)}"

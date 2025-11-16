@@ -38,7 +38,7 @@ def test_benchmark_dump_creates_artifact(tmp_path):
     os.environ['G6_FORCE_MARKET_OPEN'] = '1'
     try:
         params = {'NIFTY': {'expiries':['this_week'],'strikes_itm':2,'strikes_otm':2}}
-        res = run_unified_collectors(index_params=params, providers=_DummyProv(), csv_sink=_DummyCsv(), influx_sink=None, compute_greeks=False)
+        res = run_unified_collectors(index_params=params, providers=_DummyProv(), csv_sink=_DummyCsv(), compute_greeks=False)
         if res.get('status') == 'market_closed':
             pytest.skip('Market closed gating active unexpectedly; skipping benchmark dump artifact assertion.')
         assert res['status'] == 'ok'

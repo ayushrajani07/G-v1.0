@@ -48,7 +48,7 @@ def _run(indices_conf):
     providers = _ProvMulti()
     csv_sink = _CsvNull()
     # build_snapshots False to keep harness focused on structural listing
-    return run_unified_collectors(index_params=indices_conf, providers=providers, csv_sink=csv_sink, influx_sink=None, compute_greeks=False, estimate_iv=False, build_snapshots=False)
+    return run_unified_collectors(index_params=indices_conf, providers=providers, csv_sink=csv_sink, compute_greeks=False, estimate_iv=False, build_snapshots=False)
 
 
 def test_parity_score_degrades_when_index_missing():
