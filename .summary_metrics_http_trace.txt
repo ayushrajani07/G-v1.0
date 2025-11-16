@@ -1818,3 +1818,10 @@ body_len=48000
 normalized_body
 injected=True
 wrote_body
+start_do_GET
+wrote_scrape_sentinel
+imports_ok
+body_len=48013
+normalized_body
+injected=True
+wrote_body

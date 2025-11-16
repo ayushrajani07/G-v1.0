@@ -539,7 +539,8 @@ Based on domain knowledge and typical option premium behavior:
 #### **High Importance (Expected)**:
 1. **TP Lags (recent)**: `res[t-1]`, `res[t-2]` — momentum/autocorrelation
 2. **Avg IV**: Direct impact on premium (higher IV → higher TP)
-3. **Index Price**: Structural dependency (higher index → higher ATM premium)
+3. **Index Price**: Underlying instrument price movement - structural component in TP formula
+   - Note: Relationship is complex, not simply "higher → higher"; depends on strike positioning and Greeks
 4. **Minutes to Expiry**: Time decay (Theta effect)
 5. **Rolling Volatility**: Regime indicator
 
