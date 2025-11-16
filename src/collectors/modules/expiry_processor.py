@@ -396,7 +396,7 @@ def process_expiry(
             expiry_date = _resolve_expiry(index_symbol, expiry_rule, ctx.providers, metrics, concise_mode)
             try:
                 _trace('resolve_expiry', index=index_symbol, rule=expiry_rule, expiry=str(expiry_date))
-            except Exception:
+            except (TypeError, AttributeError):
                 pass
         strikes = precomputed_strikes
         if not strikes:
@@ -412,22 +412,22 @@ def process_expiry(
                 instruments = [inst for inst in bucket if inst.get('strike') in strike_set]
                 try:
                     _trace('fetch_instruments_expiry_map', index=index_symbol, rule=expiry_rule, count=len(instruments), bucket=len(bucket))
-                except Exception:
+                except (TypeError, AttributeError):
                     pass
             else:
                 instruments = _fetch_option_instruments(index_symbol, expiry_rule, expiry_date, strikes, ctx.providers, metrics)
                 try:
                     _trace('fetch_instruments', index=index_symbol, rule=expiry_rule, count=len(instruments))
-                except Exception:
+                except (TypeError, AttributeError):
                     pass
         if _test_debug:
             try:
                 print(f"[G6_TEST_DEBUG] stage=post_fetch index={index_symbol} rule={expiry_rule} strikes={len(strikes or [])} instruments={len(instruments or [])}")
-            except Exception:
+            except (TypeError, ValueError):
                 pass
         try:
             logger.debug('expiry_stage_counts index=%s rule=%s stage=post_fetch instruments=%d strikes=%d', index_symbol, expiry_rule, len(instruments or []), len(strikes or []))
-        except Exception:
+        except (TypeError, ValueError):
             pass
         try:
             if instruments:
@@ -502,16 +502,16 @@ def process_expiry(
                 enriched_data = {}
             try:
                 _trace('enrich_quotes', index=index_symbol, rule=expiry_rule, enriched=len(enriched_data or {}))
-            except Exception:
+            except (TypeError, AttributeError):
                 pass
         try:
             logger.debug('expiry_stage_counts index=%s rule=%s stage=post_enrich enriched=%d instruments=%d', index_symbol, expiry_rule, len(enriched_data or {}), len(instruments or []))
-        except Exception:
+        except (TypeError, ValueError):
             pass
         if _test_debug:
             try:
                 print(f"[G6_TEST_DEBUG] stage=post_enrich index={index_symbol} rule={expiry_rule} enriched={len(enriched_data or {})} instruments={len(instruments or [])}")
-            except Exception:
+            except (TypeError, ValueError):
                 pass
 
         # Enforced mapping type for downstream logic
@@ -598,7 +598,7 @@ def process_expiry(
                 kept = prevent_report.get('post_enriched_count') if isinstance(prevent_report, dict) else None
                 dropped = prevent_report.get('dropped_count') if isinstance(prevent_report, dict) else None
                 print(f"[G6_TEST_DEBUG] stage=post_validate index={index_symbol} rule={expiry_rule} remaining={len(enriched_data or {})} kept={kept} dropped={dropped}")
-            except Exception:
+            except (TypeError, ValueError, AttributeError):
                 pass
         # Phase 1 shadow pipeline (resolve, fetch, prefilter, enrich) parity check
         try:
@@ -623,7 +623,7 @@ def process_expiry(
             logger.debug('expiry.shadow.invoke_failed index=%s rule=%s', index_symbol, expiry_rule, exc_info=True)
         try:
             logger.debug('expiry_stage_counts index=%s rule=%s stage=post_validate remaining=%d', index_symbol, expiry_rule, len(enriched_data or {}))
-        except Exception:
+        except (TypeError, ValueError):
             pass
         # ------------------------------------------------------------------
         # Foreign expiry salvage (optional): If all rows were dropped solely due to
@@ -762,7 +762,7 @@ def process_expiry(
             if _test_debug:
                 try:
                     print(f"[G6_TEST_DEBUG] stage=persist index={index_symbol} rule={expiry_rule} options={len(enriched_data or {})}")
-                except Exception:
+                except (TypeError, ValueError):
                     pass
             # Define persist_result with default fail surrogate
             from dataclasses import dataclass

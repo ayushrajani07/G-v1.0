@@ -28,7 +28,7 @@ class EmitMatchStats(Protocol):
 
 try:  # pragma: no cover
     from src.collectors.helpers.status_reducer import derive_partial_reason as _derive_partial_reason_any
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     def _derive_partial_reason_any(expiry_rec: dict[str, Any]) -> str | None:
         return None
 derive_partial_reason = cast(DerivePartialReason, _derive_partial_reason_any)
@@ -37,7 +37,7 @@ try:  # pragma: no cover
     from src.collectors.helpers.struct_events import (
         _compute_reason_totals as _crt,  # imported signature: (indices: List[Dict[str, Any]]) -> Dict[str,int]
     )
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     def _crt(indices: list[dict[str, Any]]) -> dict[str, int]:  # fallback keeps matching signature
         return {}
 
@@ -46,7 +46,7 @@ try:  # pragma: no cover
         emit_option_match_stats as _emit_option_match_stats_impl,  # noqa: F401
     )
     _emit_option_match_stats_impl = cast(Any, _emit_option_match_stats_impl)
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     def _emit_option_match_stats_impl(**k: Any) -> None:  # fallback dynamic
         return None
 
@@ -55,7 +55,7 @@ _emit_option_match_stats_impl_t = cast(EmitMatchStats, _emit_option_match_stats_
 def _emit_option_match_stats(**k: Any) -> None:
     try:
         _emit_option_match_stats_impl_t(**k)
-    except Exception:  # pragma: no cover
+    except (TypeError, AttributeError):  # pragma: no cover
         logger.debug('emit_option_match_stats_wrapper_failed', exc_info=True)
 
 class PartialReasonTotals(TypedDict, total=False):
@@ -122,7 +122,7 @@ def finalize_expiry(
             strike_max = float(max(precomputed_strikes))
             diffs_tmp = [b - a for a, b in zip(precomputed_strikes, precomputed_strikes[1:], strict=False) if b > a]
             step_val = float(min(diffs_tmp)) if diffs_tmp else None
-        except Exception:
+        except (ValueError, TypeError):
             strike_min = strike_max = step_val = None
     else:
         strike_min = strike_max = step_val = None
@@ -145,7 +145,7 @@ def finalize_expiry(
                 ce_legs += 1
             elif _t == 'PE':
                 pe_legs += 1
-    except Exception:
+    except (TypeError, AttributeError):
         logger.debug('leg_count_failed', exc_info=True)
     ce_per_strike = (ce_legs / len(precomputed_strikes)) if precomputed_strikes else None
     pe_per_strike = (pe_legs / len(precomputed_strikes)) if precomputed_strikes else None
@@ -163,14 +163,14 @@ def finalize_expiry(
                             try:
                                 from prometheus_client import Counter as _C
                                 metrics.partial_expiries_total = _C('g6_partial_expiries_total','Partial expiries total',['reason'])
-                            except Exception:
+                            except (ImportError, AttributeError, TypeError):
                                 metrics.partial_expiries_total = None
                         pe_counter = getattr(metrics, 'partial_expiries_total', None)
                         if pe_counter:
                             pe_counter.labels(reason=_partial_reason).inc()
-                    except Exception:
+                    except (AttributeError, TypeError):
                         logger.debug('partial_expiries_total_metric_failed', exc_info=True)
-    except Exception:
+    except (KeyError, TypeError, AttributeError):
         logger.debug('derive_partial_reason_failed', exc_info=True)
 
     try:
@@ -192,7 +192,7 @@ def finalize_expiry(
             field_coverage=expiry_rec.get('field_coverage'),
             partial_reason=_partial_reason,
         )
-    except Exception:
+    except (TypeError, AttributeError):
         logger.debug('option_match_stats_emit_failed', exc_info=True)
 
 
@@ -218,15 +218,15 @@ def compute_cycle_reason_totals(
                     try:
                         from prometheus_client import Counter as _C
                         metrics.partial_cycle_reasons_total = _C('g6_partial_cycle_reasons_total','Partial expiry reasons per cycle',['reason'])
-                    except Exception:
+                    except (ImportError, AttributeError, TypeError):
                         metrics.partial_cycle_reasons_total = None
                 c_counter = getattr(metrics, 'partial_cycle_reasons_total', None)
                 if c_counter:
                     for r, cnt in partial_reason_totals.items():
                         if isinstance(cnt, int) and cnt > 0:
                             c_counter.labels(reason=r).inc(cnt)
-            except Exception:
+            except (AttributeError, TypeError):
                 logger.debug('partial_cycle_reasons_total_metric_failed', exc_info=True)
         return partial_reason_totals
-    except Exception:
+    except (TypeError, KeyError, AttributeError):
         return None

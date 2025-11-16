@@ -96,7 +96,7 @@ def fetch_option_instruments(index_symbol: str, expiry_rule: str, expiry_date: A
                     try:
                         if inst.get('expiry') == expiry_date and inst.get('strike') in strike_set:
                             filtered.append(inst)
-                    except Exception:
+                    except (KeyError, TypeError, AttributeError):
                         continue
                 if filtered:
                     instruments = filtered
@@ -121,14 +121,14 @@ def fetch_option_instruments(index_symbol: str, expiry_rule: str, expiry_date: A
                 if _emit_zero_data is not None:
                     # Re-use zero_data event with extended context under 'provider_diag'
                     _emit_zero_data(index=index_symbol, expiry=str(expiry_date), rule=expiry_rule, atm=None, strike_count=len(strikes))
-            except Exception:
+            except (TypeError, AttributeError):
                 pass
             try:
                 import json as _json
                 logger.info('STRUCT provider_instrument_diag | %s', _json.dumps(diag, default=str))
-            except Exception:
+            except (TypeError, ValueError, ImportError):
                 logger.debug('provider_instrument_diag_emit_failed', exc_info=True)
-        except Exception:
+        except (TypeError, KeyError, AttributeError):
             logger.debug('instrument_diag_build_failed', exc_info=True)
     if metrics and hasattr(metrics, 'mark_api_call'):
         metrics.mark_api_call(success=bool(instruments), latency_ms=(time.time()-_t_api)*1000.0)
@@ -143,7 +143,7 @@ def enrich_quotes(index_symbol: str, expiry_rule: str, expiry_date: Any, instrum
         try:
             if report_quote_enrich_error is not None:
                 report_quote_enrich_error(enrich_err, index_symbol, expiry_rule, expiry_date, len(instruments))
-        except Exception:
+        except (TypeError, AttributeError):
             handle_collector_error(enrich_err, component="collectors.expiry_helpers", index_name=index_symbol,
                                    context={"stage":"enrich_quotes","rule":expiry_rule,"expiry":str(expiry_date),"instrument_count":len(instruments)})
         enriched_data = []
@@ -175,7 +175,7 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
     try:
         prov_obj = getattr(providers, 'primary_provider', providers)
         raw_list = list(prov_obj.get_expiry_dates(index_symbol)) if hasattr(prov_obj, 'get_expiry_dates') else []
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
         raw_list = []
     candidates: list[_dt.date] = []
     for x in raw_list:
@@ -186,7 +186,7 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
                 candidates.append(x)
             else:
                 candidates.append(_dt.date.fromisoformat(str(x)))
-        except Exception:
+        except (ValueError, TypeError, AttributeError):
             continue
     candidates = sorted(set(candidates))
 
@@ -194,7 +194,7 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
         if metrics and hasattr(metrics, 'mark_api_call'):
             try:
                 metrics.mark_api_call(success=success, latency_ms=(_time.time()-start)*1000.0)
-            except Exception:
+            except (TypeError, AttributeError):
                 pass
 
     if not candidates:
@@ -205,7 +205,7 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
             chosen = providers.resolve_expiry(index_symbol, rule_str.lower())
             mark_metrics(True)
             return chosen
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError, ResolveExpiryError):
             # Pipeline-mode relaxation: allow direct ISO rule even if provider list empty so tests using
             # minimal dummy providers (no expiry list) can still resolve explicitly provided date.
             if len(rule_str) == 10 and rule_str[4]=='-' and rule_str[7]=='-':
@@ -213,7 +213,7 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
                     direct = _dt.date.fromisoformat(rule_str)
                     mark_metrics(True)
                     return direct
-                except Exception:
+                except ValueError:
                     mark_metrics(False)
                     raise ResolveExpiryError(f"Invalid direct expiry date format: {expiry_rule}")
             mark_metrics(False)
@@ -225,12 +225,12 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
         chosen = providers.resolve_expiry(index_symbol, rule)
         mark_metrics(True)
         return chosen
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError, ResolveExpiryError):
         pass
     if len(rule) == 10 and rule[4]=='-' and rule[7]=='-':
         try:
             direct = _dt.date.fromisoformat(rule)
-        except Exception:
+        except ValueError:
             mark_metrics(False)
             raise ResolveExpiryError(f"Invalid direct expiry date format: {expiry_rule}")
         if direct not in candidates:
@@ -297,9 +297,9 @@ def synthetic_metric_pop(ctx: Any, index_symbol: str, expiry_date: Any) -> None:
         if m and hasattr(m, 'synthetic_quotes_used_total'):
             try:
                 m.synthetic_quotes_used_total.inc()
-            except Exception:
+            except (AttributeError, TypeError):
                 pass
-    except Exception:
+    except (AttributeError, TypeError):
         pass
 
 __all__ = [
