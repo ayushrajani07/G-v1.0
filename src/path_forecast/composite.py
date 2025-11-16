@@ -18,6 +18,11 @@ from .params import (
     sanitize_min_days as _p_min_days,
     sanitize_bucket_ms as _p_bucket,
     sanitize_max_days_scan as _p_max_days_scan,
+    DEFAULT_ALPHA_MIN,
+    DEFAULT_ALPHA_MAX,
+    PRIOR_CACHE_MIN,
+    PRIOR_CACHE_MAX,
+    DEFAULT_PRIOR_CACHE_MAX,
 )
 from .cache import get_day_tp as _cache_get_day_tp
 from .metrics import push_composite_metrics as _push_comp_metrics
@@ -165,7 +170,8 @@ class CompositePathForecaster(PathForecaster):
         root_sig = None
         try:
             root_sig = str(self.cfg.root.resolve())
-        except Exception:
+        except (OSError, RuntimeError, AttributeError):
+            # Fallback when path resolution fails
             root_sig = str(self.cfg.root)
         cache_key = (root_sig, idx, self.cfg.expiry_tag, self.cfg.offset, now_pos, H, day_sig)
         prior: List[float]
@@ -224,9 +230,10 @@ class CompositePathForecaster(PathForecaster):
         # Clamp alpha using clamp helper for consistency
         try:
             from .common import clamp as _clamp
-            alpha = _clamp(alpha_raw, 0.3, 0.9)
-        except Exception:
-            alpha = max(0.3, min(0.9, alpha_raw))
+            alpha = _clamp(alpha_raw, DEFAULT_ALPHA_MIN, DEFAULT_ALPHA_MAX)
+        except (ImportError, TypeError, ValueError):
+            # Fallback when clamp import fails or invalid value
+            alpha = max(DEFAULT_ALPHA_MIN, min(DEFAULT_ALPHA_MAX, alpha_raw))
 
         # Blend: center retrieval quantiles around blended median
         qlist = list(quantiles)
@@ -264,7 +271,8 @@ class CompositePathForecaster(PathForecaster):
         if os.environ.get('ENABLE_PATH_FORECAST_PROFILING','').strip() != '':
             try:
                 self.last_meta['total_ms'] = int((time.perf_counter() - t_total_start) * 1000)
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Silently skip timing collection on failure
                 pass
 
         self.last_meta.update({
@@ -294,7 +302,8 @@ class CompositePathForecaster(PathForecaster):
         # Prometheus metrics push (best-effort, env guarded inside helper)
         try:
             _push_comp_metrics(self.last_meta)
-        except Exception:
+        except (ImportError, RuntimeError, ValueError, KeyError):
+            # Silently skip metrics push on failure (non-critical)
             pass
 
         return times, out
@@ -305,7 +314,8 @@ _PRIOR_CACHE: "OrderedDict[Tuple[str,str,str,str,int,int,Tuple[str,...]], List[f
 
 def _get_prior_cache_max() -> int:
     try:
-        v = int(os.environ.get('PRIOR_MEDIAN_CACHE_MAX', '256'))
-        return max(16, min(4096, v))
-    except Exception:
-        return 256
+        v = int(os.environ.get('PRIOR_MEDIAN_CACHE_MAX', str(DEFAULT_PRIOR_CACHE_MAX)))
+        return max(PRIOR_CACHE_MIN, min(PRIOR_CACHE_MAX, v))
+    except (ValueError, TypeError):
+        # Fallback when environment variable is invalid
+        return DEFAULT_PRIOR_CACHE_MAX

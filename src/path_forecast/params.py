@@ -8,6 +8,23 @@ from typing import Any, Optional
 
 from .common import safe_int, safe_float, clamp
 
+# Default parameters for ensemble/composite forecasting
+DEFAULT_ALPHA_MIN = 0.3
+DEFAULT_ALPHA_MAX = 0.9
+DEFAULT_RECENT_GAMMA = 0.9
+DEFAULT_PRIOR_CACHE_MAX = 256
+PRIOR_CACHE_MIN = 16
+PRIOR_CACHE_MAX = 4096
+
+# Default parameters for conformal prediction
+CONFORMAL_DEFAULT_COVERAGE = 0.8
+CONFORMAL_DEFAULT_WINDOW = 600
+
+# Default parameters for retrieval
+RETRIEVAL_DEFAULT_K = 15
+RETRIEVAL_DEFAULT_WINDOW = 60
+RETRIEVAL_MIN_DAYS = 3
+
 # Bounds catalog (document-only; helpers implement usage)
 SANITIZED_BOUNDS = {
     "window": (1, 720),
@@ -82,7 +99,7 @@ def sanitize_regime_penalty(v: Any, default: float = 1.25) -> float:
 
 
 def clamp_alpha(v: float) -> float:
-    return clamp(v, 0.3, 0.9)
+    return clamp(v, DEFAULT_ALPHA_MIN, DEFAULT_ALPHA_MAX)
 
 def sanitize_ann_dim(v: Any, window_default: int) -> int:
     """Sanitize ANN dimension.
@@ -96,6 +113,17 @@ def sanitize_ann_dim(v: Any, window_default: int) -> int:
 
 __all__ = [
     "SANITIZED_BOUNDS",
+    "DEFAULT_ALPHA_MIN",
+    "DEFAULT_ALPHA_MAX",
+    "DEFAULT_RECENT_GAMMA",
+    "DEFAULT_PRIOR_CACHE_MAX",
+    "PRIOR_CACHE_MIN",
+    "PRIOR_CACHE_MAX",
+    "CONFORMAL_DEFAULT_COVERAGE",
+    "CONFORMAL_DEFAULT_WINDOW",
+    "RETRIEVAL_DEFAULT_K",
+    "RETRIEVAL_DEFAULT_WINDOW",
+    "RETRIEVAL_MIN_DAYS",
     "sanitize_window",
     "sanitize_horizon",
     "sanitize_bucket_ms",
