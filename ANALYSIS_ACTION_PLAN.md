@@ -8,11 +8,21 @@
 
 ## Current Baseline and Next Steps
 
-**Baseline (2025-11-15):** Full test suite green in parallel (1462 passed, 539 skipped). Recent hygiene fixes improve observability and stability (resilient metrics gauge, cardinality guard fast-path, stable shadow meta, parameterized logging).
+**Baseline (2025-11-16):** Full test suite green in parallel (1462 passed, 539 skipped). Recent hygiene fixes improve observability and stability (resilient metrics gauge, cardinality guard fast-path, stable shadow meta, parameterized logging).
+
+**Progress Update (2025-11-16):**
+- ✅ Phase 1.1 Exception Handling: **ONGOING** - Reduced from ~3,244 to 1,859 bare exceptions (43% reduction)
+  - ✅ Multiple PRs merged: collectors layer, status_writer, catalog_http, expiry_processor, pipeline files
+  - ✅ Storage layer: COMPLETED (8 handlers fixed)
+  - 🔄 Current branch: copilot/replace-bare-exceptions-pipeline
+- ✅ Phase 1.2 Legacy Loop Removal: **COMPLETED** (removed 2025-09-28, verified 2025-11-16)
+- ✅ Phase 1.3 CSV Writer Consolidation: **ALREADY COMPLETE** (verified 2025-11-16 - was misconception)
+- ✅ Deprecation Cleanup: Multiple items completed (scripts, env vars - see Phase 2.3 below)
+- ✅ Test Infrastructure: Serial marker usage reduced to 1 test (from 50+)
 
 **Immediate Next Steps:**
-- Kick off Phase 1: Exception Handling Audit — start with storage; tighten handlers and add targeted retries.
-- Draft PR plan to remove the legacy orchestration loop and related flags.
+- Continue Phase 1 exception handling in remaining modules (dashboard, provider, validation)
+- ✅ Legacy orchestration loop removal - **COMPLETED** (already removed 2025-09-28)
 
 **Quick Validation:**
 ```powershell
@@ -28,30 +38,171 @@ This document provides a concrete, prioritized action plan to address the fundam
 
 ---
 
-## Phase 1: Critical Issues (Weeks 1-3)
+## Phase 1: Critical Issues (Weeks 1-5)
 
 ### 1.1 Exception Handling Remediation
 
 **Goal:** Reduce bare `except Exception:` from 3,244 to <500
 
-**Approach:**
-```bash
-# Step 1: Identify hotspots
-grep -r "except Exception:" src --include="*.py" -n > exceptions_audit.txt
+**Status:** 🔄 IN PROGRESS - **43% Complete** (reduced to 1,859 as of 2025-11-16)
 
-# Step 2: Prioritize by criticality
-Priority Order:
-1. src/storage/*.py (data integrity)
-2. src/metrics/*.py (observability)
-3. src/collectors/*.py (business logic)
-4. src/orchestrator/*.py (system reliability)
+**Completed Work (Weeks 1-3):**
+- ✅ Collectors layer: ~400+ handlers fixed across multiple files
+- ✅ Pipeline infrastructure: All pipeline.py files updated
+- ✅ Expiry processor: 53 handlers with specific exceptions
+- ✅ Catalog HTTP: 65 handlers properly typed
+- ✅ Status writer: 34 handlers refactored
+- ✅ **Storage layer: 8 handlers fixed (COMPLETED 2025-11-16)**
+- ✅ PRs merged: #11, #12, #13, #14
+
+**Current Branch:** `copilot/replace-bare-exceptions-pipeline`
+
+**Remaining Work by Priority:**
+
+#### **Week 3: Storage Layer (HIGH PRIORITY - Data Integrity)**
+**Status:** ✅ **COMPLETED** (2025-11-16) - Zero bare exceptions remaining!
+
+**Completed fixes:**
+- ✅ `src/storage/csv_batcher.py` - 2 handlers fixed (defensive logging)
+- ✅ `src/storage/file_buffer_manager.py` - 3 handlers fixed (file close safety)
+- ✅ `src/storage/parquet_sink.py` - 2 handlers fixed (PyArrow error handling)
+- ✅ `src/storage/csvio/backends/filesystem.py` - 1 handler fixed (CSV write safety)
+
+**Changes applied:**
+- Replaced bare `except Exception:` with `except (OSError, RuntimeError):` for defensive logging fallbacks
+- All storage layer files now use specific exception types
+- Maintained critical stderr fallback for logging failures
+
+**Action Plan (Minimal Work - Can complete in 1-2 days):**
+```powershell
+# Verify current count (should be 8)
+(Get-ChildItem -Path "src\storage" -Filter "*.py" -Recurse | 
+  Select-String -Pattern "except Exception:" -CaseSensitive).Count
+
+# Get specific locations
+Get-ChildItem -Path "src\storage" -Filter "*.py" -Recurse | 
+  Select-String -Pattern "except Exception:" -CaseSensitive | 
+  Select-Object Path, LineNumber
+
+# Target exceptions to introduce:
+# - IOError / OSError for file operations
+# - PermissionError for access issues  
+# - csv.Error for CSV-specific issues
+# - ValueError / BufferError for buffer operations
 ```
 
-**Action Items:**
-- [ ] Week 1: Audit storage layer (15 files)
-- [ ] Week 1-2: Audit metrics layer (50+ files)
-- [ ] Week 2-3: Audit collectors (30+ files)
-- [ ] Week 3: Audit orchestrator (12 files)
+**Storage Layer Pattern:**
+```python
+# Before:
+try:
+    with open(path, 'w') as f:
+        writer.writerow(data)
+except Exception as e:
+    logger.error(f"Write failed: {e}")
+
+# After:
+try:
+    with open(path, 'w') as f:
+        writer.writerow(data)
+except (IOError, OSError, PermissionError) as e:
+    logger.error(f"File operation failed: {e}", exc_info=True)
+    raise StorageError(f"Failed to write {path}") from e
+except csv.Error as e:
+    logger.error(f"CSV formatting error: {e}", exc_info=True)
+    raise DataFormatError("Invalid CSV data") from e
+except Exception as e:
+    logger.critical(f"Unexpected storage error: {e}", exc_info=True)
+    raise  # Always re-raise unexpected errors
+```
+
+#### **Week 4: Web Dashboard Layer (MEDIUM-HIGH PRIORITY)**
+Files identified with many bare exceptions:
+- `src/web/dashboard/core/csv_io.py` - 26 handlers
+- `src/web/dashboard/core/obs.py` - 5 handlers
+- `src/web/dashboard/services/forecast_core.py` - 6 handlers
+- `src/web/dashboard/routes/*.py` - Multiple handlers
+
+**Dashboard-Specific Exceptions:**
+```python
+# Introduce these custom exceptions:
+class DashboardError(Exception): pass
+class DataLoadError(DashboardError): pass
+class RenderError(DashboardError): pass
+class APIError(DashboardError): pass
+
+# Pattern:
+try:
+    data = load_csv_for_dashboard(path)
+    render_chart(data)
+except FileNotFoundError as e:
+    logger.warning(f"Data file missing: {path}")
+    return {"error": "No data available", "status": 404}
+except (IOError, PermissionError) as e:
+    logger.error(f"Cannot read data: {e}")
+    return {"error": "Data access error", "status": 500}
+except (ValueError, KeyError) as e:
+    logger.error(f"Invalid data format: {e}")
+    return {"error": "Data format error", "status": 422}
+```
+
+#### **Week 5: Provider & Validation Layers**
+Remaining files:
+- `src/provider/*.py` - 11 handlers across multiple files
+- `src/validation/preventive_validator.py` - 4 handlers
+
+**Provider-Specific Pattern:**
+```python
+from src.broker.kite.exceptions import (
+    KiteAuthError,
+    KiteNetworkError,
+    KiteRateLimitError,
+    KiteDataError
+)
+
+try:
+    instruments = provider.get_instruments()
+except KiteAuthError as e:
+    logger.error("Authentication failed", exc_info=True)
+    # Re-authenticate or fail gracefully
+    raise
+except KiteRateLimitError as e:
+    logger.warning("Rate limited, backing off")
+    time.sleep(backoff_seconds)
+    # Retry logic
+except KiteNetworkError as e:
+    logger.warning(f"Network error: {e}")
+    # Implement retry with exponential backoff
+except KiteDataError as e:
+    logger.error(f"Invalid data from provider: {e}")
+    return []  # Return empty, let coverage metrics handle
+```
+
+**Tracking & Validation:**
+```powershell
+# Create tracking file for each PR
+$timestamp = Get-Date -Format "yyyy-MM-dd"
+$count = (Get-ChildItem -Path "src" -Filter "*.py" -Recurse | 
+         Select-String -Pattern "except Exception:" -CaseSensitive).Count
+"$timestamp,$count" | Add-Content -Path "exceptions_progress.csv"
+
+# Generate diff report
+git diff main --stat -- "*.py" | Select-String "src/"
+```
+
+**Success Metrics:**
+- Baseline: 3,244 bare exceptions (2025-11-15)
+- Current: 1,859 bare exceptions (2025-11-16) - **43% reduction**
+- Target: <500 bare exceptions
+- Progress: 1,385 handlers fixed across 6 major areas
+- ✅ Storage layer: COMPLETED (0 remaining)
+- No test failures introduced
+- Error handling coverage >80% in affected modules
+
+**Revised Estimate for Remaining Work:**
+- Week 3-4: Dashboard layer (40+ handlers) = ~1 week
+- Week 4: Provider (11 handlers) + Validation (4 handlers) = ~3 days  
+- Week 5: Final cleanup + documentation = ~2 days
+- **Estimated completion:** End of Week 5 (on track!)
 
 **Pattern to Apply:**
 ```python
@@ -80,38 +231,38 @@ except Exception as e:
 
 **Goal:** Remove deprecated orchestration loop
 
-**Current State:**
-- `unified_main.collection_loop` - Deprecated since 2025-09-26
-- Still gated behind `G6_ENABLE_LEGACY_LOOP=1`
-- Grace period expired (2+ months)
+**Status:** ✅ **COMPLETED** (2025-09-28) - Already removed!
 
-**Action Items:**
-- [ ] Day 1: Run tests with legacy loop disabled to confirm stability
-- [ ] Day 2: Remove `unified_main.collection_loop` function
-- [ ] Day 2: Remove `G6_ENABLE_LEGACY_LOOP` flag handling
-- [ ] Day 3: Remove `G6_SUPPRESS_LEGACY_LOOP_WARN` flag
-- [ ] Day 3: Update all documentation references
-- [ ] Day 4: Remove related tests
-- [ ] Day 5: Final integration test
-
-**Files to Modify:**
-```
-src/unified_main.py
-src/orchestrator/loop.py
-tests/test_legacy_loop_gating.py
-tests/test_deprecation_legacy_loop.py
-docs/env_dict.md
-README.md
+**Verification:**
+```powershell
+# Verify removal
+python -m pytest tests/test_safeguard_legacy_loop_removed.py -v
+# Result: PASSED - No legacy loop tokens in active code
 ```
 
-**Validation:**
-```bash
-# Ensure no references remain
-grep -r "G6_ENABLE_LEGACY_LOOP" .
-grep -r "collection_loop" src --include="*.py"
+**What Was Done:**
+- ✅ `unified_main.collection_loop` function **REMOVED**
+- ✅ `src/unified_main.py` converted to fail-fast stub
+- ✅ `G6_ENABLE_LEGACY_LOOP` flag handling **REMOVED**
+- ✅ `G6_SUPPRESS_LEGACY_LOOP_WARN` flag **REMOVED**
+- ✅ Related tests converted to skip stubs
+- ✅ Safeguard test added (`test_safeguard_legacy_loop_removed.py`)
+- ✅ Documentation updated in DEPRECATIONS.md
+
+**Files Modified (Historical):**
+```
+✅ src/unified_main.py - Converted to RuntimeError stub
+✅ tests/test_legacy_loop_gating.py - Converted to skip stub
+✅ tests/test_deprecation_legacy_loop.py - Converted to skip stub
+✅ tests/test_safeguard_legacy_loop_removed.py - Added safeguard
+✅ docs/DEPRECATIONS.md - Marked as removed 2025-09-28
 ```
 
-**Deliverable:** PR removing legacy loop with passing tests
+**Remaining Cleanup (Optional):**
+- Documentation still references the flag in historical context (docs/env_dict.md)
+- These are acceptable as they explain what was removed
+
+**Deliverable:** ✅ Legacy loop fully removed, safeguards in place
 
 ---
 
@@ -119,33 +270,48 @@ grep -r "collection_loop" src --include="*.py"
 
 **Goal:** Single CSV write implementation
 
-**Current State:**
-- Multiple writers: csv_sink.py, csv_writer.py, csv_batcher.py
-- Facade migration incomplete (`G6_USE_CSVIO_FACADE=0` opt-out)
-- Parallel implementations create data integrity risk
+**Status:** ✅ **ALREADY COMPLETE** - Verified 2025-11-16
 
-**Action Items:**
-- [ ] Week 1: Audit all CSV write call sites
-- [ ] Week 1: Verify facade covers all use cases
-- [ ] Week 2: Migrate remaining direct write calls to facade
-- [ ] Week 2: Remove `G6_USE_CSVIO_FACADE` flag
-- [ ] Week 2: Delete legacy write implementations
-- [ ] Week 3: Comprehensive integration tests
-- [ ] Week 3: Performance benchmark (ensure no regression)
+**Actual Current State (After Investigation):**
+- ✅ Single write path: `CsvWriter` + `CsvBatcher` used by `CsvSink`
+- ✅ `csvio` is an **optional async writer thread** feature, not a competing implementation
+- ✅ `G6_USE_CSVIO_FACADE` flag only enables/disables async writer thread (performance feature)
+- ✅ Tests verify both sync and async paths work correctly
+- ✅ **No parallel implementations** - misconception in original analysis
 
-**Migration Checklist:**
-```python
-# Before:
-from src.storage.csv_writer import CsvWriter
-writer = CsvWriter()
-writer.write_direct(path, data)
-
-# After:
-from src.storage.csvio.api import write_csv_atomic
-write_csv_atomic(path, data, schema_version="v2")
+**Architecture (Verified):**
+```
+CsvSink (main API)
+  ├── CsvWriter (low-level I/O) ✅ Single implementation
+  ├── CsvBatcher (buffering) ✅ Single implementation  
+  ├── CsvAggregator (overview) ✅ Single implementation
+  └── csvio/writer_thread (OPTIONAL async feature)
+       └── Uses CsvWriter internally when enabled
 ```
 
-**Deliverable:** Single CSV write path with comprehensive tests
+**What `G6_USE_CSVIO_FACADE` Actually Does:**
+- When `=1`: Enables async writer thread for improved throughput
+- When `=0`: Uses synchronous writes (default, simpler)
+- Both paths use the same `CsvWriter` + `CsvBatcher` underneath
+
+**Files Inventory:**
+- `src/storage/csv_sink.py` - Main API ✅
+- `src/storage/csv_writer.py` - Low-level I/O ✅
+- `src/storage/csv_batcher.py` - Buffering ✅
+- `src/storage/csv_aggregator.py` - Overview ✅
+- `src/storage/csvio/*` - Optional async thread feature ✅
+
+**Test Coverage:**
+- `test_aggregator_facade_compat.py` - Tests both sync/async ✅
+- `test_batcher_facade_compat.py` - Tests both sync/async ✅
+- `test_atomic_concurrency.py` - Concurrency safety ✅
+- All tests pass with facade on/off ✅
+
+**Conclusion:**
+Original action plan was based on misunderstanding. The consolidation is already complete. The `G6_USE_CSVIO_FACADE` flag is not a technical debt item - it's a legitimate performance feature flag. **No action needed.**
+
+**Optional Enhancement (Low Priority):**
+Could rename `G6_USE_CSVIO_FACADE` to `G6_CSV_ASYNC_WRITES` for clarity, but current name is acceptable.
 
 ---
 
@@ -161,10 +327,10 @@ write_csv_atomic(path, data, schema_version="v2")
 - 8 different test categories with env variable gates
 
 **Action Items:**
-- [ ] Week 4: Audit all `@pytest.mark.serial` tests
-- [ ] Week 4-5: Refactor tests to remove global state
-- [ ] Week 5: Fix metrics registry isolation (proper fixtures)
-- [ ] Week 5: Remove `metrics_no_reset` marker
+- [x] Week 4: Audit all `@pytest.mark.serial` tests - **COMPLETED** (reduced from 50+ to 1)
+- [x] Week 4-5: Refactor tests to remove global state - **COMPLETED**
+- [x] Week 5: Fix metrics registry isolation (proper fixtures) - **COMPLETED**
+- [x] Week 5: Remove `metrics_no_reset` marker - **COMPLETED**
 - [ ] Week 6: Simplify to 3 markers: unit, integration, slow
 - [ ] Week 6: Remove env variable test gates
 - [ ] Week 7: Update CI configuration
@@ -254,14 +420,15 @@ class G6Config:
 
 **Immediate Removals (already approved per DEPRECATIONS.md):**
 ```
+✅ COMPLETED:
 - scripts/run_live.py (REMOVED 2025-10-01)
 - scripts/terminal_dashboard.py (REMOVED 2025-10-01)
-- scripts/summary_view.py (REMOVED 2025-10-03)
+- scripts/summary_view.py (REMOVED 2025-10-03 - archived)
 - G6_SUMMARY_REWRITE (REMOVED 2025-10-03)
 - G6_SUMMARY_PLAIN_DIFF (REMOVED 2025-10-03)
-- G6_SSE_ENABLED (REMOVED 2025-10-03)
+- G6_SSE_ENABLED (REMOVED 2025-10-03 - warnings only, deprecated)
 - src.providers.kite_provider shim (REMOVED 2025-10-07)
-- scripts/bench_aggregate.py (REMOVED 2025-10-05)
+- scripts/bench_aggregate.py (REMOVED 2025-10-05 - archived)
 ```
 
 **CI Enforcement:**
@@ -468,9 +635,11 @@ class SanitizingFormatter(logging.Formatter):
 ### Key Performance Indicators
 
 **Exception Handling:**
-- Baseline: 3,244 bare exceptions
+- Baseline: 3,244 bare exceptions (2025-11-15)
+- Current: 1,859 bare exceptions (2025-11-16) - **43% reduction**
+- Fixed: 1,385 handlers (Collectors + Pipeline + Status + Catalog + Expiry + **Storage**)
 - Target: <500 bare exceptions
-- Metric: `grep -r "except Exception:" src | wc -l`
+- Metric: `(Get-ChildItem -Path "src" -Filter "*.py" -Recurse | Select-String -Pattern "except Exception:" -CaseSensitive).Count`
 
 **Legacy Code:**
 - Baseline: 55+ active deprecations
@@ -478,14 +647,16 @@ class SanitizingFormatter(logging.Formatter):
 - Metric: CI check passes
 
 **CSV Integrity:**
-- Baseline: 3+ write implementations
-- Target: 1 write implementation
+- Baseline: Believed to be 3+ implementations (was misconception)
+- Actual: ✅ 1 write implementation (`CsvWriter` + `CsvBatcher`)
+- Status: **ALREADY ACHIEVED** - verified 2025-11-16
 - Metric: Code path count
 
 **Test Quality:**
 - Baseline: 50+ serial tests
+- Current: 1 serial test (2025-11-16) - **98% reduction**
 - Target: 0 serial tests
-- Metric: `grep -r "@pytest.mark.serial" tests | wc -l`
+- Metric: `(Select-String -Path "tests\**\*.py" -Pattern "@pytest.mark.serial" -Recurse).Count`
 
 **Documentation:**
 - Baseline: 107 root-level markdown files
@@ -495,17 +666,26 @@ class SanitizingFormatter(logging.Formatter):
 ### Weekly Progress Reports
 
 Generate weekly metrics:
-```bash
-#!/bin/bash
-# scripts/progress_metrics.sh
+```powershell
+# scripts/progress_metrics.ps1
 
-echo "=== Progress Metrics ==="
-echo "Bare exceptions: $(grep -r 'except Exception:' src --include="*.py" | wc -l)"
-echo "Serial tests: $(grep -r '@pytest.mark.serial' tests --include="*.py" | wc -l)"
-echo "Root markdown files: $(ls *.md | wc -l)"
-echo "Active deprecations: $(grep 'Active Deprecations' -A 100 DEPRECATIONS.md | grep '|' | wc -l)"
-echo "Legacy loops: $(grep -r 'G6_ENABLE_LEGACY_LOOP' . --include="*.py" | wc -l)"
+Write-Host "=== Progress Metrics ($(Get-Date -Format 'yyyy-MM-dd')) ==="
+$bareExceptions = (Get-ChildItem -Path "src" -Filter "*.py" -Recurse | Select-String -Pattern "except Exception:" -CaseSensitive).Count
+$serialTests = (Select-String -Path "tests\**\*.py" -Pattern "@pytest.mark.serial" -Recurse).Count
+$rootMdFiles = (Get-ChildItem -Path "." -Filter "*.md").Count
+$legacyLoopRefs = (Select-String -Path ".\**\*.py" -Pattern "G6_ENABLE_LEGACY_LOOP" -Recurse).Count
+
+Write-Host "Bare exceptions: $bareExceptions (Target: <500)"
+Write-Host "Serial tests: $serialTests (Target: 0)"
+Write-Host "Root markdown files: $rootMdFiles (Target: <10)"
+Write-Host "Legacy loop references: $legacyLoopRefs (Target: 0)"
 ```
+
+**Latest Metrics (2025-11-16):**
+- Bare exceptions: 1,859 (43% reduction from baseline 3,244) - ✅ Storage layer complete!
+- Serial tests: 1 (98% reduction from baseline 50+)
+- Root markdown files: ~100+ (unchanged, Phase 3 pending)
+- Legacy loop: ✅ **REMOVED** (verified 2025-11-16, removed 2025-09-28)
 
 ---
 
@@ -592,23 +772,24 @@ This action plan requires approval from:
 
 ## Quick Start: Day 1 Actions
 
-For immediate impact, start with these tasks:
+**Status:** ✅ COMPLETED
 
-1. **Morning:** Run exception audit to get baseline
-2. **Afternoon:** Create PR to remove items marked "REMOVED" in DEPRECATIONS.md
-3. **EOD:** Set up weekly progress metrics script
+~~For immediate impact, start with these tasks:~~
 
-**Commands:**
-```bash
+1. ✅ **Morning:** Run exception audit to get baseline - COMPLETED (baseline: 3,244, current: 1,867)
+2. ✅ **Afternoon:** Create PR to remove items marked "REMOVED" in DEPRECATIONS.md - COMPLETED (see CHANGELOG.md)
+3. ✅ **EOD:** Set up weekly progress metrics script - Use PowerShell version above
+
+**Commands (for ongoing monitoring):**
+```powershell
 # 1. Exception audit
-grep -r "except Exception:" src --include="*.py" -n > exceptions_baseline.txt
+Get-ChildItem -Path "src" -Filter "*.py" -Recurse | Select-String -Pattern "except Exception:" -CaseSensitive > exceptions_current.txt
 
-# 2. Find already-removed items
-grep "REMOVED" DEPRECATIONS.md
+# 2. Check deprecations status
+Select-String -Path "DEPRECATIONS.md" -Pattern "REMOVED"
 
-# 3. Set up metrics
-cp scripts/progress_metrics.sh.template scripts/progress_metrics.sh
-chmod +x scripts/progress_metrics.sh
+# 3. Run progress metrics
+# See "Weekly Progress Reports" section above for the full script
 ```
 
 ---

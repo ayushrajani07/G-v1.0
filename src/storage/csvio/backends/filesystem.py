@@ -104,6 +104,6 @@ def _write_csv_append(
     except (OSError, IOError) as e:
         try:
             logger.error("Failed to write CSV to %s: %s", filepath, e, exc_info=True)
-        except Exception:
+        except (OSError, RuntimeError):
             # Critical: CSV write failed AND logging failed - use stderr fallback
             print(f"CRITICAL: Failed to write CSV to {filepath}: {e}", file=sys.stderr)

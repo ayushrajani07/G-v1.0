@@ -152,7 +152,7 @@ class ParquetSink:
         except (TypeError, ValueError, AttributeError) as e:
             try:
                 logger.error("Failed to create normalized PyArrow table: %s", e, exc_info=True)
-            except Exception:
+            except (OSError, RuntimeError):
                 print(f"CRITICAL: Failed to create PyArrow table for {index_symbol}/{expiry_date}: {e}", file=sys.stderr)
             return
         
@@ -173,7 +173,7 @@ class ParquetSink:
         except (OSError, IOError, ValueError) as e:
             try:
                 logger.error("Failed to write Parquet table %s: %s", sink_file, e, exc_info=True)
-            except Exception:
+            except (OSError, RuntimeError):
                 print(f"CRITICAL: Failed to write Parquet table {sink_file}: {e}", file=sys.stderr)
             return
         

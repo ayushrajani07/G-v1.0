@@ -179,7 +179,7 @@ G6_ENABLE_: documented
 G6_ENABLE_BACKWARD_EXPIRY_FALLBACK: documented
 G6_ENABLE_BLACK: documented
 G6_ENABLE_DATA_QUALITY: documented
-G6_ENABLE_LEGACY_LOOP: documented
+G6_ENABLE_LEGACY_LOOP: (REMOVED 2025-09-28) Legacy orchestration loop flag - no longer used
 G6_ENABLE_METRIC_GROUPS: documented
 G6_ENABLE_NEAREST_EXPIRY_FALLBACK: documented
 G6_ENABLE_OPTIONAL_TESTS: documented

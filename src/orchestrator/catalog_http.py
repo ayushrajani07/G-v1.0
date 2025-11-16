@@ -425,7 +425,7 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                 self.wfile.write(body)
             except (json.JSONEncodeError, TypeError, OSError, IOError):
                 # Handle JSON encoding or I/O failures
-                logger.exception('catalog_http: snapshots_serve_failed'}
+                logger.exception('catalog_http: snapshots_serve_failed')
                 self._set_headers(500)
                 self.wfile.write(b'{"error":"snapshots_serve_failed"}')
             return

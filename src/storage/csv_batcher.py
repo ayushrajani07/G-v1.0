@@ -180,8 +180,8 @@ class CsvBatcher:
                     # Metrics emission failed - log warning but don't crash
                     try:
                         self.logger.warning("Metrics emission failed for batch %s: %s", batch_key, e)
-                    except Exception:
-                        # Even warning logging failed, but metrics are not critical
+                    except (OSError, RuntimeError):
+                        # Even warning logging failed (e.g., logger not initialized), but metrics are not critical
                         pass
             
             # Clear buffers after flush attempt
@@ -257,7 +257,7 @@ class CsvBatcher:
             try:
                 self.logger.error("Shutdown completed with %d batch failures out of %d total batches", 
                                 len(failed_batches), len(self._batch_buffers) + flushed_count)
-            except Exception:
+            except (OSError, RuntimeError):
                 print(f"CRITICAL: {len(failed_batches)} batches failed to flush during shutdown", file=sys.stderr)
         
         return flushed_count
