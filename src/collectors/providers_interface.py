@@ -21,13 +21,13 @@ from src.metrics.generated import (
 
 try:
     from src.broker.kite_provider import is_concise_logging as _is_concise_logging  # type: ignore
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     def _is_concise_logging():  # type: ignore
         return os.environ.get('G6_CONCISE_LOGS', '1').lower() not in ('0','false','no','off')
 try:  # Prometheus client optional during some tests
     from prometheus_client import Counter as _C
     from prometheus_client import Histogram as _H
-except Exception:  # pragma: no cover
+except ImportError:  # pragma: no cover
     class _Dummy:  # noqa: D401
         def __init__(self,*a,**k): pass
         def labels(self,*a,**k): return self
@@ -52,7 +52,7 @@ def _safe_inc(lbl, amount=1):  # helper to tolerate label None or unexpected met
     try:
         if lbl:
             lbl.inc(amount)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError):
         pass
 
 class Providers:
@@ -146,7 +146,7 @@ class Providers:
                         self.logger.warning(
                             "get_index_data instrumentation: zero price from quote key=%s provider=%s", key, type(self.primary_provider).__name__
                         )
-                    except Exception:
+                    except (AttributeError, TypeError):
                         pass
                     # Synthetic fallback price injection (single pass) to keep pipeline moving
                     synth_map = {
@@ -189,7 +189,8 @@ class Providers:
                 if price == 0:
                     try:
                         self.logger.warning("get_index_data instrumentation: zero price from LTP key=%s provider=%s", key, type(self.primary_provider).__name__)
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Logging failed due to attribute/type issues, not critical
                         pass
                     synth_map = {
                         'NIFTY': 24800.0,
@@ -216,7 +217,8 @@ class Providers:
             self.logger.error("Error getting index data: %s", e)
             try:
                 self.logger.warning("get_index_data instrumentation: exception path provider=%s index=%s err=%s", type(getattr(self, 'primary_provider', None)).__name__, index_symbol, e)
-            except Exception:
+            except (AttributeError, TypeError):
+                # Logging failed due to attribute/type issues, not critical
                 pass
             return 0, {}
 
@@ -311,7 +313,8 @@ class Providers:
                 if isinstance(expiry_rule, str) and len(expiry_rule) == 10 and expiry_rule[4] == '-' and expiry_rule[7] == '-':
                     # validate parse
                     return _dt.date.fromisoformat(expiry_rule)
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid date format or type, continue to fallback
                 pass
 
             # 3) Candidate list fallback (e.g., get_expiry_dates from provider stubs)
@@ -319,7 +322,8 @@ class Providers:
             try:
                 if self.primary_provider and hasattr(self.primary_provider, 'get_expiry_dates'):
                     candidates = list(self.primary_provider.get_expiry_dates(index_symbol))  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
+                # Provider call failed or returned invalid data
                 candidates = []
 
             if candidates:
@@ -418,7 +422,8 @@ class Providers:
                     quote_instruments.append((exchange, symbol))
             try:  # centralized trace
                 trace('quote_request', count=len(quote_instruments), sample=quote_instruments[:6])
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
+                # Trace logging failed, not critical
                 pass
             if not self.primary_provider or not hasattr(self.primary_provider, 'get_quote'):
                 self.logger.error("Primary provider missing get_quote for option quotes")
@@ -431,16 +436,19 @@ class Providers:
                 if hist:
                     try:
                         hist.observe(lat_ms)  # type: ignore[attr-defined]
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Metric observation failed, not critical
                         pass
                 lbl = m_api_calls_total_labels('get_quote','success')
                 _safe_inc(lbl)
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
+                # Metrics emission failed, not critical
                 pass
             try:
                 sample_keys = list(quotes.keys())[:6]
                 trace('quote_response', received=len(quotes), sample_keys=sample_keys)
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
+                # Trace logging failed, not critical
                 pass
             enriched_data = {}
             enriched_count = 0
@@ -471,7 +479,8 @@ class Providers:
                                     enriched['avg_price'] = fallback
                                     enriched['avg_price_fallback_used'] = True
                                     avg_price_fallback += 1  # fixed indentation bug so counter increments
-                        except Exception:
+                        except (ValueError, TypeError, KeyError):
+                            # Failed to compute fallback avg_price due to invalid data
                             pass
                     if 'depth' in quote:
                         enriched['depth'] = quote.get('depth')
@@ -489,7 +498,8 @@ class Providers:
                             metric_batcher.inc(m_quote_missing_volume_oi_total_labels, missing_volume_oi, prov)
                         if avg_price_fallback:
                             metric_batcher.inc(m_quote_avg_price_fallback_total_labels, avg_price_fallback, prov)
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Metric batching failed, fallback to direct emission
                         le = m_quote_enriched_total_labels(prov); _safe_inc(le, enriched_count)
                         if missing_volume_oi:
                             lm = m_quote_missing_volume_oi_total_labels(prov); _safe_inc(lm, missing_volume_oi)
