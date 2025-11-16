@@ -34,7 +34,8 @@ class MetricDef:
             try:
                 if not self.predicate(registry):
                     return None
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle missing attributes, type issues, or predicate execution failures
                 return None
         if hasattr(registry, self.attr):
             metric = getattr(registry, self.attr)
@@ -64,7 +65,8 @@ class MetricDef:
                                 # Confirm replacement name; if still mismatched, wrap in shim.
                                 if getattr(metric, '_name', None) != self.name:
                                     raise RuntimeError('replacement_name_mismatch')
-                            except Exception:
+                            except (AttributeError, TypeError, ValueError, RuntimeError):
+                                # Handle attribute access, type issues, value errors, or replacement failures
                                 # Final fallback: wrap original metric in a lightweight shim that exposes forced _name
                                 try:
                                     orig = metric
@@ -78,9 +80,11 @@ class MetricDef:
                                     shim = _NameShim(orig, self.name)
                                     setattr(registry, self.attr, shim)
                                     metric = shim  # type: ignore[assignment]
-                                except Exception:
+                                except (AttributeError, TypeError):
+                                    # Handle shim creation or assignment failures
                                     pass
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle name normalization failures
                     pass
             return metric
         ctor_kwargs = self.kwargs or {}
@@ -89,13 +93,14 @@ class MetricDef:
                 metric = self.kind(self.name, self.doc, list(self.labels), **ctor_kwargs)
             else:
                 metric = self.kind(self.name, self.doc, **ctor_kwargs)
-        except Exception:
+        except (ValueError, TypeError, RuntimeError):
             # Duplicate or constructor error: attempt recovery via global registry map
             try:
                 from prometheus_client import REGISTRY as _R  # type: ignore
                 names_map = getattr(_R, "_names_to_collectors", {})
                 metric = names_map.get(self.name)
-            except Exception:
+            except (ImportError, AttributeError, TypeError):
+                # Handle missing registry, attributes, or type issues
                 metric = None
         if metric is not None:
             # Apply same (now unconditional) normalization for newly constructed collectors.
@@ -103,13 +108,15 @@ class MetricDef:
                 try:  # pragma: no cover - defensive
                     if getattr(metric, '_name', None) != self.name:
                         metric._name = self.name
-                except Exception:
+                except (AttributeError, TypeError):
+                    # Handle attribute access or assignment failures
                     pass
             setattr(registry, self.attr, metric)
             if self.group:
                 try:
                     registry._metric_groups[self.attr] = self.group.value  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle missing attributes, type issues, or dict operations
                     pass
         return metric
 

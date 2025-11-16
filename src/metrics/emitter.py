@@ -95,7 +95,8 @@ class MetricBatcher:
                 lbl = accessor(*label_values)
                 if lbl:
                     lbl.inc(amount)  # type: ignore[attr-defined]
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError, RuntimeError) as e:
+                # Handle missing attributes, type issues, invalid values, or counter operation failures
                 _error_once.log(f"direct:{type(e).__name__}", f"Direct metric increment failed: {e}")
             return
         key = (id(accessor), accessor, tuple(label_values))
@@ -105,7 +106,8 @@ class MetricBatcher:
                 g = m_metrics_batch_queue_depth()
                 if g:
                     g.set(len(self._counters))  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
+                # Handle missing attributes, type issues, invalid values, or gauge operation failures
                 pass
             # Adaptive threshold-based flush (best-effort, non-blocking outside lock duration)
             if self.flush_threshold and len(self._counters) >= self.flush_threshold:
@@ -116,7 +118,8 @@ class MetricBatcher:
                     g = m_metrics_batch_queue_depth()
                     if g:
                         g.set(0)  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
+                    # Handle missing attributes, type issues, invalid values, or gauge operation failures
                     pass
             else:
                 items = None
@@ -126,7 +129,8 @@ class MetricBatcher:
                     lbl = accessor2(*label_tuple)
                     if lbl and amt:
                         lbl.inc(amt)  # type: ignore[attr-defined]
-                except Exception as e:
+                except (AttributeError, TypeError, ValueError, RuntimeError) as e:
+                    # Handle missing attributes, type issues, invalid values, or counter operation failures
                     _error_once.log(f"flush:{type(e).__name__}", f"MetricBatcher threshold flush error: {e}")
 
     def flush(self):
@@ -140,14 +144,16 @@ class MetricBatcher:
                 lbl = accessor(*label_tuple)
                 if lbl and amount:
                     lbl.inc(amount)  # type: ignore[attr-defined]
-            except Exception as e:
+            except (AttributeError, TypeError, ValueError, RuntimeError) as e:
+                # Handle missing attributes, type issues, invalid values, or counter operation failures
                 _error_once.log(f"flush:{type(e).__name__}", f"MetricBatcher flush error: {e}")
         # After flush reset gauge
         try:
             g = m_metrics_batch_queue_depth()
             if g:
                 g.set(0)  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Handle missing attributes, type issues, invalid values, or gauge operation failures
             pass
 
     def stop(self):  # pragma: no cover
@@ -182,12 +188,14 @@ def batch_inc(accessor: CounterAccessor, *label_values: Any, amount: float = 1.0
     """
     try:
         metric_batcher.inc(accessor, amount, *label_values)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle batcher failures
         try:
             lbl = accessor(*label_values)
             if lbl:
                 lbl.inc(amount)  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Handle direct increment failures
             pass
 
 def flush_now() -> None:
@@ -203,7 +211,8 @@ def pending_queue_size() -> int:
         if not metric_batcher.enabled:
             return 0
         return len(metric_batcher._counters)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle missing attributes or type issues
         return 0
 
 __all__ = ["metric_batcher", "MetricBatcher", "batch_inc", "flush_now", "pending_queue_size"]
