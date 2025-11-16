@@ -98,7 +98,8 @@ def _load_provider() -> Any | None:
         if callable(obj):  # factory
             obj = obj()
         _PROVIDER = obj
-    except Exception as e:  # pragma: no cover - defensive
+    except (ImportError, AttributeError, TypeError, RuntimeError) as e:  # pragma: no cover - defensive
+        # Handle import errors, missing attributes, type issues, or instantiation failures
         if not _PROVIDER_ERROR_LOGGED:
             logger.warning("Option chain provider load failed (%s): %s", spec, e)
             _PROVIDER_ERROR_LOGGED = True
@@ -114,7 +115,8 @@ def _provider_snapshot() -> Iterable[ContractRow] | None:
         if hasattr(provider, 'get_option_chain_snapshot'):
             snap = provider.get_option_chain_snapshot()
             return _normalize_snapshot(snap)
-    except Exception as e:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, RuntimeError) as e:  # pragma: no cover
+        # Handle missing method, type issues, invalid data, or snapshot failures
         logger.debug("provider get_option_chain_snapshot failed: %s", e)
     # Strategy 2: derive minimal chain using ATM + narrow range if fetch_option_chain present
     try:
@@ -131,7 +133,8 @@ def _provider_snapshot() -> Iterable[ContractRow] | None:
             expiry = _dt.date.today() + _dt.timedelta(days=7)
             df = provider.fetch_option_chain('NIFTY', expiry, (atm-width, atm+width))  # type: ignore
             return _normalize_snapshot(df)
-    except Exception as e:  # pragma: no cover
+    except (AttributeError, TypeError, ValueError, RuntimeError) as e:  # pragma: no cover
+        # Handle missing method, type issues, invalid parameters, or fetch failures
         logger.debug("provider fetch_option_chain snapshot path failed: %s", e)
     return None
 
@@ -160,9 +163,11 @@ def _normalize_snapshot(obj: Any) -> Iterable[ContractRow]:  # pragma: no cover 
                                 # Use timezone-aware UTC (utcnow deprecated) – rely on datetime.UTC (py311+) fallback to timezone.utc
                                 try:
                                     base_date = _dt.datetime.now(_dt.UTC).date()  # type: ignore[attr-defined]
-                                except Exception:
+                                except (AttributeError, TypeError):
+                                    # Handle missing UTC attribute or type issues
                                     base_date = _dt.datetime.now(_dt.UTC).date()
-                            except Exception:  # pragma: no cover - extreme fallback
+                            except (AttributeError, TypeError, ValueError):  # pragma: no cover - extreme fallback
+                                # Handle datetime access failures
                                 base_date = _dt.date.today()
                             exp_date = exp.date() if isinstance(exp, _dt.datetime) else exp
                             dte_days = max((exp_date - base_date).days, 0)
@@ -176,10 +181,12 @@ def _normalize_snapshot(obj: Any) -> Iterable[ContractRow]:  # pragma: no cover 
                         iv=float(r.get('iv', 0) or 0),
                         spread_bps=float(r.get('spread_bps', 0) or 0),
                     ))
-                except Exception:
+                except (KeyError, ValueError, TypeError):
+                    # Handle missing keys, invalid values, or type conversion failures
                     continue
             return rows
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle missing iterrows or iteration failures
         pass
     # Assume iterable of dicts
     try:
@@ -201,10 +208,12 @@ def _normalize_snapshot(obj: Any) -> Iterable[ContractRow]:  # pragma: no cover 
                     iv=float(r.get('iv', 0) or 0),
                     spread_bps=float(r.get('spread_bps', 0) or 0),
                 ))
-            except Exception:
+            except (KeyError, ValueError, TypeError):
+                # Handle missing keys, invalid values, or type conversion failures
                 continue
         return rows
-    except Exception:
+    except (TypeError, AttributeError):
+        # Handle non-iterable or missing attributes
         return []
 
 def _fetch_contract_snapshot() -> Iterable[ContractRow]:  # fallback synthetic for testing & absence
@@ -259,7 +268,8 @@ def aggregate_once() -> None:
             if acc["contracts"] > 0:
                 m.m_option_iv_mean_labels(mny_b, dte_b).set(acc["iv_sum"] / acc["contracts"])  # type: ignore[attr-defined]
                 m.m_option_spread_bps_mean_labels(mny_b, dte_b).set(acc["spread_sum"] / acc["contracts"])  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError, ZeroDivisionError):
+            # Handle missing attributes, type issues, invalid values, gauge failures, or division errors
             pass
 
 __all__ = ["aggregate_once"]

@@ -25,9 +25,11 @@ def _purge_default_registry() -> None:
         for c in list(getattr(names_map, 'values', lambda: [])()):  # type: ignore
             try:
                 REGISTRY.unregister(c)  # type: ignore[arg-type]
-            except Exception:
+            except (ValueError, KeyError):
+                # Handle collector not registered or already removed
                 pass
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle missing registry attributes or type issues
         logger.debug("_purge_default_registry failed", exc_info=True)
 
 
@@ -58,9 +60,11 @@ def force_new_metrics_registry(enable_resource_sampler: bool = False, port: int 
         if callable(_ensure):
             try:
                 _ensure()
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle registration failures
                 pass
-    except Exception:
+    except (ImportError, AttributeError):
+        # Handle missing module or attribute
         pass
     # Ensure SSE family injector is present after reset so scrapes include SSE names
     try:
@@ -69,15 +73,18 @@ def force_new_metrics_registry(enable_resource_sampler: bool = False, port: int 
         if callable(_reg):
             try:
                 _reg()
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle registration failures
                 pass
-    except Exception:
+    except (ImportError, AttributeError):
+        # Handle missing module or attribute
         pass
     # Trigger group re-registration explicitly (idempotent) in case tests rely on dynamic gating updates
     try:
         from .group_registry import register_group_metrics as _rgm  # type: ignore
         _rgm(metrics)
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle missing module, attributes, type issues, or registration failures
         pass
     # Restore/clear flag: one-shot semantics rather than persistent forcing
     try:
@@ -85,7 +92,8 @@ def force_new_metrics_registry(enable_resource_sampler: bool = False, port: int 
             os.environ.pop('G6_FORCE_NEW_REGISTRY', None)
         else:
             os.environ['G6_FORCE_NEW_REGISTRY'] = _prev_force
-    except Exception:
+    except (KeyError, TypeError):
+        # Handle missing key or type issues
         pass
     return metrics
 

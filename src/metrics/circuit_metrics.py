@@ -21,7 +21,8 @@ class CircuitMetricsExporter:
         # Lazy-create metrics if not present; use try/except to avoid duplicate registration
         try:
             self._state_g = self.metrics.index_dq_issues_total  # reuse existing object to ensure registry OK
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle missing attribute or type issues
             pass
         # Create dedicated gauges (best-effort)
         try:
@@ -29,22 +30,26 @@ class CircuitMetricsExporter:
             # Legacy 'name' label (kept for compatibility)
             try:
                 self.cb_state = Gauge('g6_circuit_state_simple', 'Circuit state (0=closed,1=half,2=open)', ['name'])
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle duplicate registration, type issues, or gauge creation failures
                 self.cb_state = None
             try:
                 self.cb_timeout = Gauge('g6_circuit_current_timeout_seconds', 'Current reset timeout for circuit', ['name'])
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle duplicate registration, type issues, or gauge creation failures
                 self.cb_timeout = None
             # Standardized 'component' label mirrors the above values
             try:
                 self.cb_state_component = Gauge('g6_circuit_state', 'Circuit state (0=closed,1=half,2=open)', ['component'])
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle duplicate registration, type issues, or gauge creation failures
                 self.cb_state_component = None
             try:
                 self.cb_timeout_component = Gauge('g6_circuit_timeout_seconds', 'Current reset timeout for circuit', ['component'])
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle duplicate registration, type issues, or gauge creation failures
                 self.cb_timeout_component = None
-        except Exception:
+        except (ImportError, ValueError, TypeError, RuntimeError):
             self.cb_state = None
             self.cb_timeout = None
             self.cb_state_component = None
@@ -61,7 +66,8 @@ class CircuitMetricsExporter:
         while not self._stop.is_set():
             try:
                 self._tick()
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle attribute access, type issues, or tick operation failures
                 pass
             for _ in range(int(self.interval / 0.5)):
                 if self._stop.is_set():
@@ -90,7 +96,8 @@ class CircuitMetricsExporter:
                     timeout_component = getattr(self, 'cb_timeout_component', None)
                     if timeout_component is not None:
                         timeout_component.labels(component=name).set(float(timeout))
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
+                # Handle missing attributes, type issues, invalid values, or gauge operation failures
                 pass
 
 
