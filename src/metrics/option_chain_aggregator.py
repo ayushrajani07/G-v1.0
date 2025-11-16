@@ -126,7 +126,8 @@ def _provider_snapshot() -> Iterable[ContractRow] | None:
             if hasattr(provider, 'get_atm_strike'):
                 try:
                     atm = float(provider.get_atm_strike())
-                except Exception:
+                except (AttributeError, TypeError, ValueError):
+                    # Handle missing method, type issues, or conversion failures
                     atm = 0.0
             width = max(atm * 0.1, 50) if atm > 0 else 100
             import datetime as _dt

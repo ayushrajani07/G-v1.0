@@ -29,12 +29,14 @@ from typing import Any
 
 try:  # import only the needed primitive types for isinstance guards
     from prometheus_client.core import CollectorRegistry  # type: ignore
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or class
     CollectorRegistry = object  # type: ignore
 
 try:
     from prometheus_client import Gauge  # type: ignore
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or class
     Gauge = None  # type: ignore
 
 logger = logging.getLogger(__name__)

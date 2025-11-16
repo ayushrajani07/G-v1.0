@@ -162,7 +162,8 @@ class MetricBatcher:
             self._thread.join(timeout=1.0)
         try:
             self.flush()
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle flush failures
             pass
 
 _enabled = os.getenv("G6_METRICS_BATCH", "0").lower() in ("1", "true", "on", "yes")
@@ -174,7 +175,8 @@ metric_batcher = MetricBatcher(enabled=_enabled, flush_interval=_flush_interval,
 def _final_flush():  # pragma: no cover
     try:
         metric_batcher.stop()
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle batcher stop failures
         pass
 
 def batch_inc(accessor: CounterAccessor, *label_values: Any, amount: float = 1.0) -> None:
@@ -202,7 +204,8 @@ def flush_now() -> None:
     """Force an immediate flush (used in tests)."""
     try:
         metric_batcher.flush()
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle flush failures
         pass
 
 def pending_queue_size() -> int:

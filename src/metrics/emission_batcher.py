@@ -140,7 +140,8 @@ class EmissionBatcher:
         if not self._config.enabled:
             try:
                 counter.inc(value)
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
+                # Handle counter operation failures
                 pass
             return
         # Normalize labels
@@ -270,7 +271,8 @@ class _InternalBatchMetrics:
             self._Gauge = Gauge
             self._Counter = PCounter
             self._Histogram = Histogram
-        except Exception:  # pragma: no cover
+        except (ImportError, AttributeError):  # pragma: no cover
+            # Handle missing module or classes
             self._Gauge = self._Counter = self._Histogram = None  # type: ignore
         self._queue_depth = None
         self._flush_total = None

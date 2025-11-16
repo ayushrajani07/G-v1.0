@@ -19,7 +19,7 @@ from src.config.env_config import EnvConfig
 
 try:
     from prometheus_client import Counter, Gauge, Histogram
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     # Minimal fallbacks for environments without prometheus_client
     class _Dummy:
         def __init__(self, *a, **k):

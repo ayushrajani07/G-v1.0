@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 
 try:  # Prometheus client is required by the surrounding package
     from prometheus_client import REGISTRY  # type: ignore
-except Exception:  # pragma: no cover - extremely unlikely import failure
+except (ImportError, AttributeError):  # pragma: no cover - extremely unlikely import failure
+    # Handle missing module or attribute
     REGISTRY = None  # type: ignore
 
 __all__ = [

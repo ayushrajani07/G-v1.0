@@ -361,12 +361,14 @@ def get_metrics_singleton():
 				fam_count = -1
 				try:
 					fam_count = len(list(_R.collect()))
-				except Exception:
+				except (AttributeError, TypeError, RuntimeError):
+					# Handle registry collection failures
 					pass
 				profile_total = None
 				try:
 					profile_total = round(float(getattr(existing, '_init_profile', {}).get('total_ms', 0.0)), 2)
-				except Exception:
+				except (AttributeError, TypeError, ValueError, KeyError):
+					# Handle profile dict access or conversion failures
 					profile_total = None
 				__logging.getLogger('src.metrics.metrics').info(
 					"metrics.registry.summary families=%s always_on_groups=%s prof_total_ms=%s strict=%s",

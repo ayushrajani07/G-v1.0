@@ -48,7 +48,8 @@ def ensure_canonical_counters(reg: Any) -> None:  # pragma: no cover - wiring + 
     if not hasattr(reg, '_legacy_metrics'):
         try:
             reg._legacy_metrics = {}
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError):  # pragma: no cover
+            # Handle attribute assignment failures
             pass
 
     for attr, canonical, legacy in _CANONICAL_COUNTERS:

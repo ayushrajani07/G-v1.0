@@ -215,7 +215,8 @@ def apply_pruning(
                 try:
                     if not predicate(group):
                         remove = True
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle predicate execution failures
                     remove = False
                 if remove:
                     # Attempt to unregister underlying collector to free name

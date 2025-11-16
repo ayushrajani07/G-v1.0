@@ -52,7 +52,7 @@ class MetricDef:
                             # Re-read to confirm; if still mismatched attempt hard replacement.
                             if getattr(metric, '_name', None) != self.name:
                                 raise RuntimeError('rename_did_not_stick')
-                        except Exception:
+                        except (AttributeError, TypeError, RuntimeError):
                             # Hard replacement path: construct a fresh collector with suffixed name
                             try:
                                 ctor_kwargs = self.kwargs or {}
