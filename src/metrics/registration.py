@@ -47,9 +47,10 @@ def core_register(registry: Any, attr: str, ctor: Callable, name: str, doc: str,
         try:
             names_map = getattr(REGISTRY, '_names_to_collectors', {})
             collector = names_map.get(name)
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle missing registry attribute or type issues
             collector = None
-    except Exception as e:  # unexpected
+    except (TypeError, RuntimeError) as e:  # unexpected type or runtime errors
         strict = EnvConfig.get_bool('G6_METRICS_STRICT_EXCEPTIONS', False)
         logger.error("core_register unexpected error creating %s (%s): %s", attr, name, e, exc_info=True)
         if strict:
@@ -60,7 +61,8 @@ def core_register(registry: Any, attr: str, ctor: Callable, name: str, doc: str,
             setattr(registry, attr, collector)
             if group:
                 registry._metric_groups[attr] = group  # type: ignore[attr-defined]
-        except Exception:  # pragma: no cover - bookkeeping
+        except (AttributeError, TypeError, KeyError):  # pragma: no cover - bookkeeping
+            # Handle attribute access, type issues, or dict operations
             pass
     return collector
 
@@ -73,14 +75,16 @@ def maybe_register(registry: Any, group: str, attr: str, metric_cls: Callable,
     try:
         if hasattr(registry, '_group_alias'):
             group = registry._group_alias.get(group, group)  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        # Handle missing attribute, type issues, or dict access failures
         pass
 
     # Respect gating predicate if available
     try:
         if hasattr(registry, '_group_allowed') and not registry._group_allowed(group):  # type: ignore[attr-defined]
             return None
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle missing attribute, type issues, or predicate call failures
         pass
 
     if hasattr(registry, attr):  # idempotent
@@ -103,10 +107,11 @@ def maybe_register(registry: Any, group: str, attr: str, metric_cls: Callable,
                 collector = getattr(registry, attr)
             else:
                 collector = None
-        except Exception as e:  # pragma: no cover
+        except (AttributeError, TypeError) as e:  # pragma: no cover
+            # Handle missing registry attribute or type issues
             logger.debug("maybe_register registry lookup failed for duplicate %s: %s", name, e)
             collector = getattr(registry, attr, None)
-    except Exception as e:  # unexpected
+    except (TypeError, RuntimeError) as e:  # unexpected type or runtime errors
         logger.error("maybe_register unexpected error creating %s (%s): %s", attr, name, e, exc_info=True)
         # Strict mode: propagate original exception for governance test
         if strict:
@@ -117,7 +122,8 @@ def maybe_register(registry: Any, group: str, attr: str, metric_cls: Callable,
         try:
             setattr(registry, attr, collector)
             registry._metric_groups[attr] = group  # type: ignore[attr-defined]
-        except Exception:  # pragma: no cover
+        except (AttributeError, TypeError, KeyError):  # pragma: no cover
+            # Handle attribute access, type issues, or dict operations
             pass
     return collector
 

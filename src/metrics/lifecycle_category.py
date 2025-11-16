@@ -31,5 +31,6 @@ def init_lifecycle_metrics(registry: MetricsRegistry) -> None:
         core('retention_scan_seconds', Histogram, 'g6_retention_scan_seconds', 'Latency of retention pruning candidate enumeration & deletion phase.')
         core('retention_delete_limit', Gauge, 'g6_retention_delete_limit', 'Configured maximum deletions allowed per retention cycle.')
         core('retention_candidate_age_seconds', Histogram, 'g6_retention_candidate_age_seconds', 'Age (seconds) distribution for eligible retention candidates.')
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle missing core method, type issues, value errors, or registration failures
         logger.debug("init_lifecycle_metrics failed", exc_info=True)

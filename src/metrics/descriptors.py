@@ -76,8 +76,8 @@ def register_descriptors(target, descriptors: Sequence[MetricDescriptor], maybe_
                 metric = maybe_register(d.group, _attr_name(d.name), ctor, d.name, d.documentation)
             if metric is not None and not hasattr(target, _attr_name(d.name)):
                 setattr(target, _attr_name(d.name), metric)
-        except Exception:
-            # Non-fatal: skip descriptor
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Non-fatal: skip descriptor on attribute access, type issues, value errors, or registration failures
             pass
 
 def _attr_name(metric_name: str) -> str:

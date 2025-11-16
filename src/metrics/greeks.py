@@ -31,5 +31,6 @@ def init_greek_metrics(registry, greek_names: Sequence[str] = ('delta','theta','
         setattr(registry, metric_name, g)
         try:
             registry._metric_groups[metric_name] = 'greeks'
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Handle missing attribute, type issues, or dict access failures
             pass

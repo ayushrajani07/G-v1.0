@@ -29,7 +29,8 @@ def init_sla_placeholders(reg: Any, group_allowed: Callable[[str], bool]) -> Non
         strict = False
         try:
             strict = os.getenv('G6_METRICS_STRICT_EXCEPTIONS','').lower() in {'1','true','yes','on'}
-        except Exception:  # pragma: no cover - env parse resilience
+        except (AttributeError, TypeError):  # pragma: no cover - env parse resilience
+            # Handle attribute access or type issues
             pass
         metric = None
         try:
@@ -41,9 +42,10 @@ def init_sla_placeholders(reg: Any, group_allowed: Callable[[str], bool]) -> Non
                     if 'g6_cycle_sla_breach_total' in names:
                         metric = coll
                         break
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle missing registry attribute or type issues
                 pass
-        except Exception as e:  # unexpected
+        except (TypeError, RuntimeError) as e:  # unexpected type or runtime errors
             logger.error("init_sla_placeholders failed creating cycle_sla_breach: %s", e, exc_info=True)
             if strict:
                 raise
@@ -56,9 +58,12 @@ def init_sla_placeholders(reg: Any, group_allowed: Callable[[str], bool]) -> Non
                     if hasattr(reg, 'metric_group_state'):
                         try:
                             reg.metric_group_state.labels(group='sla_health').set(1)  # type: ignore[attr-defined]
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError, RuntimeError):
+                            # Handle missing method, type issues, invalid values, or metric operation failures
                             pass
-            except Exception:  # pragma: no cover - bookkeeping only
+            except (AttributeError, TypeError, KeyError, RuntimeError):  # pragma: no cover - bookkeeping only
+                # Handle attribute access, type issues, dict operations, or predicate call failures
                 pass
-    except Exception:  # pragma: no cover - defensive catch-all
+    except (AttributeError, TypeError, RuntimeError):  # pragma: no cover - defensive catch-all
+        # Handle unexpected attribute, type, or runtime errors
         logger.debug("init_sla_placeholders unexpected failure", exc_info=True)

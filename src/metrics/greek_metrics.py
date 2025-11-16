@@ -23,5 +23,6 @@ def init_greek_metrics(registry: Any) -> None:  # pragma: no cover - thin wrappe
         try:
             gauge = Gauge(f'g6_option_{greek}', f'Option {greek}', ['index', 'expiry', 'strike', 'type'])
             setattr(registry, attr, gauge)
-        except Exception:  # pragma: no cover - defensive; errors ignored to avoid startup failure
+        except (ValueError, TypeError, RuntimeError):  # pragma: no cover - defensive; errors ignored to avoid startup failure
+            # Handle duplicate metric, type issues, or gauge creation failures
             pass

@@ -22,7 +22,8 @@ def apply_group_gating(registry: Any) -> tuple[set[str], set | None, set]:  # pr
                 'metrics-init_helpers-apply_group_gating',
                 'init_helpers.apply_group_gating is deprecated; call gating.configure_registry_groups directly (will be removed in a future wave)'
             )
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle missing deprecation module, attribute access, type issues, or emission failures
             pass
         _LEGACY_WARN_EMITTED = True
     from .gating import configure_registry_groups as _cfg  # type: ignore

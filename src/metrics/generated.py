@@ -15,7 +15,8 @@ from .cardinality_guard import registry_guard
 def _labels(m: Any, **kwargs: Any) -> Any:
     try:
         return m.labels(**kwargs)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle missing labels method, type issues, invalid values, or label operation failures
         return None
 
 def _labels_set(m: Any, value: float, **kwargs: Any) -> None:
@@ -24,7 +25,8 @@ def _labels_set(m: Any, value: float, **kwargs: Any) -> None:
         s = getattr(h, 'set', None)
         if callable(s):
             s(value)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle missing method, type issues, invalid values, or metric operation failures
         pass
 
 _METRICS: dict[str, Any] = {}  # name -> metric instance
@@ -524,14 +526,18 @@ def m_panel_diff_bytes_last_labels(type: str):
 try:
     _hm = m_metrics_spec_hash_info()
     if _hm: _labels_set(_hm, 1, hash=SPEC_HASH)
-except Exception: pass
+except (AttributeError, TypeError, ValueError, RuntimeError):
+    # Handle metric accessor or operation failures
+    pass
 
 try:
     import os
     _bhv = os.getenv('G6_BUILD_CONFIG_HASH', SPEC_HASH)
     _bh = m_build_config_hash_info()
     if _bh: _labels_set(_bh, 1, hash=_bhv)
-except Exception: pass
+except (ImportError, AttributeError, TypeError, ValueError, RuntimeError):
+    # Handle import errors, metric accessor or operation failures
+    pass
 
 # Export helper names and SPEC_HASH; avoid dynamic comprehensions that confuse some analyzers
 __all__ = (

@@ -32,7 +32,8 @@ def init_index_aggregate_metrics(registry: MetricsRegistry) -> None:
             maybe_existing = names_map.get('g6_metric_group_state')
             if maybe_existing is not None:
                 registry.metric_group_state = maybe_existing  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle missing registry attribute or type issues
             pass
     registry.index_attempts_total = Counter('g6_index_attempts_total', 'Total index collection attempts (per index, resets never)', ['index'])
     registry.index_failures_total = Counter('g6_index_failures_total', 'Total index collection failures (per index, labeled by error_type)', ['index','error_type'])
