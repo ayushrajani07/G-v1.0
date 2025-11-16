@@ -1,0 +1,35 @@
+{
+  "model_type": "quantile_gbrt",
+  "index": "NIFTY",
+  "target": "tp_residual",
+  "quantiles": [0.1, 0.5, 0.9],
+  "hyperparameters": {
+    "n_estimators": 100,
+    "max_depth": 3,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "random_state": 42
+  },
+  "hyperparameter_search": {
+    "n_estimators": [100, 200],
+    "max_depth": [3, 4],
+    "learning_rate": [0.05, 0.1],
+    "subsample": [0.8]
+  },
+  "training": {
+    "train_days": 45,
+    "val_days": 5,
+    "cv_folds": 2
+  },
+  "feature_config": {
+    "use_lag_features": true,
+    "use_market_features": true,
+    "use_regime_features": true,
+    "exclude_features": ["volume_ratio", "oi_change_rate"]
+  },
+  "output": {
+    "model_dir": "models/nifty_gbrt_quantile_demo",
+    "save_feature_importance": true,
+    "save_training_metrics": true
+  }
+}
