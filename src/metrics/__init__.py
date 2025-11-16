@@ -26,7 +26,8 @@ from src.config.env_config import EnvConfig
 
 try:
 	from src.utils.env_flags import is_truthy_env as _is_truthy_env
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+	# Handle missing module or attribute
 	def _is_truthy_env(name: str) -> bool:
 		val = EnvConfig.get_str(name, '')
 		return val.lower() in ('1','true','yes','on')
@@ -37,7 +38,8 @@ def _imp(msg: str):  # lightweight tracer
 		try:
 			_print = print  # local bind
 			_print(f"[metrics-trace] {msg}", flush=True)
-		except Exception:
+		except (AttributeError, TypeError, OSError):
+			# Handle print failures or I/O errors
 			pass
 
 _imp('start metrics/__init__')
@@ -50,23 +52,27 @@ def _install_logrecord_message_factory():  # pragma: no cover - simple wiring
 		return
 	try:
 		orig_factory = _logging.getLogRecordFactory()
-	except Exception:
+	except (AttributeError, TypeError):
+		# Handle missing method or type issues
 		return
 	def _factory(*args, **kwargs):  # noqa: ANN001
 		record = orig_factory(*args, **kwargs)
 		if not hasattr(record, 'message'):
 			try:
 				record.message = record.getMessage()
-			except Exception:
+			except (AttributeError, TypeError):
+				# Handle missing method or type issues
 				try:
 					record.message = str(getattr(record, 'msg', ''))
-				except Exception:
+				except (AttributeError, TypeError):
+					# Handle attribute or conversion failures
 					pass
 		return record
 	try:
 		_logging.setLogRecordFactory(_factory)
 		_logging._g6_message_factory_installed = True  # type: ignore[attr-defined]
-	except Exception:
+	except (AttributeError, TypeError):
+		# Handle method or attribute assignment failures
 		pass
 
 _imp('after install_logrecord_message_factory call')
@@ -90,7 +96,8 @@ def _install_deprecation_consolidation():  # pragma: no cover - side-effect inst
 		_warnings.filterwarnings('ignore', category=DeprecationWarning)
 		try:
 			_warnings._g6_depr_consolidation_installed = True  # type: ignore[attr-defined]
-		except Exception:
+		except (AttributeError, TypeError):
+			# Handle attribute assignment failures
 			pass
 		return
 	_seen: dict[tuple[str,str,int], int] = {}
@@ -105,7 +112,8 @@ def _install_deprecation_consolidation():  # pragma: no cover - side-effect inst
 		return _orig_showwarning(message, category, filename, lineno, file=file, line=line)
 	try:
 		_warnings.showwarning = _showwarning  # type: ignore[assignment]
-	except Exception:
+	except (AttributeError, TypeError):
+		# Handle attribute assignment failures
 		pass
 	def _emit_summary():  # pragma: no cover
 		if not summary or not _seen:
@@ -118,7 +126,8 @@ def _install_deprecation_consolidation():  # pragma: no cover - side-effect inst
 				short = filename.replace('\\','/').split('/')[-1]
 				lines.append(f"{count}x {short}:{lineno} :: {msg}")
 			_logging.getLogger(__name__).info("deprecations.summary total=%d unique=%d\n%s", total, len(_seen), "\n".join(lines))
-		except Exception:
+		except (AttributeError, TypeError):
+			# Handle logging failures
 			pass
 	_atexit.register(_emit_summary)
 	_warnings._g6_depr_consolidation_installed = True  # type: ignore[attr-defined]
@@ -155,25 +164,26 @@ try:  # pragma: no cover - best-effort
 			"# Deprecated Execution Paths\n| Component | Replacement | Deprecated Since | Planned Removal | Migration Action | Notes |\n|-----------|-------------|------------------|-----------------|------------------|-------|\n| `scripts/run_live.py` | run_orchestrator_loop.py | 2025-09-26 | R+2 | update | autogen |\n\n## Environment Flag Deprecations\n",
 			encoding='utf-8'
 		)
-except Exception:
+except (OSError, IOError):
+	# Handle file I/O errors
 	pass
 
 # Reduce duplicate emission of known deprecation warning for direct metrics module import.
-try:  # pragma: no cover - simple filter addition
-	_warnings.filterwarnings(
-		'once',
-		message=r"Importing 'src.metrics.metrics' directly is deprecated",
-		category=DeprecationWarning,
-	)
-except Exception:
-	pass
-
-_imp('import metrics module symbols (metrics.py)')
+	try:  # pragma: no cover - simple filter addition
+		_warnings.filterwarnings(
+			'once',
+			message=r"Importing 'src.metrics.metrics' directly is deprecated",
+			category=DeprecationWarning,
+		)
+	except (AttributeError, TypeError, ValueError):
+		# Handle filter failures
+		pass_imp('import metrics module symbols (metrics.py)')
 # Mark facade import so metrics.py can suppress its own deep-import deprecation warning
 try:
 	import builtins as _bi
 	_bi._G6_METRICS_FACADE_IMPORT = True  # type: ignore[attr-defined]
-except Exception:
+except (ImportError, AttributeError):
+	# Handle import or attribute assignment failures
 	pass
 import os as __os  # type: ignore  # dedicated alias for context guard
 
@@ -195,7 +205,8 @@ finally:
 	if not _prev_ctx:
 		try:
 			del __os.environ['G6_METRICS_IMPORT_CONTEXT']
-		except Exception:
+		except (KeyError, AttributeError):
+			# Handle missing key or attribute
 			pass
 	else:
 		__os.environ['G6_METRICS_IMPORT_CONTEXT'] = _prev_ctx
@@ -205,13 +216,15 @@ def dump_metrics():
 	"""Return lightweight list of metric names (facade + global registry)."""
 	try:
 		m = get_metrics_singleton()
-	except Exception:
+	except (AttributeError, TypeError, RuntimeError):
+		# Handle singleton access failures
 		m = None
 	names: list[str] = []
 	try:
 		from prometheus_client import REGISTRY as _GLOBAL_REG
 		from prometheus_client import generate_latest
-	except Exception:
+	except (ImportError, AttributeError):
+		# Handle missing module or attribute
 		_GLOBAL_REG = None
 		generate_latest = None
 	# Facade registry
@@ -222,10 +235,12 @@ def dump_metrics():
 			coll_map = getattr(items, '_collector_to_names', None) if items is not None else None
 			if coll_map is not None:
 				for collector, c_names in list(coll_map.items()):
-					for nm in c_names:
-						if nm not in names:
-							names.append(nm)
-	except Exception:
+				for nm in c_names:
+					if nm not in names:
+						names.append(nm)
+	except (AttributeError, TypeError):
+		# Handle missing attributes or type issues
+		passndle missing attributes or type issues
 		pass
 	# Global registry
 	try:
@@ -233,10 +248,11 @@ def dump_metrics():
 			coll_map2 = getattr(_GLOBAL_REG, '_collector_to_names', None)
 			if coll_map2 is not None:
 				for collector, c_names in list(coll_map2.items()):
-					for nm in c_names:
-						if nm not in names:
-							names.append(nm)
-	except Exception:
+				for nm in c_names:
+					if nm not in names:
+						names.append(nm)
+	except (AttributeError, TypeError):
+		# Handle missing attributes or type issues
 		pass
 	# Local fallback counters
 	if not names and _LOCAL_FACADE_COUNTERS:
@@ -258,14 +274,16 @@ def get_counter(name: str, documentation: str, labels: list[str] | None):
 				coll_map = getattr(prom_reg, '_collector_to_names', None)
 				if coll_map is not None:
 					for collector, names in list(coll_map.items()):
-						if name in names:
-							return collector
-			except Exception:
+				if name in names:
+					return collector
+			except (AttributeError, TypeError):
+				# Handle missing attributes or type issues
 				pass
 		# Register new counter
 		c = Counter(name, documentation, labels or [])
 		return c
-	except Exception:
+	except (ImportError, ValueError, TypeError, RuntimeError):
+		# Handle import, duplicate registration, type issues, or counter creation failures
 		class _Null:
 			def inc(self, *a, **k):
 				return 0
@@ -282,7 +300,8 @@ def get_metrics_singleton():
 	if EnvConfig.get_str('G6_FORCE_NEW_REGISTRY', '') or EnvConfig.get_str('G6_CARDINALITY_SNAPSHOT',''):
 		try:
 			_anchor.clear_singleton()  # type: ignore[attr-defined]
-		except Exception:
+		except (AttributeError, TypeError):
+			# Handle missing method or type issues
 			pass
 	existing = _anchor.get_singleton()
 	if existing is not None:
@@ -294,9 +313,11 @@ def get_metrics_singleton():
 				from .introspection import build_introspection_inventory as _bii
 				try:
 					existing._metrics_introspection = _bii(existing)  # type: ignore[attr-defined]
-				except Exception:
+				except (AttributeError, TypeError, RuntimeError):
+					# Handle attribute assignment, type issues, or build failures
 					pass
-		except Exception:
+		except (ImportError, AttributeError, TypeError):
+			# Handle import or attribute access failures
 			pass
 		# (Dedup) Previously this emitted on EVERY facade access causing log spam.
 		# Now only emit if sentinel not yet set and allow opt-out of dedup (legacy behavior) via env.
@@ -307,9 +328,11 @@ def get_metrics_singleton():
 				__logging.getLogger('src.metrics').info('metrics.group_filters.loaded')
 				try:
 					existing._group_filters_log_emitted = True
-				except Exception:
+				except (AttributeError, TypeError):
+					# Handle attribute assignment failures
 					pass
-		except Exception:
+		except (ImportError, AttributeError, TypeError):
+			# Handle import or logging failures
 			pass
 		# Cardinality snapshot fallback: if snapshot env set but file empty (or absent) ensure guard runs once
 		try:
@@ -320,11 +343,13 @@ def get_metrics_singleton():
 					from .cardinality_guard import check_cardinality as _cc
 					try:
 						summary = _cc(existing)
-						if summary is not None:
-							existing._cardinality_guard_summary = summary
-					except Exception:
-						pass
-		except Exception:
+					if summary is not None:
+						existing._cardinality_guard_summary = summary
+				except (AttributeError, TypeError):
+					# Handle attribute assignment failures
+					pass
+		except (ImportError, AttributeError, TypeError, OSError):
+			# Handle import, attribute, or file access failures
 			pass
 		# Ensure a single structured metrics.registry.summary line exists even for pre-existing registries
 		# when tests reset the sentinel via facade helper. Emit once here if needed.
@@ -351,10 +376,12 @@ def get_metrics_singleton():
 				try:
 					from src.observability.startup_summaries import register_or_note_summary as _reg  # type: ignore
 					_reg('metrics.registry', emitted=True)
-				except Exception:
+				except (ImportError, AttributeError, TypeError, RuntimeError):
+					# Handle import, attribute, type, or registration failures
 					pass
-		except Exception:
-			pass
+		except (ImportError, AttributeError, TypeError):
+		# Handle import or summary emission failures
+		pass
 		# If env flags request dump/suppression markers but registry pre-existed (created before flags
 		# were set), tests that reload the module still expect marker lines. Mirror logic here.
 		try:  # pragma: no cover - defensive wrapper
@@ -379,10 +406,12 @@ def get_metrics_singleton():
 						logger.info("METRICS_INIT_TRACE: %s steps", len(trace))
 				try:
 					existing._dump_marker_emitted = True
-				except Exception:
+				except (AttributeError, TypeError):
+					# Handle attribute assignment failures
 					pass
-		except Exception:
-			pass
+		except (ImportError, AttributeError, TypeError):
+		# Handle import or logging failures
+		pass
 		return existing
 	from . import metrics as _m  # late import to avoid circular
 	reg = _m.get_metrics_singleton()
@@ -394,12 +423,15 @@ def get_metrics_singleton():
 				try:
 					from .introspection import build_introspection_inventory as _bii
 					reg._metrics_introspection = _bii(reg)  # type: ignore[attr-defined]
-				except Exception:
+				except (AttributeError, TypeError, RuntimeError):
+					# Handle attribute assignment, type issues, or build failures
 					try:
 						reg._metrics_introspection = []  # type: ignore[attr-defined]
-					except Exception:
+					except (AttributeError, TypeError):
+						# Handle attribute assignment failures
 						pass
-	except Exception:
+	except (ImportError, AttributeError, TypeError):
+		# Handle import or introspection build failures
 		pass
 	# Cardinality snapshot fallback for freshly created registry as well
 	try:
@@ -414,9 +446,11 @@ def get_metrics_singleton():
 					summary = _cc(reg)
 					if summary is not None:
 						reg._cardinality_guard_summary = summary  # type: ignore[attr-defined]
-				except Exception:
+				except (AttributeError, TypeError):
+					# Handle attribute assignment failures
 					pass
-	except Exception:
+	except (ImportError, AttributeError, TypeError, OSError):
+		# Handle import, attribute, or file access failures
 		pass
 	# Fallback structured gating log emission if tests reload facade after gating earlier
 	try:
@@ -427,15 +461,18 @@ def get_metrics_singleton():
 			_logger.info('metrics.group_filters.loaded')
 			try:
 				reg._group_filters_log_emitted = True  # type: ignore[attr-defined]
-			except Exception:
+			except (AttributeError, TypeError):
+				# Handle attribute assignment failures
 				pass
-	except Exception:
+	except (ImportError, AttributeError, TypeError):
+		# Handle import or logging failures
 		pass
 	# Defensive: if anchor still empty, publish (covers legacy path constructing first instance)
 	try:
 		if _anchor.get_singleton() is None and reg is not None:
 			_anchor.set_singleton(reg)
-	except Exception:
+	except (AttributeError, TypeError):
+		# Handle missing method or type issues
 		pass
 	return reg
 
@@ -475,7 +512,8 @@ try:  # pragma: no cover - guard detection
 		if _is_pytest and not _force and _explicit_disable_val == '':
 			_disable_eager = True
 			_imp('auto-disable eager singleton (pytest context)')
-except Exception:
+except (AttributeError, TypeError, KeyError):
+	# Handle attribute, type, or module access failures
 	pass
 
 if _disable_eager and not _force_facade_registry:
@@ -491,10 +529,12 @@ else:
 			_imp('create new singleton via get_metrics_singleton')
 			registry = get_metrics_singleton()
 			_imp('singleton created')
-	except Exception as _e:  # pragma: no cover - defensive
+	except (AttributeError, TypeError, RuntimeError) as _e:  # pragma: no cover - defensive
+		# Handle singleton creation failures
 		try:
 			_logging.getLogger(__name__).warning("metrics.facade.registry_init_failed %s", _e)
-		except Exception:
+		except (AttributeError, TypeError):
+			# Handle logging failures
 			pass
 		registry = None  # type: ignore
 _imp('end metrics/__init__')
@@ -533,10 +573,10 @@ def _reset_metrics_summary_state():  # pragma: no cover - test-only helper
         from . import metrics as _m  # type: ignore
         if '_G6_METRICS_SUMMARY_EMITTED' in _m.__dict__:
             try:
-                del _m.__dict__['_G6_METRICS_SUMMARY_EMITTED']
-            except Exception:
-                pass
-    except Exception:
-        pass
-
-__all__.append('_reset_metrics_summary_state')
+				del _m.__dict__['_G6_METRICS_SUMMARY_EMITTED']
+			except (KeyError, AttributeError):
+				# Handle missing key or attribute
+				pass
+	except (ImportError, AttributeError):
+		# Handle import or module access failures
+		pass__all__.append('_reset_metrics_summary_state')
