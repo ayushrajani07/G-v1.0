@@ -33,7 +33,8 @@ _EGRESS_FROZEN = EnvConfig.get_bool('G6_EGRESS_FROZEN', False)
 
 try:  # Lazy import to avoid startup impact when SSE not enabled
     from src.events.event_bus import get_event_bus  # type: ignore
-except Exception:  # pragma: no cover - fallback when module unavailable
+except (ImportError, AttributeError):  # pragma: no cover - fallback when module unavailable
+    # Handle missing module or function
     get_event_bus = None  # type: ignore
 
 @dataclass
@@ -51,10 +52,12 @@ def _copy_jsonable(obj: Any) -> Any:
     try:
         import copy as _copy
         return _copy.deepcopy(obj)
-    except Exception:
+    except (TypeError, ValueError, AttributeError, RuntimeError):
+        # Handle deepcopy failures
         try:
             return json.loads(json.dumps(obj))
-        except Exception:
+        except (json.JSONEncodeError, json.JSONDecodeError, TypeError, ValueError):
+            # Handle JSON serialization failures
             return obj
 
 
@@ -65,14 +68,16 @@ def _publish_event(event_type: str, payload: dict[str, Any], *, coalesce_key: st
     if _BUS is None or _BUS is False:  # type: ignore[truthy-bool]
         try:
             _BUS = get_event_bus()
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle event bus retrieval failures
             _BUS = False  # type: ignore[assignment]
             return
     if _BUS is False:
         return
     try:
         _BUS.publish(event_type, payload, coalesce_key=coalesce_key)
-    except Exception as e:
+    except (AttributeError, TypeError, ValueError, RuntimeError) as e:
+        # Handle publish failures
         try:
             # Use PANEL_DISPLAY if available (UI emission), fallback to CONFIGURATION
             cat = getattr(ErrorCategory, 'PANEL_DISPLAY', ErrorCategory.CONFIGURATION)
@@ -85,7 +90,8 @@ def _publish_event(event_type: str, payload: dict[str, Any], *, coalesce_key: st
                 message="event bus publish failed",
                 context={"event_type": event_type},
             )
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle error handler failures
             pass
 
 def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
@@ -134,7 +140,8 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
                         message="initial full snapshot write failed",
                         context={"path": os.path.join(base_dir, base_name + '.full.json')},
                     )
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle error handler failures
                     pass
             try:
                 m = get_metrics()
@@ -163,14 +170,16 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
                 },
                 coalesce_key='panel_full',
             )
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Handle event publishing failures
             pass
         # Observe latency just for completeness of first full
         try:
             m = get_metrics()
             if hasattr(m, 'panel_diff_emit_seconds'):
                 m.panel_diff_emit_seconds.observe(max(_t.time()-start_time,0.0))  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError, OSError):
+            # Handle metric observation or time retrieval failures
             pass
         return
 
@@ -233,7 +242,8 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
             m = get_metrics()
             if hasattr(m, 'panel_diff_truncated'):
                 m.panel_diff_truncated.labels(reason='max_keys').inc()  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle metric increment failures
             pass
     _state.last_snapshot = status
     _state.counter += 1
@@ -254,7 +264,8 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
                     message="panel diff write failed",
                     context={"path": diff_path},
                 )
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle error handler failures
                 pass
             return
         try:
@@ -267,9 +278,11 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
             if hasattr(m, 'panel_diff_bytes_total'):
                 try:
                     m.panel_diff_bytes_total.labels(type='diff').inc(size)  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle metric increment failures
                     pass
-        except Exception:
+        except (AttributeError, TypeError, json.JSONEncodeError, RuntimeError):
+            # Handle metrics or JSON encoding failures
             pass
         _publish_event(
             'panel_diff',
@@ -284,9 +297,11 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
         try:
             if _BUS is not None and _BUS is not False and hasattr(_BUS, 'enforce_snapshot_guard'):
                 _BUS.enforce_snapshot_guard()  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
+            # Handle guard enforcement failures
             pass
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError, OSError, IOError, json.JSONEncodeError):
+        # Handle diff emission failures
         pass
     # Periodic full snapshot
     if full_interval > 0 and _state.counter % full_interval == 0:
@@ -307,7 +322,8 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
                         message="panel full snapshot write failed",
                         context={"path": full_path},
                     )
-                except Exception:
+                except (AttributeError, TypeError, RuntimeError):
+                    # Handle error handler failures
                     pass
                 return
             try:
@@ -322,9 +338,11 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
                 if hasattr(m, 'panel_diff_bytes_total'):
                     try:
                         m.panel_diff_bytes_total.labels(type='full').inc(size)  # type: ignore[attr-defined]
-                    except Exception:
+                    except (AttributeError, TypeError, RuntimeError):
+                        # Handle metric increment failures
                         pass
-            except Exception:
+            except (AttributeError, TypeError, json.JSONEncodeError, RuntimeError):
+                # Handle metrics or JSON encoding failures
                 pass
             _publish_event(
                 'panel_full',
@@ -340,16 +358,19 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
             try:
                 if _BUS is not None and _BUS is not False and hasattr(_BUS, 'enforce_snapshot_guard'):
                     _BUS.enforce_snapshot_guard()  # type: ignore[attr-defined]
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle guard enforcement failures
                 pass
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError, OSError, IOError, json.JSONEncodeError):
+            # Handle periodic full snapshot emission failures
             pass
     # Observe latency
     try:
         m = get_metrics()
         if hasattr(m, 'panel_diff_emit_seconds'):
             m.panel_diff_emit_seconds.observe(max(_t.time()-start_time,0.0))  # type: ignore[attr-defined]
-    except Exception:  # pragma: no cover - observational
+    except (AttributeError, TypeError, RuntimeError, OSError):  # pragma: no cover - observational
+        # Handle metric observation or time retrieval failures
         pass
 
 __all__ = ["emit_panel_artifacts"]
