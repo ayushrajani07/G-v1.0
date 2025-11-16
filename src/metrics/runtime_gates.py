@@ -46,13 +46,16 @@ def enforce_runtime_metric_gates(reg: Any) -> None:  # pragma: no cover - thin l
                 if hasattr(reg, attr):
                     try:
                         delattr(reg, attr)
-                    except Exception:
+                    except (AttributeError, TypeError):
+                        # Handle attribute deletion failures
                         pass
                     try:
                         getattr(reg, '_metric_groups', {}).pop(attr, None)
-                    except Exception:
+                    except (AttributeError, TypeError, KeyError):
+                        # Handle missing attributes, type issues, or dict operations
                         pass
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle attribute access or type issues
         pass
 
 
@@ -71,7 +74,8 @@ def late_bind_lazy_metrics(reg: Any) -> None:  # noqa: C901 - retained complexit
                 try:
                     existing.labels(**{l: 'x' for l in labels})
                     return
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
+                    # Handle missing method, type issues, invalid values, or label operation failures
                     needs_replace = True
             try:
                 if needs_replace:
@@ -81,15 +85,18 @@ def late_bind_lazy_metrics(reg: Any) -> None:  # noqa: C901 - retained complexit
                     if coll is not None:
                         try:
                             _R.unregister(coll)
-                        except Exception:
+                        except (ValueError, KeyError):
+                            # Handle collector not registered or already removed
                             pass
                 metric = ctor(prom_name, doc, labels)
                 setattr(reg, attr, metric)
                 try:
                     getattr(reg, '_metric_groups', {})[attr] = 'panel_diff'
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle missing attributes, type issues, or dict operations
                     pass
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle duplicate registration, type issues, or metric creation failures
                 pass
 
         # Panel diff metrics are spec-driven; ensure presence if group allowed and spec registration skipped for any reason.
@@ -110,13 +117,16 @@ def late_bind_lazy_metrics(reg: Any) -> None:  # noqa: C901 - retained complexit
             if hasattr(reg, attr) and attr not in getattr(reg, '_metric_groups', {}) and getattr(reg, '_group_allowed', lambda *_: True)(grp):
                 try:
                     reg._metric_groups[attr] = grp
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle missing attributes, type issues, or dict operations
                     pass
         for attr, grp in list(getattr(reg, '_metric_groups', {}).items()):
             if not getattr(reg, '_group_allowed', lambda *_: True)(grp):
                 try:
                     reg._metric_groups.pop(attr, None)
-                except Exception:
+                except (AttributeError, TypeError, KeyError):
+                    # Handle missing attributes, type issues, or dict operations
                     pass
-    except Exception:
+    except (AttributeError, TypeError, RuntimeError):
+        # Handle attribute access, type issues, or late bind failures
         pass

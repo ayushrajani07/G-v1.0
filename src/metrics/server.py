@@ -43,10 +43,12 @@ def _clear_default_registry() -> None:
         for c in collectors:
             try:
                 REGISTRY.unregister(c)  # type: ignore[arg-type]
-            except Exception:
+            except (ValueError, KeyError):
+                # Handle collector not registered or already removed
                 pass
         logger.info("Prometheus default registry cleared via reset flag")
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle missing registry attributes or type issues
         logger.warning("Registry reset attempt failed; proceeding")
 
 
@@ -82,7 +84,8 @@ def setup_metrics_server(port: int = 9108, host: str = "0.0.0.0", *,
         try:  # ensure central anchor cleared so gating re-evaluates
             from . import _singleton as _sing  # type: ignore
             _sing.clear_singleton()
-        except Exception:
+        except (ImportError, AttributeError):
+            # Handle missing module or attribute
             pass
 
     if use_custom_registry is None:
@@ -113,7 +116,8 @@ def setup_metrics_server(port: int = 9108, host: str = "0.0.0.0", *,
     # module emits static gauges at import time when available. Safe to ignore failures.
     try:  # pragma: no cover - behavior validated via integration
         import src.metrics.generated  # type: ignore  # noqa: F401
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle missing module, attributes, type issues, or import failures
         logger.debug("metrics.generated import failed (non-fatal)", exc_info=True)
 
     # If a custom CollectorRegistry is used, the import above registers into the default
@@ -134,7 +138,8 @@ def setup_metrics_server(port: int = 9108, host: str = "0.0.0.0", *,
                     registry=custom_reg,
                 )
                 _g1.labels(hash=SPEC_HASH).set(1)
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle duplicate registration, type issues, or gauge creation/operation failures
                 logger.debug("seed custom-registry spec hash failed", exc_info=True)
             # Build/config hash (falls back to spec hash if unset)
             try:
@@ -146,9 +151,11 @@ def setup_metrics_server(port: int = 9108, host: str = "0.0.0.0", *,
                     registry=custom_reg,
                 )
                 _g2.labels(hash=_bh).set(1)
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
+                # Handle duplicate registration, type issues, or gauge creation/operation failures
                 logger.debug("seed custom-registry build hash failed", exc_info=True)
-        except Exception:
+        except (ImportError, ValueError, TypeError, RuntimeError):
+            # Handle import errors or gauge creation failures
             logger.debug("custom-registry governance seeding failed", exc_info=True)
 
     # Background threads
@@ -156,12 +163,14 @@ def setup_metrics_server(port: int = 9108, host: str = "0.0.0.0", *,
         try:
             from .resource_sampling import start_resource_sampler as _srs  # type: ignore
             _srs(metrics, sampler_interval, fancy)
-        except Exception:
+        except (ImportError, AttributeError, TypeError, RuntimeError):
+            # Handle missing module, attributes, type issues, or sampler start failures
             logger.debug("start_resource_sampler failed", exc_info=True)
     try:
         from .resource_sampling import start_watchdog as _sw  # type: ignore
         _sw(metrics, sampler_interval)
-    except Exception:
+    except (ImportError, AttributeError, TypeError, RuntimeError):
+        # Handle missing module, attributes, type issues, or watchdog start failures
         logger.debug("start_watchdog failed", exc_info=True)
 
     # Lightweight metadata snapshot (consumed by metrics.get_metrics_metadata)
@@ -174,7 +183,8 @@ def setup_metrics_server(port: int = 9108, host: str = "0.0.0.0", *,
             'custom_registry': bool(use_custom_registry),
             'reset': bool(reset or force_new),
         }
-    except Exception:
+    except (TypeError, ValueError):
+        # Handle type conversion or value errors
         pass
 
     return metrics, (lambda: None)

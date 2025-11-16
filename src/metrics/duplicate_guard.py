@@ -56,14 +56,16 @@ def _ensure_duplicates_gauge(registry: Any):  # pragma: no cover - trivial
     if hasattr(registry, 'metric_duplicates_total'):
         try:
             return registry.metric_duplicates_total  # type: ignore
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle attribute access or type issues
             return None
     try:
         g = Gauge('g6_metric_duplicates_total', 'Count of duplicate metric collector groups detected on initialization')
         # Attach as attribute so tests can access & to avoid re-registration
         registry.metric_duplicates_total = g  # type: ignore[attr-defined]
         return g
-    except Exception:
+    except (ValueError, TypeError, RuntimeError):
+        # Handle duplicate registration, type issues, or gauge creation failures
         return None
 
 
@@ -77,7 +79,8 @@ def check_duplicates(registry: Any) -> dict | None:
             continue
         try:
             obj = getattr(registry, name)
-        except Exception:
+        except (AttributeError, TypeError):
+            # Handle missing attributes or type issues
             continue
         # Determine if object looks like a Prometheus metric first
         metric_like_attrs = (hasattr(obj, '_type') or hasattr(obj, '_name') or hasattr(obj, '_value'))
@@ -147,7 +150,8 @@ def check_duplicates(registry: Any) -> dict | None:
                     break
                 if allowed:
                     continue
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Handle attribute access, type issues, or dict operations
             pass
         duplicates.append({
             'names': names,
@@ -169,7 +173,8 @@ def check_duplicates(registry: Any) -> dict | None:
     if g is not None:
         try:
             g.set(len(duplicates))  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
+            # Handle missing method, type issues, invalid values, or gauge operation failures
             pass
 
     for d in duplicates[:5]:  # cap debug spam
@@ -181,7 +186,8 @@ def check_duplicates(registry: Any) -> dict | None:
         try:
             first_sample = ','.join(duplicates[0]['names']) if duplicates else ''
             sig = (len(duplicates), hash(first_sample))
-        except Exception:
+        except (KeyError, IndexError, TypeError):
+            # Handle missing keys, empty list, or type issues
             sig = (len(duplicates), 0)
         emit_always = _parse_bool(os.getenv('G6_DUPLICATES_ALWAYS_LOG'))
         if emit_always or sig not in _EMITTED_SIGNATURES:
@@ -203,7 +209,8 @@ def check_duplicates(registry: Any) -> dict | None:
                         'dedup_suppressed': not emit_always,
                     }
                 )
-            except Exception:
+            except (KeyError, IndexError, TypeError, AttributeError):
+                # Handle missing keys, empty list, type issues, or logging failures
                 pass
 
     if fail:
@@ -217,7 +224,8 @@ def check_duplicates(registry: Any) -> dict | None:
     }
     try:
         registry._duplicate_metrics_summary = summary  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError):
+        # Handle attribute assignment failures
         pass
     return summary
 
