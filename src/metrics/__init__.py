@@ -563,7 +563,7 @@ __all__ = [
 # eliminate the need for deprecated deep imports in tests).
 # ---------------------------------------------------------------------------
 def _reset_metrics_summary_state():  # pragma: no cover - test-only helper
-	"""Reset one-shot metrics summary emission sentinel if present.
+    """Reset one-shot metrics summary emission sentinel if present.
 
     Older tests performed a deep import of src.metrics.metrics to clear
     the `_G6_METRICS_SUMMARY_EMITTED` flag. That import path is deprecated;
@@ -581,20 +581,5 @@ def _reset_metrics_summary_state():  # pragma: no cover - test-only helper
     except (ImportError, AttributeError):
         # Handle import or module access failures
         pass
-	Older tests performed a deep import of src.metrics.metrics to clear
-	the `_G6_METRICS_SUMMARY_EMITTED` flag. That import path is deprecated;
-	this helper preserves the ability to force a fresh summary emission
-	while allowing tests to remain on the facade.
-	"""
-	try:
-		from . import metrics as _m  # type: ignore
-		if '_G6_METRICS_SUMMARY_EMITTED' in _m.__dict__:
-			try:
-				del _m.__dict__['_G6_METRICS_SUMMARY_EMITTED']
-			except (KeyError, AttributeError):
-				# Handle missing key or attribute
-				pass
-	except (ImportError, AttributeError):
-		# Handle import or module access failures
-		pass
+
 __all__.append('_reset_metrics_summary_state')
