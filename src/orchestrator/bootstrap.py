@@ -49,7 +49,8 @@ setup_metrics_server: Callable[..., Any] | None = None
 try:  # pragma: no cover - optional path if metrics not yet refactored
     from src.metrics import setup_metrics_server as _setup_metrics_server  # facade import
     setup_metrics_server = _setup_metrics_server
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     setup_metrics_server = None
 
 # Use canonical config loader (ConfigWrapper) to avoid depending on legacy unified_main.
@@ -57,11 +58,13 @@ load_config_fn: Callable[[str], Any] | None = None
 try:
     from src.config.loader import load_config as _load_config
     load_config_fn = _load_config
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
+    # Handle missing module or function
     load_config_fn = None
 try:
     from src.unified_main import load_config as _legacy_load_config_import
-except Exception:
+except (ImportError, AttributeError):
+    # Handle missing module or function
     _legacy_load_config_import = None  # type: ignore
 
 
@@ -95,7 +98,8 @@ def run_env_deprecation_scan(*, strict_mode_override: bool | None = None) -> Non
     except RuntimeError:
         # Re-raise strict violation immediately
         raise
-    except Exception:  # pragma: no cover - non-fatal path
+    except (AttributeError, TypeError, KeyError, ValueError):  # pragma: no cover - non-fatal path
+        # Handle config access or parsing failures
         logger.debug("Env lifecycle deprecation scan failed", exc_info=True)
 
 
@@ -141,13 +145,15 @@ def bootstrap_runtime(config_path: str,
                 use_custom_registry=custom_registry,
                 reset=reset_metrics,
             )
-        except Exception:
+        except (OSError, IOError, RuntimeError, AttributeError, TypeError):
+            # Handle server bind, I/O, or initialization failures
             logger.exception("Metrics server initialization failed")
 
     # Build runtime_config snapshot (loop/metrics env) and attach to context
     try:
         rt_cfg = get_runtime_config(refresh=True)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle config retrieval failures
         rt_cfg = None
     ctx = RuntimeContext(config=raw_cfg, runtime_config=rt_cfg, metrics=metrics)
     # Emit deprecation warnings / strict enforcement
@@ -156,7 +162,8 @@ def bootstrap_runtime(config_path: str,
     # G6_VERSION, G6_GIT_COMMIT. Config hash derived from raw config contents.
     try:
         auto_register_build_info(metrics, raw_cfg)
-    except Exception:  # pragma: no cover - non-fatal
+    except (AttributeError, TypeError, RuntimeError):  # pragma: no cover - non-fatal
+        # Handle metric registration failures
         logger.debug("Auto build info registration failed", exc_info=True)
 
     # Component initialization (now default ON). Set G6_DISABLE_COMPONENTS=1 to skip.
@@ -169,7 +176,8 @@ def bootstrap_runtime(config_path: str,
             ctx.providers = providers
             ctx.csv_sink = csv_sink
             ctx.health_monitor = health
-        except Exception:
+        except (ImportError, AttributeError, TypeError, ValueError, RuntimeError, OSError, IOError):
+            # Handle import, initialization, or I/O failures
             logger.exception("Component bootstrap (providers/storage/health) failed; proceeding with partial context")
             # If failure likely due to missing credentials and we are in premarket init window, emit guidance.
             try:
@@ -183,13 +191,15 @@ def bootstrap_runtime(config_path: str,
                         ),
                         nxt,
                     )
-            except Exception:  # pragma: no cover
+            except (AttributeError, TypeError, ValueError, OSError):  # pragma: no cover
+                # Handle market hours check failures
                 pass
     # Start catalog HTTP server if enabled
     if is_truthy_env('G6_CATALOG_HTTP'):
         try:
             start_http_server_in_thread()
-        except Exception:
+        except (OSError, IOError, RuntimeError, AttributeError):
+            # Handle server start failures
             logger.exception("Catalog HTTP server failed to start")
 
     # One-shot orchestrator startup summary (structured + optional human block)
@@ -202,7 +212,8 @@ def bootstrap_runtime(config_path: str,
                 loop_interval = getattr(rt_cfg, 'loop_interval', None)
                 if loop_interval is None and hasattr(raw_cfg, 'raw'):
                     loop_interval = raw_cfg.raw.get('loop', {}).get('interval', None)
-            except Exception:
+            except (AttributeError, TypeError, KeyError):
+                # Handle config access failures
                 loop_interval = None
             # Indices count: attempt to access planned indices list in config (common key patterns)
             indices_count = None
@@ -219,12 +230,14 @@ def bootstrap_runtime(config_path: str,
                         indices_sample = ','.join(str(x) for x in head)
                         if indices_count > 3:
                             indices_sample += ',...'
-            except Exception:
+            except (AttributeError, TypeError, KeyError, ValueError):
+                # Handle config parsing or string conversion failures
                 pass
             # Collector / pipeline flags
             try:
                 pipeline_v2 = int(_is_truthy_env('G6_COLLECTOR_PIPELINE_V2'))
-            except Exception:
+            except (ValueError, TypeError, KeyError):
+                # Handle flag parsing failures
                 pipeline_v2 = 0
             diff_mode = int(_is_truthy_env('G6_SSE_STRUCTURED'))
             structured_sse = diff_mode  # alias for clarity
@@ -242,7 +255,8 @@ def bootstrap_runtime(config_path: str,
                         if getattr(p, 'kite', None) is not None:
                             has_provider_client = 1
                             break
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle provider attribute access failures
                 pass
             # Metrics HTTP server status
             metrics_http = 0
@@ -251,7 +265,8 @@ def bootstrap_runtime(config_path: str,
                     # Look for internal server thread / port attr heuristics
                     if hasattr(metrics, 'server') or hasattr(metrics, 'port'):
                         metrics_http = 1
-            except Exception:
+            except (AttributeError, TypeError):
+                # Handle metrics attribute access failures
                 pass
             # Build info gauge presence heuristic
             build_info_registered = 0
@@ -261,7 +276,8 @@ def bootstrap_runtime(config_path: str,
                     if getattr(fam, 'name', '') == 'g6_build_info':
                         build_info_registered = 1
                         break
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError):
+                # Handle registry import or collection failures
                 pass
             # Overrides count from settings snapshot if already loaded
             overrides_count = 0
@@ -272,7 +288,8 @@ def bootstrap_runtime(config_path: str,
                 quiet_mode = int(bool(getattr(_s, 'quiet_mode', False))) or quiet_mode
                 salvage_enabled = int(bool(getattr(_s, 'salvage_enabled', False))) or salvage_enabled
                 domain_models = int(bool(getattr(_s, 'domain_models', False))) or domain_models
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
+                # Handle settings access or parsing failures
                 pass
             start_ts = int(getattr(ctx, 'start_time', time.time()))
             # Human-readable block first (if requested) so tests capturing single call see both
@@ -300,7 +317,8 @@ def bootstrap_runtime(config_path: str,
                         ],
                         logger
                     )
-                except Exception:
+                except (AttributeError, TypeError, OSError, IOError):
+                    # Handle summary emission failures
                     pass
             logger.info(
                 (
@@ -325,7 +343,8 @@ def bootstrap_runtime(config_path: str,
             )
             try:
                 register_or_note_summary('orchestrator', emitted=True)
-            except Exception:
+            except (AttributeError, TypeError, RuntimeError):
+                # Handle summary registration failures
                 pass
             # JSON variant
             try:
@@ -350,15 +369,18 @@ def bootstrap_runtime(config_path: str,
                             ],
                             logger_override=logger,
                         )
-            except Exception:
+            except (AttributeError, TypeError, OSError, IOError, json.JSONEncodeError):
+                # Handle JSON emission failures
                 pass
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        # Handle summary emission wrapper failures
         pass
     # Force collector settings hydration early so its one-shot summary is emitted under captured logger
     try:
         # If sentinel was cleared by a previous test, re-hydration will emit structured + optional JSON/human summaries
         get_collector_settings(force_reload=True)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError, ImportError):
+        # Handle settings hydration failures
         logger.debug("collector settings early hydration failed", exc_info=True)
     return ctx, metrics_stop
 
@@ -369,7 +391,8 @@ try:  # registration happens at import time (idempotent)
         def _is_deprecated_present(entry) -> bool:
             try:
                 return getattr(entry, 'status', '') == 'deprecated' and bool(EnvConfig.get_str(entry.name, ''))
-            except Exception:
+            except (AttributeError, TypeError, KeyError):
+                # Handle entry attribute or config access failures
                 return False
         present = [entry.name for entry in ENV_LIFECYCLE_REGISTRY if _is_deprecated_present(entry)]
         if not present:
@@ -378,7 +401,8 @@ try:  # registration happens at import time (idempotent)
             if is_truthy_env('G6_ENV_DEPRECATIONS_SUMMARY_JSON'):
                 try:
                     emit_summary_json('env.deprecations', [('count', 0)], logger_override=logging.getLogger(__name__))
-                except Exception:
+                except (AttributeError, TypeError, OSError, IOError, json.JSONEncodeError):
+                    # Handle JSON emission failures
                     pass
             return True
         log = logging.getLogger(__name__)
@@ -390,13 +414,15 @@ try:  # registration happens at import time (idempotent)
                     [('count', len(present)), ('names', present)],
                     logger_override=log,
                 )
-            except Exception:
+            except (AttributeError, TypeError, OSError, IOError, json.JSONEncodeError):
+                # Handle JSON emission failures
                 pass
         return True
     # Ensure callable registered for dispatcher emission + mark not yet emitted
     register_summary('env.deprecations', _emit_deprecated_env_summary)
     register_or_note_summary('env.deprecations', emitted=False)
-except Exception:
+except (AttributeError, TypeError, RuntimeError, ImportError):
+    # Handle summary registration failures
     pass
 
 __all__ = ["bootstrap_runtime", "run_env_deprecation_scan"]
