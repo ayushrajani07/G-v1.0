@@ -1180,7 +1180,8 @@ async def api_ml_forecast_path(index: str, horizon: int = 60, quantiles: str = '
         return PlainTextResponse('\n'.join([header] + rows))
     try:
         root = _paths_core.project_root() / 'data' / 'g6_data'
-    except Exception:
+    except (AttributeError, OSError, TypeError):
+        # Path resolution error
         root = Path('data/g6_data')
     try:
         cfg = CompositeConfig(root=root, window=60, k=15, min_days=3)

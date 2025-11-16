@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Optional centralized error handler (guarded import)
 try:  # pragma: no cover
     from src.error_handling import get_error_handler as _get_eh, ErrorCategory as _ErrCat, ErrorSeverity as _ErrSev  # type: ignore
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     _get_eh = None  # type: ignore
     class _ErrCat:  # type: ignore
         FILE_IO = "file_io"
@@ -45,12 +45,14 @@ def _project_root() -> Path:
             p = Path(env_root)
             if p.exists():
                 return p
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError):
+        # Value conversion, type, key, or attribute errors
         pass
     try:
         # If tests monkeypatch _paths.project_root, we pick it up here
         return _paths.project_root()
-    except Exception:
+    except (AttributeError, OSError):
+        # Path resolution error
         cwd = Path.cwd()
         if (cwd / "data").exists():
             return cwd
@@ -62,7 +64,8 @@ def _resolve_live_csv_path(idx_norm: str, expiry_tag: str, offset: str, day: _dt
     p = None
     try:
         p = _find_live_csv(base, idx_norm, expiry_tag, offset, day)
-    except Exception:
+    except (OSError, ValueError, AttributeError):
+        # File search error
         p = None
     if p and p.exists():
         return p
@@ -76,7 +79,8 @@ def _resolve_live_csv_path(idx_norm: str, expiry_tag: str, offset: str, day: _dt
             flat2 = base / f"{idx_norm}_{expiry_tag}_+{offset}.csv"
             if flat2.exists():
                 return flat2
-    except Exception:
+    except (ValueError, TypeError, KeyError, AttributeError):
+        # Value conversion, type, key, or attribute errors
         pass
     return None
 
@@ -152,8 +156,8 @@ async def api_ml_predictions(
                     # ISO string without microseconds for Grafana friendliness
                     try:
                         iso_str = ts.to_pydatetime().replace(microsecond=0).isoformat()
-                    except Exception:
-                        iso_str = str(ts)
+                    except (AttributeError, TypeError):
+                        iso_str = str(ts)  # Attribute or type error
                     # rebuild row without old 'time' if it existed
                     if has_time:
                         # remove the original 'time' column value by constructing via selected columns
@@ -167,7 +171,8 @@ async def api_ml_predictions(
                 rows = out_lines[1:]
                 cols = new_cols
                 created_time = True
-            except Exception:
+            except (ImportError, AttributeError, ValueError, KeyError):
+                # Pandas import or data processing error
                 created_time = False
             # Fallback without pandas: try common formats
             if not created_time:
@@ -181,7 +186,8 @@ async def api_ml_predictions(
                         try:
                             dt = datetime.strptime(s, fmt)
                             return int(dt.timestamp() * 1000)
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid numeric conversion or type error
                             continue
                     # Try integer seconds
                     try:
@@ -190,7 +196,8 @@ async def api_ml_predictions(
                             if len(s) >= 13:
                                 return int(s[:13])
                             return int(int(s) * 1000)
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        # Value conversion, type, key, or attribute errors
                         pass
                     return None
 
@@ -226,8 +233,8 @@ async def api_ml_predictions(
                 idx_model = cols.index("model")
                 idx_index = cols.index("index")  # noqa: F841
                 idx_hor = cols.index("horizon")
-            except Exception:
-                # Malformed header; return unfiltered
+            except (ValueError, KeyError, IndexError):
+                # Malformed header; return unfiltered  # Value, key, or index error
                 out.extend(rows)
                 return PlainTextResponse("\n".join(out), media_type="text/csv")
 
@@ -255,14 +262,16 @@ async def api_ml_predictions(
                             try:
                                 dt = _dt.datetime.strptime(s.strip(), fmt)
                                 return int(dt.timestamp() * 1000)
-                            except Exception:
+                            except (ValueError, TypeError):
+                                # Invalid numeric conversion or type error
                                 continue
                         s2 = s.strip()
                         if s2.isdigit():
                             if len(s2) >= 13:
                                 return int(s2[:13])
                             return int(s2) * 1000
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        # Value conversion, type, key, or attribute errors
                         pass
                     return None
 
@@ -270,8 +279,8 @@ async def api_ml_predictions(
                 try:
                     ts_idx = cols.index("timestamp")
                     pred_idx = cols.index("prediction")
-                except Exception:
-                    ts_idx = -1
+                except (ValueError, IndexError):
+                    ts_idx = -1  # Column not found
                     pred_idx = -1
 
                 now_ms = int(_dt.datetime.now(tz=_dt.timezone.utc).timestamp() * 1000)
@@ -289,8 +298,8 @@ async def api_ml_predictions(
                     bucket = (ems // bucket_ms) * bucket_ms
                     try:
                         pv = float(parts[pred_idx]) if pred_idx >= 0 else None
-                    except Exception:
-                        pv = None
+                    except (ValueError, TypeError):
+                        pv = None  # Invalid numeric conversion
                     if pv is None:
                         continue
                     pred_by_bucket[bucket] = pv
@@ -300,14 +309,16 @@ async def api_ml_predictions(
                 try:
                     from datetime import date as _date
                     p = _resolve_live_csv_path(idx_norm, expiry_tag, offset, _date.today())
-                except Exception:
+                except (ImportError, OSError, ValueError):
+                    # Import or file system error
                     p = None
                 if p and p.exists():
                     live_rows = _load_csv_rows_full(p)
                     for row in live_rows:
                         try:
                             ems = int(row.get("ts") or row.get("time") or 0)
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid numeric conversion or type error
                             continue
                         if not ems or ems < cutoff_ms:
                             continue
@@ -346,8 +357,8 @@ async def api_ml_predictions(
                     # Append band columns based on current prediction value
                     try:
                         pred_val = float(parts[cols.index("prediction")])
-                    except Exception:
-                        pred_val = None
+                    except (ValueError, TypeError):
+                        pred_val = None  # Invalid numeric conversion
                     if pred_val is not None:
                         br = float(band_radius)  # type: ignore[arg-type]
                         out.append(r + f",{pred_val - br:.6f},{pred_val + br:.6f}")
@@ -408,14 +419,16 @@ async def api_ml_ensemble(
                         try:
                             dt = _dt_dt.strptime(s.strip(), fmt)
                             return int(dt.timestamp() * 1000)
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid numeric conversion or type error
                             continue
                     s2 = s.strip()
                     if s2.isdigit():
                         if len(s2) >= 13:
                             return int(s2[:13])
                         return int(s2) * 1000
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError):
+                    # Value conversion, type, key, or attribute errors
                     pass
                 return None
 
@@ -444,8 +457,8 @@ async def api_ml_ensemble(
         if horizon or (not include_placeholders):
             try:
                 idx_hor = cols.index("horizon")
-            except Exception:
-                # if malformed header, just return unfiltered
+            except (ValueError, KeyError, IndexError):
+                # if malformed header, just return unfiltered  # Value, key, or index error
                 return PlainTextResponse("\n".join([header, *rows]), media_type="text/csv")
             filtered = []
             for r in rows:
@@ -457,7 +470,8 @@ async def api_ml_ensemble(
                         src_idx = cols.index("applied_k_source") if "applied_k_source" in cols else -1
                         if src_idx >= 0 and len(parts) > src_idx and parts[src_idx] == "placeholder":
                             continue
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        # Value conversion, type, key, or attribute errors
                         pass
                 filtered.append(r)
             rows = filtered
@@ -501,8 +515,8 @@ async def api_ml_ensemble_weights(
         for k, v in weights.items():
             try:
                 norm_weights[str(k)] = float(v)
-            except Exception:
-                norm_weights[str(k)] = 0.0
+            except (AttributeError, TypeError):
+                norm_weights[str(k)] = 0.0  # Attribute or type error
         # Build CSV
         out = ["timestamp,model,weight,rmse,index,horizon"]
         # Sort by weight desc for readability (stable tie-breaker by model name)
@@ -511,13 +525,15 @@ async def api_ml_ensemble_weights(
             w = norm_weights.get(m, 0.0)
             try:
                 r = float(rmses.get(m) or 0.0)
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 r = 0.0
             out.append(f"{ts},{m},{w:.6f},{r:.6f},{idx_norm},{horizon}")
         try:
             # Temporary debug (now via logging): CSV for inspection in tests
             logger.info("%s", "\n".join(out))
-        except Exception:
+        except (ValueError, TypeError, KeyError, AttributeError):
+            # Value conversion, type, key, or attribute errors
             pass
         return PlainTextResponse("\n".join(out), media_type="text/csv")
     except HTTPException:
@@ -585,7 +601,8 @@ async def api_ml_ensemble_quarantine_log(
                 if row.startswith("timestamp,event,model"):
                     continue
                 valid_rows.append(row)
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 continue
         # Apply tail after filtering valid rows
         if tail and len(valid_rows) > tail:
@@ -641,8 +658,8 @@ async def api_ml_ensemble_k_calibration(
         if k_smooth is not None:
             try:
                 k_smooth_str = f"{float(k_smooth):.2f}"
-            except Exception:
-                k_smooth_str = str(k_smooth)
+            except (AttributeError, TypeError):
+                k_smooth_str = str(k_smooth)  # Attribute or type error
         else:
             k_smooth_str = ""
         row = f"{ts},{rec_k},{k_smooth_str},{eff_cov},{band_radius},{target},{side_index},{side_horizon},{n}"
@@ -685,8 +702,8 @@ async def api_ml_ensemble_k_applied(
             rad_idx = header.index("scaled_radius")
             idx_idx = header.index("index")
             hor_idx = header.index("horizon")
-        except Exception:
-            # If columns missing, return only header
+        except (ValueError, KeyError, IndexError):
+            # If columns missing, return only header  # Value, key, or index error
             return PlainTextResponse("timestamp,applied_k,applied_k_source,scaled_radius,index,horizon\n", media_type="text/csv")
         data = lines[1:]
         if horizon is not None:
@@ -701,7 +718,8 @@ async def api_ml_ensemble_k_applied(
             if not include_placeholders:
                 try:
                     src_val = parts[src_idx]
-                except Exception:
+                except (IndexError, KeyError):
+                    # Column index error
                     src_val = ""
                 if src_val == "placeholder":
                     continue
@@ -754,7 +772,8 @@ async def api_ml_ensemble_k_override(
         if fp.exists():
             try:
                 obj = _json.loads(fp.read_text(encoding="utf-8")) or {"overrides": {}}
-            except Exception:
+            except (json.JSONDecodeError, OSError, ValueError):
+                # JSON parsing or file read error
                 obj = {"overrides": {}}
         now_ms = int(_time.time() * 1000)
         exp = None
@@ -765,7 +784,8 @@ async def api_ml_ensemble_k_override(
         try:
             if request is not None and request.client is not None:  # defensive; request is required
                 src_ip = str(request.client.host)
-        except Exception:
+        except (AttributeError, TypeError):
+            # Request client attribute error
             src_ip = None
         meta = {
             "k": float(payload.k),
@@ -791,7 +811,8 @@ async def api_ml_ensemble_k_override(
                         message="Failed to persist ensemble k override JSON",
                         context={"path": str(fp)},
                     )
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Value conversion, type, key, or attribute errors
                 pass
         # Append audit log
         try:
@@ -825,7 +846,8 @@ async def api_ml_ensemble_k_override(
                         message="Failed to append ensemble k override audit log",
                         context={"path": str(base)},
                     )
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Value conversion, type, key, or attribute errors
                 pass
         return PlainTextResponse("ok\n", media_type="text/plain")
     except Exception as e:
@@ -852,13 +874,14 @@ async def api_ml_ensemble_k_overrides(
             return PlainTextResponse("\n".join(out) + "\n", media_type="text/csv")
         try:
             obj = _json.loads(fp.read_text(encoding="utf-8")) or {"overrides": {}}
-        except Exception:
-            return PlainTextResponse("\n".join(out) + "\n", media_type="text/csv")
+        except (ValueError, KeyError, IndexError):
+            return PlainTextResponse("\n".join(out) + "\n", media_type="text/csv")  # Value, key, or index error
         ovs = obj.get("overrides") or {}
         for h, meta in sorted(ovs.items(), key=lambda kv: str(kv[0])):
             try:
                 k = float(meta.get("k")) if isinstance(meta.get("k"), (int, float)) else ""
-            except Exception:
+            except (ValueError, TypeError):
+                # Numeric conversion error
                 k = ""
             exp = meta.get("expires") if isinstance(meta.get("expires"), (int, float)) else ""
             created = meta.get("created") if isinstance(meta.get("created"), (int, float)) else ""
@@ -870,7 +893,8 @@ async def api_ml_ensemble_k_overrides(
             try:
                 if isinstance(reason, str):
                     reason = reason.replace(",", ";")
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Value conversion, type, key, or attribute errors
                 pass
             out.append(f"{h},{k},{exp},{created},{actor},{reason},{cls},{src_ip},{idx_norm}")
         return PlainTextResponse("\n".join(out) + "\n", media_type="text/csv")
@@ -917,7 +941,8 @@ async def api_ml_delta(
             pred_idx = cols.index("prediction")
             mdl_idx = cols.index("model")
             hor_idx = cols.index("horizon")
-        except Exception:
+        except (ValueError, IndexError):
+            # Column not found in CSV header
             raise HTTPException(status_code=500, detail="malformed predictions CSV header")
 
         def _to_epoch_ms(s: str) -> int | None:
@@ -927,7 +952,8 @@ async def api_ml_delta(
                     try:
                         dt = _dt.datetime.strptime(s.strip(), fmt)
                         return int(dt.timestamp() * 1000)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         continue
                 # Fallback: integer seconds or ms
                 s2 = s.strip()
@@ -935,7 +961,8 @@ async def api_ml_delta(
                     if len(s2) >= 13:
                         return int(s2[:13])
                     return int(s2) * 1000
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Value conversion, type, key, or attribute errors
                 pass
             return None
 
@@ -952,7 +979,8 @@ async def api_ml_delta(
             bucket = (ems // bucket_ms) * bucket_ms
             try:
                 pred_val = float(parts[pred_idx])
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 continue
             pred_by_bucket[bucket] = pred_val  # keep last in bucket
 
@@ -969,7 +997,8 @@ async def api_ml_delta(
         for row in live_rows[-max(tail * 2, 100):]:
             try:
                 ems = int(row.get("ts") or row.get("time") or 0)
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 continue
             if not ems:
                 continue
@@ -1056,9 +1085,11 @@ async def api_ml_correlations(
                     for r in rows[:200]:
                         try:
                             keys.update(r.keys())
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid numeric conversion or type error
                             continue
-                except Exception:
+                except (AttributeError, ValueError, KeyError):
+                    # Dict key access or attribute error
                     keys = set()
                 use_cols = sorted([
                     k for k in keys if k not in {"time", "ts", "time_str", "time_epoch_s"}
@@ -1074,7 +1105,8 @@ async def api_ml_correlations(
         for r in rows:
             try:
                 ems = int(r.get("ts") or r.get("time") or 0)
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 continue
             if not ems or ems < cutoff_ms:
                 continue
@@ -1139,8 +1171,8 @@ async def api_ml_correlations(
                 if var_x <= 0 or var_y <= 0:
                     return float("nan"), n
                 return cov / math.sqrt(var_x * var_y), n
-            except Exception:
-                return float("nan"), 0
+            except (ValueError, KeyError, IndexError):
+                return float("nan"), 0  # Value, key, or index error
 
         cols_eff = present_cols
         if format.lower() == "wide":
@@ -1207,14 +1239,16 @@ async def api_ml_model_matrix(
                     try:
                         dt = _dt.datetime.strptime(s.strip(), fmt)
                         return int(dt.timestamp() * 1000)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         continue
                 s2 = s.strip()
                 if s2.isdigit():
                     if len(s2) >= 13:
                         return int(s2[:13])
                     return int(s2) * 1000
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Value conversion, type, key, or attribute errors
                 pass
             return None
 
@@ -1232,8 +1266,8 @@ async def api_ml_model_matrix(
                 if var_x <= 0 or var_y <= 0:
                     return float("nan")
                 return cov / math.sqrt(var_x * var_y)
-            except Exception:
-                return float("nan")
+            except (ValueError, KeyError, IndexError):
+                return float("nan")  # Value, key, or index error
 
         def _slope_per_hr(ts_ms: list[int], vals: list[float]) -> float:
             try:
@@ -1248,8 +1282,8 @@ async def api_ml_model_matrix(
                     return float(0.0)
                 numer = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, vals))
                 return numer / denom
-            except Exception:
-                return float("nan")
+            except (ValueError, KeyError, IndexError):
+                return float("nan")  # Value, key, or index error
 
         # Build header
         out = [
@@ -1296,7 +1330,8 @@ async def api_ml_model_matrix(
                     # compact summary: key1=val1;key2=val2
                     try:
                         params_summary = ";".join(f"{k}={v}" for k, v in list(params.items())[:8])
-                    except Exception:
+                    except (ValueError, AttributeError, TypeError):
+                        # Dict iteration or string formatting error
                         params_summary = ""
 
                 # Sidecar used_features
@@ -1315,14 +1350,16 @@ async def api_ml_model_matrix(
                             sc_guess = art_path.parent / (art_path.name + ".fe.json")
                             if sc_guess.exists():
                                 sidecar = sc_guess
-                        except Exception:
+                        except (ValueError, TypeError, KeyError, AttributeError):
+                            # Value conversion, type, key, or attribute errors
                             pass
                     if sidecar and sidecar.exists():
                         try:
                             sc = _json.loads(sidecar.read_text(encoding="utf-8"))
                             used_features = list(sc.get("used_features") or [])
                             used_features_count = len(used_features)
-                        except Exception:
+                        except (KeyError, AttributeError, TypeError):
+                            # Dict access or attribute error
                             used_features_count = 0
 
                 # Diagnostics (window)
@@ -1344,8 +1381,8 @@ async def api_ml_model_matrix(
                             pred_idx = cols.index("prediction")
                             mdl_idx = cols.index("model")
                             hor_idx = cols.index("horizon")
-                        except Exception:
-                            ts_idx = pred_idx = mdl_idx = hor_idx = -1
+                        except (ValueError, IndexError):
+                            ts_idx = pred_idx = mdl_idx = hor_idx = -1  # Column not found
                         for r in lines[-5000:]:
                             parts = r.split(",")
                             if ts_idx < 0 or len(parts) <= max(ts_idx, pred_idx, mdl_idx, hor_idx):
@@ -1358,7 +1395,8 @@ async def api_ml_model_matrix(
                             bucket = (ems // bucket_ms) * bucket_ms
                             try:
                                 pv = float(parts[pred_idx])
-                            except Exception:
+                            except (ValueError, TypeError):
+                                # Invalid numeric conversion or type error
                                 continue
                             preds_map[bucket] = pv
 
@@ -1371,7 +1409,8 @@ async def api_ml_model_matrix(
                     for row in live_rows:
                         try:
                             ems = int(row.get("ts") or row.get("time") or 0)
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid numeric conversion or type error
                             continue
                         if not ems or ems < cutoff_ms:
                             continue
@@ -1547,7 +1586,8 @@ async def api_ml_diagnostics(
                     pred_idx = cols.index("prediction")
                     mdl_idx = cols.index("model")
                     hor_idx = cols.index("horizon")
-                except Exception:
+                except (ValueError, IndexError):
+                    # Column not found in CSV header
                     # If primary file exists but malformed, treat as no rows
                     rows = []
                     cols = []
@@ -1565,14 +1605,16 @@ async def api_ml_diagnostics(
                     try:
                         dt = _dt.datetime.strptime(s.strip(), fmt)
                         return int(dt.timestamp() * 1000)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         continue
                 s2 = s.strip()
                 if s2.isdigit():
                     if len(s2) >= 13:
                         return int(s2[:13])
                     return int(s2) * 1000
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Value conversion, type, key, or attribute errors
                 pass
             return None
 
@@ -1594,13 +1636,14 @@ async def api_ml_diagnostics(
                         h_cols = h_lines[0].split(",")
                         try:
                             h_mdl_idx = h_cols.index("model")
-                        except Exception:
-                            h_mdl_idx = -1
+                        except (ValueError, IndexError):
+                            h_mdl_idx = -1  # Column not found
                         for r in h_lines[-500:]:
                             parts = r.split(",")
                             if h_mdl_idx >= 0 and len(parts) > h_mdl_idx:
                                 include_models.add(parts[h_mdl_idx])
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError):
+                    # Value conversion, type, key, or attribute errors
                     pass
         # Ensure hybrid model can be requested even if not discovered from primary file
         if model and model == "sk_hgb_residual":
@@ -1628,7 +1671,8 @@ async def api_ml_diagnostics(
             bucket = (ems // bucket_ms) * bucket_ms
             try:
                 pv = float(parts[pred_idx])
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 continue
             preds_map[mname][bucket] = pv
         # Hybrid predictions (also capture baseline/residual if present)
@@ -1646,8 +1690,8 @@ async def api_ml_diagnostics(
                         h_hor_idx = h_cols.index("horizon")
                         h_base_idx = h_cols.index("baseline") if "baseline" in h_cols else -1
                         h_resid_idx = h_cols.index("residual") if "residual" in h_cols else -1
-                    except Exception:
-                        h_ts_idx = h_pred_idx = h_mdl_idx = h_hor_idx = -1
+                    except (ValueError, IndexError):
+                        h_ts_idx = h_pred_idx = h_mdl_idx = h_hor_idx = -1  # Column not found
                         h_base_idx = h_resid_idx = -1
                     for r in h_lines[-max(5000, window_minutes * 4) :]:
                         parts = r.split(",")
@@ -1667,20 +1711,24 @@ async def api_ml_diagnostics(
                         bucket = (ems // bucket_ms) * bucket_ms
                         try:
                             pv = float(parts[h_pred_idx])
-                        except Exception:
+                        except (ValueError, TypeError):
+                            # Invalid numeric conversion or type error
                             continue
                         preds_map[mname][bucket] = pv
                         if h_base_idx >= 0 and len(parts) > h_base_idx:
                             try:
                                 hybrid_baseline_by_bucket[bucket] = float(parts[h_base_idx])
-                            except Exception:
+                            except (ValueError, TypeError, KeyError, AttributeError):
+                                # Value conversion, type, key, or attribute errors
                                 pass
                         if h_resid_idx >= 0 and len(parts) > h_resid_idx:
                             try:
                                 hybrid_residual_by_bucket[bucket] = float(parts[h_resid_idx])
-                            except Exception:
+                            except (ValueError, TypeError, KeyError, AttributeError):
+                                # Value conversion, type, key, or attribute errors
                                 pass
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Value conversion, type, key, or attribute errors
                 pass
 
         # Load tp from live_csv
@@ -1693,7 +1741,8 @@ async def api_ml_diagnostics(
         for row in live_rows:
             try:
                 ems = int(row.get("ts") or row.get("time") or 0)
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 continue
             if not ems or ems < cutoff_ms:
                 continue
@@ -1702,15 +1751,16 @@ async def api_ml_diagnostics(
             tp_raw = row.get("tp")
             try:
                 tp_val = float(tp_raw) if tp_raw is not None else None
-            except Exception:
-                tp_val = None
+            except (ValueError, TypeError):
+                tp_val = None  # Invalid numeric conversion
             if isinstance(tp_val, (int, float)):
                 tp_by_bucket[bucket] = float(tp_val)
 
         # If no overlap between predictions and tp within the time window, do a permissive fallback scan
         try:
             joined_any = any(set(pmap.keys()) & set(tp_by_bucket.keys()) for pmap in preds_map.values())
-        except Exception:
+        except (AttributeError, TypeError, KeyError):
+            # Dict access or attribute error
             joined_any = False
         # Prepare simple sequence-aligned fallbacks (by order) if needed
         seq_pred_by_model: dict[str, list[float]] = {}
@@ -1738,7 +1788,8 @@ async def api_ml_diagnostics(
                 b = (ems // bucket_ms) * bucket_ms
                 try:
                     pv = float(parts[pred_idx])
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     continue
                 preds_map[mname][b] = pv
             # Hybrid (no cutoff)
@@ -1754,8 +1805,8 @@ async def api_ml_diagnostics(
                             h_hor_idx = h_cols.index("horizon")
                             h_base_idx = h_cols.index("baseline") if "baseline" in h_cols else -1
                             h_resid_idx = h_cols.index("residual") if "residual" in h_cols else -1
-                        except Exception:
-                            h_ts_idx = h_pred_idx = h_mdl_idx = h_hor_idx = -1
+                        except (ValueError, IndexError):
+                            h_ts_idx = h_pred_idx = h_mdl_idx = h_hor_idx = -1  # Column not found
                             h_base_idx = h_resid_idx = -1
                         hybrid_baseline_by_bucket.clear()
                         hybrid_residual_by_bucket.clear()
@@ -1775,27 +1826,32 @@ async def api_ml_diagnostics(
                             b = (ems // bucket_ms) * bucket_ms
                             try:
                                 pv = float(parts[h_pred_idx])
-                            except Exception:
+                            except (ValueError, TypeError):
+                                # Invalid numeric conversion or type error
                                 continue
                             preds_map[mname][b] = pv
                             if h_base_idx >= 0 and len(parts) > h_base_idx:
                                 try:
                                     hybrid_baseline_by_bucket[b] = float(parts[h_base_idx])
-                                except Exception:
+                                except (ValueError, TypeError, KeyError, AttributeError):
+                                    # Value conversion, type, key, or attribute errors
                                     pass
                             if h_resid_idx >= 0 and len(parts) > h_resid_idx:
                                 try:
                                     hybrid_residual_by_bucket[b] = float(parts[h_resid_idx])
-                                except Exception:
+                                except (ValueError, TypeError, KeyError, AttributeError):
+                                    # Value conversion, type, key, or attribute errors
                                     pass
-                except Exception:
+                except (ValueError, TypeError, KeyError, AttributeError):
+                    # Value conversion, type, key, or attribute errors
                     pass
             # TP without cutoff (also collect sequence)
             tp_by_bucket = {}
             for row in live_rows:
                 try:
                     ems = int(row.get("ts") or row.get("time") or 0)
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     continue
                 if not ems:
                     continue
@@ -1803,8 +1859,8 @@ async def api_ml_diagnostics(
                 tp_raw = row.get("tp")
                 try:
                     tp_val = float(tp_raw) if tp_raw is not None else None
-                except Exception:
-                    tp_val = None
+                except (ValueError, TypeError):
+                    tp_val = None  # Invalid numeric conversion
                 if isinstance(tp_val, (int, float)):
                     tp_by_bucket[b] = float(tp_val)
                     seq_tp.append(float(tp_val))
@@ -1823,7 +1879,8 @@ async def api_ml_diagnostics(
                     continue
                 try:
                     pv = float(parts[pred_idx])
-                except Exception:
+                except (ValueError, TypeError):
+                    # Invalid numeric conversion or type error
                     continue
                 seq_pred_by_model.setdefault(mname, []).append(pv)
             # Hybrid sequence
@@ -1838,8 +1895,8 @@ async def api_ml_diagnostics(
                             h_hor_idx = h_cols.index("horizon")
                             h_base_idx = h_cols.index("baseline") if "baseline" in h_cols else -1
                             h_resid_idx = h_cols.index("residual") if "residual" in h_cols else -1
-                        except Exception:
-                            h_pred_idx = h_mdl_idx = h_hor_idx = -1
+                        except (ValueError, IndexError):
+                            h_pred_idx = h_mdl_idx = h_hor_idx = -1  # Column not found
                             h_base_idx = h_resid_idx = -1
                         for r in h_lines[1:]:
                             parts = r.split(",")
@@ -1852,21 +1909,24 @@ async def api_ml_diagnostics(
                                 continue
                             try:
                                 pv = float(parts[h_pred_idx])
-                            except Exception:
-                                pv = None
+                            except (ValueError, TypeError):
+                                pv = None  # Invalid numeric conversion
                             if pv is not None:
                                 seq_pred_by_model.setdefault(mname, []).append(pv)
                             if h_base_idx >= 0 and len(parts) > h_base_idx:
                                 try:
                                     seq_hybrid_baseline.append(float(parts[h_base_idx]))
-                                except Exception:
+                                except (ValueError, TypeError, KeyError, AttributeError):
+                                    # Value conversion, type, key, or attribute errors
                                     pass
                             if h_resid_idx >= 0 and len(parts) > h_resid_idx:
                                 try:
                                     seq_hybrid_residual.append(float(parts[h_resid_idx]))
-                                except Exception:
+                                except (ValueError, TypeError, KeyError, AttributeError):
+                                    # Value conversion, type, key, or attribute errors
                                     pass
-                except Exception:
+                except (ValueError, KeyError, AttributeError, TypeError):
+                    # Value, key, attribute, or type errors
                     # If hybrid sequence parsing fails, fall back silently; diagnostics can proceed without it
                     pass
 
@@ -1904,13 +1964,15 @@ async def api_ml_diagnostics(
                     b = (ems // bucket_ms) * bucket_ms
                     try:
                         pv = float(parts[pred_idx])
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         continue
                     vals_by_bucket.setdefault(b, []).append(pv)
                 # Compute std per bucket
                 try:
                     import math
-                except Exception:
+                except ImportError:
+                    # Math module import error
                     math = None  # type: ignore
                 for b, vs in vals_by_bucket.items():
                     if len(vs) >= 2:
@@ -1920,7 +1982,8 @@ async def api_ml_diagnostics(
                             dis_by_bucket[b] = (var ** 0.5)
                         else:
                             dis_by_bucket[b] = 0.0
-            except Exception:
+            except (ValueError, KeyError, TypeError, ZeroDivisionError):
+                # Value, key, type errors or division by zero
                 dis_by_bucket = {}
 
         # Optional: compute move stats once for window and reuse per row
@@ -1938,8 +2001,8 @@ async def api_ml_diagnostics(
                             mv_lbl = cols_mv.index("move_label_pred")
                             mv_mag = cols_mv.index("conditional_magnitude")
                             mv_hor = cols_mv.index("horizon")
-                        except Exception:
-                            mv_ts = mv_prob = mv_lbl = mv_mag = mv_hor = -1
+                        except (ValueError, IndexError):
+                            mv_ts = mv_prob = mv_lbl = mv_mag = mv_hor = -1  # Column not found
                         now_ms_mv = int(_dt.datetime.now(tz=_dt.timezone.utc).timestamp() * 1000)
                         cutoff_mv = now_ms_mv - window_minutes * 60_000
                         probs: list[float] = []
@@ -1964,26 +2027,29 @@ async def api_ml_diagnostics(
                                         dt = _dt.datetime.strptime(s, fmt)
                                         ems = int(dt.timestamp() * 1000)
                                         break
-                                    except Exception:
+                                    except (ValueError, TypeError):
+                                        # Invalid numeric conversion or type error
                                         continue
                                 if ems is None and s.isdigit():
                                     ems = int(s[:13]) if len(s) >= 13 else int(s) * 1000
-                            except Exception:
+                            except (ValueError, TypeError, IndexError):
+                                # Invalid time format or type error
                                 ems = None
                             if ems is None or ems < cutoff_mv:
                                 continue
                             try:
                                 p = float(parts[mv_prob])
-                            except Exception:
-                                p = None  # type: ignore
+                            except (ValueError, TypeError):
+                                p = None  # type: ignore  # Invalid numeric conversion
                             try:
                                 lbl = int(parts[mv_lbl])
-                            except Exception:
+                            except (ValueError, TypeError, IndexError):
+                                # Invalid numeric conversion or index error
                                 lbl = 0
                             try:
                                 mag = float(parts[mv_mag])
-                            except Exception:
-                                mag = None  # type: ignore
+                            except (ValueError, TypeError):
+                                mag = None  # type: ignore  # Invalid numeric conversion
                             total += 1
                             if isinstance(p, (int, float)):
                                 probs.append(float(p))
@@ -2018,7 +2084,8 @@ async def api_ml_diagnostics(
                             (f"{last_prob:.4f}" if isinstance(last_prob, (int, float)) else ""),
                             (f"{last_mag:.4f}" if isinstance(last_mag, (int, float)) else ""),
                         ]
-            except Exception:
+            except (ValueError, KeyError, IndexError, TypeError):
+                # Value, key, index, or type errors
                 move_stats_row = None
 
         def _corr(xs: list[float], ys: list[float]) -> float:
@@ -2035,8 +2102,8 @@ async def api_ml_diagnostics(
                 if var_x <= 0 or var_y <= 0:
                     return float("nan")
                 return cov / math.sqrt(var_x * var_y)
-            except Exception:
-                return float("nan")
+            except (ValueError, KeyError, IndexError):
+                return float("nan")  # Value, key, or index error
 
         def _slope_per_hr(ts_ms: list[int], vals: list[float]) -> float:
             # simple OLS slope (units per hour)
@@ -2052,8 +2119,8 @@ async def api_ml_diagnostics(
                     return float(0.0)
                 numer = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, vals))
                 return numer / denom
-            except Exception:
-                return float("nan")
+            except (ValueError, KeyError, IndexError):
+                return float("nan")  # Value, key, or index error
 
         for mname, pmap in preds_map.items():
             keys = sorted(set(pmap.keys()) & set(tp_by_bucket.keys()))
@@ -2117,7 +2184,8 @@ async def api_ml_diagnostics(
                                     try:
                                         if b_rmse and h_rmse and h_rmse > 0:
                                             ratio = b_rmse / h_rmse
-                                    except Exception:
+                                    except (ValueError, TypeError, ZeroDivisionError):
+                                        # Value error, type error, or division by zero
                                         ratio = None
                                     try:
                                         logger.debug(
@@ -2132,7 +2200,8 @@ async def api_ml_diagnostics(
                                                 "ratio": ratio,
                                             },
                                         )
-                                    except Exception:
+                                    except (ValueError, TypeError, KeyError, AttributeError):
+                                        # Value conversion, type, key, or attribute errors
                                         pass
                                     row_parts.extend([
                                         (f"{b_rmse:.4f}" if isinstance(b_rmse, (int, float)) and b_rmse == b_rmse else ""),
@@ -2155,11 +2224,13 @@ async def api_ml_diagnostics(
                                 # Debug fallback hybrid diagnostics row (temporary instrumentation)
                                 if mname == "sk_hgb_residual":
                                     logger.debug("DEBUG_DIAG_FALLBACK_ROW %s", row_parts)
-                            except Exception:
+                            except (ValueError, TypeError, KeyError, AttributeError):
+                                # Value conversion, type, key, or attribute errors
                                 pass
                             out.append(",".join(row_parts))
                             continue
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        # Value conversion, type, key, or attribute errors
                         pass
                 # Build a row; attempt last-chance sequence-aligned metrics even if earlier guard failed
                 seq_mae = seq_rmse = None
@@ -2195,7 +2266,8 @@ async def api_ml_diagnostics(
                             seq_last_pred = xs[-1]
                             seq_last_tp = ys[-1]
                             seq_last_delta = seq_last_pred - seq_last_tp
-                    except Exception:
+                    except (ValueError, TypeError, KeyError, AttributeError):
+                        # Value conversion, type, key, or attribute errors
                         pass
                 base_parts = [
                     mname,
@@ -2241,7 +2313,8 @@ async def api_ml_diagnostics(
                                 last_base_v = seq_hybrid_baseline[-1]
                             if seq_hybrid_residual:
                                 last_resid_v = seq_hybrid_residual[-1]
-                        except Exception:
+                        except (ValueError, TypeError, KeyError, AttributeError):
+                            # Value conversion, type, key, or attribute errors
                             pass
                         # Ultimate direct-file fallback if still missing
                         if (not isinstance(b_rmse_v, (int, float)) or b_rmse_v == 0 or not (b_rmse_v == b_rmse_v)) and hybrid_fp.exists():
@@ -2260,7 +2333,8 @@ async def api_ml_diagnostics(
                                                 preds_arr.append(float(_parts[_p]))
                                             if _b >= 0 and len(_parts) > _b:
                                                 bases_arr.append(float(_parts[_b]))
-                                        except Exception:
+                                        except (ValueError, TypeError):
+                                            # Invalid numeric conversion or type error
                                             continue
                                     # Build tp array from live_rows
                                     tp_arr: list[float] = []
@@ -2268,8 +2342,8 @@ async def api_ml_diagnostics(
                                         try:
                                             tp_raw = row.get("tp")
                                             tp_val = float(tp_raw) if tp_raw is not None else None
-                                        except Exception:
-                                            tp_val = None
+                                        except (ValueError, TypeError):
+                                            tp_val = None  # Invalid numeric conversion
                                         if isinstance(tp_val, (int, float)):
                                             tp_arr.append(float(tp_val))
                                     import math as _m
@@ -2283,7 +2357,8 @@ async def api_ml_diagnostics(
                                         h_rmse_v = _m.sqrt(sum(d*d for d in dd) / n_h)
                                     if isinstance(b_rmse_v, (int, float)) and isinstance(h_rmse_v, (int, float)) and h_rmse_v > 0:
                                         ratio_v = b_rmse_v / h_rmse_v
-                            except Exception:
+                            except (ValueError, TypeError, KeyError, AttributeError):
+                                # Value conversion, type, key, or attribute errors
                                 pass
                         base_parts.extend([
                             (f"{b_rmse_v:.4f}" if isinstance(b_rmse_v, (int, float)) and b_rmse_v == b_rmse_v else ""),
@@ -2357,19 +2432,20 @@ async def api_ml_diagnostics(
                     try:
                         if hybrid_rmse and hybrid_rmse > 0:
                             improv_ratio = baseline_rmse / hybrid_rmse  # >1 means hybrid improves over baseline
-                    except Exception:
+                    except (ValueError, TypeError, ZeroDivisionError):
+                        # Value error, type error, or division by zero
                         improv_ratio = None
                     # last baseline/residual if present
                     if last_k in hybrid_baseline_by_bucket:
                         try:
                             last_base = float(hybrid_baseline_by_bucket[last_k])
-                        except Exception:
-                            last_base = None
+                        except (ValueError, TypeError):
+                            last_base = None  # Invalid numeric conversion
                     if last_k in hybrid_residual_by_bucket:
                         try:
                             last_resid = float(hybrid_residual_by_bucket[last_k])
-                        except Exception:
-                            last_resid = None
+                        except (ValueError, TypeError):
+                            last_resid = None  # Invalid numeric conversion
                 # If overlapping-key computation unavailable or NaN, fall back to sequence-aligned RMSE
                 def _seq_rmse(xs: list[float], ys: list[float]) -> float | None:
                     try:
@@ -2380,8 +2456,8 @@ async def api_ml_diagnostics(
                         ys2 = ys[:n]
                         dd = [(a - b) for a, b in zip(xs2, ys2)]
                         return math.sqrt(sum((d) ** 2 for d in dd) / n)
-                    except Exception:
-                        return None
+                    except (AttributeError, OSError, TypeError):
+                        return None  # Path resolution or file system error
                 try:
                     if (not isinstance(baseline_rmse, (int, float)) or not (baseline_rmse == baseline_rmse)):
                         b_rmse_seq = _seq_rmse(list(seq_hybrid_baseline), list(seq_tp))
@@ -2401,8 +2477,8 @@ async def api_ml_diagnostics(
                                     _h_pred = h_cols2.index("prediction")
                                     _h_base = h_cols2.index("baseline") if "baseline" in h_cols2 else -1
                                     _h_resid = h_cols2.index("residual") if "residual" in h_cols2 else -1
-                                except Exception:
-                                    _h_pred = _h_base = _h_resid = -1
+                                except (ValueError, IndexError):
+                                    _h_pred = _h_base = _h_resid = -1  # Column not found
                                 bases_seq: list[float] = []
                                 hybrid_seq: list[float] = []
                                 for _r in h_lines2[1:]:
@@ -2411,12 +2487,14 @@ async def api_ml_diagnostics(
                                         continue
                                     try:
                                         hybrid_seq.append(float(_parts[_h_pred]))
-                                    except Exception:
+                                    except (ValueError, TypeError):
+                                        # Invalid numeric conversion or type error
                                         continue
                                     if _h_base >= 0 and len(_parts) > _h_base:
                                         try:
                                             bases_seq.append(float(_parts[_h_base]))
-                                        except Exception:
+                                        except (ValueError, TypeError, KeyError, AttributeError):
+                                            # Value conversion, type, key, or attribute errors
                                             pass
                                 # Compute direct baseline rmse if possible (baseline vs tp joined by position)
                                 if not seq_tp:
@@ -2424,8 +2502,8 @@ async def api_ml_diagnostics(
                                         try:
                                             tp_raw = row.get("tp")
                                             tp_val = float(tp_raw) if tp_raw is not None else None
-                                        except Exception:
-                                            tp_val = None
+                                        except (ValueError, TypeError):
+                                            tp_val = None  # Invalid numeric conversion
                                         if isinstance(tp_val, (int, float)):
                                             seq_tp.append(float(tp_val))
                                 # Positional RMSE baseline
@@ -2434,7 +2512,8 @@ async def api_ml_diagnostics(
                                     pos_dd = [(bases_seq[i] - seq_tp[i]) for i in range(pos_n)]
                                     try:
                                         baseline_rmse = math.sqrt(sum(d*d for d in pos_dd) / pos_n)
-                                    except Exception:
+                                    except (ValueError, TypeError, KeyError, AttributeError):
+                                        # Value conversion, type, key, or attribute errors
                                         pass
                                 # Build seq_tp if still empty (no cutoff)
                                 # (Already handled positional collection above)
@@ -2449,15 +2528,18 @@ async def api_ml_diagnostics(
                                 if last_base is None and bases_seq:
                                     try:
                                         last_base = float(bases_seq[-1])
-                                    except Exception:
+                                    except (ValueError, TypeError, KeyError, AttributeError):
+                                        # Value conversion, type, key, or attribute errors
                                         pass
                                 if last_resid is None and _h_resid >= 0 and len(h_lines2) > 1:
                                     try:
                                         # reuse residual sequence if needed
                                         last_resid = float(h_lines2[-1].split(",")[_h_resid])
-                                    except Exception:
+                                    except (ValueError, TypeError, KeyError, AttributeError):
+                                        # Value conversion, type, key, or attribute errors
                                         pass
-                        except Exception:
+                        except (ValueError, TypeError, KeyError, AttributeError):
+                            # Value conversion, type, key, or attribute errors
                             pass
                     if (isinstance(baseline_rmse, (int, float)) and baseline_rmse == baseline_rmse
                         and isinstance(hybrid_rmse, (int, float)) and hybrid_rmse == hybrid_rmse and hybrid_rmse > 0):
@@ -2466,14 +2548,15 @@ async def api_ml_diagnostics(
                     if last_base is None and seq_hybrid_baseline:
                         try:
                             last_base = float(seq_hybrid_baseline[-1])
-                        except Exception:
-                            last_base = None
+                        except (ValueError, TypeError):
+                            last_base = None  # Invalid numeric conversion
                     if last_resid is None and seq_hybrid_residual:
                         try:
                             last_resid = float(seq_hybrid_residual[-1])
-                        except Exception:
-                            last_resid = None
-                except Exception:
+                        except (ValueError, TypeError):
+                            last_resid = None  # Invalid numeric conversion
+                except (ValueError, TypeError, KeyError, AttributeError):
+                    # Value conversion, type, key, or attribute errors
                     pass
             # Optional conformal band computation per model
             band_radius = None
@@ -2546,7 +2629,8 @@ async def api_ml_diagnostics(
                         row_parts.append(f"{eff_cov:.4f}")
                         row_parts.append(f"{eff_avg:.4f}")
                         row_parts.append(f"{eff_last:.4f}")
-                    except Exception:
+                    except (ValueError, KeyError, TypeError):
+                        # Value, key, or type errors
                         row_parts.extend(["", "", ""])            
             if include_move_stats:
                 if move_stats_row is not None:
@@ -2606,7 +2690,8 @@ async def api_ml_move_stats(
             lbl_idx = header.index("move_label_pred")
             mag_idx = header.index("conditional_magnitude")
             hor_idx = header.index("horizon")
-        except Exception:
+        except (ValueError, IndexError):
+            # Column not found in CSV header
             raise HTTPException(status_code=500, detail="malformed move CSV header")
 
         # Helpers
@@ -2616,14 +2701,16 @@ async def api_ml_move_stats(
                     try:
                         dt = _dt.datetime.strptime(s.strip(), fmt)
                         return int(dt.timestamp() * 1000)
-                    except Exception:
+                    except (ValueError, TypeError):
+                        # Invalid numeric conversion or type error
                         continue
                 s2 = s.strip()
                 if s2.isdigit():
                     if len(s2) >= 13:
                         return int(s2[:13])
                     return int(s2) * 1000
-            except Exception:
+            except (ValueError, TypeError, KeyError, AttributeError):
+                # Value conversion, type, key, or attribute errors
                 pass
             return None
 
@@ -2648,16 +2735,17 @@ async def api_ml_move_stats(
                 continue
             try:
                 p = float(parts[prob_idx])
-            except Exception:
-                p = None  # type: ignore
+            except (ValueError, TypeError):
+                p = None  # type: ignore  # Invalid numeric conversion
             try:
                 lbl = int(parts[lbl_idx])
-            except Exception:
+            except (ValueError, TypeError, IndexError):
+                # Invalid numeric conversion or index error
                 lbl = 0
             try:
                 mag = float(parts[mag_idx])
-            except Exception:
-                mag = None  # type: ignore
+            except (ValueError, TypeError):
+                mag = None  # type: ignore  # Invalid numeric conversion
 
             total += 1
             if isinstance(p, (int, float)):
@@ -2745,7 +2833,8 @@ async def api_ml_move_stats_archive(
                 continue
             try:
                 lines = fp.read_text(encoding="utf-8").splitlines()
-            except Exception:
+            except (ValueError, TypeError):
+                # Invalid numeric conversion or type error
                 continue
             if not lines:
                 continue
@@ -2758,8 +2847,8 @@ async def api_ml_move_stats_archive(
             hcols = lines[0].split(",")
             try:
                 hor_idx = hcols.index("horizon")
-            except Exception:
-                hor_idx = -1
+            except (ValueError, IndexError):
+                hor_idx = -1  # Column not found
             for r in data_lines:
                 parts = r.split(",")
                 if hor_idx >= 0 and len(parts) > hor_idx and parts[hor_idx] != str(horizon):

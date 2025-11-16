@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Any
 try:
     from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity, safe_read_csv_rows
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
+    # Error handling module not available
     get_error_handler = None  # type: ignore
     ErrorCategory = None  # type: ignore
     ErrorSeverity = None  # type: ignore
