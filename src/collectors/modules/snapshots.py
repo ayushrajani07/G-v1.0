@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 try:  # domain models may not be present in some reduced test contexts
     from src.domain.models import ExpirySnapshot, OptionQuote  # pragma: no cover
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     OptionQuote = None  # sentinel when models unavailable
     ExpirySnapshot = None  # sentinel when models unavailable
 
@@ -42,7 +42,7 @@ def build_expiry_snapshot(
                 if from_raw is None:
                     continue
                 option_objs.append(from_raw(sym, q))
-            except Exception:
+            except (TypeError, ValueError, KeyError, AttributeError):
                 continue
         atm_val: float = float(atm_strike) if atm_strike is not None else 0.0
         return ExpirySnapshot(
@@ -53,6 +53,6 @@ def build_expiry_snapshot(
             options=option_objs,
             generated_at=generated_at,
         )
-    except Exception:
+    except (TypeError, ValueError, AttributeError):
         logger.debug('build_expiry_snapshot_failed index=%s rule=%s', index, expiry_rule, exc_info=True)
         return None

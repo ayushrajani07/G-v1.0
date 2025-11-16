@@ -96,18 +96,18 @@ def run_persist_flow(
 
     try:
         result = persist_with_context(ctx, enriched_data, expiry_ctx, index_ohlc)
-    except Exception:  # pragma: no cover - defensive catch (should already be handled inside helper)
+    except (OSError, IOError, RuntimeError, ValueError, TypeError):  # pragma: no cover - defensive catch (should already be handled inside helper)
         logger.error('persist_flow_unexpected_exception', exc_info=True)
         # Fabricate a failed PersistResult while avoiding import churn
         try:
             return PersistResult(option_count=0, pcr=None, metrics_payload=None, failed=True)
-        except Exception:
+        except (TypeError, AttributeError):
             raise
 
     # Trace hook (unchanged semantics)
     try:
         trace('persist_done', index=expiry_ctx.index_symbol, rule=expiry_ctx.expiry_rule, options=result.option_count, failed=result.failed)
-    except Exception:  # pragma: no cover
+    except (AttributeError, TypeError):  # pragma: no cover
         logger.debug('persist_flow_trace_failed', exc_info=True)
 
     return result

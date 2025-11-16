@@ -28,11 +28,11 @@ logger = logging.getLogger(__name__)
 
 try:  # reuse existing bridge for uniform formatting + gating
     from src.collectors.modules.struct_events_bridge import emit_struct
-except Exception:  # pragma: no cover
+except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     def emit_struct(event: str, fields: dict[str, Any]) -> None:
         try:
             logger.info("STRUCT %s | %s", event, json.dumps(fields, default=str, ensure_ascii=False))
-        except Exception:
+        except (TypeError, ValueError):
             pass
 
 class AdaptiveCtxLike(Protocol):  # re-uses shape from adaptive_adjust (duplicated locally to avoid import cycle)
@@ -72,7 +72,7 @@ def emit_adaptive_summary(ctx: AdaptiveCtxLike | Any, index_symbol: str) -> None
             record_adaptive = getattr(_mod, 'record_adaptive', None)
             if callable(record_adaptive):
                 record_adaptive(payload)
-        except Exception:
+        except (ImportError, ModuleNotFoundError, AttributeError):
             pass
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
         logger.debug('adaptive_summary_emit_failed', exc_info=True)

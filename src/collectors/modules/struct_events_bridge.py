@@ -41,7 +41,7 @@ def emit_struct(event: str, fields: dict[str, Any]) -> None:  # pragma: no cover
         return
     try:
         logger.info("STRUCT %s | %s", event, json.dumps(fields, default=str, ensure_ascii=False))
-    except Exception:
+    except (TypeError, ValueError):
         logger.debug("struct_emit_failed", exc_info=True)
 
 def emit_strike_cluster(cluster_struct: dict[str, Any]) -> None:  # pragma: no cover

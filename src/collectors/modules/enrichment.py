@@ -36,7 +36,7 @@ def _resolve_noquotes_error() -> type[Exception]:  # pragma: no cover - trivial 
         cls = getattr(mod, 'NoQuotesError', None)
         if isinstance(cls, type) and issubclass(cls, Exception):
             return cls
-    except Exception:
+    except (ImportError, ModuleNotFoundError, AttributeError):
         pass
     return Exception
 
@@ -52,10 +52,10 @@ def _resolve_handle_error() -> Callable[[Exception, str, str, dict[str, Any]], A
                 except TypeError:
                     try:
                         return fn(exc, component, index_name, context)
-                    except Exception:
+                    except (TypeError, AttributeError):
                         return None
             return _adapter
-    except Exception:
+    except (ImportError, ModuleNotFoundError, AttributeError):
         pass
     def _fallback(exc: Exception, component: str, index_name: str, context: dict[str, Any]) -> None:
         logger.debug("handle_collector_error_fallback", exc_info=True)
@@ -99,6 +99,6 @@ def enrich_quotes(index_symbol: str, expiry_rule: str, expiry_date: Any, instrum
     if metrics and hasattr(metrics, "mark_api_call"):
         try:
             metrics.mark_api_call(success=bool(enriched_data), latency_ms=elapsed * 1000.0)
-        except Exception:
+        except (AttributeError, TypeError):
             logger.debug("metrics_mark_api_call_failed_enrich", exc_info=True)
     return enriched_data

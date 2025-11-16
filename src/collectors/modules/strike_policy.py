@@ -77,7 +77,7 @@ def _adaptive_v2(ctx: Any, index_symbol: str, base_cfg: dict[str, Any]) -> tuple
     try:
         if hasattr(ctx, 'last_index_coverage'):
             coverage_val = ctx.last_index_coverage.get(index_symbol)
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
         coverage_val = None
     if coverage_val is not None:
         rec['history'].append(float(coverage_val))
@@ -90,7 +90,7 @@ def _adaptive_v2(ctx: Any, index_symbol: str, base_cfg: dict[str, Any]) -> tuple
     if rec['history']:
         try:
             median_cov = statistics.median(rec['history'])
-        except Exception:
+        except (TypeError, ValueError, statistics.StatisticsError):
             median_cov = None
     target = _env_float('G6_STRIKE_POLICY_TARGET', 0.85)
     step = _env_int('G6_STRIKE_POLICY_STEP', 2)
@@ -132,7 +132,7 @@ def _adaptive_v2(ctx: Any, index_symbol: str, base_cfg: dict[str, Any]) -> tuple
                 field_coverage=None,
                 expiry_rule='policy',
                 )
-        except Exception:
+        except (ImportError, ModuleNotFoundError, AttributeError, TypeError):
             logger.debug('emit_strike_policy_adjustment_failed', exc_info=True)
     depth = rec.get('last_depth')
     return (int(depth[0]), int(depth[1])) if isinstance(depth, tuple) and len(depth) == 2 else (

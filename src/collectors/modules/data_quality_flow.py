@@ -51,7 +51,7 @@ def apply_data_quality(
                 expiry_rule,
                 _dq_issues[:6],
             )
-    except Exception:
+    except (TypeError, ValueError, AttributeError, KeyError):
         logger.debug('dq_option_quality_failed', exc_info=True)
     # Expiry consistency
     try:
@@ -64,5 +64,5 @@ def apply_data_quality(
                 expiry_rule,
                 _cons_issues,
             )
-    except Exception:
+    except (TypeError, ValueError, AttributeError, KeyError):
         logger.debug('dq_expiry_consistency_failed', exc_info=True)
