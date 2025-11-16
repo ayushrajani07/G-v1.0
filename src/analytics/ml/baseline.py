@@ -18,6 +18,13 @@ leaving residuals to a ML regressor.
 import math
 from typing import Optional
 
+try:
+    import pandas as pd
+    import numpy as np
+    HAS_PANDAS = True
+except ImportError:
+    HAS_PANDAS = False
+
 
 def _safe_float(x: Optional[float], default: Optional[float] = 0.0) -> Optional[float]:
     try:
@@ -73,3 +80,101 @@ def baseline_tp(underlying: float,
     # Baseline
     base = float(max(0.0, k) * u * iv * math.sqrt(max(T, 0.0)))
     return base
+
+
+def baseline_tp_batch(
+    df,
+    underlying_col: str = "underlying",
+    iv_col: Optional[str] = None,
+    ce_iv_col: Optional[str] = None,
+    pe_iv_col: Optional[str] = None,
+    minutes_to_expiry_col: str = "minutes_to_expiry",
+    output_col: str = "tp_baseline",
+    k: float = 1.0,
+    min_iv: float = 1e-4,
+    min_T_minutes: float = 1.0,
+):
+    """Compute baseline TP for a batch of data (DataFrame).
+    
+    Args:
+        df: Input DataFrame or pandas-compatible object
+        underlying_col: Column name for underlying price
+        iv_col: Column name for IV proxy (if available)
+        ce_iv_col: Column name for CE IV (used if iv_col not provided)
+        pe_iv_col: Column name for PE IV (used if iv_col not provided)
+        minutes_to_expiry_col: Column name for time to expiry
+        output_col: Column name for output baseline TP
+        k: Scaling coefficient
+        min_iv: Minimum IV value
+        min_T_minutes: Minimum time to expiry in minutes
+        
+    Returns:
+        DataFrame with added baseline TP column
+        
+    Raises:
+        RuntimeError: If pandas is not available
+    """
+    if not HAS_PANDAS:
+        raise RuntimeError("pandas is required for batch processing")
+    
+    # Make a copy to avoid modifying input
+    result = df.copy()
+    
+    # Extract underlying prices
+    underlying = result[underlying_col].values
+    
+    # Resolve IV
+    if iv_col is not None and iv_col in result.columns:
+        iv = result[iv_col].values
+    elif ce_iv_col in result.columns and pe_iv_col in result.columns:
+        ce = result[ce_iv_col].values
+        pe = result[pe_iv_col].values
+        iv = 0.5 * (ce + pe)
+    elif ce_iv_col in result.columns:
+        iv = result[ce_iv_col].values
+    elif pe_iv_col in result.columns:
+        iv = result[pe_iv_col].values
+    else:
+        iv = np.full(len(result), 0.0)
+    
+    # Apply bounds
+    iv = np.maximum(iv, min_iv)
+    
+    # Extract time to expiry
+    minutes_to_expiry = result[minutes_to_expiry_col].values
+    minutes_to_expiry = np.maximum(minutes_to_expiry, min_T_minutes)
+    T = minutes_to_expiry / (60.0 * 24.0)
+    
+    # Compute baseline: k * underlying * iv * sqrt(T)
+    baseline = k * underlying * iv * np.sqrt(T)
+    baseline = np.maximum(baseline, 0.0)
+    
+    # Add to result
+    result[output_col] = baseline
+    
+    return result
+
+
+def compute_residuals(
+    df,
+    tp_actual_col: str = "tp_actual",
+    tp_baseline_col: str = "tp_baseline",
+    residual_col: str = "tp_residual",
+):
+    """Compute residuals: actual - baseline.
+    
+    Args:
+        df: Input DataFrame
+        tp_actual_col: Column name for actual TP
+        tp_baseline_col: Column name for baseline TP
+        residual_col: Column name for output residual
+        
+    Returns:
+        DataFrame with added residual column
+    """
+    if not HAS_PANDAS:
+        raise RuntimeError("pandas is required for batch processing")
+    
+    result = df.copy()
+    result[residual_col] = result[tp_actual_col] - result[tp_baseline_col]
+    return result
