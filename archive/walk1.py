@@ -1,1 +1,0 @@
-"""Archived walk1.py (directory walker prototype)."""

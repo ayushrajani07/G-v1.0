@@ -124,7 +124,9 @@ def _get_reg():
         ))
         _REG = True  # sentinel to mark initialized
         return _REG
-    except Exception:
+    except (ImportError, AttributeError) as exc:
+        # Prometheus client not available or incompatible version
+        logging.getLogger("path_forecast.metrics").debug(f"Metrics registration unavailable: {exc}")
         return None
 
 
@@ -166,7 +168,8 @@ def push_retrieval_metrics(meta: dict[str, Any]) -> None:
             if isinstance(thr, (int, float)) and float(thr) > 0:
                 ratio = float(cand) / float(thr)
                 _M_CANDIDATE_RICHNESS.observe(ratio)
-    except Exception:
+    except (KeyError, ValueError, TypeError, ZeroDivisionError):
+        # Silently skip metrics push on invalid data (non-critical path)
         return
 
 
@@ -202,7 +205,8 @@ def push_composite_metrics(meta: dict[str, Any]) -> None:
                 h = meta.get("horizon_sanitized")
                 if isinstance(h, (int, float)):
                     _G_HORIZ_SAN.set(float(h))
-        except Exception:
+        except (KeyError, ValueError, TypeError, AttributeError):
+            # Silently skip metrics push on invalid data (non-critical path)
             return
 
 
@@ -245,7 +249,8 @@ def compute_ann_effectiveness(
         else:
             quality = 1.0
         return float(ann_speedup) * prune_gain * quality
-    except Exception:
+    except (ValueError, TypeError, ZeroDivisionError):
+        # Invalid input values for score calculation
         return None
 
 __all__ = [

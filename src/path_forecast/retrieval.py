@@ -52,8 +52,9 @@ def _warn(meta: Dict[str, Any], msg: str, exc: BaseException | None = None) -> N
         meta['warnings'] = arr
         if _profiling_enabled():
             _LOG.warning(entry)
-    except Exception:
-        pass
+    except (KeyError, AttributeError, TypeError) as exc:
+        # Silently ignore failures in warning collection (non-critical path)
+        _LOG.debug(f"Warning collection failed: {exc}")
 
 
 def _quantile(values: List[float], q: float) -> float:
@@ -227,11 +228,7 @@ class RetrievalPathForecaster(PathForecaster):
             return []
         files = sorted([p for p in base.glob("*.csv") if p.is_file()])
         # Sanitize max_days_scan (0 disables)
-        try:
-            from .common import safe_int as _si
-        except Exception:
-            _si = lambda x, d=0, min_=0, max_=10000: int(x) if isinstance(x, int) else int(d)  # fallback
-        max_scan = _si(getattr(self.cfg, 'max_days_scan', 0), 0, min_=0, max_=10000)
+        max_scan = _safe_int(getattr(self.cfg, 'max_days_scan', 0), 0, min_=0, max_=10000)
         if max_scan > 0 and len(files) > max_scan:
             files = files[-max_scan:]
         return files
@@ -251,8 +248,9 @@ class RetrievalPathForecaster(PathForecaster):
             idx = str(context.get("index") or "NIFTY").strip().upper()
             now_ms = int(context.get("now_ms") or 0)
             live_rows = context.get("live_rows") or []
-        except Exception:
-            raise ValueError("missing required context for retrieval forecaster")
+        except (KeyError, ValueError, TypeError, AttributeError) as exc:
+            _LOG.error(f"Invalid context for retrieval forecaster: {exc}", exc_info=True)
+            raise ValueError(f"missing required context for retrieval forecaster: {exc}") from exc
 
         # Reset meta early
         self.last_meta = {}
@@ -463,7 +461,8 @@ class RetrievalPathForecaster(PathForecaster):
             if regime_tolerance_s is not None:
                 try:
                     rel = abs((h_sd or 0.0) - (q_sd or 0.0)) / (abs(q_sd) if q_sd else 1.0)
-                except Exception:
+                except (ZeroDivisionError, TypeError, ValueError):
+                    # Fallback when standard deviation calculation fails
                     rel = 0.0
                 if rel > float(regime_tolerance_s):
                     dist *= float(regime_penalty_s)
