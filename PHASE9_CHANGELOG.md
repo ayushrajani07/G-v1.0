@@ -1,5 +1,53 @@
 # Phase 9 Performance Optimization - Changelog
 
+## [Phase 9.1 - Ensemble API Integration] - 2025-11-17
+
+### Added
+
+#### Ensemble API Integration
+- **Cache Metrics Endpoint** (`/api/ml/ensemble/cache_metrics`):
+  - Returns Phase 9 cache statistics and feature flag status
+  - Provides real-time window cache and disk cache metrics
+  - JSON response with timestamp, feature flags, and cache stats
+  
+- **Enhanced Diagnostics Endpoint**:
+  - Diagnostics now include Phase 9 cache performance metrics
+  - Backward compatible - cache info added to existing metrics section
+  - Shows window cache hit ratio and disk cache hits
+
+- **Load Test Integration**:
+  - `load_test_ensemble.py` now captures cache metrics
+  - Cache statistics displayed in test results
+  - Cache metrics included in output JSON for analysis
+
+- **Demo Script** (`scripts/ml/demo_phase9_api.py`):
+  - Interactive demonstration of Phase 9 API features
+  - Formatted display of feature flags and cache statistics
+  - JSON output mode for automation
+
+#### Tests
+- **Ensemble API Phase 9 Tests** (`tests/test_ensemble_api_phase9.py`):
+  - 9 tests covering API integration
+  - Tests cache metrics endpoint response structure
+  - Tests feature flag parsing logic
+  - Tests diagnostics cache info integration
+  - Tests load test cache metrics integration
+  - All passing (9/9)
+
+#### Documentation
+- **Ensemble API Integration Section** (PHASE9_DEVELOPER_GUIDE.md):
+  - New API endpoints documented with examples
+  - Load testing guide with Phase 9 optimizations
+  - Performance comparison instructions
+  - Example API responses
+
+### Impact
+
+- **Zero Breaking Changes**: All additions are backward compatible
+- **Easy Monitoring**: Cache performance visible through standard API endpoints
+- **Better Load Testing**: Automated cache metrics collection during load tests
+- **Developer Experience**: Simple demo script for exploring Phase 9 features
+
 ## [Phase 9] - 2025-11-17
 
 ### Added
