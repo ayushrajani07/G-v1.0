@@ -36,6 +36,32 @@
       "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] }
     },
     {
+      "id": 9,
+      "title": "Latency Histogram (ms)",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "LH",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(g6_forecast_latency_ms_bucket[5m])))",
+          "legendFormat": "p95",
+          "interval": ""
+        },
+        {
+          "refId": "LM",
+          "expr": "rate(g6_forecast_latency_ms_sum[5m]) / rate(g6_forecast_latency_ms_count[5m])",
+          "legendFormat": "mean",
+          "interval": ""
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      }
+    },
+    {
       "id": 5,
       "title": "Conformal Coverage",
       "type": "stat",

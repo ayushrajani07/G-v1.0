@@ -28,6 +28,16 @@
       ]
     },
     {
+      "id": 9,
+      "title": "Latency Histogram (Placeholder)",
+      "type": "text",
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 24 },
+      "options": {
+        "content": "Prometheus histogram not accessible via JSON API datasource. Use Prometheus datasource panel in Infinity dashboard for p95/mean latency.",
+        "mode": "markdown"
+      }
+    }
+    {
       "id": 2,
       "title": "Latency (ms)",
       "type": "stat",
