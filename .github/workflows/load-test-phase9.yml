@@ -1,0 +1,154 @@
+name: Phase 9 Load Test
+
+# Opt-in workflow: only runs on tag-based triggers or manual dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Test duration in seconds'
+        required: false
+        default: '10'
+      qps:
+        description: 'Target queries per second'
+        required: false
+        default: '5'
+  push:
+    tags:
+      - 'load-test-*'
+      - 'v*-load-test'
+
+jobs:
+  load-test:
+    name: ML Ensemble Load Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Start ML Ensemble API
+        run: |
+          # Start API in background
+          python -m src.web.api.ml_ensemble --host 0.0.0.0 --port 9210 &
+          API_PID=$!
+          echo "API_PID=$API_PID" >> $GITHUB_ENV
+          
+          # Wait for API to be ready
+          echo "Waiting for API to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:9210/health > /dev/null 2>&1; then
+              echo "API is ready!"
+              break
+            fi
+            echo "Attempt $i/30: API not ready yet..."
+            sleep 2
+          done
+          
+          # Verify API is responding
+          curl http://localhost:9210/health || exit 1
+        timeout-minutes: 2
+      
+      - name: Run short load test (sync version)
+        run: |
+          DURATION=${{ github.event.inputs.duration || '10' }}
+          QPS=${{ github.event.inputs.qps || '5' }}
+          
+          echo "Running load test: duration=${DURATION}s, qps=${QPS}"
+          
+          # Use legacy sync version for CI (no httpx dependency issues)
+          python scripts/ml/load_test_ensemble_legacy.py \
+            --api-host localhost \
+            --api-port 9210 \
+            --index NIFTY \
+            --concurrent-requests 5 \
+            --duration ${DURATION} \
+            --output reports/load_test_results.json
+        continue-on-error: true
+        timeout-minutes: 5
+      
+      - name: Validate metrics endpoint
+        run: |
+          python scripts/ml/validate_metrics.py \
+            --host localhost \
+            --port 9210 \
+            --output reports/metrics_validation.json
+        continue-on-error: true
+      
+      - name: Fetch cache metrics
+        run: |
+          curl -s http://localhost:9210/api/ml/ensemble/cache_metrics \
+            > reports/cache_metrics.json || echo '{}' > reports/cache_metrics.json
+        continue-on-error: true
+      
+      - name: Stop API server
+        if: always()
+        run: |
+          if [ -n "$API_PID" ]; then
+            kill $API_PID || true
+            wait $API_PID || true
+          fi
+      
+      - name: Upload load test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: |
+            reports/load_test_results.json
+            reports/metrics_validation.json
+            reports/cache_metrics.json
+          retention-days: 30
+      
+      - name: Display results summary
+        if: always()
+        run: |
+          echo "========================================"
+          echo "Load Test Results Summary"
+          echo "========================================"
+          
+          if [ -f reports/load_test_results.json ]; then
+            echo "Load Test Results:"
+            cat reports/load_test_results.json | jq -r '
+              "  Total Requests: \(.summary.total_requests)",
+              "  Successful: \(.summary.successful)",
+              "  Failed: \(.summary.failed)",
+              "  Success Rate: \(.summary.success_rate * 100)%",
+              "  Throughput: \(.summary.throughput) req/s",
+              "  P50 Latency: \(.latency_ms.p50)ms",
+              "  P95 Latency: \(.latency_ms.p95)ms",
+              "  P99 Latency: \(.latency_ms.p99)ms",
+              "  Overall Pass: \(.targets.overall_pass)"
+            ' || echo "  Could not parse results"
+          else
+            echo "  No results file found"
+          fi
+          
+          echo ""
+          
+          if [ -f reports/metrics_validation.json ]; then
+            echo "Metrics Validation:"
+            cat reports/metrics_validation.json | jq -r '
+              "  Status: \(.status)",
+              "  Message: \(.message)",
+              "  Required Metrics Found: \(.required_metrics.found | length)",
+              "  Required Metrics Missing: \(.required_metrics.missing | length)"
+            ' || echo "  Could not parse validation"
+          else
+            echo "  No validation file found"
+          fi
+          
+          echo "========================================"
