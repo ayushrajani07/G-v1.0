@@ -120,3 +120,108 @@ def test_baseline_tp_batch_custom_columns():
     
     assert "baseline" in result.columns
     assert all(result["baseline"] > 0)
+
+
+# Phase 7.2: Alternative baseline formula tests
+
+
+def test_baseline_tp_sublinear():
+    """Test sub-linear baseline formula."""
+    from src.analytics.ml.baseline import baseline_tp_sublinear
+    
+    # Sub-linear should grow slower with underlying than linear
+    base1 = baseline_tp_sublinear(underlying=100, iv_proxy=0.2, minutes_to_expiry=60)
+    base2 = baseline_tp_sublinear(underlying=400, iv_proxy=0.2, minutes_to_expiry=60)
+    
+    # With sqrt scaling, 4x underlying should give 2x baseline
+    ratio = base2 / base1 if base1 > 0 else 0
+    assert 1.8 <= ratio <= 2.2, f"Sub-linear scaling should be ~2x for 4x underlying, got {ratio:.2f}"
+
+
+def test_baseline_tp_log():
+    """Test log baseline formula."""
+    from src.analytics.ml.baseline import baseline_tp_log
+    
+    # Log should grow even slower
+    base1 = baseline_tp_log(underlying=100, iv_proxy=0.2, minutes_to_expiry=60)
+    base2 = baseline_tp_log(underlying=1000, iv_proxy=0.2, minutes_to_expiry=60)
+    
+    # log(1000) / log(100) = 3 / 2 = 1.5
+    ratio = base2 / base1 if base1 > 0 else 0
+    assert 1.3 <= ratio <= 1.7, f"Log scaling should be ~1.5x for 10x underlying, got {ratio:.2f}"
+    
+    # Should be positive
+    assert base1 > 0
+    assert base2 > 0
+
+
+def test_compare_baseline_formulas():
+    """Test comparison of different baseline formulas."""
+    from src.analytics.ml.baseline import compare_baseline_formulas
+    
+    # Create sample data
+    np.random.seed(42)
+    n = 100
+    df = pd.DataFrame({
+        "tp_actual": 100 + np.random.randn(n) * 10,
+        "underlying": 20000 + np.random.randn(n) * 500,
+        "avg_iv": 0.15 + np.random.randn(n) * 0.02,
+        "minutes_to_expiry": 300 + np.random.randn(n) * 50,
+    })
+    
+    results = compare_baseline_formulas(df, iv_col="avg_iv")
+    
+    # Check that all three formulas are compared
+    assert "linear" in results
+    assert "sublinear" in results
+    assert "log" in results
+    
+    # Each should have metrics
+    for formula in ["linear", "sublinear", "log"]:
+        assert "mae" in results[formula]
+        assert "rmse" in results[formula]
+        assert "correlation" in results[formula]
+        assert "mean_residual" in results[formula]
+        assert "std_residual" in results[formula]
+        
+        # MAE and RMSE should be positive
+        assert results[formula]["mae"] >= 0
+        assert results[formula]["rmse"] >= 0
+        
+        # Correlation should be in [-1, 1]
+        assert -1 <= results[formula]["correlation"] <= 1
+
+
+def test_alternative_formulas_with_ce_pe_iv():
+    """Test alternative formulas work with CE/PE IVs instead of avg_iv."""
+    from src.analytics.ml.baseline import baseline_tp_sublinear, baseline_tp_log
+    
+    # Test with CE/PE IVs
+    base_sublinear = baseline_tp_sublinear(
+        underlying=20000, ce_iv=0.18, pe_iv=0.22, minutes_to_expiry=300
+    )
+    base_log = baseline_tp_log(
+        underlying=20000, ce_iv=0.18, pe_iv=0.22, minutes_to_expiry=300
+    )
+    
+    assert base_sublinear > 0
+    assert base_log > 0
+
+
+def test_baseline_formula_ordering():
+    """Test that formulas have expected relative ordering."""
+    from src.analytics.ml.baseline import baseline_tp_sublinear, baseline_tp_log
+    
+    # For same parameters, linear > sublinear > log (typically)
+    underlying = 20000
+    iv = 0.2
+    time = 300
+    
+    base_linear = baseline_tp(underlying=underlying, iv_proxy=iv, minutes_to_expiry=time)
+    base_sublinear = baseline_tp_sublinear(underlying=underlying, iv_proxy=iv, minutes_to_expiry=time)
+    base_log = baseline_tp_log(underlying=underlying, iv_proxy=iv, minutes_to_expiry=time)
+    
+    # Linear should be largest (for these typical parameter values)
+    assert base_linear > base_sublinear
+    # Sublinear may or may not be > log depending on parameters, but all should be positive
+    assert base_log > 0
