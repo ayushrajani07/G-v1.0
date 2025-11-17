@@ -1,23 +1,27 @@
-"""Rolling MAE computation for forecasts.
+"""Rolling MAE & Coverage computation for forecasts.
 
-Phase 10 initial implementation: lightweight in-memory rolling MAE for p50 forecasts.
+Refined Phase 10 implementation: deque-based rolling window statistics for p50
+mean absolute error and band coverage percentage.
 
-Approach:
-1. When /forecast is called we enqueue an evaluation event containing:
-   - index, horizon, timestamp_ms, p50 value, underlying_at_forecast
-2. A background daemon thread wakes every 60s, scans events whose horizon window
-   has elapsed (now_ms >= timestamp_ms + horizon*60_000) and evaluates error:
-      abs(latest_underlying - p50_forecast)
-   latest_underlying is inferred using _infer_live_params from ensemble router
-   (approximation). This is a coarse first version; later versions can sample
-   actual underlying at exact evaluation time or store historical price series.
-3. Maintain per (index,horizon) rolling sums and counts; compute MAE = sum/count.
-4. Export MAE via Prometheus gauge (set_forecast_mae).
+Pipeline:
+1. /forecast enqueues evaluation event: (index, horizon, ts_ms, p50, underlying_at_forecast, band_low, band_high).
+2. Background daemon (60s interval) evaluates events whose target horizon time elapsed
+    (now_ms >= ts_ms + horizon*60_000).
+3. For each (index,horizon) maintain deques of last N errors and coverage flags
+    (1 if underlying within [band_low, band_high], else 0). N defined by env var.
+4. Compute rolling MAE = mean(errors_deque); coverage_pct = mean(flags_deque)*100.
+5. Export gauges via Prometheus: g6_forecast_mae, g6_forecast_coverage_pct.
 
-Environment toggles:
-- G6_ROLLING_MAE_ENABLE=1 (default) to enable.
-- G6_ROLLING_MAE_MAX_EVENTS (default 5000) cap pending queue size.
+Environment Variables:
+- G6_ROLLING_MAE_ENABLE=1: Enable evaluator thread & logging.
+- G6_ROLLING_MAE_MAX_EVENTS=5000: Cap pending unevaluated event queue size.
+- G6_ROLLING_MAE_WINDOW=500: Rolling window length for MAE & coverage deques.
 
+Notes / Limitations:
+- Underlying at evaluation approximated by latest inferred value (best-effort); fallback to underlying at forecast time if unavailable.
+- No persistence; window resets on process restart.
+- Clock drift / delayed evaluation may slightly shift horizon alignment for large horizons; acceptable for rolling monitoring.
+"""
 Thread-safety: protected by _LOCK.
 Persistence: none (in-memory only). Reset on process restart.
 """
@@ -25,16 +29,18 @@ from __future__ import annotations
 
 import os, time, threading, logging
 from typing import Dict, List, Tuple
+from collections import deque
 
 _LOG = logging.getLogger(__name__)
 
 _ENABLE = os.environ.get("G6_ROLLING_MAE_ENABLE", "1") == "1"
 _MAX_EVENTS = int(os.environ.get("G6_ROLLING_MAE_MAX_EVENTS", "5000"))
+_WINDOW_SIZE = int(os.environ.get("G6_ROLLING_MAE_WINDOW", "500"))
 
-_EVENTS: List[Tuple[str,int,int,float,float,float,float]] = []  # (index,horizon,ts_ms,p50,underlying_at_forecast,band_low,band_high)
+_EVENTS: List[Tuple[str,int,int,float,float,float,float]] = []  # pending evaluation events
 _LOCK = threading.Lock()
-_SUMS: Dict[Tuple[str,int], float] = {}
-_COUNTS: Dict[Tuple[str,int], int] = {}
+_ERRORS: Dict[Tuple[str,int], deque] = {}
+_COVER_FLAGS: Dict[Tuple[str,int], deque] = {}
 _STARTED = False
 
 def log_forecast_event(index: str, horizon: int, ts_ms: int, p50: float, underlying: float, band_low: float, band_high: float) -> None:
@@ -86,17 +92,18 @@ def _evaluate_ready_events() -> None:
         key = (idx, horizon)
         covered = 1 if (band_low <= latest_underlying <= band_high) else 0
         with _LOCK:
-            _SUMS[key] = _SUMS.get(key, 0.0) + error
-            _COUNTS[key] = _COUNTS.get(key, 0) + 1
-            mae = _SUMS[key] / max(1, _COUNTS[key])
-            # Coverage tracking: store in parallel maps using SUMS/COUNTS naming convention with suffix or separate dicts
-            # For simplicity extend dictionaries dynamically
-            cov_sum_key = ("cov",) + key  # type: ignore
-            cov_cnt_key = ("cov_cnt",) + key  # type: ignore
-            # Using dicts on globals not initially defined; Python allows dynamic keys
-            _SUMS[cov_sum_key] = _SUMS.get(cov_sum_key, 0.0) + covered
-            _COUNTS[cov_cnt_key] = _COUNTS.get(cov_cnt_key, 0) + 1
-            coverage_pct = (_SUMS[cov_sum_key] / max(1, _COUNTS[cov_cnt_key])) * 100.0
+            err_deque = _ERRORS.get(key)
+            if err_deque is None:
+                err_deque = deque(maxlen=_WINDOW_SIZE)
+                _ERRORS[key] = err_deque
+            cov_deque = _COVER_FLAGS.get(key)
+            if cov_deque is None:
+                cov_deque = deque(maxlen=_WINDOW_SIZE)
+                _COVER_FLAGS[key] = cov_deque
+            err_deque.append(error)
+            cov_deque.append(covered)
+            mae = sum(err_deque) / max(1, len(err_deque))
+            coverage_pct = (sum(cov_deque) / max(1, len(cov_deque))) * 100.0
         # Export Prometheus gauge
         try:
             from .prom_metrics import set_forecast_mae, set_forecast_coverage  # type: ignore
