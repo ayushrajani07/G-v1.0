@@ -358,10 +358,9 @@ def run_server(host: str = '0.0.0.0', port: int = 9210, debug: bool = False) -> 
 if __name__ == '__main__':
     import argparse
     
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    # Phase 3: Use simplified logging setup
+    from src.utils.logging_utils import setup_logging
+    setup_logging(terminal_level='INFO')
     
     parser = argparse.ArgumentParser(description='ML Ensemble API Server')
     parser.add_argument('--host', default='0.0.0.0', help='Host to bind to')

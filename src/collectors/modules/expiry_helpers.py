@@ -125,7 +125,8 @@ def fetch_option_instruments(index_symbol: str, expiry_rule: str, expiry_date: A
                 pass
             try:
                 import json as _json
-                logger.info('STRUCT provider_instrument_diag | %s', _json.dumps(diag, default=str))
+                # Silenced for cleaner terminal output
+                logger.debug('STRUCT provider_instrument_diag | %s', _json.dumps(diag, default=str))
             except (TypeError, ValueError, ImportError):
                 logger.debug('provider_instrument_diag_emit_failed', exc_info=True)
         except (TypeError, KeyError, AttributeError):

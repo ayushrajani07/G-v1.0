@@ -56,11 +56,9 @@ from src.metrics import get_metrics_singleton
 from src.utils.overlay_calendar import is_trading_day
 from src.utils.timeutils import get_market_session_bounds
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
-)
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging
+setup_logging(terminal_level='INFO')
 logger = logging.getLogger(__name__)
 
 

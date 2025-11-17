@@ -49,8 +49,17 @@ def fetch_real_quotes(provider, instruments: Iterable) -> dict | None:
     formatted = _normalize_instruments(instruments)
     if not formatted:
         return None
-    # Cache TTL from env
-    cache_ttl = EnvConfig.get_float('G6_KITE_QUOTE_CACHE_SECONDS', 1.0)
+    # Cache TTL: use collection interval as default (quotes don't need to be fresher than collection frequency)
+    # Allow env override for fine-tuning
+    try:
+        from src.config.loader import load_config
+        import os
+        config_path = os.environ.get('G6_CONFIG_PATH', 'config/g6_config.json')
+        cfg = load_config(config_path)
+        default_ttl = float(cfg.get("collection", {}).get("interval_seconds", 30))
+    except Exception:
+        default_ttl = 30.0  # Fallback to 30 seconds
+    cache_ttl = EnvConfig.get_float('G6_KITE_QUOTE_CACHE_SECONDS', default_ttl)
     if cache_ttl < 0:
         cache_ttl = 0
     if cache_ttl > 0:

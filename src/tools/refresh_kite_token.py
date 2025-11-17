@@ -19,10 +19,9 @@ except (ImportError, AttributeError):  # pragma: no cover - optional helper
     handle_api_error = None  # type: ignore
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging
+setup_logging(terminal_level='INFO')
 
 logger = logging.getLogger("kite-token")
 

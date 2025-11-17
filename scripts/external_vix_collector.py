@@ -105,7 +105,9 @@ def main():
     ap.add_argument("--interval", type=int, default=30, help="Fetch interval seconds")
     ap.add_argument("--source", default="sim", help="Source tag (e.g., nse, cboe)")
     args = ap.parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    # Phase 3: Use simplified logging setup
+    from src.utils.logging_utils import setup_logging
+    setup_logging(terminal_level='INFO')
     th = threading.Thread(target=loop, args=(args.interval, args.source), daemon=True)
     th.start()
     with run_http_server(args.listen):

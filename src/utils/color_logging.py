@@ -193,9 +193,11 @@ def enable_color_logging(format: str = _DEF_FORMAT) -> None:
         if isinstance(h, logging.StreamHandler):
             h.setFormatter(ColorFormatter(format, use_color=use_color, theme=theme))
     if not root.handlers:
-        # basicConfig not yet called; configure now
-        logging.basicConfig(level=level, format=format)
-        # After basicConfig, update any created stream handlers
+        # Phase 3: Use simplified logging setup
+        from src.utils.logging_utils import setup_logging
+        level_name = logging.getLevelName(level) if isinstance(level, int) else str(level)
+        setup_logging(terminal_level=level_name)
+        # After setup, update any created stream handlers with color formatter
         if root.handlers:
             for h in root.handlers:
                 if isinstance(h, logging.StreamHandler):

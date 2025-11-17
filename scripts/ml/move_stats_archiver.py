@@ -128,5 +128,7 @@ def main() -> None:
 if __name__ == "__main__":  # CLI entry
     # Initialize basic logging config if not already configured
     if not logging.getLogger().handlers:
-        logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+        # Phase 3: Use simplified logging setup
+        from src.utils.logging_utils import setup_logging
+        setup_logging(terminal_level='INFO')
     main()

@@ -30,12 +30,9 @@ try:
 except ImportError:
     get_provider = None  # type: ignore
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging
+setup_logging(terminal_level='INFO')
 
 logger = logging.getLogger("token-manager")
 

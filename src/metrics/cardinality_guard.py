@@ -344,7 +344,8 @@ class _RegistryGuard:
                 # Duplicate registration attempt – increment duplicates counter if available
                 try:
                     try:
-                        logger.info("registry_guard.duplicate_detected name=%s", name)
+                        # Silenced for cleaner terminal output
+                        logger.debug("registry_guard.duplicate_detected name=%s", name)
                     except (AttributeError, TypeError):
                         # Handle missing logger or format errors
                         pass

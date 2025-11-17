@@ -70,7 +70,12 @@ class CycleContext:
                 pct = (secs/total*100.0) if total else 0.0
                 fail = self.phase_failures.get(phase, 0)
                 parts.append(f"{phase}={secs:.3f}s({pct:.1f}%){'/F'+str(fail) if fail else ''}")
-            line = "PHASE_TIMING " + " | ".join(parts) + f" | total={total:.3f}s"
+            
+            # Format with each phase on its own line for better readability
+            header = "PHASE_TIMING"
+            phase_lines = [f"  {part}" for part in parts]
+            phase_lines.append(f"  total={total:.3f}s")
+            line = "\n" + header + "\n" + "\n".join(phase_lines) + "\n"
             logger.info(line)
         except (AttributeError, TypeError, ValueError, KeyError):  # pragma: no cover
             logger.debug("Failed consolidated phase log", exc_info=True)

@@ -51,12 +51,26 @@ def get_expiry_dates(provider, index_symbol: str) -> list[_dt.date]:
     try:
         if provider._auth_failed:
             raise RuntimeError("kite_auth_failed")
-        cache = provider._state.expiry_dates_cache.get(index_symbol)
-        if cache:
+        
+        # Check TTL-aware cache (cache key includes hour bucket for 1-hour TTL)
+        import time
+        cache_start = time.time()
+        cache_hour = int(cache_start // 3600)  # Changes every hour
+        cache_key = f"{index_symbol}:{cache_hour}"
+        cache = provider._state.expiry_dates_cache.get(cache_key)
+        if cache is not None:  # Changed: check explicitly for None instead of truthy check
+            logger.debug("expiry_cache_hit index=%s key=%s len=%d duration=%.3fms", 
+                       index_symbol, cache_key, len(cache), (time.time() - cache_start) * 1000)
             return cache
+        
+        logger.debug("expiry_cache_miss index=%s key=%s cache_keys=%s fetching_instruments", 
+                   index_symbol, cache_key, list(provider._state.expiry_dates_cache.keys())[:5])
         atm = get_atm_strike(provider, index_symbol)
         exch = POOL_FOR.get(index_symbol, "NFO")
+        inst_start = time.time()
         instruments = provider.get_instruments(exch)
+        logger.debug("get_instruments index=%s exch=%s count=%d duration=%.3fms", 
+                   index_symbol, exch, len(instruments), (time.time() - inst_start) * 1000)
         today = _dt.date.today()
         opts = [
             inst for inst in instruments
@@ -82,12 +96,25 @@ def get_expiry_dates(provider, index_symbol: str) -> list[_dt.date]:
         if not sorted_dates:
             if instruments:
                 # Do not fabricate based on weekday; return empty and let upstream logic handle it.
-                logger.warning("no_expiries_extracted_from_instruments index=%s", index_symbol)
+                # Silenced for cleaner terminal output
+                logger.debug("no_expiries_extracted_from_instruments index=%s", index_symbol)
                 sorted_dates = []
             else:
                 logger.warning("empty_instrument_universe_no_expiries index=%s", index_symbol)
                 sorted_dates = []
-        provider._state.expiry_dates_cache[index_symbol] = sorted_dates
+        
+        # Cache with TTL-aware key (includes hour bucket)
+        import time
+        cache_hour = int(time.time() // 3600)
+        cache_key = f"{index_symbol}:{cache_hour}"
+        provider._state.expiry_dates_cache[cache_key] = sorted_dates
+        
+        # Clean old cache entries (keep only current hour)
+        old_keys = [k for k in provider._state.expiry_dates_cache.keys() if not k.endswith(f":{cache_hour}")]
+        for old_key in old_keys:
+            provider._state.expiry_dates_cache.pop(old_key, None)
+        
+        logger.debug("expiry_dates_cached index=%s count=%d", index_symbol, len(sorted_dates))
         return sorted_dates
     except Exception as e:
         if _is_auth_error(e) or str(e) == 'kite_auth_failed':
@@ -95,7 +122,10 @@ def get_expiry_dates(provider, index_symbol: str) -> list[_dt.date]:
             if provider._rl_fallback():
                 logger.warning("Kite auth failed; using synthetic expiry dates.")
             # Do not fabricate dates here; return empty and let callers handle gracefully
-            provider._state.expiry_dates_cache[index_symbol] = []
+            import time
+            cache_hour = int(time.time() // 3600)
+            cache_key = f"{index_symbol}:{cache_hour}"
+            provider._state.expiry_dates_cache[cache_key] = []
             return []
         logger.error("Failed to get expiry dates: %s", e, exc_info=True)
         if handle_data_collection_error:

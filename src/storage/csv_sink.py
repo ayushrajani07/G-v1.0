@@ -437,7 +437,8 @@ class CsvSink:
         if concise_mode:
             self.logger.debug("Index %s price: %s, ATM strike: %s", index, index_price, atm_strike)
         else:
-            self.logger.info("Index %s price: %s, ATM strike: %s", index, index_price, atm_strike)
+            # Silenced for cleaner terminal output
+            self.logger.debug("Index %s price: %s, ATM strike: %s", index, index_price, atm_strike)
 
         # Calculate PCR for this expiry
         put_oi = sum(float(data.get('oi', 0)) for data in options_data.values() if data.get('instrument_type') == 'PE')
@@ -1371,6 +1372,35 @@ class CsvSink:
             return round(index_price / 100) * 100
         return round(index_price / 50) * 50
 
+    def _read_first_tp_from_csv(self, index: str, expiry_code: str, offset: int, date_key: str) -> float | None:
+        """Read the first TP value from today's CSV file for the given series."""
+        import csv
+        series_key = (index, expiry_code, int(offset))
+        try:
+            # Construct today's CSV filepath
+            offset_dir = f"+{offset}" if int(offset) > 0 else f"{int(offset)}"
+            filepath = os.path.join(
+                self.base_dir,
+                index,
+                expiry_code,
+                offset_dir,
+                f"{date_key}.csv",
+            )
+            if not os.path.isfile(filepath):
+                return None
+            
+            # Read first data row (skip header)
+            with open(filepath, 'r', newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    tp_val = row.get('tp')
+                    if tp_val:
+                        return float(tp_val)
+                    break  # Only read first row
+        except (IOError, OSError, ValueError, KeyError, TypeError) as e:
+            self.logger.debug("Could not read first TP from CSV for %s: %s", series_key, e)
+        return None
+
     def _group_by_strike(self, options_data: dict[str, dict[str, Any]]) -> dict[float, dict[str, Any]]:
         grouped: dict[float, dict[str, Any]] = {}
         for symbol, data in options_data.items():
@@ -1504,10 +1534,12 @@ class CsvSink:
         except (IOError, OSError, KeyError, TypeError) as e:
             self.logger.debug("Could not load prev close: %s", e)
         series_key = (index, expiry_code, int(offset))
-        # Initialize per-day open if needed
+        # Initialize per-day open if needed - read from CSV first row if available
         if self._tp_open_date_by_key.get(series_key) != date_key:
             self._tp_open_date_by_key[series_key] = date_key
-            self._tp_open_by_key[series_key] = float(tp_price)
+            # Try to read first TP value from today's CSV file
+            first_tp = self._read_first_tp_from_csv(index, expiry_code, offset, date_key)
+            self._tp_open_by_key[series_key] = float(first_tp if first_tp is not None else tp_price)
         prev_tp_close = self._tp_prev_close_by_key.get(series_key)
         tp_net_change = float(tp_price) - float(prev_tp_close) if prev_tp_close is not None else 0.0
         tp_day_change = float(tp_price) - float(self._tp_open_by_key.get(series_key, tp_price))

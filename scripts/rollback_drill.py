@@ -36,7 +36,9 @@ import sys
 from typing import Any
 
 logger = logging.getLogger("scripts.rollback_drill")
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s %(name)s: %(message)s')
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging
+setup_logging(terminal_level='INFO')
 
 
 def capture_health_snapshot() -> dict[str, Any]:

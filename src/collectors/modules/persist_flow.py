@@ -88,7 +88,8 @@ def run_persist_flow(
     # Emit pre-write verbose line (mirrors previous behavior)
     try:
         if not concise_mode:
-            logger.info("Writing %s records to CSV sink", len(enriched_data))
+            # Silenced for cleaner terminal output
+            logger.debug("Writing %s records to CSV sink", len(enriched_data))
         else:
             logger.debug("Writing %s records to CSV sink", len(enriched_data))
     except (TypeError, ValueError, OSError):  # pragma: no cover

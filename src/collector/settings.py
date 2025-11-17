@@ -145,14 +145,10 @@ def get_collector_settings(force_reload: bool = False) -> CollectorSettings:
                     s = _settings_singleton
                     log = logging.getLogger(__name__)
                     log.info(
-                        "collector.settings.summary min_volume=%s min_oi=%s vol_pct=%.2f salvage=%s foreign_salvage=%s recovery_legacy=%s domain_models=%s trace=%s quiet=%s hb_interval=%.2f outage_thr=%s outage_log_every=%s retry_on_empty=%s overrides=%d pipeline_v2=%s",
-                        s.min_volume, s.min_oi, s.volume_percentile,
-                        int(bool(s.salvage_enabled)), int(bool(s.foreign_expiry_salvage)),
-                        int(bool(s.recovery_strategy_legacy)),
+                        "collector.settings.summary domain_models=%s trace=%s quiet=%s quiet_allow_trace=%s outage_thr=%s outage_log_every=%s retry_on_empty=%s overrides=%d",
                         int(bool(s.domain_models)), int(bool(s.trace_collector or s.trace_enabled)),
-                        int(bool(s.quiet_mode)), s.loop_heartbeat_interval, s.provider_outage_threshold,
-                        s.provider_outage_log_every, int(bool(s.retry_on_empty)), len(s.log_level_overrides),
-                        int(bool(s.pipeline_v2_flag))
+                        int(bool(s.quiet_mode)), int(bool(s.quiet_allow_trace)), s.provider_outage_threshold,
+                        s.provider_outage_log_every, int(bool(s.retry_on_empty)), len(s.log_level_overrides)
                     )
                     # Register (or note) with dispatcher state (best effort)
                     try:
@@ -167,22 +163,14 @@ def get_collector_settings(force_reload: bool = False) -> CollectorSettings:
                                 emit_summary_json(
                                 'collector.settings',
                                 [
-                                    ('min_volume', s.min_volume),
-                                    ('min_oi', s.min_oi),
-                                    ('volume_percentile', s.volume_percentile),
-                                    ('salvage_enabled', int(bool(s.salvage_enabled))),
-                                    ('foreign_expiry_salvage', int(bool(s.foreign_expiry_salvage))),
-                                    ('recovery_strategy_legacy', int(bool(s.recovery_strategy_legacy))),
                                     ('domain_models', int(bool(s.domain_models))),
                                     ('trace_collector', int(bool(s.trace_collector or s.trace_enabled))),
                                     ('quiet_mode', int(bool(s.quiet_mode))),
                                     ('quiet_allow_trace', int(bool(s.quiet_allow_trace))),
-                                    ('heartbeat_interval', s.loop_heartbeat_interval),
                                     ('outage_threshold', s.provider_outage_threshold),
                                     ('outage_log_every', s.provider_outage_log_every),
                                     ('retry_on_empty', int(bool(s.retry_on_empty))),
                                     ('overrides_count', len(s.log_level_overrides)),
-                                    ('pipeline_v2_flag', int(bool(s.pipeline_v2_flag))),
                                 ],
                                 logger_override=log
                             )
@@ -192,25 +180,26 @@ def get_collector_settings(force_reload: bool = False) -> CollectorSettings:
                     try:
                         if is_truthy_env is not None and is_truthy_env('G6_SETTINGS_SUMMARY_HUMAN'):
                             if emit_human_summary is not None:
+                                # SETTINGS SUMMARY - Active Settings Only
+                                # domain_models: 0=off, 1=on - Enable experimental domain model enrichment
+                                # trace_collector: 0=off, 1=on - Enable detailed collection tracing for debugging
+                                # quiet_mode: 0=normal, 1=quiet - Suppress non-critical logging output
+                                # quiet_allow_trace: 0=off, 1=on - Allow trace logs even when quiet_mode=1
+                                # outage_threshold: N cycles - Declare provider outage after N consecutive empty cycles
+                                # outage_log_every: N cycles - Log outage warning every N cycles (prevents spam)
+                                # retry_on_empty: 0=off, 1=on - Retry API calls that return empty results
+                                # overrides_count: N - Number of active log level overrides
                                 emit_human_summary(
                                 'Settings Summary',
                                 [
-                                    ('min_volume', s.min_volume),
-                                    ('min_oi', s.min_oi),
-                                    ('volume_percentile', s.volume_percentile),
-                                    ('salvage_enabled', int(bool(s.salvage_enabled))),
-                                    ('foreign_expiry_salvage', int(bool(s.foreign_expiry_salvage))),
-                                    ('recovery_strategy_legacy', int(bool(s.recovery_strategy_legacy))),
                                     ('domain_models', int(bool(s.domain_models))),
                                     ('trace_collector', int(bool(s.trace_collector or s.trace_enabled))),
                                     ('quiet_mode', int(bool(s.quiet_mode))),
                                     ('quiet_allow_trace', int(bool(s.quiet_allow_trace))),
-                                    ('heartbeat_interval', s.loop_heartbeat_interval),
                                     ('outage_threshold', s.provider_outage_threshold),
                                     ('outage_log_every', s.provider_outage_log_every),
                                     ('retry_on_empty', int(bool(s.retry_on_empty))),
                                     ('overrides_count', len(s.log_level_overrides)),
-                                    ('pipeline_v2_flag', int(bool(s.pipeline_v2_flag))),
                                 ],
                                 logging.getLogger(__name__)
                             )

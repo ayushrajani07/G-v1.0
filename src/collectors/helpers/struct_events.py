@@ -132,7 +132,9 @@ def _emit(event: str, payload: dict[str, Any]) -> None:  # pragma: no cover (thi
         return
     try:
         if _STRUCT_FMT_MODE in {'json','both'}:
-            logger.info("STRUCT %s | %s", event, _def_dumps(_compact_payload(event, payload)))
+            # Silenced for cleaner terminal output
+            # logger.info("STRUCT %s | %s", event, _def_dumps(_compact_payload(event, payload)))
+            logger.debug("STRUCT %s | %s", event, _def_dumps(_compact_payload(event, payload)))
         if _STRUCT_FMT_MODE in {'human','both'}:
             try:
                 logger.info(_human_line(event, payload))

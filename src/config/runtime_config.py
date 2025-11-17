@@ -65,7 +65,17 @@ def _coerce_bool(val: str | None, default: bool) -> bool:
     return val.strip().lower() in {"1","true","yes","on"}
 
 def build_runtime_config() -> RuntimeConfig:
-    loop_interval = EnvConfig.get_float("G6_LOOP_INTERVAL_SECONDS", 1.0)
+    # Use config file as source of truth for interval, allow env override
+    from src.config.loader import load_config
+    import os
+    try:
+        config_path = os.environ.get('G6_CONFIG_PATH', 'config/g6_config.json')
+        cfg = load_config(config_path)
+        config_interval = cfg.get("collection", {}).get("interval_seconds", 60)
+    except Exception:
+        config_interval = 60
+    loop_interval = EnvConfig.get_float("G6_LOOP_INTERVAL_SECONDS", config_interval)
+    
     max_cycles = EnvConfig.get_int("G6_LOOP_MAX_CYCLES", 0) or None  # 0 means None
     metrics_enabled_1 = EnvConfig.get_str("G6_METRICS_ENABLED", "")
     metrics_enabled_2 = EnvConfig.get_str("G6_METRICS_ENABLE", "")

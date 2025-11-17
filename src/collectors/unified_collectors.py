@@ -49,6 +49,9 @@ _trace_import('import utils.deprecations')
 
 from src.utils.deprecations import check_pipeline_flag_deprecation
 
+# Phase 2: Simplified logging helpers
+from src.utils.log_helpers import log_cycle_complete, log_index_complete, log_warning, log_error
+
 # Optional imports for settings and env adapters (Phase 3b consolidation)
 try:
     from src.collector.settings import get_collector_settings
@@ -1569,6 +1572,26 @@ def run_unified_collectors(
         api_succ = None
         api_ms = None
         cpu = None; mem_mb = None
+        
+        # Calculate collection success from indices_struct (fallback if metrics unavailable)
+        coll_succ_calculated = None
+        if indices_struct:
+            try:
+                total_success = 0
+                total_count = 0
+                for idx_entry in indices_struct:
+                    strike_cov = float(idx_entry.get('strike_coverage_avg', 0.0) or 0.0)
+                    total_success += strike_cov
+                    total_count += 1
+                if total_count > 0:
+                    coll_succ_calculated = (total_success / total_count) * 100.0
+            except (TypeError, ValueError, KeyError):
+                pass
+        
+        # Calculate options per minute from duration and option count
+        if opts_total and total_elapsed > 0:
+            opts_per_min = (opts_total / total_elapsed) * 60.0
+        
         if metrics:
             # Safe attribute extraction helpers to avoid type: ignore
             def _mval(obj: Any, name: str) -> Any:
@@ -1580,12 +1603,16 @@ def run_unified_collectors(
                 except (AttributeError, TypeError):
                     return None
                 return None
-            coll_succ = _mval(metrics, 'collection_success_rate')
+            # Use metrics values if available, otherwise use calculated values
+            coll_succ = _mval(metrics, 'collection_success_rate') or coll_succ_calculated
             api_succ = _mval(metrics, 'api_success_rate')
             api_ms = _mval(metrics, 'api_response_time')
             cpu = _mval(metrics, 'cpu_usage_percent')
             mem_mb = _mval(metrics, 'memory_usage_mb')
-            opts_per_min = _mval(metrics, 'options_per_minute')
+            opts_per_min = _mval(metrics, 'options_per_minute') or opts_per_min
+        else:
+            # No metrics available, use calculated values
+            coll_succ = coll_succ_calculated
 
         # Build both representations lazily
         raw_line = None
@@ -1701,16 +1728,17 @@ def run_unified_collectors(
     # Structured return object (backward compatible: callers ignoring return unaffected).
     try:
         # Emit cycle_status_summary structured event before returning (observability enhancement)
-        try:
-            _emit_cycle_status_summary(
-                cycle_ts=int(time.time()),
-                duration_s=total_elapsed,
-                indices=cast(list[dict[str, Any]], indices_struct),
-                index_count=len(indices_struct),
-                include_reason_totals=True,
-            )
-        except (AttributeError, TypeError, NameError) as e:
-            logger.debug("cycle_status_summary_emit_failed: %s", e, exc_info=True)
+        # Silenced in favor of cleaner cycle completion logging
+        # try:
+        #     _emit_cycle_status_summary(
+        #         cycle_ts=int(time.time()),
+        #         duration_s=total_elapsed,
+        #         indices=cast(list[dict[str, Any]], indices_struct),
+        #         index_count=len(indices_struct),
+        #         include_reason_totals=True,
+        #     )
+        # except (AttributeError, TypeError, NameError) as e:
+        #     logger.debug("cycle_status_summary_emit_failed: %s", e, exc_info=True)
         # Phase 5: Benchmark / Anomaly persistence extracted to modules.benchmark_bridge
         try:
             if not write_benchmark_artifact:
@@ -1818,6 +1846,61 @@ def run_unified_collectors(
                     ix['field_coverage_avg'] = cov_roll.get('field_coverage_avg')
         except (ImportError, TypeError, AttributeError, KeyError) as e:
             logger.debug('legacy_coverage_rollup_failed: %s', e, exc_info=True)
+        
+        # Phase 2: Log cycle completion with per-index metrics
+        try:
+            index_metrics_map = {}
+            for idx_entry in ret_obj.get('indices', []):
+                index_name = idx_entry.get('index', 'UNKNOWN')
+                option_count = int(idx_entry.get('option_count', 0) or 0)
+                attempts = int(idx_entry.get('attempts', 0) or 0)
+                
+                # Calculate success percentage based on strike coverage
+                # Use strike_coverage_avg if available (more accurate)
+                strike_cov_avg = float(idx_entry.get('strike_coverage_avg', 0.0) or 0.0)
+                if strike_cov_avg > 0:
+                    success_pct = strike_cov_avg * 100.0
+                else:
+                    # Fallback: estimate from expiries
+                    expiries = idx_entry.get('expiries', [])
+                    if expiries:
+                        total_cov = sum(float(e.get('strike_cov', 0.0) or 0.0) for e in expiries)
+                        success_pct = (total_cov / len(expiries) * 100.0) if expiries else 0.0
+                    else:
+                        # Last resort: assume 100% if we got options, 0% otherwise
+                        success_pct = 100.0 if option_count > 0 else 0.0
+                
+                # Use actual field coverage if available
+                field_coverage_pct = float(idx_entry.get('field_coverage_avg', 0.0) or 0.0) * 100.0
+                if field_coverage_pct == 0.0:
+                    # Fallback: estimate from expiries
+                    expiries = idx_entry.get('expiries', [])
+                    if expiries:
+                        total_field_cov = sum(float(e.get('field_cov', 0.0) or 0.0) for e in expiries)
+                        field_coverage_pct = (total_field_cov / len(expiries) * 100.0) if expiries else 0.0
+                    else:
+                        # Estimate based on status
+                        status = (idx_entry.get('status') or '').upper()
+                        if status == 'OK':
+                            field_coverage_pct = 95.0
+                        elif status == 'PARTIAL':
+                            field_coverage_pct = 75.0
+                        elif status == 'STALE':
+                            field_coverage_pct = 50.0
+                
+                index_metrics_map[index_name] = {
+                    'success_pct': success_pct,
+                    'field_coverage_pct': field_coverage_pct,
+                    'strike_count': option_count,
+                }
+            
+            # Log cycle completion
+            if index_metrics_map:
+                duration_ms = int(total_elapsed * 1000)
+                log_cycle_complete(logger, duration_ms, index_metrics_map)
+        except Exception as e:
+            logger.debug("Failed to log cycle metrics: %s", e, exc_info=True)
+        
         return ret_obj
     except (KeyError, TypeError, AttributeError, ValueError) as e:
         # Structured return build failed late; preserve best-effort indices_struct so callers/tests

@@ -610,7 +610,6 @@ def run_cycle(ctx: RuntimeContext) -> float:
                         ctx.index_params,
                         ctx.providers,
                         ctx.csv_sink,
-                        ctx.influx_sink,
                         ctx.metrics,
                         compute_greeks=bool(greeks_cfg.get('enabled')),
                         risk_free_rate=float(greeks_cfg.get('risk_free_rate', 0.05)),

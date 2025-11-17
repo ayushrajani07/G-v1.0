@@ -26,7 +26,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import ClassVar
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging
+setup_logging(terminal_level='INFO')
 logger = logging.getLogger(__name__)
 
 

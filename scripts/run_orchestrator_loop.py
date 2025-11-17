@@ -42,8 +42,15 @@ except Exception:  # pragma: no cover
     def flush_deferred_cycle_tables():  # type: ignore
         pass
 
-LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s: %(message)s"
-logging.basicConfig(level=EnvConfig.get_str("G6_LOG_LEVEL", "INFO"), format=LOG_FORMAT)
+# Phase 1: Use simplified logging setup
+from src.utils.logging_utils import setup_logging, setup_development, setup_production
+
+# Determine environment and setup appropriate logging
+if EnvConfig.get_str("G6_ENV", "development") == "production":
+    setup_production()  # Quiet terminal, ops logs
+else:
+    setup_development()  # Verbose terminal, debug logs
+
 logger = logging.getLogger("run_orchestrator_loop")
 
 def parse_args(argv: list[str]) -> argparse.Namespace:

@@ -10,12 +10,9 @@ import sys
 
 # Add this before launching the subprocess
 
-# Configure logging to be more immediate
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging
+setup_logging(terminal_level='INFO', debug_file='logs/debug_startup.log')
 
 logger = logging.getLogger("debug")
 

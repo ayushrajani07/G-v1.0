@@ -329,12 +329,10 @@ def main() -> None:
     
     args = parser.parse_args()
     
-    # Setup logging
-    log_level = logging.DEBUG if args.debug else logging.INFO
-    logging.basicConfig(
-        level=log_level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
+    # Phase 3: Use simplified logging setup
+    from src.utils.logging_utils import setup_logging
+    log_level = 'DEBUG' if args.debug else 'INFO'
+    setup_logging(terminal_level=log_level)
     
     # Determine config path
     if args.config:

@@ -44,7 +44,9 @@ logger = logging.getLogger("kite-test")
 
 
 def setup_logging() -> None:
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    # Phase 3: Use simplified logging setup
+    from src.utils.logging_utils import setup_logging
+    setup_logging(terminal_level='INFO')
 
 
 def get_expiry(kite_provider: KiteProvider) -> list[str]:

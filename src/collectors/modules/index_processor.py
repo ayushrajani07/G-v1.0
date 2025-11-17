@@ -267,7 +267,8 @@ def process_index(
         except (AttributeError, TypeError) as e:
             logger.debug("Failed to trace index_config: %s", e)
     if not concise_mode:
-        logger.info("Collecting data for %s", index_symbol)
+        # Silenced for cleaner terminal output
+        logger.debug("Collecting data for %s", index_symbol)
     else:
         logger.debug("Collecting data for %s", index_symbol)
     per_index_start = time.time(); per_index_ts = utc_now()
@@ -501,7 +502,8 @@ def process_index(
                         logger.debug('emit_strike_cluster failed: %s', e)
                         try:
                             import json as _json
-                            logger.info('STRUCT strike_cluster | %s', _json.dumps(cluster_struct, default=str))
+                            # Silenced for cleaner terminal output
+                            logger.debug('STRUCT strike_cluster | %s', _json.dumps(cluster_struct, default=str))
                         except (TypeError, ValueError) as e2:
                             logger.debug('Failed to emit strike_cluster struct: %s', e2, exc_info=True)
     except (AttributeError, ValueError, TypeError, KeyError) as e:

@@ -41,7 +41,12 @@ except ImportError:
     _kite_auth_validation_import = None  # type: ignore
 
 LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s: %(message)s"
-logging.basicConfig(level=os.environ.get("G6_LOG_LEVEL", "INFO"), format=LOG_FORMAT)
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging, setup_production
+if os.environ.get("G6_ENV") == "production":
+    setup_production()
+else:
+    setup_logging(terminal_level=os.environ.get("G6_LOG_LEVEL", "INFO"))
 logger = logging.getLogger("launch_platform")
 
 _SCRIPT_DIR = Path(__file__).resolve().parent

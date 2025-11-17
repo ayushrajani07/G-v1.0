@@ -34,10 +34,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from src.analytics.ml.baseline import baseline_tp_batch, compute_residuals
 from src.analytics.ml.feature_engineering import FeatureEngineer
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging
+setup_logging(terminal_level='INFO')
 logger = logging.getLogger(__name__)
 
 

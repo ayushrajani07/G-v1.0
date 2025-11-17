@@ -31,7 +31,8 @@ try:  # reuse existing bridge for uniform formatting + gating
 except (ImportError, ModuleNotFoundError, AttributeError):  # pragma: no cover
     def emit_struct(event: str, fields: dict[str, Any]) -> None:
         try:
-            logger.info("STRUCT %s | %s", event, json.dumps(fields, default=str, ensure_ascii=False))
+            # Silenced for cleaner terminal output
+            logger.debug("STRUCT %s | %s", event, json.dumps(fields, default=str, ensure_ascii=False))
         except (TypeError, ValueError):
             pass
 

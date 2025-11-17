@@ -402,7 +402,8 @@ def process_expiry(
         if not strikes:
             raise NoInstrumentsError(f"Failed to build strike list for {index_symbol}; atm={atm_strike}")
         if not concise_mode:
-            logger.info("Collecting %s strikes for %s %s: %s", len(strikes), index_symbol, expiry_rule, strikes)
+            # Silenced for cleaner terminal output
+            logger.debug("Collecting %s strikes for %s %s: %s", len(strikes), index_symbol, expiry_rule, strikes)
         else:
             logger.debug("Collecting %s strikes for %s %s", len(strikes), index_symbol, expiry_rule)
         with ctx.time_phase('fetch_instruments'):
@@ -835,7 +836,8 @@ def process_expiry(
         except (TypeError, ValueError, KeyError, AttributeError) as agg_e:
             logger.debug('Aggregation capture failed for %s %s: %s', index_symbol, expiry_rule, agg_e)
         if not concise_mode:
-            logger.info("Successfully collected %s options for %s %s", len(enriched_data), index_symbol, expiry_rule)
+            # Silenced for cleaner terminal output
+            logger.debug("Successfully collected %s options for %s %s", len(enriched_data), index_symbol, expiry_rule)
         else:
             logger.debug("Collected %s options for %s %s", len(enriched_data), index_symbol, expiry_rule)
         try:

@@ -1,243 +1,186 @@
-"""Unified logging utilities for G6 Platform."""
+"""Simplified three-tier logging for G6 Platform.
+
+Phase 1 Implementation: 2025-11-16
+- Three tiers: Terminal (clean) → Ops (JSON) → Debug (detailed)
+- Environment-driven configuration
+- Standardized message formats
+"""
 from __future__ import annotations
 
 import logging
 import os
 import sys
+from typing import Optional
 
-# Phase 2: Centralized environment variable access
-from src.config.env_config import EnvConfig
+# Tier definitions
+TIER_TERMINAL = "terminal"  # User-facing console
+TIER_OPS = "ops"            # Operational file logs
+TIER_DEBUG = "debug"        # Developer debug logs
 
-# Optional imports
-try:
-    from src.utils.env_flags import is_truthy_env  # type: ignore
-except ImportError:
-    is_truthy_env = None  # type: ignore
+# Format strings
+FMT_TERMINAL = "%(message)s"  # Clean output only
+FMT_OPS = "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+FMT_DEBUG = "%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s"
 
-try:
-    from src.errors import handle_error, ErrorCategory, ErrorSeverity
-except ImportError:
-    handle_error = None  # type: ignore
-    ErrorCategory = None  # type: ignore
-    ErrorSeverity = None  # type: ignore
-
-DEFAULT_FORMAT = '%(asctime)s - %(threadName)s - %(name)s - %(levelname)s - %(message)s'
-# Minimal console format (message only) used for cleaner terminal output.
-MINIMAL_CONSOLE_FORMAT = '%(message)s'
-
+# Suppressed loggers (always WARNING+)
 SUPPRESSED_LOGGERS = [
-    'urllib3', 'requests', 'kiteconnect.connection'
+    'urllib3', 'requests', 'kiteconnect.connection', 'urllib3.connectionpool'
 ]
 
-def setup_logging(level: str = 'INFO', log_file: str | None = None, fmt: str = DEFAULT_FORMAT) -> logging.Logger:
-    """Configure root logging.
-
-    Console handler: by default uses minimal message-only format to satisfy
-    requirement: "REMOVE INFO- AND ALL TEXT BEFORE THAT FROM TERMINAL OUTPUT".
-    Override via env G6_VERBOSE_CONSOLE=1 (restores full DEFAULT_FORMAT) or
-    explicitly pass a fmt argument.
-
-    File handler (if enabled) always uses full DEFAULT_FORMAT for diagnostics.
+def setup_logging(
+    terminal_level: str = "WARNING",  # Default: show only warnings/errors
+    ops_file: Optional[str] = None,   # If provided, enable Tier 2
+    debug_file: Optional[str] = None, # If provided, enable Tier 3
+    # Legacy compatibility
+    level: Optional[str] = None,
+    log_file: Optional[str] = None,
+    fmt: Optional[str] = None,
+) -> logging.Logger:
     """
-    log_level = getattr(logging, level.upper(), logging.INFO)
+    Configure three-tier logging.
+    
+    Args:
+        terminal_level: Console level (WARNING=user, INFO=verbose, DEBUG=dev)
+        ops_file: Path for operational JSON logs (None=disabled)
+        debug_file: Path for debug logs (None=disabled)
+        
+        # Legacy compatibility args (deprecated):
+        level: Old API, maps to terminal_level if provided
+        log_file: Old API, maps to debug_file if provided
+        fmt: Ignored in new implementation
+    
+    Env Overrides:
+        G6_LOG_LEVEL: Override terminal_level
+        G6_OPS_LOG: Override ops_file path
+        G6_DEBUG_LOG: Override debug_file path
+    
+    Examples:
+        # Production: Quiet terminal, ops logs only
+        setup_logging(terminal_level="WARNING", ops_file="logs/ops.jsonl")
+        
+        # Development: Verbose terminal, debug logs
+        setup_logging(terminal_level="INFO", debug_file="logs/debug.log")
+        
+        # Legacy compatibility
+        setup_logging(level='INFO', log_file='logs/g6.log')  # Still works
+    """
+    # Handle legacy API
+    if level is not None:
+        terminal_level = level
+    if log_file is not None and debug_file is None:
+        debug_file = log_file
+    
+    # Apply env overrides
+    terminal_level = os.getenv("G6_LOG_LEVEL", terminal_level).upper()
+    ops_file = os.getenv("G6_OPS_LOG", ops_file)
+    debug_file = os.getenv("G6_DEBUG_LOG", debug_file)
+    
+    # Setup root logger
     root = logging.getLogger()
-    root.setLevel(log_level)
-    # Remove existing handlers to avoid duplication on re-init
-    def _safe_close_handler(h: logging.Handler) -> None:
-        try:
-            h.flush()
-        except (OSError, IOError, ValueError):
-            # Handle flush failures (closed handlers, I/O errors)
-            return
-        try:
-            h.close()
-        except (OSError, IOError, ValueError):
-            # Handle close failures (closed handlers, I/O errors)
-            return
-
+    root.setLevel(logging.DEBUG)  # Capture all, filter per handler
+    
+    # Clear existing handlers
     for h in root.handlers[:]:
         try:
             root.removeHandler(h)
-        except (ValueError, AttributeError):
-            # Handle handler removal failures
+            h.close()
+        except Exception:
             pass
-        _safe_close_handler(h)
 
-    # Decide console format precedence: explicit fmt parameter beats env toggles.
-    if is_truthy_env is not None:
-        try:
-            verbose_console_env = is_truthy_env('G6_VERBOSE_CONSOLE')
-            minimal_disabled_env = is_truthy_env('G6_DISABLE_MINIMAL_CONSOLE')
-            json_console_env = is_truthy_env('G6_JSON_LOGS')
-        except (AttributeError, TypeError, KeyError, ValueError):
-            # Handle env flag access failures
-            verbose_console_env = EnvConfig.get_bool('G6_VERBOSE_CONSOLE', False)
-            minimal_disabled_env = EnvConfig.get_bool('G6_DISABLE_MINIMAL_CONSOLE', False)
-            json_console_env = EnvConfig.get_bool('G6_JSON_LOGS', False)
-    else:
-        verbose_console_env = EnvConfig.get_bool('G6_VERBOSE_CONSOLE', False)
-        minimal_disabled_env = EnvConfig.get_bool('G6_DISABLE_MINIMAL_CONSOLE', False)
-        json_console_env = EnvConfig.get_bool('G6_JSON_LOGS', False)
-    # If caller passed a custom fmt different from DEFAULT_FORMAT, honor it.
-    if fmt != DEFAULT_FORMAT:
-        console_fmt = fmt
-    else:
-        if verbose_console_env or minimal_disabled_env:
-            console_fmt = DEFAULT_FORMAT
-        else:
-            console_fmt = MINIMAL_CONSOLE_FORMAT
-
+    
+    # Tier 1: Terminal (clean, minimal)
     console = logging.StreamHandler(sys.stdout)
-    console.setLevel(log_level)
-    if json_console_env:
-        try:
-            try:
-                import orjson as _orjson  # type: ignore
-                _json_dumps = _orjson.dumps
-                _is_orjson = True
-            except (ImportError, AttributeError):  # pragma: no cover
-                # Handle missing orjson module
-                import json as _json  # type: ignore
-                _json_dumps = _json.dumps
-                _is_orjson = False
-
-            class _JsonFormatter(logging.Formatter):
-                def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
-                    # Use record.created or fall back to time.time() to avoid naive datetime usage
-                    import time as _time
-                    # Pull structured context if available
-                    try:
-                        from . import log_context as _lc  # type: ignore
-                        ctx = _lc.get_context()
-                    except (ImportError, AttributeError, TypeError):
-                        # Handle log_context module or access failures
-                        ctx = {}
-                    payload = {
-                        'ts': getattr(record, 'created', _time.time()),
-                        'level': record.levelname,
-                        'logger': record.name,
-                        'thread': record.threadName,
-                        'msg': record.getMessage(),
-                        'ctx': ctx or None,
-                    }
-                    if record.exc_info:
-                        payload['exc_info'] = self.formatException(record.exc_info)
-                    try:
-                        if _is_orjson:
-                            return _json_dumps(payload).decode('utf-8')  # type: ignore[call-arg]
-                        else:
-                            s = _json_dumps(payload)  # type: ignore[call-arg]
-                            return s if isinstance(s, str) else str(s)
-                    except (TypeError, ValueError, AttributeError):
-                        # Handle JSON serialization failures
-                        return str(payload)
-            console.setFormatter(_JsonFormatter())
-        except (ImportError, AttributeError, TypeError, ValueError):
-            # Handle JSON formatter setup failures
-            console.setFormatter(logging.Formatter(console_fmt))
-    else:
-        # Enrich plain text logs with selected context fields by adding a filter
-        class _CtxFilter(logging.Filter):
-            def filter(self, record: logging.LogRecord) -> bool:  # type: ignore[override]
-                try:
-                    from . import log_context as _lc  # type: ignore
-                    ctx = _lc.get_context()
-                    # Expose as attributes for formatters that include them
-                    for k in ("run_id", "component", "cycle", "index", "provider"):
-                        if k in ctx and not hasattr(record, k):
-                            setattr(record, k, ctx[k])
-                except (ImportError, AttributeError, TypeError, KeyError):
-                    # Handle log_context or attribute access failures
-                    pass
-                return True
-        console.addFilter(_CtxFilter())
-        console.setFormatter(logging.Formatter(console_fmt))
-    try:
-        enc = getattr(sys.stdout, 'encoding', '') or ''
-        if enc.lower() not in ('utf-8','utf8','utf_8'):
-            class _AsciiSanitizer(logging.Filter):
-                _MAP = str.maketrans({
-                    '╔':'+','╗':'+','╚':'+','╝':'+','═':'=','║':'|','─':'-','┌':'+','┐':'+','└':'+','┘':'+','│':'|'
-                })
-                def filter(self, record: logging.LogRecord) -> bool:  # type: ignore[override]
-                    if isinstance(record.msg, str):
-                        record.msg = record.msg.translate(self._MAP)
-                    return True
-            console.addFilter(_AsciiSanitizer())
-    except (AttributeError, TypeError):
-        # Handle encoding check or filter setup failures
-        pass
+    console.setLevel(getattr(logging, terminal_level, logging.WARNING))
+    console.setFormatter(logging.Formatter(FMT_TERMINAL))
     root.addHandler(console)
 
-    if log_file:
+    
+    # Tier 2: Operational logs (JSON, structured)
+    if ops_file:
         try:
-            os.makedirs(os.path.dirname(log_file), exist_ok=True)
-            fh = logging.FileHandler(log_file, encoding='utf-8')
-            fh.setLevel(log_level)
-            # Always keep detailed format in file for post-mortem analysis
-            class _FileCtxFilter(logging.Filter):
-                def filter(self, record: logging.LogRecord) -> bool:  # type: ignore[override]
-                    try:
-                        from . import log_context as _lc  # type: ignore
-                        ctx = _lc.get_context()
-                        for k in ("run_id", "component", "cycle", "index", "provider"):
-                            if k in ctx and not hasattr(record, k):
-                                setattr(record, k, ctx[k])
-                    except (ImportError, AttributeError, TypeError, KeyError):
-                        # Handle log_context or attribute access failures
-                        pass
-                    return True
-            fh.addFilter(_FileCtxFilter())
-            fh.setFormatter(logging.Formatter(DEFAULT_FORMAT))
-            root.addHandler(fh)
+            os.makedirs(os.path.dirname(ops_file), exist_ok=True)
+            ops_handler = logging.FileHandler(ops_file, encoding='utf-8')
+            ops_handler.setLevel(logging.INFO)
+            
+            # Simple JSON formatter
+            class JSONFormatter(logging.Formatter):
+                def format(self, record):
+                    import json
+                    import time
+                    obj = {
+                        "ts": int(time.time() * 1000),
+                        "level": record.levelname,
+                        "logger": record.name,
+                        "msg": record.getMessage(),
+                    }
+                    # Add context if available
+                    for attr in ("index", "component", "run_id", "cycle", "success_pct", "field_coverage_pct"):
+                        if hasattr(record, attr):
+                            obj[attr] = getattr(record, attr)
+                    if record.exc_info:
+                        obj["exception"] = self.formatException(record.exc_info)
+                    return json.dumps(obj)
+            
+            ops_handler.setFormatter(JSONFormatter())
+            root.addHandler(ops_handler)
         except Exception as e:
-            root.error("Failed to create log file handler: %s", e)
-            if handle_error is not None and ErrorCategory is not None and ErrorSeverity is not None:
-                try:
-                    # Use facade to avoid circular import (Phase 2 refactoring)
-                    handle_error(
-                        e,
-                        category=ErrorCategory.CONFIGURATION,
-                        severity=ErrorSeverity.MEDIUM,
-                        context={"op": "create_file_handler", "path": log_file},
-                        suppress=True
-                    )
-                except (AttributeError, TypeError, RuntimeError):
-                    # Handle error handler invocation failures
-                    pass
-
+            root.error("Failed to create ops log handler: %s", e)
+    
+    # Tier 3: Debug logs (full detail)
+    if debug_file:
+        try:
+            os.makedirs(os.path.dirname(debug_file), exist_ok=True)
+            debug_handler = logging.FileHandler(debug_file, encoding='utf-8')
+            debug_handler.setLevel(logging.DEBUG)
+            debug_handler.setFormatter(logging.Formatter(FMT_DEBUG))
+            root.addHandler(debug_handler)
+        except Exception as e:
+            root.error("Failed to create debug log handler: %s", e)
+    
+    # Suppress noisy loggers
     for name in SUPPRESSED_LOGGERS:
         logging.getLogger(name).setLevel(logging.WARNING)
 
     return root
 
-# Best-effort cleanup of logging handlers at interpreter exit to avoid ResourceWarnings in tests
+
+# Quick presets for common scenarios
+def setup_production():
+    """Production: Quiet terminal + ops logs."""
+    return setup_logging(
+        terminal_level="WARNING",
+        ops_file="logs/ops.jsonl"
+    )
+
+def setup_development():
+    """Development: Verbose terminal + debug logs."""
+    return setup_logging(
+        terminal_level="INFO",
+        debug_file="logs/debug.log"
+    )
+
+def setup_ci():
+    """CI/CD: Info terminal only, no files."""
+    return setup_logging(terminal_level="INFO")
+
+
+# Best-effort cleanup of logging handlers at interpreter exit
 try:
     import atexit
     @atexit.register
     def _g6_close_logging_handlers() -> None:
-        # Do not import or call any logging or error-handling code here.
-        # During interpreter shutdown, streams may already be closed; simply
-        # attempt a quiet flush/close and swallow any exceptions.
         try:
             root = logging.getLogger()
             handlers = list(root.handlers[:])
-        except (AttributeError, TypeError):
-            # Handle logging shutdown issues
+        except Exception:
             handlers = []
         for h in handlers:
             try:
                 h.flush()
-            except (OSError, IOError, ValueError, AttributeError):
-                # Handle flush failures during shutdown
-                pass
-            try:
                 h.close()
-            except (OSError, IOError, ValueError, AttributeError):
-                # Handle close failures during shutdown
+            except Exception:
                 pass
-except (ImportError, AttributeError, RuntimeError):
-    # Handle atexit module or registration failures
+except Exception:
     pass
 
-__all__ = ["setup_logging"]
+__all__ = ["setup_logging", "setup_production", "setup_development", "setup_ci"]

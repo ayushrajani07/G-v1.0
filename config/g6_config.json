@@ -6,7 +6,7 @@
     "host": "0.0.0.0"
   },
   "collection": {
-    "interval_seconds": 60
+    "interval_seconds": 30
   },
   "greeks": {
     "enabled": true,
@@ -49,13 +49,13 @@
       "enable": true,
       "strikes_itm": 5,
       "strikes_otm": 5,
-      "expiries": ["this_month", "next_month"]
+      "expiries": ["this_month"]
     },
     "SENSEX": {
       "enable": true,
       "strikes_itm": 10,
       "strikes_otm": 10,
-      "expiries": ["this_week", "next_week", "this_month", "next_month"]
+      "expiries": ["this_week", "next_week", "this_month"]
     }
   },
   "features": {

@@ -43,7 +43,9 @@ except Exception:  # pragma: no cover
         pass
 
 LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s: %(message)s"
-logging.basicConfig(level=EnvConfig.get_str("G6_LOG_LEVEL", "INFO"), format=LOG_FORMAT)
+# Phase 3: Use simplified logging setup
+from src.utils.logging_utils import setup_logging
+setup_logging(terminal_level=EnvConfig.get_str("G6_LOG_LEVEL", "INFO"))
 logger = logging.getLogger("run_orchestrator_loop")
 
 def parse_args(argv: list[str]) -> argparse.Namespace:

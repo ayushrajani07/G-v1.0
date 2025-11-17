@@ -17,6 +17,8 @@ from collections.abc import Callable
 from src.config.env_config import EnvConfig
 from src.orchestrator.context import RuntimeContext
 from src.utils.env_flags import is_truthy_env  # type: ignore
+# Phase 2: Use standardized logging helpers
+from src.utils.log_helpers import log_info, log_warning
 
 try:  # optional gating utilities (early slice)
     from src.orchestrator.gating import should_skip_cycle_market_hours  # type: ignore
@@ -35,7 +37,7 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
     monolithic unified_main loop. This indirection enables unit testing and
     future pluggable behaviors (e.g., adaptive interval, partial refresh).
     """
-    logger.info("Starting orchestration loop interval=%s", interval)
+    log_info(logger, "LOOP", "Starting orchestration", interval_seconds=interval)
     # Micro-cache frequently-read environment flags at loop startup to avoid
     # repeated os.getenv calls inside the loop.
     market_hours_only = is_truthy_env('G6_LOOP_MARKET_HOURS')
@@ -48,12 +50,12 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
             parsed = int(max_cycles_raw)
             if parsed > 0:
                 max_cycles = parsed
-                logger.info("[loop] Max cycles limit enabled: %s", max_cycles)
+                log_info(logger, "LOOP", "Max cycles limit enabled", max_cycles=max_cycles)
             else:
                 logger.debug("[loop] Ignoring non-positive G6_LOOP_MAX_CYCLES=%s", max_cycles_raw)
         except (ValueError, TypeError):
             # Handle integer conversion failures
-            logger.warning("[loop] Invalid G6_LOOP_MAX_CYCLES=%r (must be int)", max_cycles_raw)
+            log_warning(logger, "LOOP", "Invalid G6_LOOP_MAX_CYCLES (must be int)", value=max_cycles_raw)
     executed_cycles = 0
     try:
         while not ctx.shutdown:
@@ -65,10 +67,10 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
                     cycle_fn(ctx)
                     executed_cycles += 1
                     if max_cycles is not None and executed_cycles >= max_cycles:
-                        logger.info("[loop] Reached max cycles (%s) -> terminating", max_cycles)
+                        log_info(logger, "LOOP", "Reached max cycles, terminating", max_cycles=max_cycles)
                         break
             except KeyboardInterrupt:  # direct interrupt inside cycle_fn
-                logger.info("[loop] KeyboardInterrupt received inside cycle; initiating shutdown")
+                log_info(logger, "LOOP", "KeyboardInterrupt inside cycle, initiating shutdown")
                 ctx.shutdown = True  # type: ignore[attr-defined]
                 break
             except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as e:  # noqa
@@ -80,12 +82,12 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
                 if sleep_for:
                     time.sleep(sleep_for)
             except KeyboardInterrupt:
-                logger.info("[loop] KeyboardInterrupt during sleep; terminating")
+                log_info(logger, "LOOP", "KeyboardInterrupt during sleep, terminating")
                 ctx.shutdown = True  # type: ignore[attr-defined]
                 break
     except KeyboardInterrupt:
-        logger.info("[loop] KeyboardInterrupt (outer) -> graceful shutdown")
+        log_info(logger, "LOOP", "KeyboardInterrupt, graceful shutdown")
     finally:
-        logger.info("Orchestration loop terminated")
+        log_info(logger, "LOOP", "Orchestration loop terminated")
 
 __all__ = ["run_loop"]

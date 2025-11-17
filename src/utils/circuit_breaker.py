@@ -179,7 +179,9 @@ class CircuitOpenError(Exception):
 # Example usage
 if __name__ == "__main__":
     # Configure logging
-    logging.basicConfig(level=logging.INFO)
+    # Phase 3: Use simplified logging setup
+    from src.utils.logging_utils import setup_logging
+    setup_logging(terminal_level='INFO')
 
     # Create a circuit breaker
     breaker = CircuitBreaker("example", failure_threshold=3, reset_timeout=5)

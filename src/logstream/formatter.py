@@ -197,18 +197,18 @@ def format_cycle_table(*,
         status_tokens.append('OK')
     status = '+'.join(status_tokens)
 
+    # Calculate options per minute if not provided
+    if options_per_min is None and duration_s > 0:
+        options_per_min = (options / duration_s) * 60.0
+    
     # Prepare raw values (without units for sizing, then append units where useful)
     row = {
         'Dur(s)': f"{duration_s:.2f}",
         'Opts': str(options),
-        'OpM': f"{options_per_min:.1f}" if options_per_min is not None else '-',
+        'OpM': f"{options_per_min:.1f}" if options_per_min is not None and options_per_min > 0 else '0.0',
         'API(ms)': f"{api_latency_ms:.1f}" if api_latency_ms is not None else '-',
         'API%': f"{api_success_pct:.1f}" if api_success_pct is not None else '-',
         'Coll%': f"{collection_success_pct:.1f}" if collection_success_pct is not None else '-',
-        'CPU%': f"{cpu:.1f}" if cpu is not None else '-',
-        'Mem(MB)': f"{mem_mb:.1f}" if mem_mb is not None else '-',
-        'Idx': str(indices),
-        'Stall': str(stall_flag) if stall_flag is not None else '-',
         'Status': status,
     }
     headers = list(row.keys())

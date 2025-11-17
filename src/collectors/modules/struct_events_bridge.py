@@ -40,7 +40,8 @@ def emit_struct(event: str, fields: dict[str, Any]) -> None:  # pragma: no cover
     if event in _SUPPRESS_EVENTS:
         return
     try:
-        logger.info("STRUCT %s | %s", event, json.dumps(fields, default=str, ensure_ascii=False))
+        # Silenced for cleaner terminal output
+        logger.debug("STRUCT %s | %s", event, json.dumps(fields, default=str, ensure_ascii=False))
     except (TypeError, ValueError):
         logger.debug("struct_emit_failed", exc_info=True)
 

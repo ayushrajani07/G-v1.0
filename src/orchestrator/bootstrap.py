@@ -302,7 +302,7 @@ def bootstrap_runtime(config_path: str,
                     )
                 except Exception:
                     pass
-            logger.info(
+            logger.debug(
                 (
                     "orchestrator.summary loop_interval=%s indices=%s pipeline_v2=%s diff_mode=%s "
                     "structured_sse=%s quiet=%s salvage=%s domain_models=%s provider_client=%s "

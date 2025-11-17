@@ -256,7 +256,9 @@ class LoggingSink:
         self._logger = logger or logging.getLogger("g6")
         # If no handlers are configured, default to a basic stream handler
         if not self._logger.handlers:
-            logging.basicConfig(level=logging.INFO)
+            # Phase 3: Use simplified logging setup
+            from src.utils.logging_utils import setup_logging
+            setup_logging(terminal_level='INFO')
 
     def emit(self, event: OutputEvent) -> None:
         lvl_map = {
