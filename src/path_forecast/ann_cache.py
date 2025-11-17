@@ -327,6 +327,21 @@ def clear_ann_window_cache() -> None:
         _ANN_WINDOW_CACHE.clear()
 
 
+def reset_cache_stats() -> None:
+    """Reset all cache statistics (for testing)."""
+    global _ANN_WINDOW_CACHE_HITS, _ANN_WINDOW_CACHE_MISSES, _ANN_WINDOW_CACHE_EVICTIONS
+    global _ANN_DISK_CACHE_HITS, _ANN_DISK_CACHE_MISSES, _ANN_DISK_CACHE_SAVES
+    
+    with _ANN_WINDOW_CACHE_LOCK:
+        _ANN_WINDOW_CACHE_HITS = 0
+        _ANN_WINDOW_CACHE_MISSES = 0
+        _ANN_WINDOW_CACHE_EVICTIONS = 0
+    
+    _ANN_DISK_CACHE_HITS = 0
+    _ANN_DISK_CACHE_MISSES = 0
+    _ANN_DISK_CACHE_SAVES = 0
+
+
 __all__ = [
     "get_ann_windows",
     "put_ann_windows",
@@ -335,4 +350,5 @@ __all__ = [
     "get_ann_window_cache_stats",
     "get_ann_disk_cache_stats",
     "clear_ann_window_cache",
+    "reset_cache_stats",
 ]
