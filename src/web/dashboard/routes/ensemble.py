@@ -752,7 +752,7 @@ async def forecast(
     try:
         from ..rolling_mae import log_forecast_event, ensure_started  # type: ignore
         ensure_started()
-        log_forecast_event(idx, horizon, now_ms, p50, underlying)
+        log_forecast_event(idx, horizon, now_ms, p50, underlying, band_low, band_high)
     except Exception:
         pass
     
