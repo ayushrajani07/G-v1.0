@@ -40,6 +40,7 @@ from .routes.live import router as live_router
 from .routes.overlay import router as overlay_router
 from .routes.system import router as system_router
 from .routes.path_forecast import router as path_forecast_router
+from .routes.ensemble import router as ensemble_router
 try:
     # Advisor router provides universal advisor endpoints
     from .routes.advisor import router as advisor_router
@@ -194,6 +195,26 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="G6 Dashboard", version="0.1.0", lifespan=lifespan, default_response_class=ORJSONResponse)
+_DIAG_ENABLED = os.environ.get('G6_DIAG_ENABLE','1').lower() in ('1','true','yes','on')
+
+# --------------------------- Early Diagnostics (placed immediately after app construction) ---------------------------
+if _DIAG_ENABLED:
+    @app.get('/__diag/pid')
+    async def __diag_pid() -> JSONResponse:  # returns pid for process verification
+        import os as _os, time as _t
+        return JSONResponse({'pid': _os.getpid(), 'ts_ms': int(_t.time()*1000)})
+
+    @app.get('/__diag/routes')
+    async def __diag_routes() -> JSONResponse:  # enumerates current paths
+        paths = sorted({getattr(r, 'path', None) for r in app.routes if hasattr(r, 'path')})
+        return JSONResponse({'count': len(paths), 'paths': paths})
+
+    @app.get('/__diag/summary')
+    async def __diag_summary() -> JSONResponse:
+        import os as _os
+        paths = [getattr(r, 'path', None) for r in app.routes if hasattr(r, 'path')]
+        ensemble_paths = [p for p in paths if p and '/ensemble/' in p]
+        return JSONResponse({'pid': _os.getpid(), 'total_paths': len(paths), 'ensemble_paths': ensemble_paths})
 
 # Compression for JSON payloads (saves bandwidth and speeds Grafana Infinity)
 try:
@@ -243,6 +264,7 @@ app.include_router(live_router)
 app.include_router(overlay_router)
 app.include_router(system_router)
 app.include_router(path_forecast_router)
+app.include_router(ensemble_router)
 # Memory status endpoint (lightweight; avoid dedicated router for single path)
 try:
     from src.utils.memory_manager import get_memory_manager as _get_mm
@@ -855,50 +877,6 @@ async def api_diag_advisor_integrity() -> JSONResponse:
         )
     return JSONResponse({'error': 'advisor integrity failure'}, status_code=503)
 
-@app.get('/api/errors/recent')
-async def api_errors_recent(
-    count: int = 50,
-    category: str | None = None,
-    severity: str | None = None,
-) -> JSONResponse:
-    """Return recent errors with optional category/severity filtering.
-
-    Matches test expectations: filters by FILE_IO + LOW and caps at 200 server-side.
-    """
-    try:
-        handler = get_error_handler()
-        # Hard upper cap to avoid huge payloads
-        want = max(0, min(count, 200))
-        raw = handler.get_recent_errors(count=want)
-        out: list[dict[str, Any]] = []
-        cat_norm = (category or '').strip().lower() or None
-        sev_norm = (severity or '').strip().lower() or None
-        for err in raw:
-            cat_val = err.category.value
-            sev_val = err.severity.value
-            if cat_norm and cat_val.lower() != cat_norm:
-                continue
-            if sev_norm and sev_val.lower() != sev_norm:
-                continue
-            d = err.to_dict()
-            # Promote uppercase variants for test convenience
-            d['category'] = cat_val.upper()
-            d['severity'] = sev_val.upper()
-            # Provide legacy key name expected by some hygiene tests
-            if 'function_name' in d and 'function' not in d:
-                d['function'] = d['function_name']
-            out.append(d)
-        return JSONResponse({'errors': out, 'count': len(out), 'filtered': bool(cat_norm or sev_norm)})
-    except Exception as e:
-        get_error_handler().handle_error(
-            e,
-            category=ErrorCategory.CONFIGURATION,
-            severity=ErrorSeverity.LOW,
-            component='web.dashboard.app',
-            function_name='api_errors_recent',
-            message='Failed serving recent errors',
-            should_log=False,
-        )
     return JSONResponse({'errors': [], 'count': 0}, status_code=503)
 
 @app.get('/health/metrics')
@@ -1063,6 +1041,39 @@ async def api_ml_ensemble_k_calibration(index: str, horizon: str | None = None) 
     row = f"{ts},{recommended_k},{k_smooth_fmt},{effective_cov},{band_radius},{target},{index},{horizon_val},{n}"
     return PlainTextResponse(f"{header}\n{row}")
 
+@app.get('/api/ml/ensemble/forecast')
+async def api_ml_ensemble_forecast(index: str, horizon: int = 60) -> JSONResponse:
+    """Unified ensemble forecast endpoint (migrated from Flask).
+
+    Returns JSON structure:
+    { index, horizon, timestamp, forecast{p10,p50,p90,band_low,band_high}, confidence, metadata }
+    Currently returns mock values until real-time integration enabled.
+    """
+    idx = index.upper().strip()
+    # Mock values
+    forecast = {
+        'p10': 180.5,
+        'p50': 195.3,
+        'p90': 210.8,
+        'band_low': 178.2,
+        'band_high': 212.5,
+    }
+    metadata = {
+        'latency_ms': 0.0,
+        'components_used': ['baseline', 'gbrt', 'retrieval', 'conformal'],
+        'weights': {'gbrt': 0.7, 'retrieval': 0.3},
+    }
+    import time as _t
+    body = {
+        'index': idx,
+        'horizon': horizon,
+        'timestamp': int(_t.time()*1000),
+        'forecast': forecast,
+        'confidence': 0.75,
+        'metadata': metadata,
+    }
+    return JSONResponse(body)
+
 @app.get('/api/ml/ensemble/weights')
 async def api_ml_ensemble_weights(index: str, horizon: str) -> PlainTextResponse:
     """Return model weight CSV from <index>_ensemble_weights.json sidecar.
@@ -1200,3 +1211,15 @@ async def api_ml_forecast_path(index: str, horizon: int = 60, quantiles: str = '
         for q in q_list:
             rows.append(f"{req_ts},{index},{horizon},{q:.3f},{now_ms + bucket_ms},{float('nan')}")
     return PlainTextResponse('\n'.join([header] + rows))
+
+@app.get('/api/ml/ensemble/forecast2')
+async def api_ml_ensemble_forecast2(index: str, horizon: int = 60) -> JSONResponse:
+    """Temporary duplicate forecast endpoint to diagnose routing issues."""
+    body = {
+        'index': index.upper(),
+        'horizon': horizon,
+        'diagnostic': True,
+        'timestamp': int(time.time()*1000),
+        'forecast': {'p50': 195.3},
+    }
+    return JSONResponse(body)

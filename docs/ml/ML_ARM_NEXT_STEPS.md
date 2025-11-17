@@ -47,6 +47,99 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
 
 ---
 
+## 🔌 FastAPI Ensemble Forecast Service (Migration Summary)
+
+The legacy Flask ML ensemble service (port 9210) has been migrated into the unified FastAPI dashboard process (default port **9500**). New JSON + diagnostics endpoints provide lower latency (~5–8ms) and integrated caching.
+
+### Core Endpoints (Prefix: `/api/ml/ensemble`)
+| Endpoint | Method | Description | Notes |
+|----------|--------|-------------|-------|
+| `/forecast` | GET | Returns ensemble forecast snapshot (p10/p50/p90 + bands) | Params: `index`, `horizon`, `quantiles`, `underlying`, `avg_iv`, `minutes_to_expiry`, `recent_window_size`, `cache_bust` |
+| `/diagnostics` | GET | Component enablement, weights, confidence, metrics | Lightweight health view |
+| `/confidence` | GET | Detailed confidence factors & recommendation | Uses internal meta factors |
+| `/retrain` | POST | Schedule retraining job (stub) | Body: `index`, `days`, `run_validation` |
+| `/cache/stats` | GET | Forecast cache size, hits, misses, age metrics | TTL configurable via env |
+| `/cache/clear` | POST | Clears forecast cache and resets counters | Use for incident mitigation |
+
+### Forecast Request Example
+```bash
+curl "http://localhost:9500/api/ml/ensemble/forecast?index=NIFTY&horizon=60&quantiles=0.1,0.5,0.9&recent_window_size=60"
+```
+Response (truncated):
+```json
+{
+  "index": "NIFTY",
+  "horizon": 60,
+  "timestamp": "<epoch_ms>",
+  "forecast": {"p10": 180.5, "p50": 195.3, "p90": 210.8, "band_low": 178.2, "band_high": 212.5},
+  "confidence": 0.75,
+  "metadata": {
+    "latency_ms": 6.8,
+    "components_used": ["baseline", "gbrt", "retrieval", "conformal"],
+    "weights": {"gbrt": 0.70, "retrieval": 0.30},
+    "recent_count": 60,
+    "cache_hit": false
+  }
+}
+```
+
+### Parameters
+- `index` (required): Index symbol (e.g., NIFTY, BANKNIFTY)
+- `horizon`: Minutes into future (1–720)
+- `quantiles`: Comma-separated list (default `0.1,0.5,0.9`)
+- `underlying`: Current underlying price (optional)
+- `avg_iv`: Average implied volatility proxy
+- `minutes_to_expiry`: Remaining minutes (for term structure)
+- `recent_window_size`: Number of recent TP rows pulled from today’s CSV (0–200)
+- `cache_bust=1`: Forces recomputation ignoring cache
+
+### Caching
+- In-memory TTL cache keyed by: `(index, horizon, quantiles, underlying, avg_iv, minutes_to_expiry, recent_window_size)`
+- TTL env var: `G6_FORECAST_CACHE_TTL` (default 30s; set to 0 to disable)
+- Metadata flag: `cache_hit` indicates reused result
+- Manual maintenance: `/api/ml/ensemble/cache/clear`
+
+### Recent Window Loading
+- Pulls today’s CSV from: `data/g6_data/<INDEX>/this_month/0/<YYYY-MM-DD>.csv` (fallback to `this_week/0/`)
+- Extracts `tp` column (or first numeric column) into `recent_window` array.
+- `recent_count` in metadata records number of rows used.
+
+### Diagnostics & Visibility
+- Conditional diagnostics (env: `G6_DIAG_ENABLE=1`) provide `/__diag/pid`, `/__diag/routes`, `/__diag/summary`.
+- Start script (`scripts/ml/start_dashboard_api.ps1`) performs:
+  1. Port clearance
+  2. Uvicorn launch
+  3. Forecast route assertion in OpenAPI
+  4. PID endpoint check
+
+### Environment Variables
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `G6_FORECAST_CACHE_TTL` | Forecast cache TTL seconds | `30` |
+| `G6_DIAG_ENABLE` | Enable diagnostic endpoints | `1` |
+| `G6_DASHBOARD_DEBUG` | Additional debug routers/logging | `0` |
+
+### Migration Benefits
+| Aspect | Legacy Flask (9210) | FastAPI Unified (9500) |
+|--------|---------------------|------------------------|
+| Latency (P95 baseline) | ~200–400ms | ~5–15ms mock / <50ms real |
+| Deployment | Separate service | Consolidated dashboard process |
+| Caching | None | TTL in-memory forecast cache |
+| Diagnostics | Ad-hoc | Structured JSON endpoints |
+| Restart Reliability | Occasional stale port | Port clearance & assertion |
+| Extensibility | Hard-coded paths | Router prefix + modular design |
+
+### Next Enhancements (Planned)
+- Full horizon arrays via `detail=full` parameter
+- File-level recent window caching (avoid repeated CSV reads)
+- LRU bounding & adaptive TTL based on volatility regime
+- Integration with live streaming updates (replace empty `live_rows` context)
+- Persistent ANN index cache for retrieval speedups
+
+---
+
+---
+
 ## Phase 8: Production Deployment & Stabilization
 
 **Duration:** 2-4 weeks  

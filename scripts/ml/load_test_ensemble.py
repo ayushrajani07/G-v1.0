@@ -34,6 +34,27 @@ from typing import Dict, List, Tuple
 from collections import defaultdict
 
 import numpy as np
+from pathlib import Path as _Path
+
+# ------------------------------------------------------------------
+# Serialization helpers (Phase 9: robust JSON output)
+# ------------------------------------------------------------------
+def _sanitize_json(value):
+    """Recursively convert numpy / Path / set / tuple types to JSON-safe primitives."""
+    import numpy as _np
+    if isinstance(value, dict):
+        return {str(k): _sanitize_json(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [ _sanitize_json(v) for v in value ]
+    if isinstance(value, (_np.integer,)):
+        return int(value)
+    if isinstance(value, (_np.floating,)):
+        return float(value)
+    if isinstance(value, (_np.bool_,)):
+        return bool(value)
+    if isinstance(value, _Path):
+        return str(value)
+    return value
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -432,8 +453,9 @@ def main():
     # Save results if requested
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
+        safe_results = _sanitize_json(results)
         with open(args.output, 'w') as f:
-            json.dump(results, f, indent=2)
+            json.dump(safe_results, f, indent=2)
         logger.info(f"\nResults saved to: {args.output}")
     
     # Exit based on results

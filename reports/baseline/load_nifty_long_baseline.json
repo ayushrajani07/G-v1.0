@@ -1,0 +1,33 @@
+{
+  "timestamp": "2025-11-17T15:44:24.013887",
+  "test_config": {
+    "index": "NIFTY",
+    "concurrent_requests": 10,
+    "duration": 31.169317960739136,
+    "horizons": [
+      60
+    ]
+  },
+  "summary": {
+    "total_requests": 150,
+    "successful": 150,
+    "failed": 0,
+    "success_rate": 1.0,
+    "error_rate": 0.0,
+    "throughput": 4.812424839996177
+  },
+  "latency_ms": {
+    "mean": 2064.4597721099854,
+    "p50": 2052.7971982955933,
+    "p95": 2187.9369139671326,
+    "p99": 2196.805396080017
+  },
+  "targets": {
+    "p95_target_ms": 1000,
+    "p95_pass": false,
+    "error_rate_target": 0.05,
+    "error_rate_pass": true,
+    "overall_pass": false
+  },
+  "errors": []
+}
