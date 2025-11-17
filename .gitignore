@@ -72,6 +72,10 @@ prometheus/
 !prometheus_rules.yml
 !prometheus_alerts.yml
 grafana/
+!grafana/dashboards/
+!grafana/dashboards/*.json
+!grafana/provisioning/
+!grafana/provisioning/**
 
 # --- Local environment snapshots (do not commit) ---
 env_snapshots/
