@@ -1,0 +1,96 @@
+{
+  "description": "Phase 9 Grid Evaluation Example Configuration",
+  "version": "1.0",
+  "configs": [
+    {
+      "config_id": "baseline_w60_k15",
+      "window": 60,
+      "k": 15,
+      "distance_metric": "l2",
+      "use_ann": false,
+      "seed": 42
+    },
+    {
+      "config_id": "baseline_w90_k15",
+      "window": 90,
+      "k": 15,
+      "distance_metric": "l2",
+      "use_ann": false,
+      "seed": 43
+    },
+    {
+      "config_id": "baseline_w60_k20",
+      "window": 60,
+      "k": 20,
+      "distance_metric": "l2",
+      "use_ann": false,
+      "seed": 44
+    },
+    {
+      "config_id": "ann_cosine_w60_k15",
+      "window": 60,
+      "k": 15,
+      "distance_metric": "l2",
+      "use_ann": true,
+      "ann_space": "cosine",
+      "ann_max_candidates": 50,
+      "seed": 45
+    },
+    {
+      "config_id": "ann_cosine_w90_k15",
+      "window": 90,
+      "k": 15,
+      "distance_metric": "l2",
+      "use_ann": true,
+      "ann_space": "cosine",
+      "ann_max_candidates": 75,
+      "seed": 46
+    },
+    {
+      "config_id": "ann_l2_w60_k15",
+      "window": 60,
+      "k": 15,
+      "distance_metric": "l2",
+      "use_ann": true,
+      "ann_space": "l2",
+      "ann_max_candidates": 50,
+      "seed": 47
+    },
+    {
+      "config_id": "recent_l2_w60_k15",
+      "window": 60,
+      "k": 15,
+      "distance_metric": "recent_l2",
+      "use_ann": false,
+      "seed": 48
+    },
+    {
+      "config_id": "weighted_inv_dist_w60_k15",
+      "window": 60,
+      "k": 15,
+      "distance_metric": "l2",
+      "weight_mode": "inv_dist",
+      "use_ann": false,
+      "seed": 49
+    },
+    {
+      "config_id": "ann_weighted_w60_k15",
+      "window": 60,
+      "k": 15,
+      "distance_metric": "l2",
+      "weight_mode": "inv_dist",
+      "use_ann": true,
+      "ann_space": "cosine",
+      "ann_max_candidates": 50,
+      "seed": 50
+    },
+    {
+      "config_id": "high_k_w60_k30",
+      "window": 60,
+      "k": 30,
+      "distance_metric": "l2",
+      "use_ann": false,
+      "seed": 51
+    }
+  ]
+}

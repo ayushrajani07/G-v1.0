@@ -122,14 +122,17 @@ def _get_reg():
             buckets=[1, 5, 10, 25, 50, 100, 250, 500, 1000, 2000],
         ))
         
-        # Phase 9: Stage-level latency histograms
+        # Phase 9: Stage-level latency histogram (single metric with labels)
         global _M_STAGE_LATENCY
-        for stage in ["data_load", "retrieval", "ann_build", "ann_reuse", "aggregation", "conformal"]:
-            _M_STAGE_LATENCY[stage] = cast(HistogramLike, _H(
+        if not _M_STAGE_LATENCY:  # Only create once
+            stage_metric = cast(HistogramLike, _H(
                 "g6_ml_stage_latency_seconds",
                 "Stage-level latency in seconds",
                 labelnames=["stage", "index", "horizon"],
             ))
+            # Share the same metric instance for all stages
+            for stage in ["data_load", "retrieval", "ann_build", "ann_reuse", "aggregation", "conformal"]:
+                _M_STAGE_LATENCY[stage] = stage_metric
         
         # Optional: meta gauges & histograms (window/horizon, alpha, candidate richness)
         if os.environ.get("PATH_FORECAST_META_METRICS", "").strip() != "":
