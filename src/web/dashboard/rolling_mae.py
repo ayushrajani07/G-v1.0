@@ -16,6 +16,8 @@ Environment Variables:
 - G6_ROLLING_MAE_ENABLE=1: Enable evaluator thread & logging.
 - G6_ROLLING_MAE_MAX_EVENTS=5000: Cap pending unevaluated event queue size.
 - G6_ROLLING_MAE_WINDOW=500: Rolling window length for MAE & coverage deques.
+- G6_ROLLING_MAE_PERSIST=1: Enable persistence of window state to JSON file.
+- G6_ROLLING_MAE_PERSIST_FILE=metrics/rolling_mae_state.json: Relative path (under project root) for persisted state.
 
 Notes / Limitations:
 - Underlying at evaluation approximated by latest inferred value (best-effort); fallback to underlying at forecast time if unavailable.
@@ -36,6 +38,10 @@ _LOG = logging.getLogger(__name__)
 _ENABLE = os.environ.get("G6_ROLLING_MAE_ENABLE", "1") == "1"
 _MAX_EVENTS = int(os.environ.get("G6_ROLLING_MAE_MAX_EVENTS", "5000"))
 _WINDOW_SIZE = int(os.environ.get("G6_ROLLING_MAE_WINDOW", "500"))
+_PERSIST = os.environ.get("G6_ROLLING_MAE_PERSIST", "1") == "1"
+_PERSIST_FILE = os.environ.get("G6_ROLLING_MAE_PERSIST_FILE", "metrics/rolling_mae_state.json")
+_LAST_FLUSH = 0.0
+_FLUSH_INTERVAL_SEC = 120  # flush at most every 2 minutes
 
 _EVENTS: List[Tuple[str,int,int,float,float,float,float]] = []  # pending evaluation events
 _LOCK = threading.Lock()
@@ -56,6 +62,77 @@ def log_forecast_event(index: str, horizon: int, ts_ms: int, p50: float, underly
         if len(_EVENTS) >= _MAX_EVENTS:
             _EVENTS.pop(0)
         _EVENTS.append((index.upper(), int(horizon), int(ts_ms), float(p50), float(underlying), float(band_low), float(band_high)))
+
+def _project_root() -> str:
+    start = os.path.abspath(__file__)
+    cur = os.path.dirname(start)
+    while True:
+        if os.path.exists(os.path.join(cur, 'pyproject.toml')):
+            return cur
+        new_cur = os.path.dirname(cur)
+        if new_cur == cur:
+            return os.getcwd()
+        cur = new_cur
+
+def _persist_path() -> str:
+    root = _project_root()
+    return os.path.join(root, _PERSIST_FILE)
+
+def _save_state(force: bool = False) -> None:
+    if not _PERSIST:
+        return
+    global _LAST_FLUSH
+    now = time.time()
+    if not force and (now - _LAST_FLUSH) < _FLUSH_INTERVAL_SEC:
+        return
+    state = {}
+    with _LOCK:
+        for key, dq in _ERRORS.items():
+            idx, horizon = key
+            state.setdefault('errors', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        for key, dq in _COVER_FLAGS.items():
+            idx, horizon = key
+            state.setdefault('coverage', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+    try:
+        path = _persist_path()
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = path + '.tmp'
+        import json
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump(state, f)
+        os.replace(tmp, path)
+        _LAST_FLUSH = now
+    except Exception as e:
+        _LOG.debug(f"rolling_mae save_state failed: {e}")
+
+def _load_state() -> None:
+    if not _PERSIST:
+        return
+    path = _persist_path()
+    if not os.path.exists(path):
+        return
+    try:
+        import json
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        errors = data.get('errors', [])
+        coverage = data.get('coverage', [])
+        with _LOCK:
+            for item in errors:
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                values = item.get('values', [])
+                dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
+                _ERRORS[(idx, horizon)] = dq
+            for item in coverage:
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                values = item.get('values', [])
+                dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
+                _COVER_FLAGS[(idx, horizon)] = dq
+        _LOG.info(f"rolling_mae loaded state: errors={len(_ERRORS)} coverage={len(_COVER_FLAGS)}")
+    except Exception as e:
+        _LOG.debug(f"rolling_mae load_state failed: {e}")
 
 def _infer_underlying(index: str) -> float:
     """Reuse ensemble router inference for underlying (best-effort)."""
@@ -111,9 +188,12 @@ def _evaluate_ready_events() -> None:
             set_forecast_coverage(idx, horizon, coverage_pct)
         except Exception:
             pass
+    # After processing ready batch, attempt periodic flush
+    _save_state()
 
 def _loop() -> None:
     _LOG.info("rolling_mae evaluator thread started")
+    _load_state()
     while True:
         try:
             _evaluate_ready_events()
