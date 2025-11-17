@@ -385,10 +385,138 @@ with tempfile.TemporaryDirectory() as tmpdir:
 - [ ] Error rate unchanged from baseline
 - [ ] Coverage variance within ±2%
 
+## Ensemble API Integration
+
+### Phase 9 Optimizations in Ensemble API
+
+Phase 9 optimizations are automatically available through the Ensemble API when feature flags are enabled. The API provides dedicated endpoints for monitoring cache performance.
+
+### New API Endpoints
+
+#### Cache Metrics Endpoint
+
+```bash
+GET /api/ml/ensemble/cache_metrics
+```
+
+Returns Phase 9 cache statistics and feature flag status.
+
+**Example Response:**
+```json
+{
+  "timestamp": "2025-11-17T12:00:00Z",
+  "feature_flags": {
+    "ann_window_cache": true,
+    "ann_disk_cache": true,
+    "profiling": false,
+    "prom_metrics": true,
+    "disable_weighted": false
+  },
+  "window_cache": {
+    "enabled": true,
+    "hit_ratio": 0.89,
+    "size": 85,
+    "evictions": 12,
+    "hits": 450,
+    "misses": 55
+  },
+  "disk_cache": {
+    "enabled": true,
+    "hits": 120,
+    "misses": 8,
+    "saves": 8
+  }
+}
+```
+
+#### Enhanced Diagnostics Endpoint
+
+The existing diagnostics endpoint now includes cache metrics:
+
+```bash
+GET /api/ml/ensemble/diagnostics?index=NIFTY
+```
+
+Cache information is included in the `metrics` section:
+```json
+{
+  "metrics": {
+    "forecast_count_24h": 1440,
+    "avg_latency_ms": 310,
+    "error_rate_24h": 0.001,
+    "window_cache_enabled": true,
+    "window_cache_hit_ratio": 0.89,
+    "disk_cache_enabled": true,
+    "disk_cache_hits": 120
+  }
+}
+```
+
+### Load Testing with Phase 9
+
+The load test script now captures cache metrics:
+
+```bash
+# Run load test with Phase 9 enabled
+export ENABLE_ANN_WINDOW_CACHE=1
+export ENABLE_ANN_DISK_CACHE=1
+export ANN_CACHE_DIR=/tmp/ann_cache
+
+python scripts/ml/load_test_ensemble.py \
+  --index NIFTY \
+  --concurrent-requests 100 \
+  --duration 300 \
+  --output results.json
+```
+
+The output JSON includes Phase 9 cache metrics:
+```json
+{
+  "phase9_cache_metrics": {
+    "window_cache": {
+      "enabled": true,
+      "hit_ratio": 0.92,
+      "size": 85
+    },
+    "disk_cache": {
+      "enabled": true,
+      "hits": 450
+    }
+  }
+}
+```
+
+### Performance Comparison
+
+To compare performance with and without Phase 9:
+
+```bash
+# Baseline (Phase 9 disabled)
+unset ENABLE_ANN_WINDOW_CACHE
+unset ENABLE_ANN_DISK_CACHE
+python scripts/ml/load_test_ensemble.py --index NIFTY --output baseline.json
+
+# With Phase 9 enabled
+export ENABLE_ANN_WINDOW_CACHE=1
+export ENABLE_ANN_DISK_CACHE=1
+export ANN_CACHE_DIR=/tmp/ann_cache
+python scripts/ml/load_test_ensemble.py --index NIFTY --output optimized.json
+
+# Compare results
+python -c "
+import json
+b = json.load(open('baseline.json'))
+o = json.load(open('optimized.json'))
+print(f'P95 latency improvement: {(1 - o[\"latency_ms\"][\"p95\"] / b[\"latency_ms\"][\"p95\"]) * 100:.1f}%')
+print(f'Cache hit ratio: {o.get(\"phase9_cache_metrics\", {}).get(\"window_cache\", {}).get(\"hit_ratio\", 0):.2%}')
+"
+```
+
 ## Support
 
 For issues or questions:
 - Check logs with `ENABLE_PATH_FORECAST_PROFILING=1`
 - Review Prometheus metrics
-- Consult test cases in `tests/test_phase9_*.py`
+- Test cache metrics endpoint: `/api/ml/ensemble/cache_metrics`
+- Consult test cases in `tests/test_phase9_*.py` and `tests/test_ensemble_api_phase9.py`
 - Contact ML Engineering Team: ml-team@example.com
