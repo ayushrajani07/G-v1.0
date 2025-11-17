@@ -1,5 +1,60 @@
 # Phase 9 Performance Optimization - Changelog
 
+## [Phase 9.2 - Full Detail Forecast Mode] - 2025-11-17
+
+### Added
+
+#### Full Detail Forecast Response
+- **Enhanced Forecast Endpoint** (`/api/ml/ensemble/forecast`):
+  - New `detail=full` query parameter for rich response mode
+  - Returns `time_grid` object with start/end timestamps, resolution, and value array
+  - Returns `quantile_paths` mapping quantile labels to forecast arrays
+  - All arrays aligned with same length for easy consumption
+  - Quantile labels normalized from floats (0.1 → "p10", 0.5 → "p50", etc.)
+  - Backward compatible: default behavior unchanged (snapshot mode)
+  - Empty sequences handled gracefully (empty arrays, never null)
+
+#### Tests
+- **Full Detail Mode Tests** (`tests/test_ensemble_api_full_detail.py`):
+  - 16 comprehensive tests covering full detail mode
+  - Tests backward compatibility (snapshot mode unchanged)
+  - Tests time_grid structure and field validation
+  - Tests quantile_paths structure and label normalization
+  - Tests array length consistency
+  - Tests custom quantiles with full detail
+  - Tests edge cases (empty results, invalid params)
+  - Tests case-insensitive detail parameter
+  - All passing (16/16)
+
+#### Documentation
+- **Updated Ensemble API Reference** (`docs/ml/ENSEMBLE_API.md`):
+  - Documented `detail=full` response schema
+  - Added example JSON responses for both modes
+  - Clarified field descriptions and array structures
+  - Added request examples for full detail mode
+  - Version bumped to 1.1
+
+### Changed
+
+- **ForecastResponse Model**:
+  - Added optional `time_grid` field (TimeGrid model)
+  - Added optional `quantile_paths` field (dict of quantile label to float array)
+  - Fields only populated when `detail=full` is requested
+
+### Impact
+
+- **Zero Breaking Changes**: Default response unchanged, new fields optional
+- **Enhanced Visualization**: Downstream consumers can now plot full forecast trajectories
+- **Flexible Quantiles**: Supports custom quantile sets with stable labels
+- **Developer Experience**: Clear documentation and comprehensive test coverage
+
+### Use Cases
+
+- Multi-horizon trajectory curves for visualization
+- Comparing path shapes across different models
+- Computing derivatives and volatility from forecast paths
+- Time-series analysis of forecast evolution
+
 ## [Phase 9.1 - Ensemble API Integration] - 2025-11-17
 
 ### Added

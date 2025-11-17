@@ -48,6 +48,12 @@ class ForecastMetadata(BaseModel):
     recent_count: int = Field(0, description="Number of recent TP rows used in forecast context")
     cache_hit: bool = Field(False, description="True if served from in-memory forecast cache")
 
+class TimeGrid(BaseModel):
+    start: int = Field(..., description="Start timestamp in epoch milliseconds")
+    end: int = Field(..., description="End timestamp in epoch milliseconds")
+    resolution_ms: int = Field(..., description="Time step resolution in milliseconds")
+    values: list[int] = Field(..., description="Array of timestamps for each forecast point")
+
 class ForecastResponse(BaseModel):
     index: str
     horizon: int
@@ -55,6 +61,8 @@ class ForecastResponse(BaseModel):
     forecast: Dict[str, float]
     confidence: float
     metadata: ForecastMetadata
+    time_grid: Optional[TimeGrid] = Field(None, description="Time grid for full detail mode")
+    quantile_paths: Optional[Dict[str, list[float]]] = Field(None, description="Per-quantile forecast paths for full detail mode")
 
 class DiagnosticsResponse(BaseModel):
     index: str
@@ -87,6 +95,15 @@ class RetrainResponse(BaseModel):
 
 # --------------------------- Helpers ---------------------------
 _def_components = ['baseline', 'gbrt', 'retrieval', 'conformal']
+
+def _quantile_to_label(q: float) -> str:
+    """Convert quantile float to stable label string.
+    
+    Examples: 0.1 -> 'p10', 0.5 -> 'p50', 0.95 -> 'p95'
+    """
+    # Round to avoid floating point precision issues
+    pct = round(q * 100)
+    return f"p{pct}"
 
 # --------------------------- Simple In-Memory Forecast Cache ---------------------------
 _CACHE: Dict[Tuple[str,int,str,float,float,float,int], ForecastResponse] = {}
@@ -383,6 +400,7 @@ async def forecast(
     minutes_to_expiry: float = Query(375.0, ge=0, description="Minutes to expiry"),
     recent_window_size: int = Query(60, ge=0, le=200, description="Number of recent TP rows to include from CSV"),
     cache_bust: int = Query(0, ge=0, le=1, description="Set to 1 to bypass cache"),
+    detail: Optional[str] = Query(None, description="Response detail level: 'full' for time grid and quantile paths"),
 ):
     """Return real ensemble forecast using EnsembleForecaster.forecast_path.
 
@@ -488,7 +506,47 @@ async def forecast(
         recent_count=len(recent_window or []),
         cache_hit=False,
     )
-    resp = ForecastResponse(index=idx, horizon=horizon, timestamp=str(now_ms), forecast=forecast_data, confidence=confidence, metadata=meta)
+    
+    # Build full detail response if requested
+    time_grid_obj = None
+    quantile_paths_obj = None
+    if detail and detail.lower() == 'full':
+        # Build time_grid from times array
+        if times:
+            # times is already epoch ms array from forecast_path
+            time_grid_obj = TimeGrid(
+                start=times[0] if times else now_ms,
+                end=times[-1] if times else now_ms,
+                resolution_ms=60_000,  # 1-minute buckets as used in forecast_path call
+                values=list(times)
+            )
+        else:
+            # Empty case - return minimal valid grid
+            time_grid_obj = TimeGrid(
+                start=now_ms,
+                end=now_ms,
+                resolution_ms=60_000,
+                values=[]
+            )
+        
+        # Build quantile_paths from qmap
+        quantile_paths_obj = {}
+        for q in q_list:
+            label = _quantile_to_label(q)
+            path = qmap.get(q, [])
+            # Ensure path is list of floats, handle empty gracefully
+            quantile_paths_obj[label] = [float(v) for v in path] if path else []
+    
+    resp = ForecastResponse(
+        index=idx, 
+        horizon=horizon, 
+        timestamp=str(now_ms), 
+        forecast=forecast_data, 
+        confidence=confidence, 
+        metadata=meta,
+        time_grid=time_grid_obj,
+        quantile_paths=quantile_paths_obj
+    )
     _cache_put(cache_key, resp)
     return resp
 
