@@ -534,7 +534,7 @@ python scripts/ml/train_ensemble_meta_model.py \
 # Implement real near-strike features
 # Requires data collection updates
 
-# 1. Update collectors for ATM±2 strikes
+# 1. Update collectors for ATM±2 strikes. #comment by user: collectors already collect and log data for a wider range than ATM±2. find refrences for atm offset collection in docs and add code to update placeholders with real values!
 python scripts/collectors/update_for_near_strikes.py
 
 # 2. Collect historical near-strike data

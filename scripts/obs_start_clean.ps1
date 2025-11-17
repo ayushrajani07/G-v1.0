@@ -151,8 +151,11 @@ Ensure-Dir $dbSrcDir
 # Copy dashboards
 try {
   Remove-Item (Join-Path $dbSrcDir '*') -Force -ErrorAction SilentlyContinue
-  $dashSrc = Join-Path $Root 'grafana/dashboards/generated'
-  Get-ChildItem -Path $dashSrc -Filter *.json -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -ne 'manifest.json' } | ForEach-Object {
+  $dashSrc = Join-Path $Root 'grafana/dashboards'
+  Get-ChildItem -Path $dashSrc -Filter *.json -File -Recurse -ErrorAction SilentlyContinue | Where-Object { 
+    $_.Name -ne 'manifest.json' -and 
+    $_.Directory.Name -notmatch 'hidden|archive'
+  } | ForEach-Object {
     Copy-Item $_.FullName -Destination $dbSrcDir -Force
   }
 } catch {}
