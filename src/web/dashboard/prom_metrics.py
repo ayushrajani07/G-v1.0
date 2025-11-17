@@ -11,6 +11,7 @@ Metrics exposed:
 - g6_recent_window_cache_misses_total: Counter of recent window cache misses
 - g6_forecast_cache_size: Gauge of current forecast cache entries
 - g6_recent_window_cache_size: Gauge of current recent window cache entries
+- g6_forecast_mae: Gauge of rolling mean absolute error for p50 forecasts (per index,horizon)
 """
 from __future__ import annotations
 
@@ -32,6 +33,7 @@ _RECENT_WINDOW_CACHE_HITS: Any = None
 _RECENT_WINDOW_CACHE_MISSES: Any = None
 _FORECAST_CACHE_SIZE: Any = None
 _RECENT_WINDOW_CACHE_SIZE: Any = None
+_FORECAST_ROLLING_MAE: Any = None
 
 
 def _is_enabled() -> bool:
@@ -112,6 +114,13 @@ def _init_metrics() -> bool:
         _RECENT_WINDOW_CACHE_SIZE = Gauge(
             "g6_recent_window_cache_size",
             "Current file cache entries",
+            registry=_REGISTRY,
+        )
+
+        _FORECAST_ROLLING_MAE = Gauge(
+            "g6_forecast_mae",
+            "Rolling mean absolute error for p50 forecast",
+            labelnames=["index", "horizon"],
             registry=_REGISTRY,
         )
 
@@ -248,6 +257,24 @@ def set_recent_window_cache_size(size: int) -> None:
             _LOG.debug(f"Failed to set recent window cache size: {e}")
 
 
+def set_forecast_mae(index: str, horizon: int, mae: float) -> None:
+    """Set rolling mean absolute error gauge.
+
+    Args:
+        index: Index name
+        horizon: Horizon minutes
+        mae: Mean absolute error value
+    """
+    if not _is_enabled():
+        return
+    _init_metrics()
+    if _FORECAST_ROLLING_MAE is not None:
+        try:
+            _FORECAST_ROLLING_MAE.labels(index=index, horizon=str(horizon)).set(mae)
+        except Exception as e:
+            _LOG.debug(f"Failed to set forecast MAE: {e}")
+
+
 def get_registry() -> Optional[Any]:
     """Get the Prometheus registry if metrics are enabled.
 
@@ -269,5 +296,6 @@ __all__ = [
     "increment_recent_window_cache_miss",
     "set_forecast_cache_size",
     "set_recent_window_cache_size",
+    "set_forecast_mae",
     "get_registry",
 ]

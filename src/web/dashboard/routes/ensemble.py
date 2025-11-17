@@ -747,6 +747,14 @@ async def forecast(
         observe_forecast_latency(idx, horizon, latency_ms)
     except Exception:
         pass
+
+    # Rolling MAE: log p50 forecast for future evaluation (Phase 10 initial stub)
+    try:
+        from ..rolling_mae import log_forecast_event, ensure_started  # type: ignore
+        ensure_started()
+        log_forecast_event(idx, horizon, now_ms, p50, underlying)
+    except Exception:
+        pass
     
     return resp
 
