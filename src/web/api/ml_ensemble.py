@@ -179,6 +179,24 @@ def create_app(config_dir: Path | None = None) -> Flask:
             
             config = _configs.get(index)
             
+            # Phase 9: Add cache metrics to diagnostics
+            cache_info = {}
+            try:
+                from src.path_forecast.ann_cache import (
+                    get_ann_window_cache_stats,
+                    get_ann_disk_cache_stats,
+                )
+                window_stats = get_ann_window_cache_stats()
+                disk_stats = get_ann_disk_cache_stats()
+                cache_info = {
+                    'window_cache_enabled': window_stats.get('enabled', False),
+                    'window_cache_hit_ratio': window_stats.get('hit_ratio', 0.0),
+                    'disk_cache_enabled': disk_stats.get('enabled', False),
+                    'disk_cache_hits': disk_stats.get('hits', 0),
+                }
+            except (ImportError, Exception) as e:
+                _LOG.debug(f"Phase 9 cache stats not available: {e}")
+            
             # Build diagnostics response
             response = DiagnosticsResponse(
                 index=index,
@@ -197,7 +215,8 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 metrics={
                     'forecast_count_24h': 1440,
                     'avg_latency_ms': 450,
-                    'error_rate_24h': 0.002
+                    'error_rate_24h': 0.002,
+                    **cache_info  # Phase 9: Include cache metrics
                 },
                 model_age_days=3.5
             )
@@ -242,6 +261,53 @@ def create_app(config_dir: Path | None = None) -> Flask:
             
         except Exception as e:
             _LOG.error(f"Confidence error: {e}", exc_info=True)
+            return jsonify({'error': 'Internal server error'}), 500
+    
+    @app.route('/api/ml/ensemble/cache_metrics', methods=['GET'])
+    def cache_metrics() -> Response:
+        """
+        Phase 9: Cache performance metrics endpoint.
+        
+        Returns:
+        - ANN window cache statistics
+        - ANN disk cache statistics
+        - Feature flags status
+        """
+        try:
+            # Import Phase 9 cache statistics
+            try:
+                from src.path_forecast.ann_cache import (
+                    get_ann_window_cache_stats,
+                    get_ann_disk_cache_stats,
+                )
+                window_stats = get_ann_window_cache_stats()
+                disk_stats = get_ann_disk_cache_stats()
+            except ImportError:
+                _LOG.warning("Phase 9 ann_cache module not available")
+                window_stats = {'enabled': False}
+                disk_stats = {'enabled': False}
+            
+            # Get environment flag status
+            import os
+            flags = {
+                'ann_window_cache': os.environ.get('ENABLE_ANN_WINDOW_CACHE', '0') == '1',
+                'ann_disk_cache': os.environ.get('ENABLE_ANN_DISK_CACHE', '0') == '1',
+                'profiling': os.environ.get('ENABLE_PATH_FORECAST_PROFILING', '0') == '1',
+                'prom_metrics': os.environ.get('ENABLE_PATH_FORECAST_PROM_METRICS', '0') == '1',
+                'disable_weighted': os.environ.get('PATH_FORECAST_DISABLE_WEIGHTED', '0') == '1',
+            }
+            
+            response = {
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'feature_flags': flags,
+                'window_cache': window_stats,
+                'disk_cache': disk_stats,
+            }
+            
+            return jsonify(response)
+            
+        except Exception as e:
+            _LOG.error(f"Cache metrics error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
     
     @app.route('/api/ml/ensemble/retrain', methods=['POST'])

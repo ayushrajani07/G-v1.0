@@ -234,14 +234,35 @@ class LoadTester:
         logger.info(f"\nTest completed in {actual_duration:.1f}s")
         logger.info(f"Total requests: {len(self.results)}")
         
-        return self.analyze_results(actual_duration)
+        # Phase 9: Fetch cache metrics after test
+        cache_metrics_after = self.fetch_cache_metrics()
+        
+        return self.analyze_results(actual_duration, cache_metrics_after)
     
-    def analyze_results(self, duration: float) -> Dict:
+    def fetch_cache_metrics(self) -> Dict:
+        """
+        Fetch Phase 9 cache metrics from API.
+        
+        Returns:
+            Dictionary with cache metrics or empty dict on error
+        """
+        url = f"http://{self.api_host}:{self.api_port}/api/ml/ensemble/cache_metrics"
+        try:
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode())
+                return data
+        except Exception as e:
+            logger.debug(f"Could not fetch cache metrics: {e}")
+            return {}
+    
+    def analyze_results(self, duration: float, cache_metrics: Dict = None) -> Dict:
         """
         Analyze test results and compute metrics.
         
         Args:
             duration: Actual test duration
+            cache_metrics: Phase 9 cache metrics (optional)
             
         Returns:
             Dictionary with analysis results
@@ -249,6 +270,19 @@ class LoadTester:
         logger.info("\n" + "=" * 70)
         logger.info("Results Analysis")
         logger.info("=" * 70)
+        
+        # Phase 9: Display cache metrics if available
+        if cache_metrics:
+            logger.info("\nPhase 9 Cache Metrics:")
+            window_cache = cache_metrics.get('window_cache', {})
+            disk_cache = cache_metrics.get('disk_cache', {})
+            if window_cache.get('enabled'):
+                logger.info(f"  ANN Window Cache Hit Ratio: {window_cache.get('hit_ratio', 0):.2%}")
+                logger.info(f"  ANN Window Cache Size: {window_cache.get('size', 0)}")
+                logger.info(f"  ANN Window Cache Evictions: {window_cache.get('evictions', 0)}")
+            if disk_cache.get('enabled'):
+                logger.info(f"  ANN Disk Cache Hits: {disk_cache.get('hits', 0)}")
+                logger.info(f"  ANN Disk Cache Misses: {disk_cache.get('misses', 0)}")
         
         if not self.results:
             logger.error("No results to analyze")
@@ -326,7 +360,7 @@ class LoadTester:
             logger.error("✗ LOAD TEST FAILED")
         logger.info("=" * 70)
         
-        return {
+        result = {
             "timestamp": datetime.now().isoformat(),
             "test_config": {
                 "index": self.index,
@@ -364,6 +398,12 @@ class LoadTester:
                 for r in failed[:10]  # First 10 errors
             ]
         }
+        
+        # Phase 9: Add cache metrics if available
+        if cache_metrics:
+            result["phase9_cache_metrics"] = cache_metrics
+        
+        return result
 
 
 def main():
