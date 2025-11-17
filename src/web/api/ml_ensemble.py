@@ -72,7 +72,16 @@ def create_app(config_dir: Path | None = None) -> Flask:
     app.config['JSON_SORT_KEYS'] = False
     
     if config_dir is None:
-        config_dir = Path(__file__).resolve().parents[3] / "configs" / "ml"
+        # Robust discovery: walk up until we find configs/ml
+        start = Path(__file__).resolve()
+        for parent in [start.parent] + list(start.parents):
+            candidate = parent / "configs" / "ml"
+            if candidate.exists():
+                config_dir = candidate
+                break
+        else:  # fallback
+            config_dir = Path(__file__).resolve().parents[3] / "configs" / "ml"
+        _LOG.info(f"Using ensemble config directory: {config_dir}")
     
     @app.route('/health', methods=['GET'])
     def health() -> Response:
@@ -107,7 +116,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
             # Get or create forecaster
             forecaster = _get_forecaster(index, config_dir)
             if forecaster is None:
-                return jsonify({'error': f'No configuration found for index {index}'}), 404
+                return jsonify({'error': f'No configuration found for index {index}', 'config_dir': str(config_dir)}), 404
             
             # Generate mock forecast for now (until we have real-time data integration)
             # In production, this would read live market data
@@ -166,7 +175,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
             
             forecaster = _get_forecaster(index, config_dir)
             if forecaster is None:
-                return jsonify({'error': f'No configuration found for index {index}'}), 404
+                return jsonify({'error': f'No configuration found for index {index}', 'config_dir': str(config_dir)}), 404
             
             config = _configs.get(index)
             
@@ -292,25 +301,21 @@ def _get_forecaster(index: str, config_dir: Path) -> Optional[EnsembleForecaster
     # Load configuration
     config_file = config_dir / f"{index.lower()}_ensemble_config.json"
     if not config_file.exists():
-        _LOG.warning(f"Config file not found: {config_file}")
+        _LOG.warning(f"Config file not found for {index}: {config_file}")
         return None
     
     try:
-        config_data = safe_read_json(config_file)
+        config_data = safe_read_json(config_file, default=None, function_name='ml_ensemble_read_config')
         if config_data is None:
-            _LOG.error(f"Failed to load config: {config_file}")
+            _LOG.error(f"Failed to load config JSON (None returned): {config_file}")
             return None
         
         # Parse config
         config = _parse_config(config_data)
         _configs[index] = config
         
-        # Create forecaster (in production, this would load trained models)
-        # For now, we create a minimal instance
-        forecaster = EnsembleForecaster(
-            config=config,
-            index=index
-        )
+        # Create forecaster using EnsembleConfig signature (expects a single cfg argument)
+        forecaster = EnsembleForecaster(config)  # type: ignore[arg-type]
         
         _forecasters[index] = forecaster
         _LOG.info(f"Created forecaster for {index}")

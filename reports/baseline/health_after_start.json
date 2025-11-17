@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-11-17T15:13:15.740030",
+  "indices": [
+    "NIFTY",
+    "BANKNIFTY"
+  ],
+  "all_passed": false,
+  "critical_failures": [
+    "API health check failed",
+    "Metrics exporter for NIFTY not responding",
+    "Metrics exporter for BANKNIFTY not responding",
+    "Forecast generation failed for NIFTY",
+    "Forecast generation failed for BANKNIFTY"
+  ],
+  "warnings": [],
+  "checks": {
+    "api_health": {
+      "status": "failed",
+      "details": {
+        "service": "ml_ensemble_api",
+        "status": "ok",
+        "timestamp": "2025-11-17T09:42:55.357644+00:00"
+      }
+    },
+    "metrics_NIFTY": {
+      "status": "failed",
+      "port": 9325,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "metrics_BANKNIFTY": {
+      "status": "failed",
+      "port": 9326,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "model_age_NIFTY": {
+      "status": "error",
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "model_age_BANKNIFTY": {
+      "status": "error",
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "forecast_NIFTY": {
+      "status": "failed",
+      "error": "HTTP Error 404: NOT FOUND"
+    },
+    "forecast_BANKNIFTY": {
+      "status": "failed",
+      "error": "HTTP Error 404: NOT FOUND"
+    }
+  }
+}

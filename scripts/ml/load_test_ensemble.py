@@ -24,6 +24,7 @@ import json
 import logging
 import sys
 import time
+import os
 import urllib.request
 import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -45,7 +46,13 @@ logger = logging.getLogger(__name__)
 
 
 class LoadTester:
-    """Load tester for ML ensemble API."""
+    """Load tester for ML ensemble API.
+
+    Note: Forecast endpoint returns a JSON object with a nested
+    'forecast' dict containing p10/p50/p90. We normalize detection
+    accordingly so success detection is resilient to future schema
+    extensions.
+    """
     
     def __init__(
         self,
@@ -97,14 +104,15 @@ class LoadTester:
                 data = json.loads(response.read().decode())
                 latency = time.time() - start_time
                 
+                forecast_block = data.get("forecast", data)
                 return {
                     "status": "success",
                     "latency": latency,
                     "horizon": horizon,
                     "timestamp": datetime.now().isoformat(),
-                    "has_p10": "p10" in data,
-                    "has_p50": "p50" in data,
-                    "has_p90": "p90" in data,
+                    "has_p10": "p10" in forecast_block,
+                    "has_p50": "p50" in forecast_block,
+                    "has_p90": "p90" in forecast_block,
                 }
                 
         except urllib.error.HTTPError as e:
@@ -351,8 +359,8 @@ def main():
     parser.add_argument(
         "--api-port",
         type=int,
-        default=9210,
-        help="API port (default: 9210)"
+        default=None,
+        help="API port (default: 9500 if dashboard running else 9210)"
     )
     parser.add_argument(
         "--index",
@@ -390,6 +398,25 @@ def main():
     horizons = [int(h.strip()) for h in args.horizons.split(',')]
     
     # Create load tester
+    # Auto-select port if not provided
+    if args.api_port is None:
+        # Prefer dashboard port if health responds
+        dash_port = int(os.environ.get("DASHBOARD_API_PORT", "9500"))
+        legacy_port = int(os.environ.get("ML_API_PORT", "9210"))
+        # Simple probe
+        def _probe(port: int) -> bool:
+            try:
+                with urllib.request.urlopen(f"http://localhost:{port}/health", timeout=2):
+                    return True
+            except Exception:
+                return False
+        if _probe(dash_port):
+            args.api_port = dash_port
+        elif _probe(legacy_port):
+            args.api_port = legacy_port
+        else:
+            args.api_port = dash_port  # fall back to dashboard default
+
     tester = LoadTester(
         api_host=args.api_host,
         api_port=args.api_port,

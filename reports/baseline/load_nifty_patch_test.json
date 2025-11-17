@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-11-17T15:22:37.586384",
+  "test_config": {
+    "index": "NIFTY",
+    "concurrent_requests": 5,
+    "duration": 10.24915862083435,
+    "horizons": [
+      60
+    ]
+  },
+  "summary": {
+    "total_requests": 25,
+    "successful": 0,
+    "failed": 25,
+    "success_rate": 0.0,
+    "error_rate": 1.0,
+    "throughput": 2.439224615880209
+  },
+  "latency_ms": {
+    "mean": 0,
+    "p50": 0,
+    "p95": 0,
+    "p99": 0
+  },
+  "targets": {
+    "p95_target_ms": 1000,
+    "p95_pass": false,
+    "error_rate_target": 0.05,
+    "error_rate_pass": false,
+    "overall_pass": false
+  },
+  "errors": [
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    },
+    {
+      "type": "http_error",
+      "horizon": 60,
+      "error": 404
+    }
+  ]
+}
