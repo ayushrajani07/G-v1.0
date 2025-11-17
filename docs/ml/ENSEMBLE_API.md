@@ -73,65 +73,61 @@ Snapshot (default):
     "weights": {"gbrt": 0.70, "retrieval": 0.30},
     "recent_count": 60,
     "cache_hit": false
-  }
-}
-```
+=======
+# Ensemble API Reference
 
-Full detail (when `detail=full`):
-```
+**Version:** 1.0  
+**Last Updated:** 2025-11-17  
+**Status:** Production
+
+## Overview
+
+The ML Ensemble Forecasting API provides real-time price path predictions combining multiple forecasting models (GBRT, retrieval-based, conformal prediction) with Phase 9 performance optimizations.
+
+**Base URL:** `http://localhost:9210/api/ml/ensemble`
+
+**Key Features:**
+- Real-time ensemble forecasting with quantile predictions
+- Phase 9 ANN cache metrics (window + disk cache)
+- Component diagnostics and health checks
+- Backward-compatible API design
+
+---
+
+## API Endpoints
+
+### 1. Forecast Endpoint
+
+**`GET /api/ml/ensemble/forecast`**
+
+Generate ensemble forecast for a given index and time horizon.
+
+#### Query Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `index` | string | Yes | - | Index name (e.g., NIFTY, BANKNIFTY) |
+| `horizon` | integer | No | 60 | Forecast horizon in minutes (> 0) |
+| `detail` | string | No | snapshot | Response detail level: `snapshot` or `full` |
+
+#### Response Schema (detail=snapshot)
+
+**Default response** - Compact quantile summary:
+
+```json
 {
   "index": "NIFTY",
   "horizon": 60,
-  "timestamp": "<epoch_ms>",
-  "time_grid": [ <ms_0>, <ms_1>, ... ],
-  "quantiles": {
-    "0.1": [ v0, v1, ... ],
-    "0.5": [ v0, v1, ... ],
-    "0.9": [ v0, v1, ... ]
-  },
-  "metadata": { ... }
-}
-```
-
-## Recent Window Loading
-
-- CSV locations checked in order:
-  - `data/g6_data/<INDEX>/this_month/0/<YYYY-MM-DD>.csv`
-  - `data/g6_data/<INDEX>/this_week/0/<YYYY-MM-DD>.csv`
-- Extracts `tp` column (or first numeric column if `tp` not found).
-- `recent_count` records how many rows were used.
-
-## Caching
-
-- Forecast result cache: in-memory TTL cache keyed by `(index, horizon, quantiles, underlying, avg_iv, minutes_to_expiry, recent_window_size)`.
-  - Env: `G6_FORECAST_CACHE_TTL` (seconds, default `30`), `G6_FORECAST_CACHE_MAX` (max entries, default `500`).
-  - Endpoints: `/cache/stats`, `/cache/clear`.
-- File-level cache for recent window (planned):
-  - Env: `G6_RECENT_FILE_CACHE_TTL` (seconds, default `60`).
-  - Mtime-aware invalidation.
-
-## Diagnostics
-
-- Enabled when `G6_DIAG_ENABLE=1`.
-- `/__diag/pid`, `/__diag/routes`, `/__diag/summary`.
-
-## Metrics (Prometheus)
-
-Planned/expected metric families (names subject to final implementation):
-- `g6_forecast_latency_ms` (histogram) — labels: `index`, `horizon`.
-- `g6_forecast_cache_hits_total`, `g6_forecast_cache_misses_total` — labels: `index`, `horizon`.
-- `g6_recent_file_cache_hits_total`, `g6_recent_file_cache_misses_total` — labels as appropriate.
-
-## Versioning & Compatibility
-
-- Snapshot response is the default and stable.
-- `detail=full` is additive; no breaking changes to default response.
-- Any schema changes will be guarded by tests and documented here.
+  "timestamp": "2025-11-17T12:34:56.789Z",
+  "forecast": {
+    "p10": 180.5,
+    "p50": 195.3,
+    "recent_count": 60,
+    "cache_hit": false
 
 ## Quick Start
 
 Run:
-```
 python -m uvicorn src.web.dashboard.app:app --host 0.0.0.0 --port 9500
 ```
 
@@ -139,3 +135,4 @@ Test:
 ```
 python -m pytest -q
 ```
+>>>>>>> 
