@@ -47,7 +47,7 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
 
 ---
 
-## ✅ Progress To Date (2025-11-17)
+## ✅ Progress To Date (2025-11-17) – Updated Phase 9 Kickoff
 
 **Local (completed):**
 - FastAPI `/forecast` hardened against missing models/retrieval; returns safe responses.
@@ -59,8 +59,45 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
 - Load-test harness (`scripts/ml/load_test_ensemble.py`) to measure p50/p95, error rate, cache stats.
 
 **Remote agent (prepared + ready to implement):**
-- Issue: `docs/ml/ISSUE_PHASE9_ENSEMBLE_OPTIMIZATIONS.md` (file-cache, `detail=full`, Prometheus metrics, LRU bound, tests, docs).
-- Follow-up: `docs/ml/ISSUE_PHASE9_FOLLOWUP_SCAFFOLDS.md` (finalize API docs, async load-test, metrics validator, CI wiring).
+Remote execution has started on discrete Phase 9 tasks (issue specs added under `docs/ml/issues/`).
+
+**Phase 9 Issue Status (initial delegation):**
+- Detail Mode (`ISSUE_FULL_DETAIL_MODE.md`): NOT STARTED (awaiting branch creation).
+- Recent Window File Cache (`ISSUE_RECENT_WINDOW_FILE_CACHE.md`): NOT STARTED.
+- Forecast Cache LRU Bound (`ISSUE_FORECAST_CACHE_LRU.md`): NOT STARTED.
+- Prometheus Metrics Export (`ISSUE_PROMETHEUS_METRICS.md`): IN PROGRESS (cloud agent delegated).
+- Metrics Validator Script (`ISSUE_METRICS_VALIDATOR.md`): IN PROGRESS (cloud agent delegated).
+- Async Load Test + CI (`ISSUE_ASYNC_LOAD_TEST_AND_CI.md`): IN PROGRESS (cloud agent delegated).
+- Docs Hardening & Alignment (`ISSUE_DOCS_HARDENING.md`): IN PROGRESS (cloud agent delegated; will integrate after metrics + detail mode land).
+
+**Branch / Ordering Guidance (tracking):**
+1. Detail Mode → unlocks full schema examples.
+2. File Cache + LRU → baseline performance uplift before heavy measurement.
+3. Metrics Export → observability for subsequent load test.
+4. Async Load Test + CI → provides measurable latency/error artifact.
+5. Metrics Validator → enforces metrics completeness in CI.
+6. Docs Hardening → consolidates final schema & env vars.
+
+**Planned Env Vars (upcoming additions):**
+- `G6_FORECAST_CACHE_MAX` – cap forecast cache entries (LRU eviction).
+- `G6_RECENT_FILE_CACHE_TTL` / `G6_RECENT_FILE_CACHE_MAX_SIZE` – recent window file cache controls.
+- `ENABLE_PATH_FORECAST_PROM_METRICS` – metrics export toggle (already referenced, pending implementation).
+
+**Next Local Actions (suggested):**
+- Capture baseline latency/error now (pre-optimizations) with existing thread load tester.
+- Prepare Grafana variable dashboard (index/horizon templating) for post‑metrics panels.
+- Add lightweight data freshness script for daily CSV presence & last timestamp exposure.
+
+**Risks & Watchpoints:**
+- Metrics overhead: keep histogram buckets minimal until validated.
+- Cache memory growth: ensure max size env documented once LRU implemented.
+- Doc churn: delay major doc restructuring until detail mode response finalized.
+
+**Success Metric Targets (Phase 9):**
+- ≥30% P95 latency reduction after caches + metrics instrumentation.
+- Forecast cache hit ratio ≥60% steady state.
+- Recent window file cache hit ratio ≥70% for horizons using TP history.
+- Metrics endpoint exposes all required counters/gauges with validator passing.
 
 **Operational checks:**
 - Start script verifies `/__diag/pid` and OpenAPI forecast route.
@@ -1131,7 +1168,7 @@ The completion of the ML ARM Implementation Roadmap marks a significant mileston
 
 ---
 
-**Next Action:** Begin Phase 9 - Performance Optimization (activate caching & profiling, establish latency reduction plan)
+**Immediate Next Action:** Execute baseline load test + proceed with delegated Phase 9 implementations (detail mode + caching + metrics) before adjusting thresholds.
 
 **Contact:**
 - ML Engineering Team: ml-team@example.com
