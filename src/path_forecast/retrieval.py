@@ -293,6 +293,8 @@ class RetrievalPathForecaster(PathForecaster):
         ann_day_map: List[Path] = []
         ann_build_ms = None
         ann_index_mem_bytes = None
+        ann_cache_hit = False
+        ann_disk_cache_hit = False
 
         t_ann_start = None
         if self.cfg.use_ann and day_files:
@@ -300,60 +302,97 @@ class RetrievalPathForecaster(PathForecaster):
             dim = ann_dim_s
             space = ann_space_norm
             day_key = tuple(str(p) for p in day_files)
-            cache_key = (idx, self.cfg.expiry_tag, self.cfg.offset, W, n_today, space, dim, day_key)
-            use_cache = not _env_flag('G6_DISABLE_ANN_CACHE')
-            cached = _ANN_INDEX_CACHE.get(cache_key) if use_cache else None
-            if cached is not None:
-                ann_index = cached.get('ann_index')
-                ann_day_map = list(cached.get('ann_day_map') or [])
-                ann_build_ms = 0
-                ann_index_mem_bytes = cached.get('ann_index_mem_bytes')
-            else:
-                w_cache_key = (idx, self.cfg.expiry_tag, self.cfg.offset, W, n_today, day_key)
-                windows_cache_disabled = _env_flag('DISABLE_ANN_WINDOW_CACHE')
-                if (not windows_cache_disabled) and (w_cache_key in _ANN_WINDOWS_CACHE):
-                    cached_w = _ANN_WINDOWS_CACHE.get(w_cache_key) or {}
-                    ann_windows = list(cached_w.get('ann_windows') or [])
-                    ann_day_map = list(cached_w.get('ann_day_map') or [])
+            
+            # Phase 9: Try disk cache first
+            try:
+                from .ann_cache import load_ann_index_from_disk, save_ann_index_to_disk
+                disk_cached = load_ann_index_from_disk(idx, self.cfg.expiry_tag, self.cfg.offset, W, space, dim)
+                if disk_cached is not None:
+                    ann_index = disk_cached.get('ann_index')
+                    ann_day_map = list(disk_cached.get('ann_day_map') or [])
+                    ann_index_mem_bytes = disk_cached.get('ann_index_mem_bytes')
+                    ann_build_ms = 0
+                    ann_disk_cache_hit = True
+                    if _profiling_enabled():
+                        _LOG.info(f"ANN disk cache hit for {idx}")
+            except Exception as exc:
+                _warn(self.last_meta, "ANN disk cache load failed", exc)
+            
+            # Phase 9: Fall back to in-memory cache or build
+            if ann_index is None:
+                cache_key = (idx, self.cfg.expiry_tag, self.cfg.offset, W, n_today, space, dim, day_key)
+                use_cache = not _env_flag('G6_DISABLE_ANN_CACHE')
+                cached = _ANN_INDEX_CACHE.get(cache_key) if use_cache else None
+                if cached is not None:
+                    ann_index = cached.get('ann_index')
+                    ann_day_map = list(cached.get('ann_day_map') or [])
+                    ann_build_ms = 0
+                    ann_index_mem_bytes = cached.get('ann_index_mem_bytes')
+                    ann_cache_hit = True
                 else:
-                    for p in day_files:
-                        dstr = p.stem
-                        hist_tp = _cache_get_day_tp(self.cfg.root, idx, self.cfg.expiry_tag, self.cfg.offset, dstr)
-                        n_hist = len(hist_tp)
-                        if n_hist < n_today + H or n_today < W:
-                            continue
-                        hw = hist_tp[n_today - W: n_today]
-                        ann_windows.append(list(_ann_zscore(hw)))
-                        ann_day_map.append(p)
-                    if not windows_cache_disabled:
-                        _ANN_WINDOWS_CACHE[w_cache_key] = {
-                            'ann_windows': list(ann_windows),
-                            'ann_day_map': list(ann_day_map),
-                        }
-                try:
-                    if ann_windows:
-                        ann_index = AnnIndex(dim=dim, params=AnnParams(space=space))
-                        ann_index.fit(ann_windows)
-                        if t_ann_start is not None:
-                            ann_build_ms = int((time.perf_counter() - t_ann_start) * 1000)
+                    # Phase 9: Use enhanced window cache
+                    try:
+                        from .ann_cache import get_ann_windows, put_ann_windows
+                        cached_windows = get_ann_windows(idx, self.cfg.expiry_tag, self.cfg.offset, W, n_today, space, dim, day_key)
+                        if cached_windows is not None:
+                            ann_windows = list(cached_windows.get('ann_windows', []))
+                            ann_day_map = list(cached_windows.get('ann_day_map', []))
+                    except Exception as exc:
+                        _warn(self.last_meta, "ANN window cache get failed", exc)
+                    
+                    if not ann_windows:
+                        # Build windows from scratch
+                        for p in day_files:
+                            dstr = p.stem
+                            hist_tp = _cache_get_day_tp(self.cfg.root, idx, self.cfg.expiry_tag, self.cfg.offset, dstr)
+                            n_hist = len(hist_tp)
+                            if n_hist < n_today + H or n_today < W:
+                                continue
+                            hw = hist_tp[n_today - W: n_today]
+                            ann_windows.append(list(_ann_zscore(hw)))
+                            ann_day_map.append(p)
+                        
+                        # Phase 9: Store in enhanced window cache
                         try:
-                            if hasattr(ann_index, '_vectors') and ann_index._vectors is not None:
-                                ann_index_mem_bytes = int(getattr(ann_index._vectors, 'nbytes', 0))
-                            elif hasattr(ann_index, '_index') and ann_index._index is not None:
-                                ann_index_mem_bytes = int(sys.getsizeof(ann_index._index))
+                            from .ann_cache import put_ann_windows
+                            put_ann_windows(idx, self.cfg.expiry_tag, self.cfg.offset, W, n_today, space, dim, day_key, ann_windows, ann_day_map)
                         except Exception as exc:
-                            _warn(self.last_meta, "ANN memory estimate failed", exc)
-                        if use_cache:
-                            _ANN_INDEX_CACHE[cache_key] = {
-                                'ann_index': ann_index,
-                                'ann_day_map': list(ann_day_map),
-                                'ann_index_mem_bytes': ann_index_mem_bytes,
-                            }
-                except (ValueError, RuntimeError, MemoryError) as exc:
-                    _warn(self.last_meta, "ANN index build failed", exc)
-                    ann_index = None
-                    ann_build_ms = None
-                    ann_index_mem_bytes = None
+                            _warn(self.last_meta, "ANN window cache put failed", exc)
+                    
+                    try:
+                        if ann_windows:
+                            ann_index = AnnIndex(dim=dim, params=AnnParams(space=space))
+                            ann_index.fit(ann_windows)
+                            if t_ann_start is not None:
+                                ann_build_ms = int((time.perf_counter() - t_ann_start) * 1000)
+                            try:
+                                if hasattr(ann_index, '_vectors') and ann_index._vectors is not None:
+                                    ann_index_mem_bytes = int(getattr(ann_index._vectors, 'nbytes', 0))
+                                elif hasattr(ann_index, '_index') and ann_index._index is not None:
+                                    ann_index_mem_bytes = int(sys.getsizeof(ann_index._index))
+                            except Exception as exc:
+                                _warn(self.last_meta, "ANN memory estimate failed", exc)
+                            
+                            # Store in legacy in-memory cache
+                            if use_cache:
+                                _ANN_INDEX_CACHE[cache_key] = {
+                                    'ann_index': ann_index,
+                                    'ann_day_map': list(ann_day_map),
+                                    'ann_index_mem_bytes': ann_index_mem_bytes,
+                                }
+                            
+                            # Phase 9: Save to disk cache
+                            try:
+                                from .ann_cache import save_ann_index_to_disk
+                                save_ann_index_to_disk(idx, self.cfg.expiry_tag, self.cfg.offset, W, space, dim, 
+                                                      ann_index, ann_day_map, ann_index_mem_bytes)
+                            except Exception as exc:
+                                _warn(self.last_meta, "ANN disk cache save failed", exc)
+                    except (ValueError, RuntimeError, MemoryError) as exc:
+                        _warn(self.last_meta, "ANN index build failed", exc)
+                        ann_index = None
+                        ann_build_ms = None
+                        ann_index_mem_bytes = None
 
         iterate_files = day_files
         ann_mad_filtered = None
@@ -584,6 +623,19 @@ class RetrievalPathForecaster(PathForecaster):
             _push_metrics(self.last_meta)
         except Exception as exc:
             _warn(self.last_meta, "metrics push failed", exc)
+        
+        # Phase 9: Push ANN cache metrics
+        try:
+            from .ann_cache import get_ann_window_cache_stats, get_ann_disk_cache_stats
+            from .metrics import push_ann_cache_metrics, push_ann_disk_cache_metrics
+            
+            window_cache_stats = get_ann_window_cache_stats()
+            push_ann_cache_metrics(window_cache_stats)
+            
+            disk_cache_stats = get_ann_disk_cache_stats()
+            push_ann_disk_cache_metrics(disk_cache_stats)
+        except Exception as exc:
+            _warn(self.last_meta, "ANN cache metrics push failed", exc)
         # Inject sanitized parameter visibility into meta for observability
         try:
             self.last_meta.update({

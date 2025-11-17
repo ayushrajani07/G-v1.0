@@ -6,13 +6,21 @@ Existing function:
 New (guarded) Prometheus helpers (enabled when ENABLE_PATH_FORECAST_PROM_METRICS is set):
 - push_retrieval_metrics(last_meta)
     Exposes histogram and gauges for latency, candidates, ANN stats, and stage timings.
+
+Phase 9 additions:
+- ANN cache metrics (hit ratio, size, evictions)
+- ANN disk cache metrics (hits, load time)
+- Stage-level latency histograms
 """
 from __future__ import annotations
 
 from typing import Optional, Any, cast
 import os
+import logging
 
 from src.metrics.protocols import GaugeLike, HistogramLike
+
+_LOG = logging.getLogger("path_forecast.metrics")
 
 _REG: Any | None = None
 _M_LATENCY: HistogramLike | None = None
@@ -32,6 +40,16 @@ _G_COMP_PRIOR_CACHE_HIT: GaugeLike | None = None
 _G_COMP_ALPHA: GaugeLike | None = None
 _G_COMP_PRIOR_DAYS: GaugeLike | None = None
 _G_COMP_RET_DAYS: GaugeLike | None = None
+
+# Phase 9: ANN cache metrics
+_G_ANN_CACHE_HIT_RATIO: GaugeLike | None = None
+_G_ANN_CACHE_SIZE: GaugeLike | None = None
+_G_ANN_CACHE_EVICTIONS: GaugeLike | None = None
+_G_ANN_DISK_CACHE_HITS: GaugeLike | None = None
+_G_ANN_DISK_CACHE_LOAD_MS: HistogramLike | None = None
+
+# Phase 9: Stage-level latency histograms
+_M_STAGE_LATENCY: dict[str, HistogramLike] = {}
 
 _DEF_BUCKETS = [
     1, 2.5, 5, 7.5, 10, 15, 25, 50, 75, 100, 150, 250, 500, 750, 1000,
@@ -78,6 +96,44 @@ def _get_reg():
             "pf_quantile_agg_ms",
             "Quantile aggregation time in ms",
         ))
+        
+        # Phase 9: ANN cache metrics
+        global _G_ANN_CACHE_HIT_RATIO, _G_ANN_CACHE_SIZE, _G_ANN_CACHE_EVICTIONS
+        global _G_ANN_DISK_CACHE_HITS, _G_ANN_DISK_CACHE_LOAD_MS
+        _G_ANN_CACHE_HIT_RATIO = cast(GaugeLike, _G(
+            "g6_ml_ann_cache_hit_ratio",
+            "ANN window cache hit ratio (0-1)",
+        ))
+        _G_ANN_CACHE_SIZE = cast(GaugeLike, _G(
+            "g6_ml_ann_cache_size",
+            "ANN window cache current size",
+        ))
+        _G_ANN_CACHE_EVICTIONS = cast(GaugeLike, _G(
+            "g6_ml_ann_cache_evictions",
+            "ANN window cache evictions total",
+        ))
+        _G_ANN_DISK_CACHE_HITS = cast(GaugeLike, _G(
+            "g6_ml_ann_disk_cache_hits",
+            "ANN disk cache hits total",
+        ))
+        _G_ANN_DISK_CACHE_LOAD_MS = cast(HistogramLike, _H(
+            "g6_ml_ann_disk_cache_load_ms",
+            "ANN disk cache load time in milliseconds",
+            buckets=[1, 5, 10, 25, 50, 100, 250, 500, 1000, 2000],
+        ))
+        
+        # Phase 9: Stage-level latency histogram (single metric with labels)
+        global _M_STAGE_LATENCY
+        if not _M_STAGE_LATENCY:  # Only create once
+            stage_metric = cast(HistogramLike, _H(
+                "g6_ml_stage_latency_seconds",
+                "Stage-level latency in seconds",
+                labelnames=["stage", "index", "horizon"],
+            ))
+            # Share the same metric instance for all stages
+            for stage in ["data_load", "retrieval", "ann_build", "ann_reuse", "aggregation", "conformal"]:
+                _M_STAGE_LATENCY[stage] = stage_metric
+        
         # Optional: meta gauges & histograms (window/horizon, alpha, candidate richness)
         if os.environ.get("PATH_FORECAST_META_METRICS", "").strip() != "":
             global _G_WINDOW_SAN, _G_HORIZ_SAN, _M_ALPHA_HIST, _M_CANDIDATE_RICHNESS
@@ -126,7 +182,7 @@ def _get_reg():
         return _REG
     except (ImportError, AttributeError) as exc:
         # Prometheus client not available or incompatible version
-        logging.getLogger("path_forecast.metrics").debug(f"Metrics registration unavailable: {exc}")
+        _LOG.debug(f"Metrics registration unavailable: {exc}")
         return None
 
 
@@ -253,8 +309,85 @@ def compute_ann_effectiveness(
         # Invalid input values for score calculation
         return None
 
+def push_ann_cache_metrics(stats: dict[str, Any]) -> None:
+    """Push ANN cache metrics to Prometheus.
+    
+    Args:
+        stats: Dictionary with cache statistics from ann_cache module
+    """
+    reg = _get_reg()
+    if reg is None:
+        return
+    
+    try:
+        if _G_ANN_CACHE_HIT_RATIO is not None:
+            hit_ratio = float(stats.get('hit_ratio', 0.0))
+            _G_ANN_CACHE_HIT_RATIO.set(hit_ratio)
+        
+        if _G_ANN_CACHE_SIZE is not None:
+            size = int(stats.get('size', 0))
+            _G_ANN_CACHE_SIZE.set(float(size))
+        
+        if _G_ANN_CACHE_EVICTIONS is not None:
+            evictions = int(stats.get('evictions', 0))
+            _G_ANN_CACHE_EVICTIONS.set(float(evictions))
+    except (KeyError, ValueError, TypeError, AttributeError) as exc:
+        _LOG.debug(f"Failed to push ANN cache metrics: {exc}")
+
+
+def push_ann_disk_cache_metrics(stats: dict[str, Any]) -> None:
+    """Push ANN disk cache metrics to Prometheus.
+    
+    Args:
+        stats: Dictionary with disk cache statistics from ann_cache module
+    """
+    reg = _get_reg()
+    if reg is None:
+        return
+    
+    try:
+        if _G_ANN_DISK_CACHE_HITS is not None:
+            hits = int(stats.get('hits', 0))
+            _G_ANN_DISK_CACHE_HITS.set(float(hits))
+        
+        # Load time is recorded as a histogram observation
+        load_ms = stats.get('load_ms')
+        if load_ms is not None and _G_ANN_DISK_CACHE_LOAD_MS is not None:
+            _G_ANN_DISK_CACHE_LOAD_MS.observe(float(load_ms))
+    except (KeyError, ValueError, TypeError, AttributeError) as exc:
+        _LOG.debug(f"Failed to push ANN disk cache metrics: {exc}")
+
+
+def observe_stage_latency(stage: str, latency_seconds: float, index: str = "", horizon: int = 0) -> None:
+    """Observe stage-level latency.
+    
+    Args:
+        stage: Stage name (data_load, retrieval, ann_build, ann_reuse, aggregation, conformal)
+        latency_seconds: Latency in seconds
+        index: Index name for label
+        horizon: Horizon for label
+    """
+    reg = _get_reg()
+    if reg is None:
+        return
+    
+    try:
+        if stage in _M_STAGE_LATENCY:
+            metric = _M_STAGE_LATENCY[stage]
+            # Use labels if metric supports them
+            if hasattr(metric, 'labels'):
+                metric.labels(stage=stage, index=index, horizon=str(horizon)).observe(latency_seconds)
+            else:
+                metric.observe(latency_seconds)
+    except (KeyError, ValueError, TypeError, AttributeError) as exc:
+        _LOG.debug(f"Failed to observe stage latency for {stage}: {exc}")
+
+
 __all__ = [
     "compute_ann_effectiveness",
     "push_retrieval_metrics",
     "push_composite_metrics",
+    "push_ann_cache_metrics",
+    "push_ann_disk_cache_metrics",
+    "observe_stage_latency",
 ]

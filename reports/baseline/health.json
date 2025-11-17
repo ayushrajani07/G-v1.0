@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-11-17T14:56:30.526814",
+  "indices": [
+    "NIFTY",
+    "BANKNIFTY"
+  ],
+  "all_passed": false,
+  "critical_failures": [
+    "API connection failed: <urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>",
+    "Metrics exporter for NIFTY not responding",
+    "Metrics exporter for BANKNIFTY not responding",
+    "Forecast generation failed for NIFTY",
+    "Forecast generation failed for BANKNIFTY"
+  ],
+  "warnings": [],
+  "checks": {
+    "api_health": {
+      "status": "failed",
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "metrics_NIFTY": {
+      "status": "failed",
+      "port": 9325,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "metrics_BANKNIFTY": {
+      "status": "failed",
+      "port": 9326,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "model_age_NIFTY": {
+      "status": "error",
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "model_age_BANKNIFTY": {
+      "status": "error",
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "forecast_NIFTY": {
+      "status": "failed",
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    "forecast_BANKNIFTY": {
+      "status": "failed",
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    }
+  }
+}

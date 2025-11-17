@@ -1,0 +1,86 @@
+{
+  "timestamp": "2025-11-17T14:57:45.255803",
+  "test_config": {
+    "index": "NIFTY",
+    "concurrent_requests": 20,
+    "duration": 61.3429753780365,
+    "horizons": [
+      30,
+      60,
+      120
+    ]
+  },
+  "summary": {
+    "total_requests": 300,
+    "successful": 0,
+    "failed": 300,
+    "success_rate": 0.0,
+    "error_rate": 1.0,
+    "throughput": 4.890535520183021
+  },
+  "latency_ms": {
+    "mean": 0,
+    "p50": 0,
+    "p95": 0,
+    "p99": 0
+  },
+  "targets": {
+    "p95_target_ms": 1000,
+    "p95_pass": false,
+    "error_rate_target": 0.05,
+    "error_rate_pass": false,
+    "overall_pass": false
+  },
+  "errors": [
+    {
+      "type": "connection_error",
+      "horizon": 30,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 60,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 120,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 30,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 60,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 120,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 30,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 60,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 120,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    },
+    {
+      "type": "connection_error",
+      "horizon": 30,
+      "error": "<urlopen error [WinError 10061] No connection could be made because the target machine actively refused it>"
+    }
+  ]
+}
