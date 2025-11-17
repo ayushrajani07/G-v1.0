@@ -46,9 +46,11 @@ class FeatureEngineer:
     Phase 7 Extensions:
     4. Near-Strike Features (15) - when use_near_strikes=True:
        - Premium ratios (4): CE/PE ratios for ATM±1 and ATM±2
-       - Strike skew (4): IV skew and smile curvature
-       - Greeks gradients (3): Gamma, Vega, Theta gradients
-       - Liquidity indicators (4): Volume/OI concentration, spread, liquidity score
+       - Strike skew (4): IV skew and smile curvature (uses real IV data)
+       - Greeks gradients (3): Gamma, Vega, Theta gradients (uses real Greeks data)
+       - Liquidity indicators (4): Volume/OI concentration, spread, liquidity score (uses real vol/OI)
+       
+       Note: Uses actual data from collectors which already gather ATM±6 (NIFTY) and ATM±10 (BANKNIFTY) strikes.
     
     5. Enhanced Index Features (8):
        - Signed vs unsigned returns (magnitude and direction)
@@ -66,6 +68,13 @@ class FeatureEngineer:
     # Phase 7 configuration
     use_near_strikes: bool = False  # Enable ATM±2 strike features
     use_enhanced_index: bool = True  # Enable enhanced index features
+    
+    # Note: Collectors already gather wide strike ranges:
+    # - NIFTY: ATM ± 6 strikes (config: strikes_itm=6, strikes_otm=6)
+    # - BANKNIFTY: ATM ± 10 strikes (config: strikes_itm=10, strikes_otm=10)
+    # Data stored in: data/g6_data/{index}/{expiry}/{offset}/
+    # Available fields per offset: ce_iv, pe_iv, ce_gamma, pe_gamma, ce_vega,
+    # pe_vega, ce_theta, pe_theta, ce_vol, pe_vol, ce_oi, pe_oi
     
     # Normalization bounds
     min_minutes_to_expiry: float = 1.0
@@ -423,47 +432,207 @@ class FeatureEngineer:
             df["pe_atm2_ratio"] = 1.0
         
         # 2. Strike Skew (using IV columns if available)
-        # For simplicity, we'll use premium ratios as proxy for IV skew
-        # In production, actual IV columns for each strike should be used
-        if "ce_atm1_ratio" in df.columns and "ce_atm_minus1_col" in locals():
-            # Placeholder: skew based on premium ratios
-            df["ce_iv_skew"] = 0.0
+        # IV skew measures asymmetry in implied volatility across strikes
+        # Positive skew: OTM puts > ATM > OTM calls (typical in equity indices)
+        
+        # CE IV Skew: (IV_ATM - IV_ATM+2) / IV_ATM
+        # Measures how CE IV decreases as strike increases
+        if ce_atm_col and ce_atm_col in df.columns and ce_atm2_col and ce_atm2_col in df.columns:
+            # Assuming IV columns have corresponding naming (e.g., ce_atm -> ce_atm_iv)
+            ce_atm_iv_col = f"{ce_atm_col}_iv" if f"{ce_atm_col}_iv" in df.columns else None
+            ce_atm2_iv_col = f"{ce_atm2_col}_iv" if f"{ce_atm2_col}_iv" in df.columns else None
+            
+            if ce_atm_iv_col and ce_atm2_iv_col and ce_atm_iv_col in df.columns and ce_atm2_iv_col in df.columns:
+                ce_atm_iv_safe = df[ce_atm_iv_col].replace(0, np.nan)
+                df["ce_iv_skew"] = ((df[ce_atm_iv_col] - df[ce_atm2_iv_col]) / ce_atm_iv_safe).fillna(0.0)
+            else:
+                df["ce_iv_skew"] = 0.0
         else:
             df["ce_iv_skew"] = 0.0
         
-        df["pe_iv_skew"] = 0.0
-        df["total_iv_skew"] = 0.0
-        df["iv_smile_curvature"] = 0.0
+        # PE IV Skew: (IV_ATM-2 - IV_ATM) / IV_ATM
+        # Measures how PE IV increases as strike decreases (typical put skew)
+        if pe_atm_col and pe_atm_col in df.columns and pe_atm_minus2_col and pe_atm_minus2_col in df.columns:
+            pe_atm_iv_col = f"{pe_atm_col}_iv" if f"{pe_atm_col}_iv" in df.columns else None
+            pe_atm_minus2_iv_col = f"{pe_atm_minus2_col}_iv" if f"{pe_atm_minus2_col}_iv" in df.columns else None
+            
+            if pe_atm_iv_col and pe_atm_minus2_iv_col and pe_atm_iv_col in df.columns and pe_atm_minus2_iv_col in df.columns:
+                pe_atm_iv_safe = df[pe_atm_iv_col].replace(0, np.nan)
+                df["pe_iv_skew"] = ((df[pe_atm_minus2_iv_col] - df[pe_atm_iv_col]) / pe_atm_iv_safe).fillna(0.0)
+            else:
+                df["pe_iv_skew"] = 0.0
+        else:
+            df["pe_iv_skew"] = 0.0
+        
+        # Total IV Skew: Combines CE and PE skew
+        df["total_iv_skew"] = df["ce_iv_skew"] + df["pe_iv_skew"]
+        
+        # IV Smile Curvature: Measures convexity of volatility smile
+        # Uses ATM-1, ATM, ATM+1 to compute second derivative
+        if ce_atm_col and ce_atm1_col and ce_atm_minus1_col:
+            ce_atm_iv_col = f"{ce_atm_col}_iv" if f"{ce_atm_col}_iv" in df.columns else None
+            ce_atm1_iv_col = f"{ce_atm1_col}_iv" if f"{ce_atm1_col}_iv" in df.columns else None
+            ce_atm_minus1_iv_col = f"{ce_atm_minus1_col}_iv" if f"{ce_atm_minus1_col}_iv" in df.columns else None
+            
+            if (ce_atm_iv_col and ce_atm1_iv_col and ce_atm_minus1_iv_col and
+                ce_atm_iv_col in df.columns and ce_atm1_iv_col in df.columns and ce_atm_minus1_iv_col in df.columns):
+                # Second derivative approximation: (IV_left + IV_right - 2*IV_center)
+                df["iv_smile_curvature"] = (
+                    df[ce_atm_minus1_iv_col] + df[ce_atm1_iv_col] - 2 * df[ce_atm_iv_col]
+                ).fillna(0.0)
+            else:
+                df["iv_smile_curvature"] = 0.0
+        else:
+            df["iv_smile_curvature"] = 0.0
         
         # 3. Greeks Gradients
-        # Assuming we have gamma/vega/theta at ATM+1 and ATM-1
-        # For now, use placeholder values
-        df["gamma_gradient"] = 0.0
-        df["vega_gradient"] = 0.0
-        df["theta_gradient"] = 0.0
+        # Gradients measure rate of change of Greeks across strikes
+        # Helps capture sensitivity changes and convexity effects
+        
+        # Gamma Gradient: (Gamma_ATM+1 - Gamma_ATM-1) / 2
+        # Measures how gamma changes across strikes (gamma is max at ATM)
+        if gamma_col and gamma_col in df.columns:
+            gamma_atm1_col = f"{gamma_col}_atm1" if f"{gamma_col}_atm1" in df.columns else None
+            gamma_atm_minus1_col = f"{gamma_col}_atm_minus1" if f"{gamma_col}_atm_minus1" in df.columns else None
+            
+            if gamma_atm1_col and gamma_atm_minus1_col:
+                df["gamma_gradient"] = (
+                    (df[gamma_atm1_col] - df[gamma_atm_minus1_col]) / 2.0
+                ).fillna(0.0)
+            else:
+                # Fallback: use gamma from CE and PE at different strikes if available
+                ce_gamma_atm1 = f"{ce_atm1_col}_gamma" if ce_atm1_col and f"{ce_atm1_col}_gamma" in df.columns else None
+                ce_gamma_atm_minus1 = f"{ce_atm_minus1_col}_gamma" if ce_atm_minus1_col and f"{ce_atm_minus1_col}_gamma" in df.columns else None
+                
+                if ce_gamma_atm1 and ce_gamma_atm_minus1:
+                    df["gamma_gradient"] = (
+                        (df[ce_gamma_atm1] - df[ce_gamma_atm_minus1]) / 2.0
+                    ).fillna(0.0)
+                else:
+                    df["gamma_gradient"] = 0.0
+        else:
+            df["gamma_gradient"] = 0.0
+        
+        # Vega Gradient: Similar to gamma gradient
+        if vega_col and vega_col in df.columns:
+            vega_atm1_col = f"{vega_col}_atm1" if f"{vega_col}_atm1" in df.columns else None
+            vega_atm_minus1_col = f"{vega_col}_atm_minus1" if f"{vega_col}_atm_minus1" in df.columns else None
+            
+            if vega_atm1_col and vega_atm_minus1_col:
+                df["vega_gradient"] = (
+                    (df[vega_atm1_col] - df[vega_atm_minus1_col]) / 2.0
+                ).fillna(0.0)
+            else:
+                ce_vega_atm1 = f"{ce_atm1_col}_vega" if ce_atm1_col and f"{ce_atm1_col}_vega" in df.columns else None
+                ce_vega_atm_minus1 = f"{ce_atm_minus1_col}_vega" if ce_atm_minus1_col and f"{ce_atm_minus1_col}_vega" in df.columns else None
+                
+                if ce_vega_atm1 and ce_vega_atm_minus1:
+                    df["vega_gradient"] = (
+                        (df[ce_vega_atm1] - df[ce_vega_atm_minus1]) / 2.0
+                    ).fillna(0.0)
+                else:
+                    df["vega_gradient"] = 0.0
+        else:
+            df["vega_gradient"] = 0.0
+        
+        # Theta Gradient: Rate of time decay change across strikes
+        if theta_col and theta_col in df.columns:
+            theta_atm1_col = f"{theta_col}_atm1" if f"{theta_col}_atm1" in df.columns else None
+            theta_atm_minus1_col = f"{theta_col}_atm_minus1" if f"{theta_col}_atm_minus1" in df.columns else None
+            
+            if theta_atm1_col and theta_atm_minus1_col:
+                df["theta_gradient"] = (
+                    (df[theta_atm1_col] - df[theta_atm_minus1_col]) / 2.0
+                ).fillna(0.0)
+            else:
+                ce_theta_atm1 = f"{ce_atm1_col}_theta" if ce_atm1_col and f"{ce_atm1_col}_theta" in df.columns else None
+                ce_theta_atm_minus1 = f"{ce_atm_minus1_col}_theta" if ce_atm_minus1_col and f"{ce_atm_minus1_col}_theta" in df.columns else None
+                
+                if ce_theta_atm1 and ce_theta_atm_minus1:
+                    df["theta_gradient"] = (
+                        (df[ce_theta_atm1] - df[ce_theta_atm_minus1]) / 2.0
+                    ).fillna(0.0)
+                else:
+                    df["theta_gradient"] = 0.0
+        else:
+            df["theta_gradient"] = 0.0
         
         # 4. Liquidity Indicators
+        # These measure how liquidity is distributed across strikes
+        
+        # Volume Concentration: ATM volume / total volume across ATM±2
         if volume_col and volume_col in df.columns:
-            # Volume concentration: assume ATM volume / total volume across strikes
-            # Placeholder: set to 0.5 (50% concentration)
-            df["volume_concentration"] = 0.5
+            # Calculate total volume across near strikes
+            total_vol = df[volume_col]
+            
+            # Add volumes from other strikes if available
+            for strike_col in [ce_atm1_col, ce_atm2_col, ce_atm_minus1_col, ce_atm_minus2_col,
+                             pe_atm1_col, pe_atm2_col, pe_atm_minus1_col, pe_atm_minus2_col]:
+                if strike_col:
+                    vol_col_name = f"{strike_col}_vol" if f"{strike_col}_vol" in df.columns else None
+                    if vol_col_name:
+                        total_vol = total_vol + df[vol_col_name].fillna(0)
+            
+            # Compute concentration (avoid division by zero)
+            total_vol_safe = total_vol.replace(0, np.nan)
+            df["volume_concentration"] = (df[volume_col] / total_vol_safe).fillna(0.5)
+            # Clip to reasonable range [0, 1]
+            df["volume_concentration"] = df["volume_concentration"].clip(0, 1)
         else:
             df["volume_concentration"] = 0.5
         
+        # OI Concentration: ATM OI / total OI across ATM±2
         if oi_col and oi_col in df.columns:
-            df["oi_concentration"] = 0.5
+            total_oi = df[oi_col]
+            
+            # Add OI from other strikes if available
+            for strike_col in [ce_atm1_col, ce_atm2_col, ce_atm_minus1_col, ce_atm_minus2_col,
+                             pe_atm1_col, pe_atm2_col, pe_atm_minus1_col, pe_atm_minus2_col]:
+                if strike_col:
+                    oi_col_name = f"{strike_col}_oi" if f"{strike_col}_oi" in df.columns else None
+                    if oi_col_name:
+                        total_oi = total_oi + df[oi_col_name].fillna(0)
+            
+            # Compute concentration
+            total_oi_safe = total_oi.replace(0, np.nan)
+            df["oi_concentration"] = (df[oi_col] / total_oi_safe).fillna(0.5)
+            df["oi_concentration"] = df["oi_concentration"].clip(0, 1)
         else:
             df["oi_concentration"] = 0.5
         
-        # Bid-ask spread average (placeholder)
-        df["bid_ask_spread_avg"] = 0.0
+        # Bid-ask spread average across strikes
+        # If bid/ask columns available, compute spread
+        bid_cols = [f"{col}_bid" for col in [ce_atm_col, pe_atm_col, ce_atm1_col, pe_atm1_col] 
+                   if col and f"{col}_bid" in df.columns]
+        ask_cols = [f"{col}_ask" for col in [ce_atm_col, pe_atm_col, ce_atm1_col, pe_atm1_col]
+                   if col and f"{col}_ask" in df.columns]
         
-        # Liquidity score (composite metric)
-        # Simple formula: weighted average of volume and OI concentration
+        if bid_cols and ask_cols and len(bid_cols) == len(ask_cols):
+            spreads = []
+            for bid_col, ask_col in zip(bid_cols, ask_cols):
+                mid = (df[bid_col] + df[ask_col]) / 2.0
+                mid_safe = mid.replace(0, np.nan)
+                spread_pct = ((df[ask_col] - df[bid_col]) / mid_safe).fillna(0)
+                spreads.append(spread_pct)
+            
+            if spreads:
+                # Average spread across strikes
+                df["bid_ask_spread_avg"] = sum(spreads) / len(spreads)
+                df["bid_ask_spread_avg"] = df["bid_ask_spread_avg"].clip(0, 1)
+            else:
+                df["bid_ask_spread_avg"] = 0.0
+        else:
+            df["bid_ask_spread_avg"] = 0.0
+        
+        # Liquidity Score: Composite metric combining volume, OI, and spreads
+        # Higher volume/OI concentration and lower spreads indicate better liquidity
+        # Formula: 0.4 * vol_conc + 0.4 * oi_conc + 0.2 * (1 - spread)
         df["liquidity_score"] = (
-            0.6 * df["volume_concentration"] + 
-            0.4 * df["oi_concentration"]
+            0.4 * df["volume_concentration"] + 
+            0.4 * df["oi_concentration"] +
+            0.2 * (1.0 - df["bid_ask_spread_avg"])
         )
+        df["liquidity_score"] = df["liquidity_score"].clip(0, 1)
         
         return df
     

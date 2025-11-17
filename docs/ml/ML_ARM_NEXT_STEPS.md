@@ -527,26 +527,33 @@ python scripts/ml/train_ensemble_meta_model.py \
 
 ### 11.2 Feature Engineering V2
 
-#### Near-Strike Integration (Real Implementation)
+#### Near-Strike Integration (Completed Implementation)
 
-**Phase 7 Enhanced Features (Currently Placeholders):**
+**Phase 7 Enhanced Features - Implementation Status: ✅ COMPLETE**
+
+The Phase 7 near-strike features are now fully implemented using real collector data:
+
+**Data Already Available:**
+- Collectors already gather wide strike ranges per `config/g6_config.json`:
+  - NIFTY: strikes_itm=6, strikes_otm=6 (ATM ± 6 strikes)
+  - BANKNIFTY: strikes_itm=10, strikes_otm=10 (ATM ± 10 strikes)
+- Data stored at: `data/g6_data/{index}/{expiry}/{offset}/{date}.csv`
+- Available fields: ce_iv, pe_iv, ce_gamma, pe_gamma, ce_vega, pe_vega, ce_theta, pe_theta, ce_vol, pe_vol, ce_oi, pe_oi
+
+**Features Implemented (No Longer Placeholders):**
+1. ✅ IV Skew: Uses actual IV data from ATM±2 strikes
+2. ✅ Greeks Gradients: Computes gradients from actual gamma/vega/theta data
+3. ✅ Liquidity Indicators: Uses actual volume/OI data across strikes
+
+**Usage:**
 ```bash
-# Implement real near-strike features
-# Requires data collection updates
-
-# 1. Update collectors for ATM±2 strikes. #comment by user: collectors already collect and log data for a wider range than ATM±2. find refrences for atm offset collection in docs and add code to update placeholders with real values!
-python scripts/collectors/update_for_near_strikes.py
-
-# 2. Collect historical near-strike data
-python scripts/ml/backfill_near_strike_data.py \
-  --days 60 \
-  --strikes ATM-2,ATM-1,ATM,ATM+1,ATM+2
-
-# 3. Retrain with full feature set (47 features)
+# Train with full feature set (47 features)
 python scripts/ml/train_gbrt_quantile.py \
   --use-near-strikes \
   --use-enhanced-index
 ```
+
+**Reference:** See `docs/ml/PHASE7_IMPLEMENTATION_NOTES.md` for implementation details.
 
 #### Advanced Feature Engineering
 

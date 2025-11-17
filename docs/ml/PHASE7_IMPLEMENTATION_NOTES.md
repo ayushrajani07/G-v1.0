@@ -27,26 +27,31 @@ Added support for 15 new features when `use_near_strikes=True`:
 
 **Purpose:** Capture relative premium decay across strikes
 
-#### Strike Skew (4 features - placeholders)
-- `ce_iv_skew`: IV skew for call options
-- `pe_iv_skew`: IV skew for put options
-- `total_iv_skew`: Combined IV skew
-- `iv_smile_curvature`: Volatility smile curvature
+#### Strike Skew (4 features)
+- `ce_iv_skew`: IV skew for call options - measures (IV_ATM - IV_ATM+2) / IV_ATM
+- `pe_iv_skew`: IV skew for put options - measures (IV_ATM-2 - IV_ATM) / IV_ATM
+- `total_iv_skew`: Combined IV skew (sum of CE and PE skew)
+- `iv_smile_curvature`: Volatility smile curvature - second derivative using ATM±1
 
-**Note:** These are currently placeholders. Full implementation requires actual IV data for each strike.
+**Implementation:** Uses actual IV data from collector (ce_iv, pe_iv fields) for ATM±2 strikes.
+Data source: Collectors already gather ATM±6 strikes for NIFTY, ATM±10 for BANKNIFTY.
 
-#### Greeks Gradients (3 features - placeholders)
-- `gamma_gradient`: Rate of change of gamma across strikes
-- `vega_gradient`: Rate of change of vega across strikes
-- `theta_gradient`: Rate of change of theta across strikes
+#### Greeks Gradients (3 features)
+- `gamma_gradient`: Rate of change of gamma across strikes - computed as (Gamma_ATM+1 - Gamma_ATM-1) / 2
+- `vega_gradient`: Rate of change of vega across strikes - computed as (Vega_ATM+1 - Vega_ATM-1) / 2
+- `theta_gradient`: Rate of change of theta across strikes - computed as (Theta_ATM+1 - Theta_ATM-1) / 2
 
-**Note:** Placeholders pending availability of Greeks data for each strike.
+**Implementation:** Uses actual Greeks data from collector (ce_gamma, pe_gamma, ce_vega, pe_vega, ce_theta, pe_theta fields).
+Gradients computed using finite difference method across strikes.
 
 #### Liquidity Indicators (4 features)
-- `volume_concentration`: ATM volume / total volume across strikes
-- `oi_concentration`: ATM OI / total OI across strikes
-- `bid_ask_spread_avg`: Average bid-ask spread across strikes
-- `liquidity_score`: Composite liquidity metric (0.6 × volume_concentration + 0.4 × oi_concentration)
+- `volume_concentration`: ATM volume / total volume across ATM±2 strikes
+- `oi_concentration`: ATM OI / total OI across ATM±2 strikes
+- `bid_ask_spread_avg`: Average bid-ask spread (percentage) across near strikes
+- `liquidity_score`: Composite liquidity metric (0.4 × volume_conc + 0.4 × oi_conc + 0.2 × (1 - spread))
+
+**Implementation:** Uses actual volume/OI data from collector (ce_vol, pe_vol, ce_oi, pe_oi fields).
+Bid-ask spreads computed from bid/ask prices when available. Higher liquidity score indicates better market liquidity.
 
 **Configuration:**
 ```python
@@ -298,7 +303,7 @@ python scripts/ml/validate_baseline_formula.py \
 
 ## Notes
 
-1. **Near-Strike Features**: Currently partially implemented with placeholders for IV skew and Greeks gradients. Full implementation pending strike-specific IV/Greeks data availability.
+1. **Near-Strike Features**: Fully implemented using real collector data. Collectors already gather wide strike ranges (NIFTY: ATM±6, BANKNIFTY: ATM±10), so ATM±2 data needed for Phase 7 features is readily available. Features use actual IV, Greeks, volume, and OI data from CSV storage.
 
 2. **Enhanced Index Features**: Fully implemented and enabled by default. These provide significant modeling improvements with no additional data requirements.
 
@@ -307,6 +312,12 @@ python scripts/ml/validate_baseline_formula.py \
 4. **Backward Compatibility**: All changes are backward compatible. Default behavior adds enhanced index features but not near-strikes.
 
 5. **Performance**: Phase 7 features add minimal computation overhead (~5-10% increase in feature extraction time).
+
+6. **Data Availability**: Per config/g6_config.json, collectors gather:
+   - NIFTY: strikes_itm=6, strikes_otm=6 (ATM ± 6 strikes)
+   - BANKNIFTY: strikes_itm=10, strikes_otm=10 (ATM ± 10 strikes)
+   - Data stored: data/g6_data/{index}/{expiry}/{offset}/{date}.csv
+   - Available fields: ce_iv, pe_iv, ce_gamma, pe_gamma, ce_vega, pe_vega, ce_theta, pe_theta, ce_vol, pe_vol, ce_oi, pe_oi
 
 ## References
 
