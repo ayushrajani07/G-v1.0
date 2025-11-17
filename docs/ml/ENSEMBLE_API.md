@@ -207,19 +207,87 @@ curl "http://localhost:9500/api/ml/ensemble/forecast?index=NIFTY&horizon=120&det
 
 ## Quick Start
 
-Run the server:
+Run:
 ```bash
 python -m uvicorn src.web.dashboard.app:app --host 0.0.0.0 --port 9500
 ```
 
-Test the API:
+Test:
 ```bash
-python -m pytest tests/test_ensemble_api*.py -v
+python -m pytest -q
 ```
 
 ---
 
-## Version History
+## Environment Variables
 
-- **v1.1** (2025-11-17): Added `detail=full` mode with time grid and quantile paths
-- **v1.0** (2025-11-17): Initial production release with Phase 9 optimizations 
+### Forecast Cache Configuration
+
+- `G6_FORECAST_CACHE_TTL` (int, default: `30`): Time-to-live in seconds for forecast cache entries.
+
+### Recent Window File Cache Configuration
+
+The recent window file cache reduces disk I/O and CSV parsing overhead when loading recent TP data:
+
+- `G6_RECENT_FILE_CACHE_TTL` (int, default: `60`): Time-to-live in seconds for cached recent window data. Set to `0` to disable caching.
+- `G6_RECENT_FILE_CACHE_MAX_SIZE` (int, default: `50`): Maximum number of cache entries. Oldest entries are evicted when limit is reached.
+
+**Cache Key:** `(index, date_str, window_size)`
+- Cache automatically invalidates when file mtime changes
+- Cache can reuse larger windows for smaller requests (e.g., cached 100 rows can serve request for 60 rows)
+
+**Example:**
+```bash
+export G6_RECENT_FILE_CACHE_TTL=120
+export G6_RECENT_FILE_CACHE_MAX_SIZE=100
+```
+
+---
+
+## Cache Statistics
+
+The `/api/ml/ensemble/cache/stats` endpoint returns statistics for both forecast cache and recent file cache:
+
+**Response Structure:**
+```json
+{
+  "forecast_cache": {
+    "ttl_sec": 30,
+    "size": 5,
+    "hits": 120,
+    "misses": 25,
+    "hit_ratio": 0.8276,
+    "oldest_age_sec": 28.5,
+    "newest_age_sec": 1.2,
+    "entries": [...]
+  },
+  "recent_file_cache": {
+    "ttl_sec": 60,
+    "max_size": 50,
+    "current_entries": 3,
+    "hits": 450,
+    "misses": 80,
+    "hit_ratio": 0.8491,
+    "oldest_age_sec": 55.3,
+    "newest_age_sec": 2.1,
+    "entries": [
+      {
+        "key": {
+          "index": "NIFTY",
+          "date": "2025-11-17",
+          "window_size": 60
+        },
+        "age_sec": 15.2,
+        "row_count": 60
+      }
+    ]
+  }
+}
+```
+
+**Cache Metrics:**
+- `recent_file_cache_hits`: Number of times data was served from cache
+- `recent_file_cache_misses`: Number of times data was loaded from disk
+- `recent_file_cache_current_entries`: Current number of entries in cache
+
+The cache significantly reduces latency when the same recent window is requested multiple times within the TTL period. 
