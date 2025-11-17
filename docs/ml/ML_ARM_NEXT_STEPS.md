@@ -87,10 +87,11 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 
 **Phase 10 Next Local Actions:**
 1. Drift monitoring integration (feature importance + distribution shift panels).
-2. Add rolling MAE & coverage Prometheus gauges + Grafana panels.
+2. Add rolling MAE & coverage Prometheus gauges + Grafana panels (will extend existing latency/eviction dashboard).
 3. Implement adaptive TTL prototype (volatility-driven) behind flag.
 4. Begin regime change alert pipeline (weekly cron + threshold evaluation).
 5. Extend load test to multi-index comparative mode (NIFTY vs BANKNIFTY).
+6. Add alert rules tied to new metrics (p95 latency, eviction rate, cache hit ratio thresholds).
 
 **Phase 10 Risks & Watchpoints:**
 - Drift false positives → calibrate thresholds using last 30 days.
@@ -104,10 +105,15 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 - Regime detection latency: <250ms incremental overhead.
 - Adaptive TTL: ≤5% latency improvement vs static TTL without hit ratio drop.
 - Documentation freshness: monthly review with zero outdated env vars.
+ - Eviction rate: <2/sec sustained (5m window) in normal load.
+ - Forecast cache hit ratio: ≥60% sustained post-adaptive TTL.
+ - Recent file cache hit ratio: ≥70% sustained.
 
 **Operational checks:**
 - Start script verifies `/__diag/pid` and OpenAPI forecast route.
 - Dashboards pull `/api/ml/ensemble/forecast` and `/api/ml/ensemble/cache/stats` every 10s.
+ - Prometheus panels: latency histogram (variable percentile), eviction rate trend.
+ - Validate `/metrics` exports: latency buckets, sum/count, eviction counter, hit/miss counters.
 
 ---
 

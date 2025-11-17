@@ -1,20 +1,23 @@
 # Ensemble API Reference
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Last Updated:** 2025-11-17  
-**Status:** Production
+**Status:** Production (Phase 10 kickoff)
 
 ## Overview
 
-The ML Ensemble Forecasting API provides real-time price path predictions combining multiple forecasting models (GBRT, retrieval-based, conformal prediction) with Phase 9 performance optimizations.
+The ML Ensemble Forecasting API provides real-time price path predictions combining multiple forecasting models (GBRT, retrieval-based, conformal prediction) with Phase 9 performance optimizations and new Phase 10 observability extensions (latency percentile selector, eviction rate trend).
 
 **Base URL:** `http://localhost:9500/api/ml/ensemble`
 
 **Key Features:**
 - Real-time ensemble forecasting with quantile predictions
-- Full detail mode with time grid and quantile paths
-- Phase 9 ANN cache metrics (window + disk cache)
+- Full detail mode with time grid and quantile paths (`detail=full`)
+- Caching layer (TTL + LRU bound) with eviction statistics
+- Recent window file cache (TTL + size bound, reuse larger window subsets)
+- Prometheus metrics export (latency histogram buckets, eviction counter, hit/miss counters)
 - Component diagnostics and health checks
+- Grafana dashboards (Infinity + JSON API variants) with latency percentile selector
 - Backward-compatible API design
 
 ---
@@ -221,32 +224,42 @@ python -m pytest -q
 
 ## Environment Variables
 
+### Core
+
+- `ENABLE_PATH_FORECAST_PROM_METRICS` (int, default: `1`): Enables Prometheus metrics export (`/metrics`). Set to `0` to disable.
+- `G6_DIAG_ENABLE` (int, default: `1`): Enables diagnostic endpoints.
+- `PATH_FORECAST_DISABLE_WEIGHTED` (int, default: `0`): Disable weighted quantile computation (performance fallback).
+
 ### Forecast Cache Configuration
 
 - `G6_FORECAST_CACHE_TTL` (int, default: `30`): Time-to-live in seconds for forecast cache entries.
+- `G6_FORECAST_CACHE_MAX` (int, default: `500`): Maximum number of forecast cache entries (LRU eviction enforced when exceeded).
 
 ### Recent Window File Cache Configuration
 
-The recent window file cache reduces disk I/O and CSV parsing overhead when loading recent TP data:
+Reduces disk I/O and CSV parsing overhead when loading recent TP data.
 
-- `G6_RECENT_FILE_CACHE_TTL` (int, default: `60`): Time-to-live in seconds for cached recent window data. Set to `0` to disable caching.
-- `G6_RECENT_FILE_CACHE_MAX_SIZE` (int, default: `50`): Maximum number of cache entries. Oldest entries are evicted when limit is reached.
+- `G6_RECENT_FILE_CACHE_TTL` (int, default: `60`): TTL for cached recent window data (set `0` to disable).
+- `G6_RECENT_FILE_CACHE_MAX_SIZE` (int, default: `50`): Maximum number of cached recent file windows.
 
-**Cache Key:** `(index, date_str, window_size)`
-- Cache automatically invalidates when file mtime changes
-- Cache can reuse larger windows for smaller requests (e.g., cached 100 rows can serve request for 60 rows)
+**Recent File Cache Key:** `(index, date_str, window_size)`
+- Invalidates automatically on file mtime change.
+- Larger cached window can serve smaller requested window sizes.
 
 **Example:**
 ```bash
+export G6_FORECAST_CACHE_TTL=30
+export G6_FORECAST_CACHE_MAX=500
 export G6_RECENT_FILE_CACHE_TTL=120
 export G6_RECENT_FILE_CACHE_MAX_SIZE=100
+export ENABLE_PATH_FORECAST_PROM_METRICS=1
 ```
 
 ---
 
-## Cache Statistics
+## Cache & Metrics Statistics
 
-The `/api/ml/ensemble/cache/stats` endpoint returns statistics for both forecast cache and recent file cache:
+The `/api/ml/ensemble/cache/stats` endpoint returns statistics for both forecast cache and recent file cache (subset of fields shown). Additional metrics are exposed via Prometheus when `ENABLE_PATH_FORECAST_PROM_METRICS=1`.
 
 **Response Structure:**
 ```json
@@ -285,9 +298,47 @@ The `/api/ml/ensemble/cache/stats` endpoint returns statistics for both forecast
 }
 ```
 
-**Cache Metrics:**
-- `recent_file_cache_hits`: Number of times data was served from cache
-- `recent_file_cache_misses`: Number of times data was loaded from disk
-- `recent_file_cache_current_entries`: Current number of entries in cache
+### Cache Metrics (Prometheus Counters/Gauges)
+- `g6_forecast_cache_hits_total`: Total forecast cache hits
+- `g6_forecast_cache_misses_total`: Total forecast cache misses
+- `g6_forecast_cache_evictions_total`: Total forecast cache evictions (LRU)
+- `g6_forecast_cache_size`: Current number of forecast cache entries
+- `g6_recent_file_cache_hits_total`: Recent file cache hits
+- `g6_recent_file_cache_misses_total`: Recent file cache misses
+- `g6_recent_file_cache_entries`: Current recent file cache entry count
 
-The cache significantly reduces latency when the same recent window is requested multiple times within the TTL period. 
+### Latency Histogram Metrics
+Histogram: `g6_forecast_latency_ms_bucket`, with companion `g6_forecast_latency_ms_sum`, `g6_forecast_latency_ms_count`.
+
+Quantiles (Grafana):
+```promql
+histogram_quantile(${lat_q}, sum by (le) (rate(g6_forecast_latency_ms_bucket[5m])))
+```
+
+Mean latency:
+```promql
+rate(g6_forecast_latency_ms_sum[5m]) / rate(g6_forecast_latency_ms_count[5m])
+```
+
+Eviction rate (LRU pressure):
+```promql
+rate(g6_forecast_cache_evictions_total[5m])
+```
+
+### Dashboard Variables
+- `index` (e.g., NIFTY, BANKNIFTY)
+- `horizon` (15,30,60,120,240)
+- `lat_q` (0.90,0.95,0.99) – used in latency histogram quantile selection
+
+### Operational Notes
+- High eviction rate with stable size indicates LRU pressure: consider increasing `G6_FORECAST_CACHE_MAX` or optimizing key cardinality.
+- Low hit ratio with frequent evictions may indicate overly aggressive horizon diversity; review typical query distribution.
+- Recent file cache hit ratio <50%: consider raising TTL or window reuse strategy.
+
+### Alerting Suggestions
+- Latency p95 > 500ms for 5m → Performance degradation alert.
+- Eviction rate spikes > 2/sec sustained 5m → Investigate cache size; possible thrashing.
+- Cache hit ratio <40% over 15m → Inspect request diversity & TTL.
+- Recent file cache hit ratio <50% over 30m → Validate data freshness vs TTL.
+
+The cache layers significantly reduce latency when identical or similar requests recur within TTL windows; latency histogram plus eviction trend aid adaptive tuning in Phase 10.
