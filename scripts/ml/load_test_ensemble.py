@@ -1,5 +1,167 @@
 #!/usr/bin/env python3
 """
+Simple load test harness for Ensemble Forecast API.
+
+- Uses threads + requests (stdlib + widely available) for portability.
+- Remote agent can upgrade to asyncio+httpx as needed.
+
+Usage:
+  python scripts/ml/load_test_ensemble.py --qps 20 --duration 30 --indices NIFTY,BANKNIFTY --horizon 60 --base http://127.0.0.1:9500 --detail snapshot
+
+Outputs JSON summary to stdout; use --out to write to file as well.
+"""
+import argparse
+import json
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from statistics import median
+from typing import Dict, List, Tuple
+
+import requests
+
+
+def p50(values: List[float]) -> float:
+    return float(median(values)) if values else 0.0
+
+
+def p95(values: List[float]) -> float:
+    if not values:
+        return 0.0
+    s = sorted(values)
+    idx = min(len(s) - 1, int(round(0.95 * (len(s) - 1))))
+    return float(s[idx])
+
+
+def fetch(base: str, index: str, horizon: int, detail: str, recent_window_size: int, session: requests.Session) -> Tuple[bool, float, str]:
+    params = {
+        "index": index,
+        "horizon": horizon,
+        "recent_window_size": recent_window_size,
+    }
+    if detail == "full":
+        params["detail"] = "full"
+    url = f"{base.rstrip('/')}/api/ml/ensemble/forecast"
+    t0 = time.perf_counter()
+    try:
+        r = session.get(url, params=params, timeout=10)
+        ok = r.status_code == 200
+        latency_ms = (time.perf_counter() - t0) * 1000.0
+        return ok, latency_ms, r.text[:200]
+    except Exception as e:
+        latency_ms = (time.perf_counter() - t0) * 1000.0
+        return False, latency_ms, str(e)
+
+
+def rate_limited_executor(qps: int, duration: int, func, args_list: List[Tuple], max_workers: int = 64):
+    """Submit tasks at approximately QPS for a given duration."""
+    end_time = time.time() + duration
+    interval = 1.0 / max(1, qps)
+    results = []
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        next_at = time.time()
+        i = 0
+        while time.time() < end_time:
+            if i >= len(args_list):
+                i = 0
+            args = args_list[i]
+            results.append(ex.submit(func, *args))
+            i += 1
+            next_at += interval
+            now = time.time()
+            sleep = next_at - now
+            if sleep > 0:
+                time.sleep(sleep)
+        # drain
+        for f in as_completed(results):
+            yield f
+
+
+def get_cache_stats(base: str) -> Dict:
+    url = f"{base.rstrip('/')}/api/ml/ensemble/cache/stats"
+    try:
+        r = requests.get(url, timeout=5)
+        return r.json() if r.ok else {}
+    except Exception:
+        return {}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--base", default="http://127.0.0.1:9500", help="Base URL for API")
+    ap.add_argument("--indices", default="NIFTY", help="Comma-separated indices")
+    ap.add_argument("--horizon", type=int, default=60)
+    ap.add_argument("--detail", choices=["snapshot", "full"], default="snapshot")
+    ap.add_argument("--recent-window-size", type=int, default=60)
+    ap.add_argument("--qps", type=int, default=20)
+    ap.add_argument("--duration", type=int, default=30)
+    ap.add_argument("--workers", type=int, default=32)
+    ap.add_argument("--out", default="", help="Write JSON summary to this path as well")
+    args = ap.parse_args()
+
+    indices = [s.strip() for s in args.indices.split(",") if s.strip()]
+
+    # Prepare argument tuples for workers
+    sess = requests.Session()
+    arg_list = []
+    for idx in indices:
+        arg_list.append((args.base, idx, args.horizon, args.detail, args.recent_window_size, sess))
+
+    total = 0
+    ok = 0
+    errs = 0
+    latencies: List[float] = []
+    samples: List[str] = []
+
+    start = time.time()
+    for fut in rate_limited_executor(args.qps, args.duration, fetch, arg_list, max_workers=args.workers):
+        success, latency_ms, sample = fut.result()
+        total += 1
+        latencies.append(latency_ms)
+        if success:
+            ok += 1
+        else:
+            errs += 1
+            if len(samples) < 5:
+                samples.append(sample)
+    elapsed = time.time() - start
+
+    stats = get_cache_stats(args.base)
+    hit_ratio = stats.get("hit_ratio")
+
+    summary = {
+        "base": args.base,
+        "indices": indices,
+        "horizon": args.horizon,
+        "detail": args.detail,
+        "qps": args.qps,
+        "duration_sec": args.duration,
+        "workers": args.workers,
+        "total_requests": total,
+        "success": ok,
+        "errors": errs,
+        "error_rate": (errs / total) if total else 0.0,
+        "latency_ms_p50": round(p50(latencies), 3),
+        "latency_ms_p95": round(p95(latencies), 3),
+        "cache_hit_ratio": hit_ratio,
+        "cache_stats": stats,
+        "error_samples": samples,
+        "elapsed_sec": round(elapsed, 3),
+        "timestamp": int(time.time() * 1000),
+    }
+
+    print(json.dumps(summary, indent=2))
+    if args.out:
+        try:
+            with open(args.out, "w", encoding="utf-8") as f:
+                json.dump(summary, f, indent=2)
+        except Exception as e:
+            print(f"Failed to write summary to {args.out}: {e}")
+
+
+if __name__ == "__main__":
+    main()
+#!/usr/bin/env python3
+"""
 Load Test Ensemble Forecaster - Phase 8 Production Validation
 
 Stress test the ML ensemble API to validate performance under load.
