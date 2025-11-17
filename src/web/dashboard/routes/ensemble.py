@@ -300,7 +300,17 @@ def _load_recent_window(index: str, limit: int) -> list[list[float]]:
     if _RECENT_FILE_CACHE_TTL_SEC > 0:
         with _RECENT_FILE_CACHE_LOCK:
             global _RECENT_FILE_CACHE_HITS, _RECENT_FILE_CACHE_MISSES
+            
+            # First try exact match
             cached_entry = _RECENT_FILE_CACHE.get(cache_key)
+            
+            # If no exact match, look for larger windows we can reuse
+            if cached_entry is None:
+                idx_upper = index.upper()
+                for (cached_idx, cached_date, cached_limit), entry in _RECENT_FILE_CACHE.items():
+                    if cached_idx == idx_upper and cached_date == today and cached_limit >= limit:
+                        cached_entry = entry
+                        break
             
             if cached_entry is not None:
                 cached_rows = cached_entry.get('rows')
