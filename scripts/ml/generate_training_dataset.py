@@ -99,6 +99,28 @@ def parse_args():
         help="Minimum data completeness ratio (default: 0.9)"
     )
     
+    # Phase 7 arguments
+    parser.add_argument(
+        "--use-near-strikes",
+        action="store_true",
+        help="Enable Phase 7 near-strike features (requires ATM±2 strike data)"
+    )
+    
+    parser.add_argument(
+        "--use-enhanced-index",
+        action="store_true",
+        default=True,
+        help="Enable Phase 7 enhanced index features (default: True)"
+    )
+    
+    parser.add_argument(
+        "--baseline-formula",
+        type=str,
+        choices=["linear", "sublinear", "log"],
+        default="linear",
+        help="Baseline formula to use (default: linear)"
+    )
+    
     return parser.parse_args()
 
 
@@ -211,27 +233,47 @@ def load_historical_data(input_path: str) -> pd.DataFrame:
 def compute_baseline(
     df: pd.DataFrame,
     k: float = 1.0,
+    formula: str = "linear",
 ) -> pd.DataFrame:
     """Compute baseline TP and residuals.
     
     Args:
         df: Input dataframe
         k: Baseline scaling coefficient
+        formula: Baseline formula to use ("linear", "sublinear", or "log")
         
     Returns:
         DataFrame with baseline and residuals added
     """
-    logger.info(f"Computing baseline TP (k={k})")
+    logger.info(f"Computing baseline TP (k={k}, formula={formula})")
     
-    # Compute baseline
-    df = baseline_tp_batch(
-        df,
-        underlying_col="underlying",
-        iv_col="avg_iv",
-        minutes_to_expiry_col="minutes_to_expiry",
-        output_col="tp_baseline",
-        k=k,
-    )
+    # Compute baseline based on formula
+    if formula == "linear":
+        df = baseline_tp_batch(
+            df,
+            underlying_col="underlying",
+            iv_col="avg_iv",
+            minutes_to_expiry_col="minutes_to_expiry",
+            output_col="tp_baseline",
+            k=k,
+        )
+    elif formula in ["sublinear", "log"]:
+        # Import alternative formulas
+        from src.analytics.ml.baseline import baseline_tp_sublinear, baseline_tp_log
+        
+        # Extract data
+        underlying = df["underlying"].values
+        iv = df["avg_iv"].values
+        minutes_to_expiry = df["minutes_to_expiry"].values
+        T = np.maximum(minutes_to_expiry, 1.0) / (60.0 * 24.0)
+        
+        # Compute baseline
+        if formula == "sublinear":
+            df["tp_baseline"] = k * np.sqrt(underlying) * iv * np.sqrt(T)
+        else:  # log
+            df["tp_baseline"] = k * np.log(np.maximum(underlying, 1.0)) * iv * T
+    else:
+        raise ValueError(f"Unknown baseline formula: {formula}")
     
     # Compute residuals
     df = compute_residuals(
@@ -248,18 +290,29 @@ def compute_baseline(
     return df
 
 
-def extract_features(df: pd.DataFrame) -> pd.DataFrame:
+def extract_features(
+    df: pd.DataFrame,
+    use_near_strikes: bool = False,
+    use_enhanced_index: bool = True,
+) -> pd.DataFrame:
     """Extract ML features.
     
     Args:
         df: Input dataframe with baseline computed
+        use_near_strikes: Enable Phase 7 near-strike features
+        use_enhanced_index: Enable Phase 7 enhanced index features
         
     Returns:
         DataFrame with features extracted
     """
     logger.info("Extracting features")
+    logger.info(f"  Near-strike features: {use_near_strikes}")
+    logger.info(f"  Enhanced index features: {use_enhanced_index}")
     
-    fe = FeatureEngineer()
+    fe = FeatureEngineer(
+        use_near_strikes=use_near_strikes,
+        use_enhanced_index=use_enhanced_index,
+    )
     
     # Extract features (residual already computed)
     # Need to manually extract lag/market/regime since we have residual
@@ -273,6 +326,49 @@ def extract_features(df: pd.DataFrame) -> pd.DataFrame:
         timestamp_col="timestamp",
     )
     df_copy = fe._extract_regime_features(df_copy, iv_col="avg_iv")
+    
+    # Phase 7.2: Enhanced index features
+    if use_enhanced_index:
+        df_copy = fe._extract_enhanced_index_features(
+            df_copy,
+            index_price_col="underlying",
+            iv_col="avg_iv",
+            gamma_col=None,  # TODO: Add if available
+            vega_col=None,   # TODO: Add if available
+        )
+    
+    # Phase 7.1: Near-strike features
+    if use_near_strikes:
+        # Check if near-strike columns are available
+        near_strike_cols = [
+            "ce_atm", "pe_atm", "ce_atm1", "pe_atm1",
+            "ce_atm2", "pe_atm2", "volume", "oi"
+        ]
+        available_cols = [col for col in near_strike_cols if col in df_copy.columns]
+        
+        if len(available_cols) > 0:
+            logger.info(f"  Found {len(available_cols)} near-strike columns")
+            df_copy = fe._extract_near_strike_features(
+                df_copy,
+                ce_atm_col="ce_atm" if "ce_atm" in df_copy.columns else None,
+                pe_atm_col="pe_atm" if "pe_atm" in df_copy.columns else None,
+                ce_atm1_col="ce_atm1" if "ce_atm1" in df_copy.columns else None,
+                pe_atm1_col="pe_atm1" if "pe_atm1" in df_copy.columns else None,
+                ce_atm2_col="ce_atm2" if "ce_atm2" in df_copy.columns else None,
+                pe_atm2_col="pe_atm2" if "pe_atm2" in df_copy.columns else None,
+                ce_atm_minus1_col=None,
+                pe_atm_minus1_col=None,
+                ce_atm_minus2_col=None,
+                pe_atm_minus2_col=None,
+                gamma_col=None,
+                vega_col=None,
+                theta_col=None,
+                volume_col="volume" if "volume" in df_copy.columns else None,
+                oi_col="oi" if "oi" in df_copy.columns else None,
+                iv_col="avg_iv",
+            )
+        else:
+            logger.warning("Near-strike features requested but no strike columns found")
     
     logger.info(f"Extracted {len(fe.get_feature_names())} features")
     
@@ -431,7 +527,11 @@ def main():
         
         # Compute baseline if requested
         if args.compute_baseline:
-            df = compute_baseline(df, k=args.k_coefficient)
+            df = compute_baseline(
+                df,
+                k=args.k_coefficient,
+                formula=args.baseline_formula,
+            )
         else:
             logger.info("Skipping baseline computation (--compute-baseline not set)")
             # Ensure tp_residual exists
@@ -440,7 +540,11 @@ def main():
                     df["tp_residual"] = df["tp_actual"] - df["tp_baseline"]
         
         # Extract features
-        df = extract_features(df)
+        df = extract_features(
+            df,
+            use_near_strikes=args.use_near_strikes,
+            use_enhanced_index=args.use_enhanced_index,
+        )
         
         # Validate if requested
         validation = None
