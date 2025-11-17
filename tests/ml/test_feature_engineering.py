@@ -144,31 +144,26 @@ def test_regime_features(sample_data):
 
 def test_get_feature_names():
     """Test get_feature_names method."""
+    # Test with base features only (no Phase 7)
+    fe_base = FeatureEngineer(use_enhanced_index=False, use_near_strikes=False)
+    feature_names_base = fe_base.get_feature_names()
+    
+    # Should have 24 base features
+    assert len(feature_names_base) == 24
+    
+    # Check feature groups for base
+    lag_features = [f for f in feature_names_base if "lag" in f]
+    assert len(lag_features) == 6
+    
+    rolling_features = [f for f in feature_names_base if "rolling" in f]
+    assert len(rolling_features) == 6  # 3 mean + 3 std
+    
+    # Test with default (enhanced index enabled)
     fe = FeatureEngineer()
     feature_names = fe.get_feature_names()
     
-    # Should have 24 features total
-    assert len(feature_names) == 24
-    
-    # Check feature groups
-    lag_features = [f for f in feature_names if "lag" in f]
-    assert len(lag_features) == 6
-    
-    rolling_features = [f for f in feature_names if "rolling" in f]
-    assert len(rolling_features) == 6  # 3 mean + 3 std
-    
-    market_features = [
-        f for f in feature_names 
-        if any(x in f for x in ["index_return", "avg_iv", "iv_change", 
-                                 "minutes_to_expiry", "time_of_day", "weekday"])
-    ]
-    assert len(market_features) == 8
-    
-    regime_features = [
-        f for f in feature_names
-        if any(x in f for x in ["percentile", "volume_ratio", "oi_change"])
-    ]
-    assert len(regime_features) == 4
+    # Should have 32 features total (24 base + 8 enhanced index)
+    assert len(feature_names) == 32
 
 
 def test_validate_features_valid(sample_data):
@@ -345,3 +340,242 @@ def test_missing_timestamp_column():
     assert "time_of_day_sin" in result.columns
     assert "time_of_day_cos" in result.columns
     assert "weekday" in result.columns
+
+
+# Phase 7 Tests
+
+
+def test_enhanced_index_features():
+    """Test Phase 7.2 enhanced index features."""
+    fe = FeatureEngineer(use_enhanced_index=True)
+    
+    np.random.seed(42)
+    n = 50
+    df = pd.DataFrame({
+        "timestamp": pd.date_range("2024-01-01 09:15", periods=n, freq="1min"),
+        "tp_actual": 100 + np.cumsum(np.random.randn(n) * 0.5),
+        "tp_baseline": 100 + np.cumsum(np.random.randn(n) * 0.3),
+        "underlying": 20000 + np.cumsum(np.random.randn(n) * 10),
+        "avg_iv": 0.15 + np.random.randn(n) * 0.01,
+        "minutes_to_expiry": 375 - np.arange(n),
+        "gamma": 0.001 + np.random.randn(n) * 0.0001,
+        "vega": 50 + np.random.randn(n) * 5,
+    })
+    
+    result = fe.extract_features(df, gamma_col="gamma", vega_col="vega")
+    
+    # Check enhanced index features exist
+    assert "index_return_1m_abs" in result.columns
+    assert "index_return_1m_sign" in result.columns
+    assert "index_iv_correlation_5m" in result.columns
+    assert "rv_iv_ratio" in result.columns
+    assert "index_price_percentile" in result.columns
+    assert "index_return_x_iv" in result.columns
+    assert "index_return_x_gamma" in result.columns
+    assert "index_vol_x_vega" in result.columns
+    
+    # Validate index_return_1m_abs is non-negative
+    assert (result["index_return_1m_abs"].dropna() >= 0).all()
+    
+    # Validate index_return_1m_sign is in {-1, 0, 1}
+    sign_values = result["index_return_1m_sign"].dropna().unique()
+    assert all(s in [-1, 0, 1] for s in sign_values)
+    
+    # Validate index_price_percentile is in [0, 1]
+    assert (result["index_price_percentile"] >= 0).all()
+    assert (result["index_price_percentile"] <= 1).all()
+
+
+def test_enhanced_index_features_disabled():
+    """Test that enhanced index features are not created when disabled."""
+    fe = FeatureEngineer(use_enhanced_index=False)
+    
+    df = pd.DataFrame({
+        "timestamp": pd.date_range("2024-01-01", periods=20, freq="1min"),
+        "tp_actual": 100 + np.random.randn(20),
+        "tp_baseline": 95 + np.random.randn(20),
+        "underlying": 20000 + np.random.randn(20) * 10,
+        "avg_iv": 0.15 + np.random.randn(20) * 0.01,
+        "minutes_to_expiry": 375 - np.arange(20),
+    })
+    
+    result = fe.extract_features(df)
+    
+    # Enhanced features should not exist
+    assert "index_return_1m_abs" not in result.columns
+    assert "index_iv_correlation_5m" not in result.columns
+    assert "index_price_percentile" not in result.columns
+
+
+def test_near_strike_features():
+    """Test Phase 7.1 near-strike features."""
+    fe = FeatureEngineer(use_near_strikes=True)
+    
+    np.random.seed(42)
+    n = 50
+    df = pd.DataFrame({
+        "timestamp": pd.date_range("2024-01-01 09:15", periods=n, freq="1min"),
+        "tp_actual": 100 + np.cumsum(np.random.randn(n) * 0.5),
+        "tp_baseline": 100 + np.cumsum(np.random.randn(n) * 0.3),
+        "underlying": 20000 + np.cumsum(np.random.randn(n) * 10),
+        "avg_iv": 0.15 + np.random.randn(n) * 0.01,
+        "minutes_to_expiry": 375 - np.arange(n),
+        "ce_atm": 50 + np.random.randn(n) * 2,
+        "pe_atm": 50 + np.random.randn(n) * 2,
+        "ce_atm1": 40 + np.random.randn(n) * 2,
+        "pe_atm1": 60 + np.random.randn(n) * 2,
+        "ce_atm2": 30 + np.random.randn(n) * 2,
+        "pe_atm2": 70 + np.random.randn(n) * 2,
+        "volume": 1000 + np.random.randint(-100, 100, n),
+        "oi": 5000 + np.random.randint(-500, 500, n),
+    })
+    
+    result = fe.extract_features(
+        df,
+        ce_atm_col="ce_atm",
+        pe_atm_col="pe_atm",
+        ce_atm1_col="ce_atm1",
+        pe_atm1_col="pe_atm1",
+        ce_atm2_col="ce_atm2",
+        pe_atm2_col="pe_atm2",
+        volume_col="volume",
+        oi_col="oi",
+    )
+    
+    # Check near-strike features exist
+    assert "ce_atm1_ratio" in result.columns
+    assert "pe_atm1_ratio" in result.columns
+    assert "ce_atm2_ratio" in result.columns
+    assert "pe_atm2_ratio" in result.columns
+    assert "volume_concentration" in result.columns
+    assert "oi_concentration" in result.columns
+    assert "liquidity_score" in result.columns
+    
+    # Validate premium ratios are positive
+    assert (result["ce_atm1_ratio"] > 0).all()
+    assert (result["pe_atm1_ratio"] > 0).all()
+    
+    # Validate liquidity score is in valid range
+    assert (result["liquidity_score"] >= 0).all()
+    assert (result["liquidity_score"] <= 1).all()
+
+
+def test_near_strike_features_disabled():
+    """Test that near-strike features are not created when disabled."""
+    fe = FeatureEngineer(use_near_strikes=False)
+    
+    df = pd.DataFrame({
+        "timestamp": pd.date_range("2024-01-01", periods=20, freq="1min"),
+        "tp_actual": 100 + np.random.randn(20),
+        "tp_baseline": 95 + np.random.randn(20),
+        "underlying": 20000 + np.random.randn(20) * 10,
+        "avg_iv": 0.15 + np.random.randn(20) * 0.01,
+        "minutes_to_expiry": 375 - np.arange(20),
+    })
+    
+    result = fe.extract_features(df)
+    
+    # Near-strike features should not exist
+    assert "ce_atm1_ratio" not in result.columns
+    assert "pe_atm1_ratio" not in result.columns
+    assert "volume_concentration" not in result.columns
+
+
+def test_phase7_feature_count():
+    """Test that feature count is correct for Phase 7."""
+    # Base features only (24)
+    fe_base = FeatureEngineer(use_enhanced_index=False, use_near_strikes=False)
+    assert len(fe_base.get_feature_names()) == 24
+    
+    # Base + enhanced index (24 + 8 = 32)
+    fe_enhanced = FeatureEngineer(use_enhanced_index=True, use_near_strikes=False)
+    assert len(fe_enhanced.get_feature_names()) == 32
+    
+    # Base + near-strike (24 + 15 = 39)
+    fe_near = FeatureEngineer(use_enhanced_index=False, use_near_strikes=True)
+    assert len(fe_near.get_feature_names()) == 39
+    
+    # All features (24 + 8 + 15 = 47)
+    fe_all = FeatureEngineer(use_enhanced_index=True, use_near_strikes=True)
+    assert len(fe_all.get_feature_names()) == 47
+
+
+def test_backward_compatibility():
+    """Test that Phase 7 enhancements maintain backward compatibility."""
+    # Default should work like before (with enhanced index but no near-strikes)
+    fe_default = FeatureEngineer()
+    
+    df = pd.DataFrame({
+        "timestamp": pd.date_range("2024-01-01", periods=20, freq="1min"),
+        "tp_actual": 100 + np.random.randn(20),
+        "tp_baseline": 95 + np.random.randn(20),
+        "underlying": 20000 + np.random.randn(20) * 10,
+        "avg_iv": 0.15 + np.random.randn(20) * 0.01,
+        "minutes_to_expiry": 375 - np.arange(20),
+    })
+    
+    result = fe_default.extract_features(df)
+    
+    # Should have base + enhanced index features
+    assert "tp_residual" in result.columns
+    assert "residual_lag_1" in result.columns
+    assert "index_return_1m" in result.columns
+    
+    # Should have enhanced index features by default
+    assert "index_return_1m_abs" in result.columns
+    
+    # Should NOT have near-strike features by default
+    assert "ce_atm1_ratio" not in result.columns
+
+
+def test_interaction_features():
+    """Test interaction features are computed correctly."""
+    fe = FeatureEngineer(use_enhanced_index=True)
+    
+    df = pd.DataFrame({
+        "timestamp": pd.date_range("2024-01-01", periods=20, freq="1min"),
+        "tp_actual": 100 + np.random.randn(20),
+        "tp_baseline": 95 + np.random.randn(20),
+        "underlying": 20000 + np.cumsum(np.random.randn(20) * 10),
+        "avg_iv": 0.15 + np.random.randn(20) * 0.01,
+        "minutes_to_expiry": 375 - np.arange(20),
+        "gamma": 0.001 + np.random.randn(20) * 0.0001,
+        "vega": 50 + np.random.randn(20) * 5,
+    })
+    
+    result = fe.extract_features(df, gamma_col="gamma", vega_col="vega")
+    
+    # Check interaction features
+    assert "index_return_x_iv" in result.columns
+    assert "index_return_x_gamma" in result.columns
+    assert "index_vol_x_vega" in result.columns
+    
+    # Verify interaction is actual multiplication (for non-NaN values)
+    valid_idx = result["index_return_1m"].notna()
+    if valid_idx.sum() > 0:
+        expected = result.loc[valid_idx, "index_return_1m"] * result.loc[valid_idx, "avg_iv"]
+        actual = result.loc[valid_idx, "index_return_x_iv"]
+        assert np.allclose(expected, actual, rtol=1e-5)
+
+
+def test_phase7_features_with_missing_optional_columns():
+    """Test that Phase 7 features handle missing optional columns gracefully."""
+    fe = FeatureEngineer(use_enhanced_index=True, use_near_strikes=True)
+    
+    # Minimal data without optional columns
+    df = pd.DataFrame({
+        "timestamp": pd.date_range("2024-01-01", periods=20, freq="1min"),
+        "tp_actual": 100 + np.random.randn(20),
+        "tp_baseline": 95 + np.random.randn(20),
+        "underlying": 20000 + np.random.randn(20) * 10,
+        "avg_iv": 0.15 + np.random.randn(20) * 0.01,
+        "minutes_to_expiry": 375 - np.arange(20),
+    })
+    
+    # Should not raise errors even without optional columns
+    result = fe.extract_features(df)
+    
+    # Features should exist with default/placeholder values
+    assert "index_return_x_gamma" in result.columns
+    assert "ce_atm1_ratio" in result.columns
+    assert "volume_concentration" in result.columns

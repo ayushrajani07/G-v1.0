@@ -130,7 +130,8 @@ def test_validate_dataset():
     
     # Check metrics
     assert validation["total_samples"] == len(df)
-    assert validation["features_count"] == 24
+    # Phase 7: With enhanced index features by default, we have 32 features
+    assert validation["features_count"] == 32
     assert "baseline_correlation" in validation
     assert validation["baseline_correlation"] > 0.85
 
@@ -205,11 +206,11 @@ def test_feature_statistics():
     df = compute_baseline(df, k=1.0)
     df = extract_features(df)
     
-    fe = FeatureEngineer()
+    fe = FeatureEngineer()  # Default has enhanced index features
     stats = fe.get_feature_statistics(df)
     
-    # Check that stats exist for all features
-    assert len(stats) == 24
+    # Check that stats exist for all features (32 with enhanced index by default)
+    assert len(stats) == 32
     
     # Check stat structure
     for feat_name, feat_stats in stats.items():
