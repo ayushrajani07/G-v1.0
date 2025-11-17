@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-Metrics Validation Script - Phase 9
+Metrics Validation Script
 
-Scrape /metrics endpoint and validate presence of key Prometheus metrics.
-Outputs a JSON file with current metric values for CI artifacts.
+Scrape /metrics endpoint and validate presence of required Prometheus metrics.
+Outputs a JSON file with validation results for CI artifacts.
 
 Usage:
-    python scripts/ml/validate_metrics.py --host localhost --port 9210
-    python scripts/ml/validate_metrics.py --host localhost --port 9210 --output metrics.json
+    python scripts/ml/validate_metrics.py --url http://localhost:9500/metrics --required g6_forecast_latency_ms,g6_forecast_cache_hits_total
+    python scripts/ml/validate_metrics.py --url http://localhost:9500/metrics --required g6_forecast_latency_ms --out metrics_validation.json
 """
 
 import argparse
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -23,22 +23,6 @@ except ImportError:
     print("Error: httpx not installed")
     print("Install with: pip install httpx")
     sys.exit(1)
-
-
-REQUIRED_METRICS = [
-    "g6_forecast_latency_ms",
-    "g6_forecast_cache_hits_total",
-    "g6_forecast_cache_misses_total",
-]
-
-OPTIONAL_METRICS = [
-    "g6_ml_ann_cache_hit_ratio",
-    "g6_ml_ann_cache_size",
-    "g6_ml_ann_cache_evictions",
-    "g6_ml_ann_disk_cache_hits",
-    "g6_ml_ann_disk_cache_load_ms",
-    "g6_ml_stage_latency_seconds",
-]
 
 
 def parse_prometheus_metrics(text: str) -> Dict[str, List[Dict]]:
@@ -89,41 +73,74 @@ def parse_prometheus_metrics(text: str) -> Dict[str, List[Dict]]:
                 metrics[metric_name] = []
             metrics[metric_name].append(sample)
             
-        except (ValueError, IndexError) as e:
+        except (ValueError, IndexError):
             # Skip malformed lines
             continue
     
     return metrics
 
 
+def extract_histogram_sample(metrics: Dict[str, List[Dict]], base_metric_name: str) -> Optional[Dict]:
+    """
+    Extract histogram sample data for a given base metric name.
+    
+    For a histogram metric, Prometheus exposes:
+    - metric_name_sum: cumulative sum of observed values
+    - metric_name_count: total count of observations
+    
+    Args:
+        metrics: Parsed metrics dictionary
+        base_metric_name: Base name of the histogram metric
+        
+    Returns:
+        Dict with 'count' and 'sum' fields if found, None otherwise
+    """
+    sum_key = f"{base_metric_name}_sum"
+    count_key = f"{base_metric_name}_count"
+    
+    histogram_sample = {}
+    
+    if sum_key in metrics and metrics[sum_key]:
+        # Sum all samples for the _sum metric
+        total_sum = sum(s["value"] for s in metrics[sum_key])
+        histogram_sample["sum"] = total_sum
+    
+    if count_key in metrics and metrics[count_key]:
+        # Sum all samples for the _count metric
+        total_count = sum(s["value"] for s in metrics[count_key])
+        histogram_sample["count"] = int(total_count)
+    
+    return histogram_sample if histogram_sample else None
+
+
 def validate_metrics(
-    host: str,
-    port: int,
+    url: str,
+    required_metrics: List[str],
     timeout: float = 10.0
 ) -> Dict:
     """
-    Scrape and validate Prometheus metrics from the API.
+    Scrape and validate Prometheus metrics from the specified URL.
     
     Args:
-        host: API host
-        port: API port
+        url: Full URL to metrics endpoint
+        required_metrics: List of required metric names
         timeout: Request timeout in seconds
         
     Returns:
         Validation results dictionary
     """
-    url = f"http://{host}:{port}/metrics"
-    
     print(f"Scraping metrics from {url}...")
     
     try:
         response = httpx.get(url, timeout=timeout)
         
         if response.status_code != 200:
+            print(f"Warning: HTTP {response.status_code} received")
             return {
-                "status": "error",
-                "message": f"HTTP {response.status_code}: {response.text[:200]}",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "found": [],
+                "missing": required_metrics,
+                "error": f"HTTP {response.status_code}: {response.text[:200]}",
             }
         
         metrics_text = response.text
@@ -131,105 +148,90 @@ def validate_metrics(
         
         print(f"Found {len(metrics)} unique metric types")
         
-        # Check required metrics
-        required_found = {}
-        required_missing = []
+        # Check which required metrics are present
+        found = []
+        missing = []
         
-        for metric_name in REQUIRED_METRICS:
-            if metric_name in metrics:
-                required_found[metric_name] = metrics[metric_name]
-                print(f"  ✓ {metric_name}: {len(metrics[metric_name])} samples")
+        for metric_name in required_metrics:
+            # Check for the base metric name or any variant (_sum, _count, _bucket)
+            base_found = metric_name in metrics
+            sum_found = f"{metric_name}_sum" in metrics
+            count_found = f"{metric_name}_count" in metrics
+            bucket_found = f"{metric_name}_bucket" in metrics
+            
+            if base_found or sum_found or count_found or bucket_found:
+                found.append(metric_name)
+                print(f"  ✓ {metric_name}: found")
             else:
-                required_missing.append(metric_name)
+                missing.append(metric_name)
                 print(f"  ✗ {metric_name}: MISSING")
         
-        # Check optional metrics
-        optional_found = {}
-        optional_missing = []
-        
-        for metric_name in OPTIONAL_METRICS:
-            if metric_name in metrics:
-                optional_found[metric_name] = metrics[metric_name]
-                print(f"  ℹ {metric_name}: {len(metrics[metric_name])} samples")
-            else:
-                optional_missing.append(metric_name)
-        
-        # Calculate current counters
-        counters = {}
-        for metric_name, samples in required_found.items():
-            if samples:
-                # Sum all samples (counters are cumulative)
-                total = sum(s["value"] for s in samples)
-                counters[metric_name] = {
-                    "total": total,
-                    "samples": len(samples),
-                }
-        
-        for metric_name, samples in optional_found.items():
-            if samples:
-                total = sum(s["value"] for s in samples)
-                counters[metric_name] = {
-                    "total": total,
-                    "samples": len(samples),
-                }
-        
-        # Determine overall status
-        if required_missing:
-            status = "failed"
-            message = f"Missing required metrics: {', '.join(required_missing)}"
-        else:
-            status = "passed"
-            message = "All required metrics present"
-        
-        print(f"\nValidation: {status.upper()}")
-        print(f"  {message}")
-        
-        return {
-            "status": status,
-            "message": message,
-            "timestamp": datetime.now().isoformat(),
-            "required_metrics": {
-                "found": list(required_found.keys()),
-                "missing": required_missing,
-            },
-            "optional_metrics": {
-                "found": list(optional_found.keys()),
-                "missing": optional_missing,
-            },
-            "counters": counters,
-            "total_metrics": len(metrics),
+        # Build result
+        result = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "found": found,
+            "missing": missing,
         }
+        
+        # Try to extract histogram sample for latency metric if present
+        # Look for any metric containing 'latency' in the name
+        latency_metrics = [m for m in found if 'latency' in m.lower()]
+        if latency_metrics:
+            # Use the first latency metric found
+            histogram_sample = extract_histogram_sample(metrics, latency_metrics[0])
+            if histogram_sample:
+                result["latency_histogram_sample"] = histogram_sample
+                print(f"  ℹ Histogram sample: {histogram_sample}")
+        
+        if missing:
+            print(f"\nValidation FAILED: Missing {len(missing)} required metric(s)")
+        else:
+            print(f"\nValidation PASSED: All {len(found)} required metrics present")
+        
+        return result
         
     except httpx.TimeoutException:
+        print(f"Warning: Timeout connecting to {url}")
         return {
-            "status": "error",
-            "message": f"Timeout connecting to {url}",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "found": [],
+            "missing": required_metrics,
+            "error": f"Timeout connecting to {url}",
+        }
+    except httpx.ConnectError as e:
+        print(f"Warning: Cannot connect to {url}: {e}")
+        return {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "found": [],
+            "missing": required_metrics,
+            "error": f"Cannot connect to {url}: {str(e)}",
         }
     except Exception as e:
+        print(f"Error: {e}")
         return {
-            "status": "error",
-            "message": f"Error: {str(e)}",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "found": [],
+            "missing": required_metrics,
+            "error": str(e),
         }
 
 
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="Validate Prometheus metrics from ML ensemble API"
+        description="Validate required Prometheus metrics from a metrics endpoint"
     )
     parser.add_argument(
-        "--host",
+        "--url",
         type=str,
-        default="localhost",
-        help="API host (default: localhost)"
+        required=True,
+        help="Full URL to metrics endpoint (e.g., http://localhost:9500/metrics)"
     )
     parser.add_argument(
-        "--port",
-        type=int,
-        default=9210,
-        help="API port (default: 9210)"
+        "--required",
+        type=str,
+        required=True,
+        help="Comma-separated list of required metric names (e.g., g6_forecast_latency_ms,g6_forecast_cache_hits_total)"
     )
     parser.add_argument(
         "--timeout",
@@ -238,28 +240,37 @@ def main():
         help="Request timeout in seconds (default: 10.0)"
     )
     parser.add_argument(
-        "--output",
+        "--out",
         type=Path,
-        help="JSON output file for validation results"
+        default=Path("metrics_validation.json"),
+        help="JSON output file for validation results (default: metrics_validation.json)"
     )
     
     args = parser.parse_args()
     
-    # Run validation
-    results = validate_metrics(args.host, args.port, args.timeout)
+    # Parse required metrics list
+    required_metrics = [m.strip() for m in args.required.split(',') if m.strip()]
     
-    # Save output if requested
-    if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        with open(args.output, 'w') as f:
-            json.dump(results, f, indent=2)
-        print(f"\nResults saved to: {args.output}")
-    
-    # Exit with appropriate code
-    if results["status"] == "passed":
-        sys.exit(0)
-    else:
+    if not required_metrics:
+        print("Error: No required metrics specified")
         sys.exit(1)
+    
+    print(f"Required metrics: {', '.join(required_metrics)}")
+    
+    # Run validation
+    results = validate_metrics(args.url, required_metrics, args.timeout)
+    
+    # Save output
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    with open(args.out, 'w') as f:
+        json.dump(results, f, indent=2)
+    print(f"\nResults saved to: {args.out}")
+    
+    # Exit with appropriate code based on whether any metrics are missing
+    if results.get("missing"):
+        sys.exit(1)
+    else:
+        sys.exit(0)
 
 
 if __name__ == "__main__":
