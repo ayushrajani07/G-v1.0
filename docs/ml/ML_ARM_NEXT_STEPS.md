@@ -47,6 +47,27 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
 
 ---
 
+## ✅ Progress To Date (2025-11-17)
+
+**Local (completed):**
+- FastAPI `/forecast` hardened against missing models/retrieval; returns safe responses.
+- Live param inference added when omitted: `underlying` (from today's `tp`), `avg_iv` (from `ce_iv`/`pe_iv`), `minutes_to_expiry` (≈ 15:30 IST).
+- Start/stop ops:
+  - `scripts/ml/start_dashboard_api.ps1` runs uvicorn in background window (`-WindowStyle` or `DASHBOARD_API_WINDOW_STYLE`).
+  - `scripts/ml/stop_dashboard_api.ps1` stops via diag PID and port clearance.
+- Grafana dashboards + provisioning added (Infinity and JSON API variants) for quick monitoring.
+- Load-test harness (`scripts/ml/load_test_ensemble.py`) to measure p50/p95, error rate, cache stats.
+
+**Remote agent (prepared + ready to implement):**
+- Issue: `docs/ml/ISSUE_PHASE9_ENSEMBLE_OPTIMIZATIONS.md` (file-cache, `detail=full`, Prometheus metrics, LRU bound, tests, docs).
+- Follow-up: `docs/ml/ISSUE_PHASE9_FOLLOWUP_SCAFFOLDS.md` (finalize API docs, async load-test, metrics validator, CI wiring).
+
+**Operational checks:**
+- Start script verifies `/__diag/pid` and OpenAPI forecast route.
+- Dashboards pull `/api/ml/ensemble/forecast` and `/api/ml/ensemble/cache/stats` every 10s.
+
+---
+
 ## 🔌 FastAPI Ensemble Forecast Service (Migration Summary)
 
 The legacy Flask ML ensemble service (port 9210) has been migrated into the unified FastAPI dashboard process (default port **9500**). New JSON + diagnostics endpoints provide lower latency (~5–8ms) and integrated caching.
@@ -108,9 +129,10 @@ Response (truncated):
 - Conditional diagnostics (env: `G6_DIAG_ENABLE=1`) provide `/__diag/pid`, `/__diag/routes`, `/__diag/summary`.
 - Start script (`scripts/ml/start_dashboard_api.ps1`) performs:
   1. Port clearance
-  2. Uvicorn launch
+  2. Uvicorn launch (background window style configurable)
   3. Forecast route assertion in OpenAPI
   4. PID endpoint check
+  5. Paired stop script available: `scripts/ml/stop_dashboard_api.ps1`
 
 ### Environment Variables
 | Variable | Purpose | Default |
@@ -135,6 +157,54 @@ Response (truncated):
 - LRU bounding & adaptive TTL based on volatility regime
 - Integration with live streaming updates (replace empty `live_rows` context)
 - Persistent ANN index cache for retrieval speedups
+
+---
+
+## 🧩 Repo Sync (2025-11-17)
+
+New assets added to support Phase 8/9 operations and monitoring:
+
+- Scripts
+  - `scripts/ml/start_dashboard_api.ps1`: Now supports background launch with `-WindowStyle Hidden|Minimized|Normal|Maximized` (defaults to `Hidden`). Reads `DASHBOARD_API_WINDOW_STYLE` if not provided.
+  - `scripts/ml/stop_dashboard_api.ps1`: Cleanly stops the dashboard by PID endpoint and port clearance.
+
+- API Docs & Load Test
+  - `docs/ml/ENSEMBLE_API.md`: Standalone reference for Ensemble API (params, examples, caching, diagnostics, metrics).
+  - `scripts/ml/load_test_ensemble.py`: Runnable load test harness (threads + requests). Example:
+    ```bash
+    python scripts/ml/load_test_ensemble.py \
+      --qps 20 --duration 15 --indices NIFTY --horizon 60 --detail snapshot
+    ```
+
+- Grafana Dashboards (two datasource options)
+  - Infinity (recommended): `grafana/dashboards/ensemble_api.json`
+    - Provisioning: `grafana/provisioning/datasources/infinity.yml`
+  - JSON API (no Infinity plugin): `grafana/dashboards/ensemble_api_jsonapi.json`
+    - Provisioning: `grafana/provisioning/datasources/jsonapi.yml`
+  - Dashboard provider: `grafana/provisioning/dashboards/ensemble.yml` (points to `/var/lib/grafana/dashboards/g6`)
+
+- FastAPI Router Enhancements
+  - Live parameter inference (when omitted): underlying from today’s CSV `tp`, `avg_iv` from `ce_iv`/`pe_iv`, `minutes_to_expiry` ≈ minutes until 15:30 Asia/Kolkata.
+  - Hardened `/forecast` to avoid 500s if models/retrieval are missing.
+
+Quick Grafana (Docker) example:
+```bash
+# Infinity plugin
+docker run -d --name grafana -p 3000:3000 \
+  -e GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource \
+  -v $PWD/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources \
+  -v $PWD/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards \
+  -v $PWD/grafana/dashboards:/var/lib/grafana/dashboards/g6 \
+  grafana/grafana
+
+# JSON API plugin alternative
+docker run -d --name grafana -p 3000:3000 \
+  -e GF_INSTALL_PLUGINS=simpod-json-datasource \
+  -v $PWD/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources \
+  -v $PWD/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards \
+  -v $PWD/grafana/dashboards:/var/lib/grafana/dashboards/g6 \
+  grafana/grafana
+```
 
 ---
 
@@ -348,6 +418,10 @@ export ENABLE_PATH_FORECAST_PROM_METRICS=1
 # Monitor in Grafana
 # New panels: latency breakdown, cache stats, candidate counts
 ```
+
+> Repo status: Load test scaffold and dashboards are added. Metrics export and file/LRU cache are planned next and tracked in:
+> - `docs/ml/ISSUE_PHASE9_ENSEMBLE_OPTIMIZATIONS.md`
+> - `docs/ml/ISSUE_PHASE9_FOLLOWUP_SCAFFOLDS.md`
 
 ### 9.2 Short-Term Optimizations (Week 3-4)
 
@@ -1025,9 +1099,11 @@ python scripts/ml/automl_pipeline.py \
 - **Diagnostics:** `scripts/ml/detect_model_drift.py`
 
 ### Dashboards
-- **Grafana:** ML Ensemble Monitoring Dashboard
+- **Grafana:**
+  - Ensemble API dashboards: `grafana/dashboards/ensemble_api.json` (Infinity) and `grafana/dashboards/ensemble_api_jsonapi.json` (JSON API)
+  - Provisioning: `grafana/provisioning/datasources/*`, `grafana/provisioning/dashboards/ensemble.yml`
 - **Prometheus:** Metrics at `:9090`
-- **API:** Health at `:9210/health`
+- **API:** Health/Diag at `:9500/__diag/pid`, Forecast at `:9500/api/ml/ensemble/forecast`
 
 ---
 

@@ -20,6 +20,11 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 import logging, os, threading
+from datetime import datetime, time as dtime, timedelta, timezone
+try:
+    from zoneinfo import ZoneInfo  # Python 3.9+
+except Exception:  # pragma: no cover
+    ZoneInfo = None  # type: ignore
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -235,6 +240,84 @@ def _load_recent_window(index: str, limit: int) -> list[list[float]]:
     """
     if limit <= 0:
         return []
+
+def _infer_live_params(index: str) -> Dict[str, float]:
+    """Infer underlying, avg_iv, minutes_to_expiry from today's CSV when possible.
+
+    - underlying: last TP value
+    - avg_iv: mean of last row's ce_iv/pe_iv if present, else fallback to 0.2
+    - minutes_to_expiry: minutes until 15:30 Asia/Kolkata today; if past, minutes until next business day's 15:30 (approximation)
+    """
+    result = {
+        'underlying': 0.0,
+        'avg_iv': 0.2,
+        'minutes_to_expiry': 375.0,
+    }
+    root = _project_root() / 'data' / 'g6_data'
+    today = time.strftime('%Y-%m-%d')
+    candidates = [
+        root / index.upper() / 'this_month' / '0' / f'{today}.csv',
+        root / index.upper() / 'this_week' / '0' / f'{today}.csv',
+    ]
+    path = None
+    for c in candidates:
+        if c.exists():
+            path = c
+            break
+    if path is None:
+        # compute minutes to expiry anyway
+        pass
+    else:
+        try:
+            import csv
+            with path.open('r', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                header = next(reader, [])
+                cols = {h.strip().lower(): i for i, h in enumerate(header)}
+                tp_idx = cols.get('tp') or cols.get('tp_value') or cols.get('theoretical_price')
+                ce_iv_idx = cols.get('ce_iv')
+                pe_iv_idx = cols.get('pe_iv')
+                last_row = None
+                for row in reader:
+                    last_row = row
+                if last_row:
+                    if tp_idx is not None:
+                        try:
+                            result['underlying'] = float(last_row[int(tp_idx)])
+                        except Exception:
+                            pass
+                    iv_vals = []
+                    if ce_iv_idx is not None:
+                        try:
+                            iv_vals.append(float(last_row[int(ce_iv_idx)]))
+                        except Exception:
+                            pass
+                    if pe_iv_idx is not None:
+                        try:
+                            iv_vals.append(float(last_row[int(pe_iv_idx)]))
+                        except Exception:
+                            pass
+                    if iv_vals:
+                        # clamp to reasonable range
+                        avg_iv = sum(iv_vals) / len(iv_vals)
+                        if avg_iv >= 0:
+                            result['avg_iv'] = float(avg_iv)
+        except Exception as e:
+            _LOG.debug(f"infer_live_params failed for {index}: {e}")
+
+    # minutes_to_expiry: approx to 15:30 Asia/Kolkata today or next day
+    try:
+        tz = ZoneInfo('Asia/Kolkata') if ZoneInfo else timezone(timedelta(hours=5, minutes=30))
+        now = datetime.now(tz)
+        target = now.replace(hour=15, minute=30, second=0, microsecond=0)
+        if now > target:
+            target = target + timedelta(days=1)
+            target = target.replace(hour=15, minute=30, second=0, microsecond=0)
+        minutes = max(0.0, (target - now).total_seconds() / 60.0)
+        result['minutes_to_expiry'] = float(round(minutes, 2))
+    except Exception:
+        pass
+    return result
     root = _project_root() / 'data' / 'g6_data'
     today = time.strftime('%Y-%m-%d')
     candidates = [
@@ -325,8 +408,15 @@ async def forecast(
     if not q_list:
         q_list = [0.1, 0.5, 0.9]
 
-    # Build minimal context; recent_window empty for now.
+    # Build minimal context; enrich from live data if params are defaults.
     now_ms = int(time.time() * 1000)
+    inferred = _infer_live_params(idx)
+    if underlying <= 0.0:
+        underlying = inferred.get('underlying', underlying)
+    if avg_iv == 0.2:
+        avg_iv = inferred.get('avg_iv', avg_iv)
+    if minutes_to_expiry == 375.0:
+        minutes_to_expiry = inferred.get('minutes_to_expiry', minutes_to_expiry)
     context = {
         'index': idx,
         'now_ms': now_ms,
@@ -337,6 +427,8 @@ async def forecast(
     }
 
     recent_window = _load_recent_window(idx, recent_window_size)
+    if recent_window is None:
+        recent_window = []
 
     # Cache key derived from stable inputs (exclude underlying if too noisy?) retain underlying for now
     cache_key = (idx, horizon, quantiles, underlying, avg_iv, minutes_to_expiry, recent_window_size)
@@ -347,13 +439,19 @@ async def forecast(
         # Mark cache hit in metadata clone
         cached.metadata.cache_hit = True
         return cached
-    times, qmap = fore.forecast_path(
-        recent_window=recent_window,
-        context=context,
-        quantiles=q_list,
-        horizon_minutes=horizon,
-        bucket_ms=60_000,
-    )
+    try:
+        times, qmap = fore.forecast_path(
+            recent_window=recent_window,
+            context=context,
+            quantiles=q_list,
+            horizon_minutes=horizon,
+            bucket_ms=60_000,
+        )
+    except Exception as e:  # pragma: no cover
+        _LOG.warning(f"forecast_path failed for {idx}: {e}")
+        times, qmap = [], {}
+    if qmap is None:
+        qmap = {}
 
     # Derive single-point summary from first forecast horizon value per quantile.
     def _first(q: float) -> float:
@@ -387,7 +485,7 @@ async def forecast(
         latency_ms=latency_ms,
         components_used=[c for c in _def_components if lm.get(f"{c}_enabled", True)],
         weights={'gbrt': weight_gbrt, 'retrieval': weight_retrieval},
-        recent_count=len(recent_window),
+        recent_count=len(recent_window or []),
         cache_hit=False,
     )
     resp = ForecastResponse(index=idx, horizon=horizon, timestamp=str(now_ms), forecast=forecast_data, confidence=confidence, metadata=meta)

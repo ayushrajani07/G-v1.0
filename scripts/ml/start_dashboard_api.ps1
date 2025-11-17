@@ -1,7 +1,16 @@
-Param([string]$ApiHost,[int]$Port)
+Param(
+	[string]$ApiHost,
+	[int]$Port,
+	[ValidateSet('Hidden','Minimized','Normal','Maximized')]
+	[string]$WindowStyle
+)
 
 if (-not $ApiHost -or $ApiHost -eq '') { $ApiHost = $Env:DASHBOARD_API_HOST; if (-not $ApiHost) { $ApiHost = '0.0.0.0' } }
 if (-not $Port) { if ($Env:DASHBOARD_API_PORT) { $Port = [int]$Env:DASHBOARD_API_PORT } else { $Port = 9500 } }
+$styleEnv = $Env:DASHBOARD_API_WINDOW_STYLE
+if (-not $WindowStyle -or $WindowStyle -eq '') {
+	if ($styleEnv -and $styleEnv -ne '') { $WindowStyle = $styleEnv } else { $WindowStyle = 'Hidden' }
+}
 
 $scriptDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = (Resolve-Path "$scriptDir\..\..").Path
@@ -35,8 +44,8 @@ if (Test-Path $pidFile) {
 $outFile = Join-Path $logDir 'dashboard_api.out.log'
 $errFile = Join-Path $logDir 'dashboard_api.err.log'
 $args = @('-m','uvicorn','src.web.dashboard.app:app','--host',$ApiHost,'--port',$Port,'--timeout-keep-alive','5','--log-level','info')
-Write-Host "Launching uvicorn: python $($args -join ' ')" -ForegroundColor Cyan
-$proc = Start-Process -FilePath python -ArgumentList $args -RedirectStandardOutput $outFile -RedirectStandardError $errFile -PassThru
+Write-Host "Launching uvicorn: python $($args -join ' ') (WindowStyle=$WindowStyle)" -ForegroundColor Cyan
+$proc = Start-Process -FilePath python -ArgumentList $args -RedirectStandardOutput $outFile -RedirectStandardError $errFile -WindowStyle $WindowStyle -PassThru -WorkingDirectory $projectRoot
 $proc.Id | Out-File $pidFile -Encoding ascii
 Start-Sleep -Seconds 3
 if (-not (Get-Process -Id $proc.Id -ErrorAction SilentlyContinue)) { Write-Host "Failed to start dashboard API" -ForegroundColor Red; if (Test-Path $pidFile){Remove-Item $pidFile -Force}; Pop-Location; exit 1 }
