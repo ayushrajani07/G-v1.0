@@ -106,14 +106,14 @@ def _quantile_to_label(q: float) -> str:
     return f"p{pct}"
 
 # --------------------------- Simple In-Memory Forecast Cache ---------------------------
-_CACHE: Dict[Tuple[str,int,str,float,float,float,int], ForecastResponse] = {}
+_CACHE: Dict[Tuple[str,int,str,float,float,float,int,str], ForecastResponse] = {}
 _CACHE_LOCK = threading.Lock()
 _CACHE_TTL_SEC = max(0, int(os.environ.get('G6_FORECAST_CACHE_TTL', '30')))
-_CACHE_TIME: Dict[Tuple[str,int,str,float,float,float,int], float] = {}
+_CACHE_TIME: Dict[Tuple[str,int,str,float,float,float,int,str], float] = {}
 _CACHE_HITS = 0
 _CACHE_MISSES = 0
 
-def _cache_get(key: Tuple[str,int,str,float,float,float,int]) -> Optional[ForecastResponse]:
+def _cache_get(key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[ForecastResponse]:
     if _CACHE_TTL_SEC == 0:
         return None
     with _CACHE_LOCK:
@@ -132,7 +132,7 @@ def _cache_get(key: Tuple[str,int,str,float,float,float,int]) -> Optional[Foreca
         _CACHE_HITS += 1
         return _CACHE.get(key)
 
-def _cache_put(key: Tuple[str,int,str,float,float,float,int], value: ForecastResponse) -> None:
+def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: ForecastResponse) -> None:
     if _CACHE_TTL_SEC == 0:
         return
     with _CACHE_LOCK:
@@ -148,7 +148,7 @@ async def cache_stats():
         for k, ts in _CACHE_TIME.items():
             age = now - ts
             entries.append({'key': {
-                'index': k[0], 'horizon': k[1], 'quantiles': k[2], 'underlying': k[3], 'avg_iv': k[4], 'minutes_to_expiry': k[5], 'recent_window_size': k[6]
+                'index': k[0], 'horizon': k[1], 'quantiles': k[2], 'underlying': k[3], 'avg_iv': k[4], 'minutes_to_expiry': k[5], 'recent_window_size': k[6], 'detail': k[7]
             }, 'age_sec': round(age, 3)})
         oldest = max((e['age_sec'] for e in entries), default=0.0)
         newest = min((e['age_sec'] for e in entries), default=0.0)
@@ -448,8 +448,9 @@ async def forecast(
     if recent_window is None:
         recent_window = []
 
-    # Cache key derived from stable inputs (exclude underlying if too noisy?) retain underlying for now
-    cache_key = (idx, horizon, quantiles, underlying, avg_iv, minutes_to_expiry, recent_window_size)
+    # Cache key derived from stable inputs - include detail param to avoid returning wrong response type
+    detail_normalized = detail.lower() if detail else ""
+    cache_key = (idx, horizon, quantiles, underlying, avg_iv, minutes_to_expiry, recent_window_size, detail_normalized)
     cached: Optional[ForecastResponse] = None
     if cache_bust == 0:
         cached = _cache_get(cache_key)
