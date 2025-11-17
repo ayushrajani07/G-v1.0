@@ -290,4 +290,98 @@ The `/api/ml/ensemble/cache/stats` endpoint returns statistics for both forecast
 - `recent_file_cache_misses`: Number of times data was loaded from disk
 - `recent_file_cache_current_entries`: Current number of entries in cache
 
-The cache significantly reduces latency when the same recent window is requested multiple times within the TTL period. 
+The cache significantly reduces latency when the same recent window is requested multiple times within the TTL period.
+
+---
+
+## Load Testing
+
+### Async Load Tester
+
+The ensemble API includes a high-performance async load tester built with `httpx` for testing performance under concurrent load.
+
+**Location:** `scripts/ml/load_test_ensemble_async.py`
+
+**Key Features:**
+- Async/await with connection pooling for high concurrency
+- QPS (queries per second) rate limiting
+- Warm-up period support
+- Per-index breakdown with latency percentiles (p50, p95, p99)
+- CSV export for detailed latency analysis
+- Cache-bust mode for testing cold cache performance
+- Cache-bust pass for comparing warm vs cold cache metrics
+- Phase 9 cache metrics integration
+
+**Basic Usage:**
+```bash
+python scripts/ml/load_test_ensemble_async.py \
+  --api-host localhost \
+  --api-port 9210 \
+  --indices NIFTY BANKNIFTY \
+  --qps 20 \
+  --concurrency 10 \
+  --duration 60 \
+  --output results.json
+```
+
+**Common Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--api-host` | string | localhost | API hostname |
+| `--api-port` | int | 9210 | API port |
+| `--indices` | string[] | NIFTY | Index names to test |
+| `--qps` | float | 20.0 | Target queries per second |
+| `--concurrency` | int | 10 | Max concurrent requests |
+| `--duration` | int | 60 | Test duration in seconds |
+| `--warmup` | int | 0 | Warm-up period in seconds (excluded from results) |
+| `--horizons` | string | 30,60,120 | Comma-separated forecast horizons |
+| `--detail` | string | snapshot | Response detail level (snapshot/full) |
+| `--cache-bust` | flag | false | Add random parameter to bypass cache |
+| `--cache-bust-pass` | flag | false | Run second test with cache busting and compare |
+| `--csv-out` | path | - | CSV file for latency samples |
+| `--output` | path | - | JSON file for test results |
+
+**Advanced Example - Cache Comparison:**
+```bash
+# Compare warm vs cold cache performance
+python scripts/ml/load_test_ensemble_async.py \
+  --indices NIFTY BANKNIFTY \
+  --qps 50 \
+  --concurrency 20 \
+  --duration 120 \
+  --warmup 30 \
+  --cache-bust-pass \
+  --csv-out latency_samples.csv \
+  --output load_test_results.json
+```
+
+**Output Format:**
+
+The JSON output includes:
+- **summary**: Total requests, success/failure counts, throughput
+- **latency_ms**: Mean, p50, p95, p99, min, max
+- **per_index**: Per-index breakdown with error rates and latencies
+- **targets**: Performance target checks (p95 < 1000ms, error rate < 5%)
+- **phase9_cache_metrics**: Window cache and disk cache statistics
+- **cache_bust_pass** (if enabled): Warm vs cold cache comparison
+
+**Performance Expectations:**
+
+The async version demonstrates >2x throughput improvement over thread-based implementations:
+- **Baseline (threads)**: ~50 req/s @ 10 concurrent requests
+- **Async (httpx)**: >100 req/s @ 10 concurrent requests
+- **P95 latency target**: < 1000ms
+- **Error rate target**: < 5%
+
+**CI Integration:**
+
+The load test runs automatically in CI via `.github/workflows/load-test-phase9.yml`:
+- Triggered on tags matching `load-test-*` or `v*-load-test`
+- Manual workflow dispatch available
+- Fails if error rate > 2% or P95 > 1000ms
+- Uploads test results and latency CSV as artifacts
+
+**See Also:**
+- Unit tests: `tests/test_load_test_ensemble.py`
+- CI workflow: `.github/workflows/load-test-phase9.yml` 
