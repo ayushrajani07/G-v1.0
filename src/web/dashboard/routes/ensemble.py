@@ -99,6 +99,15 @@ _CACHE_HITS = 0
 _CACHE_MISSES = 0
 _CACHE_EVICTIONS = 0
 
+# --------------------------- Recent Window File Cache ---------------------------
+# Cache for recent TP window loaded from CSV to reduce disk I/O and parsing
+_RECENT_FILE_CACHE: Dict[Tuple[str, str, int], Dict[str, Any]] = {}
+_RECENT_FILE_CACHE_LOCK = threading.Lock()
+_RECENT_FILE_CACHE_TTL_SEC = max(0, int(os.environ.get('G6_RECENT_FILE_CACHE_TTL', '60')))
+_RECENT_FILE_CACHE_MAX_SIZE = max(1, int(os.environ.get('G6_RECENT_FILE_CACHE_MAX_SIZE', '50')))
+_RECENT_FILE_CACHE_HITS = 0
+_RECENT_FILE_CACHE_MISSES = 0
+
 def _cache_get(key: Tuple[str,int,str,float,float,float,int]) -> Optional[ForecastResponse]:
     if _CACHE_TTL_SEC == 0:
         return None
@@ -142,8 +151,10 @@ def _cache_put(key: Tuple[str,int,str,float,float,float,int], value: ForecastRes
 
 @router.get('/cache/stats')
 async def cache_stats():
-    """Return in-memory forecast cache statistics."""
+    """Return in-memory forecast cache statistics and recent file cache statistics."""
     now = time.time()
+    
+    # Forecast cache stats
     with _CACHE_LOCK:
         entries = []
         for k, ts in _CACHE_TIME.items():
@@ -154,7 +165,7 @@ async def cache_stats():
         oldest = max((e['age_sec'] for e in entries), default=0.0)
         newest = min((e['age_sec'] for e in entries), default=0.0)
         hit_ratio = (_CACHE_HITS / (_CACHE_HITS + _CACHE_MISSES)) if (_CACHE_HITS + _CACHE_MISSES) else 0.0
-        return {
+        forecast_cache_stats = {
             'ttl_sec': _CACHE_TTL_SEC,
             'max_size': _CACHE_MAX_SIZE,
             'size': len(entries),
@@ -166,18 +177,55 @@ async def cache_stats():
             'newest_age_sec': newest,
             'entries': entries[:50],  # cap detail
         }
+    
+    # Recent file cache stats
+    with _RECENT_FILE_CACHE_LOCK:
+        file_entries = []
+        for k, entry in _RECENT_FILE_CACHE.items():
+            age = now - entry['ts']
+            file_entries.append({
+                'key': {
+                    'index': k[0],
+                    'date': k[1],
+                    'window_size': k[2],
+                },
+                'age_sec': round(age, 3),
+                'row_count': len(entry.get('rows', [])),
+            })
+        file_oldest = max((e['age_sec'] for e in file_entries), default=0.0)
+        file_newest = min((e['age_sec'] for e in file_entries), default=0.0)
+        file_hit_ratio = (_RECENT_FILE_CACHE_HITS / (_RECENT_FILE_CACHE_HITS + _RECENT_FILE_CACHE_MISSES)) if (_RECENT_FILE_CACHE_HITS + _RECENT_FILE_CACHE_MISSES) else 0.0
+        recent_file_cache_stats = {
+            'ttl_sec': _RECENT_FILE_CACHE_TTL_SEC,
+            'max_size': _RECENT_FILE_CACHE_MAX_SIZE,
+            'current_entries': len(file_entries),
+            'hits': _RECENT_FILE_CACHE_HITS,
+            'misses': _RECENT_FILE_CACHE_MISSES,
+            'hit_ratio': round(file_hit_ratio, 4),
+            'oldest_age_sec': file_oldest,
+            'newest_age_sec': file_newest,
+            'entries': file_entries[:50],  # cap detail
+        }
+    
+    return {
+        'forecast_cache': forecast_cache_stats,
+        'recent_file_cache': recent_file_cache_stats,
+    }
 
 @router.post('/cache/clear')
 async def cache_clear():
-    """Clear the in-memory forecast cache and reset counters."""
-    global _CACHE_HITS, _CACHE_MISSES, _CACHE_EVICTIONS
+    """Clear the in-memory forecast cache and recent file cache, and reset counters."""
+    global _CACHE_HITS, _CACHE_MISSES, _RECENT_FILE_CACHE_HITS, _RECENT_FILE_CACHE_MISSES
     with _CACHE_LOCK:
         _CACHE.clear()
         _CACHE_TIME.clear()
         _CACHE_HITS = 0
         _CACHE_MISSES = 0
-        _CACHE_EVICTIONS = 0
-    return {'status': 'ok', 'cleared': True}
+    with _RECENT_FILE_CACHE_LOCK:
+        _RECENT_FILE_CACHE.clear()
+        _RECENT_FILE_CACHE_HITS = 0
+        _RECENT_FILE_CACHE_MISSES = 0
+    return {'status': 'ok', 'cleared': True, 'caches_cleared': ['forecast_cache', 'recent_file_cache']}
 
 def _project_root() -> Path:
     # Attempt to locate project root by walking up until pyproject.toml found
@@ -258,9 +306,140 @@ def _load_recent_window(index: str, limit: int) -> list[list[float]]:
     Fallback: empty list if file not found or parse fails.
     Assumptions: CSV header contains 'tp' or first numeric column usable.
     Returns list[[tp], ...] up to 'limit' most recent rows.
+    
+    Uses file-level cache with mtime awareness to avoid repeated disk I/O.
     """
     if limit <= 0:
         return []
+    
+    # Cache lookup
+    today = time.strftime('%Y-%m-%d')
+    cache_key = (index.upper(), today, limit)
+    
+    # Try cache first if enabled
+    if _RECENT_FILE_CACHE_TTL_SEC > 0:
+        with _RECENT_FILE_CACHE_LOCK:
+            global _RECENT_FILE_CACHE_HITS, _RECENT_FILE_CACHE_MISSES
+            
+            # First try exact match
+            cached_entry = _RECENT_FILE_CACHE.get(cache_key)
+            
+            # If no exact match, look for larger windows we can reuse
+            if cached_entry is None:
+                idx_upper = index.upper()
+                for (cached_idx, cached_date, cached_limit), entry in _RECENT_FILE_CACHE.items():
+                    if cached_idx == idx_upper and cached_date == today and cached_limit >= limit:
+                        cached_entry = entry
+                        break
+            
+            if cached_entry is not None:
+                cached_rows = cached_entry.get('rows')
+                cached_mtime = cached_entry.get('mtime')
+                cached_ts = cached_entry.get('ts')
+                cached_path = cached_entry.get('path')
+                
+                # Check TTL
+                if (time.time() - cached_ts) <= _RECENT_FILE_CACHE_TTL_SEC:
+                    # Check mtime if path exists
+                    try:
+                        if cached_path and Path(cached_path).exists():
+                            current_mtime = os.path.getmtime(cached_path)
+                            if abs(current_mtime - cached_mtime) < 0.001:  # mtime unchanged
+                                _RECENT_FILE_CACHE_HITS += 1
+                                _LOG.debug(f"recent_file_cache HIT: {cache_key}")
+                                # If cached has more rows than requested, slice last N
+                                if len(cached_rows) >= limit:
+                                    return cached_rows[-limit:]
+                                return cached_rows
+                    except Exception:
+                        pass
+            
+            _RECENT_FILE_CACHE_MISSES += 1
+            _LOG.debug(f"recent_file_cache MISS: {cache_key}")
+    
+    # Cache miss or disabled - load from disk
+    return _load_recent_window_impl(index, limit, today, cache_key)
+
+
+def _load_recent_window_impl(index: str, limit: int, today: str, cache_key: Tuple[str, str, int]) -> list[list[float]]:
+    """Implementation of recent window loading with cache update."""
+
+    root = _project_root() / 'data' / 'g6_data'
+    candidates = [
+        root / index.upper() / 'this_month' / '0' / f'{today}.csv',
+        root / index.upper() / 'this_week' / '0' / f'{today}.csv',
+    ]
+    path = None
+    for c in candidates:
+        if c.exists():
+            path = c
+            break
+    if path is None:
+        return []
+    
+    rows: list[list[float]] = []
+    try:
+        import csv
+        with path.open('r', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            header = next(reader, [])
+            tp_idx = -1
+            for i, col in enumerate(header):
+                if col.strip().lower() in ('tp','tp_value','theoretical_price'):
+                    tp_idx = i
+                    break
+            # If no explicit tp column, assume first numeric column after header
+            for row in reader:
+                if not row:
+                    continue
+                if tp_idx == -1:
+                    # find first numeric cell
+                    val = None
+                    for cell in row:
+                        try:
+                            val = float(cell)
+                            break
+                        except ValueError:
+                            continue
+                    if val is None:
+                        continue
+                    rows.append([val])
+                else:
+                    try:
+                        val = float(row[tp_idx])
+                    except (ValueError, IndexError):
+                        continue
+                    rows.append([val])
+        # Keep only last 'limit'
+        if len(rows) > limit:
+            rows = rows[-limit:]
+        
+        # Update cache if enabled
+        if _RECENT_FILE_CACHE_TTL_SEC > 0:
+            with _RECENT_FILE_CACHE_LOCK:
+                # Evict oldest entry if cache is full
+                if len(_RECENT_FILE_CACHE) >= _RECENT_FILE_CACHE_MAX_SIZE:
+                    # Find and remove the oldest entry by timestamp
+                    oldest_key = min(_RECENT_FILE_CACHE.keys(), 
+                                    key=lambda k: _RECENT_FILE_CACHE[k]['ts'])
+                    _RECENT_FILE_CACHE.pop(oldest_key, None)
+                    _LOG.debug(f"recent_file_cache evicted oldest entry: {oldest_key}")
+                
+                # Store in cache
+                mtime = os.path.getmtime(path)
+                _RECENT_FILE_CACHE[cache_key] = {
+                    'rows': rows,
+                    'mtime': mtime,
+                    'ts': time.time(),
+                    'path': str(path),
+                }
+                _LOG.debug(f"recent_file_cache stored: {cache_key}")
+        
+        return rows
+    except Exception as e:
+        _LOG.warning(f"recent_window_load_failed index={index} path={path}: {e}")
+        return []
+
 
 def _infer_live_params(index: str) -> Dict[str, float]:
     """Infer underlying, avg_iv, minutes_to_expiry from today's CSV when possible.
@@ -339,59 +518,6 @@ def _infer_live_params(index: str) -> Dict[str, float]:
     except Exception:
         pass
     return result
-    root = _project_root() / 'data' / 'g6_data'
-    today = time.strftime('%Y-%m-%d')
-    candidates = [
-        root / index.upper() / 'this_month' / '0' / f'{today}.csv',
-        root / index.upper() / 'this_week' / '0' / f'{today}.csv',
-    ]
-    path = None
-    for c in candidates:
-        if c.exists():
-            path = c
-            break
-    if path is None:
-        return []
-    rows: list[list[float]] = []
-    try:
-        import csv
-        with path.open('r', encoding='utf-8') as f:
-            reader = csv.reader(f)
-            header = next(reader, [])
-            tp_idx = -1
-            for i, col in enumerate(header):
-                if col.strip().lower() in ('tp','tp_value','theoretical_price'):
-                    tp_idx = i
-                    break
-            # If no explicit tp column, assume first numeric column after header
-            for row in reader:
-                if not row:
-                    continue
-                if tp_idx == -1:
-                    # find first numeric cell
-                    val = None
-                    for cell in row:
-                        try:
-                            val = float(cell)
-                            break
-                        except ValueError:
-                            continue
-                    if val is None:
-                        continue
-                    rows.append([val])
-                else:
-                    try:
-                        val = float(row[tp_idx])
-                    except (ValueError, IndexError):
-                        continue
-                    rows.append([val])
-        # Keep only last 'limit'
-        if len(rows) > limit:
-            rows = rows[-limit:]
-        return rows
-    except Exception as e:
-        _LOG.warning(f"recent_window_load_failed index={index} path={path}: {e}")
-        return []
 
 # --------------------------- Endpoints ---------------------------
 @router.get('/forecast', response_model=ForecastResponse)
