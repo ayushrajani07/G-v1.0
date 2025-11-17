@@ -44,8 +44,8 @@
       "targets": [
         {
           "refId": "LH",
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(g6_forecast_latency_ms_bucket[5m])))",
-          "legendFormat": "p95",
+          "expr": "histogram_quantile(${lat_q}, sum by (le) (rate(g6_forecast_latency_ms_bucket[5m])))",
+          "legendFormat": "p${lat_q}",
           "interval": ""
         },
         {
@@ -128,7 +128,7 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": ["g6", "ml", "ensemble"],
-  "templating": { "list": [ { "name": "index", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": { "text": "NIFTY", "value": "NIFTY" } }, { "name": "horizon", "label": "Horizon", "type": "custom", "query": "15,30,60,120,240", "current": { "text": "60", "value": "60" } } ] },
+  "templating": { "list": [ { "name": "index", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": { "text": "NIFTY", "value": "NIFTY" } }, { "name": "horizon", "label": "Horizon", "type": "custom", "query": "15,30,60,120,240", "current": { "text": "60", "value": "60" } }, { "name": "lat_q", "label": "Latency Percentile", "type": "custom", "query": "0.90,0.95,0.99", "current": { "text": "0.95", "value": "0.95" } } ] },
   "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "",
