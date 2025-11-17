@@ -800,3 +800,18 @@ async def retrain(req: RetrainRequest):
         raise HTTPException(status_code=404, detail=f"forecaster_unavailable: {idx}")
     job_id = f"retrain_{idx}_{int(time.time())}"
     return RetrainResponse(index=idx, status='scheduled', job_id=job_id, parameters={'training_days': req.days, 'validate': req.run_validation}, estimated_completion='in 2 hours', message='Retraining job scheduled successfully')
+
+@router.post('/metrics/flush')
+async def metrics_flush():
+    """Force flush rolling MAE & coverage state to persistence file (Phase 10).
+
+    Returns summary of persisted keys; no-op if persistence disabled.
+    """
+    try:
+        from ..rolling_mae import ensure_started, force_flush_state  # type: ignore
+        ensure_started()
+        result = force_flush_state()
+        return {"status": "ok", **result}
+    except Exception as e:
+        _LOG.warning(f"metrics_flush_failed: {e}")
+        raise HTTPException(status_code=500, detail="metrics_flush_failed")

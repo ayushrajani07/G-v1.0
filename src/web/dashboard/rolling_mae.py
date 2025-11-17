@@ -210,3 +210,23 @@ def ensure_started() -> None:
     t.start()
 
 __all__ = ["log_forecast_event", "ensure_started"]
+
+def force_flush_state() -> dict:
+    """Force persistence flush and return summary metadata.
+
+    Returns:
+        dict with path, errors_keys, coverage_keys, window_size, persisted (bool)
+    """
+    if not _PERSIST:
+        return {"persisted": False, "reason": "persistence_disabled"}
+    _save_state(force=True)
+    with _LOCK:
+        return {
+            "persisted": True,
+            "path": _persist_path(),
+            "errors_keys": len(_ERRORS),
+            "coverage_keys": len(_COVER_FLAGS),
+            "window_size": _WINDOW_SIZE,
+        }
+
+__all__.append("force_flush_state")
