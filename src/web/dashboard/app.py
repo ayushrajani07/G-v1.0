@@ -489,6 +489,37 @@ async def metrics_raw() -> PlainTextResponse:
                 lines.append(f"{name} {s.value}")
     return PlainTextResponse('\n'.join(lines))
 
+@app.get('/metrics')
+async def prometheus_metrics() -> PlainTextResponse:
+    """Expose Prometheus metrics for path forecast endpoints.
+    
+    Only active when ENABLE_PATH_FORECAST_PROM_METRICS=1 environment variable is set.
+    Returns 404 if not enabled.
+    """
+    try:
+        from .prom_metrics import get_registry
+        registry = get_registry()
+        if registry is None:
+            return PlainTextResponse("Prometheus metrics not enabled", status_code=404)
+        
+        # Generate metrics output
+        from prometheus_client import generate_latest
+        metrics_output = generate_latest(registry)
+        return PlainTextResponse(metrics_output.decode('utf-8'), media_type="text/plain; version=0.0.4")
+    except ImportError:
+        return PlainTextResponse("Prometheus client not available", status_code=503)
+    except Exception as e:
+        get_error_handler().handle_error(
+            e,
+            category=ErrorCategory.CONFIGURATION,
+            severity=ErrorSeverity.LOW,
+            component="web.dashboard.app",
+            function_name="prometheus_metrics",
+            message="Failed to generate Prometheus metrics",
+            should_log=False,
+        )
+        return PlainTextResponse("Error generating metrics", status_code=500)
+
 # DEBUG_MODE already defined above
 
 # HTML_DEPRECATED: Removed _build_memory_snapshot helper (only used by HTML endpoints)

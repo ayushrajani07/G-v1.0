@@ -133,18 +133,36 @@ def _cache_get(key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[Fo
         if ts is None:
             global _CACHE_MISSES
             _CACHE_MISSES += 1
+            # Track Prometheus metric
+            try:
+                from ..prom_metrics import increment_forecast_cache_miss
+                increment_forecast_cache_miss(key[0])  # key[0] is index
+            except Exception:
+                pass
             return None
         if (time.time() - ts) > _CACHE_TTL_SEC:
             # expired - purge
             _CACHE.pop(key, None)
             _CACHE_TIME.pop(key, None)
             _CACHE_MISSES += 1
+            # Track Prometheus metric
+            try:
+                from ..prom_metrics import increment_forecast_cache_miss
+                increment_forecast_cache_miss(key[0])  # key[0] is index
+            except Exception:
+                pass
             return None
         # Mark as recently used (LRU)
         _CACHE.move_to_end(key)
         _CACHE_TIME.move_to_end(key)
         global _CACHE_HITS
         _CACHE_HITS += 1
+        # Track Prometheus metric
+        try:
+            from ..prom_metrics import increment_forecast_cache_hit
+            increment_forecast_cache_hit(key[0])  # key[0] is index
+        except Exception:
+            pass
         return _CACHE.get(key)
 
 def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: ForecastResponse) -> None:
@@ -165,6 +183,13 @@ def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: Forecas
             _CACHE.pop(oldest_key, None)
             _CACHE_TIME.pop(oldest_key, None)
             _CACHE_EVICTIONS += 1
+        
+        # Update Prometheus gauge
+        try:
+            from ..prom_metrics import set_forecast_cache_size
+            set_forecast_cache_size(len(_CACHE))
+        except Exception:
+            pass
 
 @router.get('/cache/stats')
 async def cache_stats():
@@ -364,6 +389,12 @@ def _load_recent_window(index: str, limit: int) -> list[list[float]]:
                             if abs(current_mtime - cached_mtime) < 0.001:  # mtime unchanged
                                 _RECENT_FILE_CACHE_HITS += 1
                                 _LOG.debug(f"recent_file_cache HIT: {cache_key}")
+                                # Track Prometheus metric
+                                try:
+                                    from ..prom_metrics import increment_recent_window_cache_hit
+                                    increment_recent_window_cache_hit(index.upper())
+                                except Exception:
+                                    pass
                                 # If cached has more rows than requested, slice last N
                                 if len(cached_rows) >= limit:
                                     return cached_rows[-limit:]
@@ -373,6 +404,12 @@ def _load_recent_window(index: str, limit: int) -> list[list[float]]:
             
             _RECENT_FILE_CACHE_MISSES += 1
             _LOG.debug(f"recent_file_cache MISS: {cache_key}")
+            # Track Prometheus metric
+            try:
+                from ..prom_metrics import increment_recent_window_cache_miss
+                increment_recent_window_cache_miss(index.upper())
+            except Exception:
+                pass
     
     # Cache miss or disabled - load from disk
     return _load_recent_window_impl(index, limit, today, cache_key)
@@ -451,6 +488,13 @@ def _load_recent_window_impl(index: str, limit: int, today: str, cache_key: Tupl
                     'path': str(path),
                 }
                 _LOG.debug(f"recent_file_cache stored: {cache_key}")
+                
+                # Update Prometheus gauge
+                try:
+                    from ..prom_metrics import set_recent_window_cache_size
+                    set_recent_window_cache_size(len(_RECENT_FILE_CACHE))
+                except Exception:
+                    pass
         
         return rows
     except Exception as e:
@@ -696,6 +740,14 @@ async def forecast(
         quantile_paths=quantile_paths_obj
     )
     _cache_put(cache_key, resp)
+    
+    # Track Prometheus latency metric
+    try:
+        from ..prom_metrics import observe_forecast_latency
+        observe_forecast_latency(idx, horizon, latency_ms)
+    except Exception:
+        pass
+    
     return resp
 
 @router.get('/diagnostics', response_model=DiagnosticsResponse)
