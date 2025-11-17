@@ -1,0 +1,150 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1700000000001,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Forecast Snapshot",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "options": {"showHeader": true},
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "simpod-json-datasource", "uid": "jsonapi" },
+          "urlPath": "/api/ml/ensemble/forecast",
+          "queryParams": "index=${index}&horizon=${horizon}",
+          "cacheDurationSeconds": 5
+        }
+      ],
+      "transformations": [
+        { "id": "jsonata", "options": { "expression": "{p10: forecast.p10, p50: forecast.p50, p90: forecast.p90, band_low: forecast.band_low, band_high: forecast.band_high}" } }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Latency (ms)",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "options": {"reduceOptions": {"calcs": ["last"], "values": false}},
+      "targets": [
+        {
+          "refId": "B",
+          "datasource": { "type": "simpod-json-datasource", "uid": "jsonapi" },
+          "urlPath": "/api/ml/ensemble/forecast",
+          "queryParams": "index=${index}&horizon=${horizon}",
+          "cacheDurationSeconds": 5
+        }
+      ],
+      "transformations": [
+        { "id": "jsonata", "options": { "expression": "{latency_ms: metadata.latency_ms}" } }
+      ],
+      "fieldConfig": {"defaults": {"unit": "ms"}}
+    },
+    {
+      "id": 3,
+      "title": "Cache Hit Ratio",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 6, "x": 0, "y": 8 },
+      "options": {"reduceOptions": {"calcs": ["last"], "values": false}},
+      "targets": [
+        {
+          "refId": "C",
+          "datasource": { "type": "simpod-json-datasource", "uid": "jsonapi" },
+          "urlPath": "/api/ml/ensemble/cache/stats",
+          "cacheDurationSeconds": 5
+        }
+      ],
+      "transformations": [
+        { "id": "jsonata", "options": { "expression": "{hit_ratio: hit_ratio}" } }
+      ],
+      "fieldConfig": {"defaults": {"unit": "percentunit"}}
+    },
+    {
+      "id": 4,
+      "title": "Cache Entries",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 18, "x": 6, "y": 8 },
+      "options": {"showHeader": true},
+      "targets": [
+        {
+          "refId": "D",
+          "datasource": { "type": "simpod-json-datasource", "uid": "jsonapi" },
+          "urlPath": "/api/ml/ensemble/cache/stats",
+          "cacheDurationSeconds": 5
+        }
+      ],
+      "transformations": [
+        { "id": "jsonata", "options": { "expression": "entries.{index: key.index, horizon: key.horizon, quantiles: key.quantiles, age_sec: age_sec}" } }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Conformal Coverage",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
+      "options": {"reduceOptions": {"calcs": ["last"], "values": false}},
+      "targets": [
+        {"refId": "E", "datasource": {"type": "simpod-json-datasource", "uid": "jsonapi"}, "urlPath": "/api/ml/ensemble/forecast", "queryParams": "index=${index}&horizon=${horizon}&detail=full", "cacheDurationSeconds": 5 }
+      ],
+      "transformations": [ { "id": "jsonata", "options": { "expression": "{coverage: metadata.conformal_coverage}" } } ],
+      "fieldConfig": {"defaults": {"unit": "percentunit"}}
+    },
+    {
+      "id": 6,
+      "title": "Recent File Cache Hit Ratio",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 16 },
+      "options": {"reduceOptions": {"calcs": ["last"], "values": false}},
+      "targets": [
+        {"refId": "F", "datasource": {"type": "simpod-json-datasource", "uid": "jsonapi"}, "urlPath": "/api/ml/ensemble/cache/stats", "cacheDurationSeconds": 5 }
+      ],
+      "transformations": [ { "id": "jsonata", "options": { "expression": "{recent_file_cache_hit_ratio: recent_file_cache.hit_ratio}" } } ],
+      "fieldConfig": {"defaults": {"unit": "percentunit"}}
+    },
+    {
+      "id": 7,
+      "title": "Evictions",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 16 },
+      "options": {"reduceOptions": {"calcs": ["last"], "values": false}},
+      "targets": [
+        {"refId": "G", "datasource": {"type": "simpod-json-datasource", "uid": "jsonapi"}, "urlPath": "/api/ml/ensemble/cache/stats", "cacheDurationSeconds": 5 }
+      ],
+      "transformations": [ { "id": "jsonata", "options": { "expression": "{evictions: evictions}" } } ]
+    },
+    {
+      "id": 8,
+      "title": "Quantile Paths (t0 sample)",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 18, "y": 16 },
+      "options": {"showHeader": true},
+      "targets": [
+        {"refId": "H", "datasource": {"type": "simpod-json-datasource", "uid": "jsonapi"}, "urlPath": "/api/ml/ensemble/forecast", "queryParams": "index=${index}&horizon=${horizon}&detail=full", "cacheDurationSeconds": 5 }
+      ],
+      "transformations": [ { "id": "jsonata", "options": { "expression": "{p10_t0: quantile_paths.p10[0], p50_t0: quantile_paths.p50[0], p90_t0: quantile_paths.p90[0]}" } } ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["g6", "ml", "ensemble", "jsonapi"],
+  "templating": {
+    "list": [
+      {"name": "index", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": {"text": "NIFTY", "value": "NIFTY"}},
+      {"name": "horizon", "label": "Horizon (min)", "type": "custom", "query": "15,30,60,120,240", "current": {"text": "60", "value": "60"}}
+    ]
+  },
+  "time": { "from": "now-15m", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "G6 Ensemble API (JSON API)",
+  "uid": "g6-ensemble-api-jsonapi",
+  "version": 2
+}
