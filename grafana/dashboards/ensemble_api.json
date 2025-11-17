@@ -62,6 +62,23 @@
       }
     },
     {
+      "id": 10,
+      "title": "Eviction Rate (per sec)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "refId": "ER",
+          "expr": "rate(g6_forecast_cache_evictions_total[5m])",
+          "legendFormat": "evictions_rate",
+          "interval": ""
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
       "id": 5,
       "title": "Conformal Coverage",
       "type": "stat",
