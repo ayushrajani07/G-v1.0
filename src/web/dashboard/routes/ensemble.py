@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 import logging, os, threading
 from datetime import datetime, time as dtime, timedelta, timezone
+from collections import OrderedDict
 try:
     from zoneinfo import ZoneInfo  # Python 3.9+
 except Exception:  # pragma: no cover
@@ -89,12 +90,14 @@ class RetrainResponse(BaseModel):
 _def_components = ['baseline', 'gbrt', 'retrieval', 'conformal']
 
 # --------------------------- Simple In-Memory Forecast Cache ---------------------------
-_CACHE: Dict[Tuple[str,int,str,float,float,float,int], ForecastResponse] = {}
+_CACHE: OrderedDict[Tuple[str,int,str,float,float,float,int], ForecastResponse] = OrderedDict()
 _CACHE_LOCK = threading.Lock()
 _CACHE_TTL_SEC = max(0, int(os.environ.get('G6_FORECAST_CACHE_TTL', '30')))
-_CACHE_TIME: Dict[Tuple[str,int,str,float,float,float,int], float] = {}
+_CACHE_MAX_SIZE = max(1, int(os.environ.get('G6_FORECAST_CACHE_MAX', '500')))
+_CACHE_TIME: OrderedDict[Tuple[str,int,str,float,float,float,int], float] = OrderedDict()
 _CACHE_HITS = 0
 _CACHE_MISSES = 0
+_CACHE_EVICTIONS = 0
 
 # --------------------------- Recent Window File Cache ---------------------------
 # Cache for recent TP window loaded from CSV to reduce disk I/O and parsing
@@ -120,6 +123,9 @@ def _cache_get(key: Tuple[str,int,str,float,float,float,int]) -> Optional[Foreca
             _CACHE_TIME.pop(key, None)
             _CACHE_MISSES += 1
             return None
+        # Mark as recently used (LRU)
+        _CACHE.move_to_end(key)
+        _CACHE_TIME.move_to_end(key)
         global _CACHE_HITS
         _CACHE_HITS += 1
         return _CACHE.get(key)
@@ -127,9 +133,21 @@ def _cache_get(key: Tuple[str,int,str,float,float,float,int]) -> Optional[Foreca
 def _cache_put(key: Tuple[str,int,str,float,float,float,int], value: ForecastResponse) -> None:
     if _CACHE_TTL_SEC == 0:
         return
+    global _CACHE_EVICTIONS
     with _CACHE_LOCK:
         _CACHE[key] = value
         _CACHE_TIME[key] = time.time()
+        # Move to end to mark as most recently used
+        _CACHE.move_to_end(key)
+        _CACHE_TIME.move_to_end(key)
+        
+        # LRU eviction: remove oldest entries when size exceeds max
+        while len(_CACHE) > _CACHE_MAX_SIZE:
+            # Remove oldest (first) entry
+            oldest_key = next(iter(_CACHE))
+            _CACHE.pop(oldest_key, None)
+            _CACHE_TIME.pop(oldest_key, None)
+            _CACHE_EVICTIONS += 1
 
 @router.get('/cache/stats')
 async def cache_stats():
@@ -149,9 +167,11 @@ async def cache_stats():
         hit_ratio = (_CACHE_HITS / (_CACHE_HITS + _CACHE_MISSES)) if (_CACHE_HITS + _CACHE_MISSES) else 0.0
         forecast_cache_stats = {
             'ttl_sec': _CACHE_TTL_SEC,
+            'max_size': _CACHE_MAX_SIZE,
             'size': len(entries),
             'hits': _CACHE_HITS,
             'misses': _CACHE_MISSES,
+            'evictions': _CACHE_EVICTIONS,
             'hit_ratio': round(hit_ratio, 4),
             'oldest_age_sec': oldest,
             'newest_age_sec': newest,
