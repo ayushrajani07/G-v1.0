@@ -86,15 +86,15 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 - `PATH_FORECAST_DISABLE_WEIGHTED` (performance toggle, optional)
 
 **Phase 10 Next Local Actions (Updated):**
-1. Drift monitoring integration (feature importance + distribution shift panels).  ✅ (completed: drift_monitor.py, API endpoint, Prometheus gauges, Grafana panel, alert rules, health gauges `g6_drift_last_eval_ms`, `g6_drift_alert_count`; placeholder data pending real feed integration)
-2. Add rolling MAE & coverage Prometheus gauges + Grafana panels.  ✅ (completed: gauges + endpoints + persistence added)
-3. Implement adaptive TTL prototype (volatility-driven) behind flag.  ☐
-4. Begin regime change alert pipeline (weekly cron + threshold evaluation).  ☐
-5. Extend load test to multi-index comparative mode (NIFTY vs BANKNIFTY).  ✅ (completed: load_test_ensemble_multi.py with JSON/HTML output)
-6. Add alert rules tied to new metrics (p95 latency, eviction rate, cache hit ratio thresholds).  ✅ (completed: prometheus_alerts_drift.yml with sustained/broad/critical drift rules)
+1. Drift monitoring integration (feature importance + distribution shift panels).  ✅ (drift_monitor + gauges + Grafana + alert rules; API integrated)
+2. Add rolling MAE & coverage Prometheus gauges + Grafana panels.  ✅ (gauges + endpoints + persistence)
+3. Implement adaptive TTL prototype (volatility-driven) behind flag.  ✅ (present behind `G6_FORECAST_CACHE_ADAPTIVE_TTL` with min/max bounds)
+4. Regime change alert pipeline and visibility.  ✅ (scheduler summary cache, `/regime/status`, `/regime/breaches`, Prometheus `g6_regime_alert_count`, Grafana table panel)
+5. Extend load test to multi-index comparative mode (NIFTY vs BANKNIFTY).  ✅ (load_test_ensemble_multi.py)
+6. Add alert rules tied to new metrics (p95 latency, eviction rate, cache hit ratio thresholds).  ✅ (see `prometheus_alerts_ml.yml`)
 7. Add normalized error metric & histogram distribution for tail risk tracking.  ✅
 8. Implement decay / half-life adaptive smoothing of metrics.  ✅
-9. Provide comparison endpoint with percentiles & filtering.  ✅
+9. Provide comparison endpoint with percentiles & filtering.  ✅ (plus `include_drift=1` to attach drift summary)
 10. Add config validation endpoint for decay precedence.  ✅
 11. Add persistence + manual flush of rolling metric state.  ✅
 
@@ -182,11 +182,10 @@ histogram_quantile(0.90, sum(rate(g6_forecast_norm_error_hist_bucket[30m])) by (
 - Percentile gaps (p90 vs mean) now visible for tail risk management.
 
 **Next Focus (Remaining Phase 10 Items):**
-- Integrate drift detector outputs into comparison endpoint.
-- Adaptive TTL prototype (volatility-responsive) & impact study.
-- Regime change alerts aligned with normalized error + coverage deviations.
-- Multi-index load test scalability validation.
-- Alert rule set for p95 latency, eviction surge, low coverage, rising normalized p90.
+- Impact study for adaptive TTL vs static TTL (latency and hit-ratio deltas).
+- Fine-tune regime thresholds and breach reasons; add per-horizon annotations in Grafana.
+- Add Infinity panel for `/metrics/compare?include_drift=1` with index/horizon selectors.
+- Add small runbook for triaging regime vs drift alerts.
 
 ---
 
@@ -195,6 +194,8 @@ histogram_quantile(0.90, sum(rate(g6_forecast_norm_error_hist_bucket[30m])) by (
 - Dashboards pull `/api/ml/ensemble/forecast` and `/api/ml/ensemble/cache/stats` every 10s.
  - Prometheus panels: latency histogram (variable percentile), eviction rate trend.
  - Validate `/metrics` exports: latency buckets, sum/count, eviction counter, hit/miss counters.
+ - New: ML rule file – include `prometheus_alerts_ml.yml` in `prometheus.yml` → `rule_files`.
+ - New: Grafana Infinity table – "Regime Breaches (${index_pick})" uses `/api/ml/ensemble/regime/breaches`.
 
 ---
 

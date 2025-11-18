@@ -1,7 +1,7 @@
 # Ensemble API Reference
 
-**Version:** 1.2  
-**Last Updated:** 2025-11-17  
+**Version:** 1.3  
+**Last Updated:** 2025-11-18  
 **Status:** Production (Phase 10 kickoff)
 
 ## Overview
@@ -19,6 +19,7 @@ The ML Ensemble Forecasting API provides real-time price path predictions combin
 - Component diagnostics and health checks
 - Grafana dashboards (Infinity + JSON API variants) with latency percentile selector
 - Backward-compatible API design
+ - Regime and drift visibility endpoints and Grafana table panel
 
 ---
 
@@ -177,6 +178,66 @@ curl "http://localhost:9500/api/ml/ensemble/cache/stats"
 
 ---
 
+### 6. Rolling Metrics Comparison (+ Drift)
+
+**`GET /api/ml/ensemble/metrics/compare`**
+
+Compare window vs EMA metrics, with optional drift summary.
+
+Query params:
+- `index` (optional)
+- `horizon` (optional)
+- `include_drift` (0|1, default 0): when 1 and `index` is provided, attaches `drift_summary`:
+
+```json
+{
+  "...": {},
+  "drift_summary": { "index": "NIFTY", "ts_ms": 1700312345678, "alert_count": 2, "feature_count": 25 }
+}
+```
+
+---
+
+### 7. Regime Status
+
+**`GET /api/ml/ensemble/regime/status`**
+
+Returns last computed regime evaluation summary.
+
+- With `?index=NIFTY`: a single object; 404 if unavailable.
+- Without `index`: map of `{ index -> summary }`.
+
+Shape (example):
+```json
+{
+  "index": "NIFTY",
+  "ts_ms": 1700312345678,
+  "alerts": 1,
+  "total_horizons": 6,
+  "coverage_min": 0.72,
+  "norm_error_p90_max": 0.31,
+  "breaches": [
+    {"horizon": 60, "coverage_window_pct": 72.5, "norm_error_p90": 0.31, "triggered": true, "reasons": ["coverage<75","norm_p90>0.3"]}
+  ]
+}
+```
+
+---
+
+### 8. Regime Breaches (flat for Grafana)
+
+**`GET /api/ml/ensemble/regime/breaches?index=NIFTY`**
+
+Returns only the `breaches` array for easy table rendering:
+
+```json
+[
+  {"horizon": 60, "coverage_window_pct": 72.5, "norm_error_p90": 0.31, "triggered": true, "reasons": ["coverage<75","norm_p90>0.3"]}
+]
+```
+
+---
+
 ### 6. Cache Clear Endpoint
 
 **`POST /api/ml/ensemble/cache/clear`**
@@ -253,6 +314,9 @@ export G6_FORECAST_CACHE_MAX=500
 export G6_RECENT_FILE_CACHE_TTL=120
 export G6_RECENT_FILE_CACHE_MAX_SIZE=100
 export ENABLE_PATH_FORECAST_PROM_METRICS=1
+export G6_ROLLING_MAE_ENABLE=1
+export G6_DRIFT_ENABLE=1
+export G6_REGIME_ALERT_ENABLE=1
 ```
 
 ---
@@ -342,3 +406,56 @@ rate(g6_forecast_cache_evictions_total[5m])
 - Recent file cache hit ratio <50% over 30m → Validate data freshness vs TTL.
 
 The cache layers significantly reduce latency when identical or similar requests recur within TTL windows; latency histogram plus eviction trend aid adaptive tuning in Phase 10.
+
+---
+
+## Prometheus Alert Rules (ML)
+
+Add the ML alerts file to your Prometheus config and reload:
+
+`prometheus.yml` snippet:
+```yaml
+rule_files:
+  - prometheus_alerts.yml
+  - prometheus_alerts_ml.yml
+```
+
+Example alert ideas covered:
+- Regime change detected (`g6_regime_alert_count > 0` for 10m)
+- Drift alerts present (`g6_drift_alert_count > 0` for 10m)
+- Forecast latency p95 high (from `g6_forecast_latency_ms_bucket`)
+- Coverage low (`g6_forecast_coverage_pct < 70` for 15m)
+- Normalized error high (`g6_forecast_norm_error > 0.25` for 15m)
+
+---
+
+## Grafana: Regime Breaches Table (Infinity)
+
+Use the Infinity datasource pointing to:
+```
+http://127.0.0.1:9500/api/ml/ensemble/regime/breaches?index=${index_pick}
+```
+
+Panel: Table → Data source: `INFINITY` → Type: JSON → Source: URL.
+
+Recommended panel setup:
+- Variable `index_pick` from Prometheus label values (`index` label)
+- Columns: `horizon`, `coverage_window_pct` (rename to `coverage%`), `norm_error_p90` (rename to `norm_p90`), `triggered`, `reasons`
+
+---
+
+## Adaptive TTL Prototype (Optional)
+
+When enabled, per-key cache TTL adapts based on IV and recent window volatility.
+
+Env:
+```bash
+export G6_FORECAST_CACHE_ADAPTIVE_TTL=1
+export G6_FORECAST_CACHE_TTL_MIN=10
+export G6_FORECAST_CACHE_TTL_MAX=60
+export G6_ADAPTIVE_TTL_IV_REF=0.35
+export G6_ADAPTIVE_TTL_W_IV=0.7
+export G6_ADAPTIVE_TTL_W_WIN=0.3
+```
+
+Check current behavior at `/api/ml/ensemble/cache/stats` → `forecast_cache.adaptive=true` and per-entry `ttl_sec`.
