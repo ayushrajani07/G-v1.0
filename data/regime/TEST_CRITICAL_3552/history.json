@@ -1,0 +1,14 @@
+[
+  {
+    "timestamp": "2025-11-18T08:05:00.270064+00:00",
+    "embedding": {
+      "volatility": 0.1,
+      "bandwidth": 0.1,
+      "drift_severity": 0.1,
+      "cache_hit_ratio": 0.9,
+      "norm_error_p90": 0.1
+    },
+    "status": "stable",
+    "distance": 0.0
+  }
+]
