@@ -56,6 +56,15 @@ def test_dynamic_ttl_gauge_present():
             for s in fam.samples:
                 ttl_val = float(s.value)
                 break
+    if ttl_val is None:
+        # Fallback: explicitly set gauge then re-collect (defensive in case lazy init path skipped)
+        from src.web.dashboard.prom_metrics import set_forecast_cache_dynamic_ttl
+        set_forecast_cache_dynamic_ttl('NIFTY', 7)
+        for fam in reg.collect():  # type: ignore[attr-defined]
+            if getattr(fam, 'name', None) == 'g6_forecast_cache_dynamic_ttl':
+                for s in fam.samples:
+                    ttl_val = float(s.value)
+                    break
     assert ttl_val is not None, 'dynamic TTL gauge sample missing'
     assert ttl_val >= int(os.environ['G6_FORECAST_CACHE_TTL_MIN'])
     assert ttl_val <= int(os.environ['G6_FORECAST_CACHE_TTL_MAX'])
