@@ -66,6 +66,41 @@
       ]
     },
     {
+      "type": "stat",
+      "title": "Top Critical Count ({{index}})",
+      "gridPos": {"x": 8, "y": 9, "w": 8, "h": 5},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 3},
+              {"color": "red", "value": 6}
+            ]
+          },
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": []
+      },
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [
+        {
+          "refId": "TopCount",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+          "type": "json",
+          "source": "url",
+          "url": "http://localhost:9500/api/ml/drift/daily_reports/top_critical_count?index=${index}",
+          "json_options": { "root_is_not_array": true },
+          "columns": [
+            { "selector": "count", "text": "Count", "type": "number" }
+          ]
+        }
+      ]
+    },
+    {
       "type": "timeseries",
       "title": "Severity Stack ({{index}})",
       "gridPos": {"x": 0, "y": 0, "w": 16, "h": 9},
@@ -141,6 +176,7 @@
                 {"color": "orange", "value": 2},
                 {"color": "red", "value": 3}
               ]}},
+              {"id": "description", "value": "Absolute mean Z-score: |(recent_mean - baseline_mean)/baseline_std|"},
               {"id": "custom.displayMode", "value": "color-text"},
               {"id": "unit", "value": "short"},
               {"id": "decimals", "value": 2}
@@ -155,6 +191,7 @@
                 {"color": "orange", "value": 1.5},
                 {"color": "red", "value": 2}
               ]}},
+              {"id": "description", "value": "Symmetric variance deviation: max(var_ratio, 1/var_ratio)"},
               {"id": "custom.displayMode", "value": "color-text"},
               {"id": "unit", "value": "short"},
               {"id": "decimals", "value": 2}
@@ -173,9 +210,7 @@
           "columns": [
             { "selector": "feature", "text": "Feature", "type": "string" },
             { "selector": "psi", "text": "PSI", "type": "number" },
-            { "selector": "mean_delta_zscore", "text": "Mean Z", "type": "number" },
             { "selector": "mean_delta_zscore_abs", "text": "Mean Z |abs|", "type": "number" },
-            { "selector": "var_ratio", "text": "Var Ratio", "type": "number" },
             { "selector": "var_ratio_dev", "text": "Var Ratio dev", "type": "number" }
           ]
         }

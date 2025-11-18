@@ -266,6 +266,26 @@ async def api_ml_drift_daily_report_trend(days: int = 7):
         series.append({'generated_at': gen_at, 'aggregate_counts': d.get('aggregate_counts', {})})
         for pi in d.get('per_index', []):
             idx = pi.get('index')
+
+        @router.get('/api/ml/drift/daily_reports/top_critical_count')
+        async def api_ml_drift_daily_report_top_critical_count(index: str):
+            """Return the count of top critical features for the selected index from the latest report."""
+            import os, json, glob
+            base = os.path.join(os.getcwd(), 'reports', 'drift')
+            files = sorted(glob.glob(os.path.join(base, 'daily_*.json')))
+            if not files:
+                return JSONResponse({'count': 0})
+            latest = files[-1]
+            try:
+                data = json.load(open(latest, 'r', encoding='utf-8'))
+                idx = index.strip().upper()
+                for pi in data.get('per_index', []):
+                    if str(pi.get('index','')).upper() == idx:
+                        arr = pi.get('top_critical') or []
+                        return JSONResponse({'count': len(arr)})
+                return JSONResponse({'count': 0})
+            except Exception:
+                return JSONResponse({'count': 0})
             if not idx:
                 continue
             counts = pi.get('counts', {}) or {}
