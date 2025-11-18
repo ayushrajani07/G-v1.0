@@ -1,0 +1,102 @@
+{
+  "uid": "ml_drift_json_combined_and_top",
+  "title": "ML Drift Combined Severity + Top Critical (JSON)",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "name": "index",
+        "type": "custom",
+        "query": "NIFTY,BANKNIFTY",
+        "current": { "text": "NIFTY", "value": "NIFTY", "selected": true }
+      },
+      {
+        "name": "days",
+        "type": "custom",
+        "query": "7,14,30",
+        "current": { "text": "14", "value": "14", "selected": true }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Severity Stack ({{index}})",
+      "gridPos": {"x": 0, "y": 0, "w": 16, "h": 9},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}},
+      "fieldConfig": {"defaults": {"unit": "short", "custom": {"drawStyle": "line", "lineInterpolation": "smooth", "stacking": {"mode": "normal", "group": "A"}}}, "overrides": []},
+      "targets": [
+        {
+          "refId": "Crit",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+          "type": "json",
+          "source": "url",
+          "url": "http://localhost:9500/api/ml/drift/daily_reports/trend?days=${days}",
+          "json_options": { "root_is_not_array": true, "root_selector": "per_index_severity_series.${index}.critical" },
+          "columns": [
+            { "selector": "generated_at", "text": "Time", "type": "time" },
+            { "selector": "value", "text": "Critical", "type": "number" }
+          ]
+        },
+        {
+          "refId": "Act",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+          "type": "json",
+          "source": "url",
+          "url": "http://localhost:9500/api/ml/drift/daily_reports/trend?days=${days}",
+          "json_options": { "root_is_not_array": true, "root_selector": "per_index_severity_series.${index}.actionable" },
+          "columns": [
+            { "selector": "generated_at", "text": "Time", "type": "time" },
+            { "selector": "value", "text": "Actionable", "type": "number" }
+          ]
+        },
+        {
+          "refId": "Watch",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+          "type": "json",
+          "source": "url",
+          "url": "http://localhost:9500/api/ml/drift/daily_reports/trend?days=${days}",
+          "json_options": { "root_is_not_array": true, "root_selector": "per_index_severity_series.${index}.watch" },
+          "columns": [
+            { "selector": "generated_at", "text": "Time", "type": "time" },
+            { "selector": "value", "text": "Watch", "type": "number" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Critical Features ({{index}} – latest)",
+      "gridPos": {"x": 16, "y": 0, "w": 8, "h": 9},
+      "options": {"showHeader": true},
+      "targets": [
+        {
+          "refId": "TopCrit",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+          "type": "json",
+          "source": "url",
+          "url": "http://localhost:9500/api/ml/drift/daily_reports/top_critical?index=${index}&limit=10",
+          "json_options": { "root_is_not_array": true },
+          "columns": [
+            { "selector": "feature", "text": "Feature", "type": "string" },
+            { "selector": "psi", "text": "PSI", "type": "number" },
+            { "selector": "mean_delta_zscore", "text": "Mean Z", "type": "number" },
+            { "selector": "var_ratio", "text": "Var Ratio", "type": "number" }
+          ]
+        }
+      ]
+    }
+  ],
+  "__inputs": [
+    {
+      "name": "DS_INFINITY",
+      "label": "Infinity",
+      "type": "datasource",
+      "pluginId": "yesoreyeram-infinity-datasource",
+      "pluginName": "Infinity"
+    }
+  ]
+}

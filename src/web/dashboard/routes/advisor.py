@@ -278,3 +278,27 @@ async def api_ml_drift_daily_report_trend(days: int = 7):
             bucket['actionable'].append({'generated_at': gen_at, 'value': int(counts.get('actionable', 0))})
             bucket['watch'].append({'generated_at': gen_at, 'value': int(counts.get('watch', 0))})
     return JSONResponse({'series': series, 'per_index_series': per_index_series, 'per_index_severity_series': per_index_severity_series, 'count': len(series)})
+
+
+@router.get('/api/ml/drift/daily_reports/top_critical')
+async def api_ml_drift_daily_report_top_critical(index: str, limit: int = 10):
+    """Return latest top critical features for a given index from daily report.
+
+    Suitable for Grafana Infinity/JSON table consumption.
+    """
+    import os, json, glob
+    base = os.path.join(os.getcwd(), 'reports', 'drift')
+    files = sorted(glob.glob(os.path.join(base, 'daily_*.json')))
+    if not files:
+        return JSONResponse({'error': 'no_reports'}, status_code=404)
+    latest = files[-1]
+    try:
+        data = json.load(open(latest, 'r', encoding='utf-8'))
+        idx = index.strip().upper()
+        for pi in data.get('per_index', []):
+            if str(pi.get('index','')).upper() == idx:
+                arr = pi.get('top_critical') or []
+                return JSONResponse(arr[:max(0,int(limit))])
+        return JSONResponse([], status_code=200)
+    except Exception:
+        return JSONResponse({'error': 'read_failed'}, status_code=500)
