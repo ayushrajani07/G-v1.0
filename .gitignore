@@ -74,6 +74,8 @@ prometheus/
 grafana/
 !grafana/dashboards/
 !grafana/dashboards/*.json
+!grafana/dashboards/components/
+!grafana/dashboards/components/*.json
 !grafana/provisioning/
 !grafana/provisioning/**
 

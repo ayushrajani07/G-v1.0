@@ -178,6 +178,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             # Debug function not available, attribute error, or type error
             pass  # Debug endpoints are optional, don't fail startup
     
+    # Phase 10: Start drift monitoring evaluator thread if enabled
+    try:
+        from .drift_metrics import start_drift_evaluator
+        start_drift_evaluator()
+    except Exception as e:
+        # Drift monitoring is optional, don't fail startup
+        _LOG.info(f"Drift monitoring not started: {e}")
+    
     yield
     # Shutdown
     try:
@@ -192,6 +200,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             message="Failed to stop metrics cache",
             should_log=False,
         )
+    
+    # Phase 10: Stop drift monitoring evaluator thread
+    try:
+        from .drift_metrics import stop_drift_evaluator
+        stop_drift_evaluator()
+    except Exception as e:
+        # Drift monitoring is optional, don't fail shutdown
+        _LOG.info(f"Drift monitoring not stopped cleanly: {e}")
 
 
 app = FastAPI(title="G6 Dashboard", version="0.1.0", lifespan=lifespan, default_response_class=ORJSONResponse)
