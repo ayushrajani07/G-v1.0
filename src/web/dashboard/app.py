@@ -185,6 +185,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         # Drift monitoring is optional, don't fail startup
         _LOG.info(f"Drift monitoring not started: {e}")
+    # Phase 10: Start regime change weekly scheduler if enabled
+    try:
+        from .regime_alerts import start_regime_scheduler
+        start_regime_scheduler()
+    except Exception as e:
+        _LOG.info(f"Regime scheduler not started: {e}")
     
     yield
     # Shutdown
@@ -208,6 +214,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     except Exception as e:
         # Drift monitoring is optional, don't fail shutdown
         _LOG.info(f"Drift monitoring not stopped cleanly: {e}")
+    # Phase 10: Stop regime scheduler
+    try:
+        from .regime_alerts import stop_regime_scheduler
+        stop_regime_scheduler()
+    except Exception as e:
+        _LOG.info(f"Regime scheduler not stopped cleanly: {e}")
 
 
 app = FastAPI(title="G6 Dashboard", version="0.1.0", lifespan=lifespan, default_response_class=ORJSONResponse)
