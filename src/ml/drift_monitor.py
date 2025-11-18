@@ -267,26 +267,44 @@ class DriftMonitor:
     def _classify(self, psi: float, ks_p: float, mean_z: float, var_ratio: float) -> Tuple[str,List[str]]:
         reasons: List[str] = []
         crit = False; actionable = False; watch = False
-        if psi >= self.psi_crit:
+        psi_warn_hit = psi >= self.psi_warn
+        psi_crit_hit = psi >= self.psi_crit
+        ks_warn_hit = ks_p <= self.ks_warn
+        ks_crit_hit = ks_p <= self.ks_crit
+        mean_warn_hit = abs(mean_z) >= self.mean_z_warn
+        mean_crit_hit = abs(mean_z) >= self.mean_z_crit
+        var_warn_hit = (var_ratio >= self.var_warn_high or var_ratio <= self.var_warn_low)
+        var_crit_hit = (var_ratio >= self.var_crit_high or var_ratio <= self.var_crit_low)
+
+        if psi_crit_hit:
             crit = True; reasons.append(f'psi_crit {psi:.3f}')
-        elif psi >= self.psi_warn:
+        elif psi_warn_hit:
             watch = True; reasons.append(f'psi_warn {psi:.3f}')
-        if ks_p <= self.ks_crit:
+        if ks_crit_hit:
             crit = True; reasons.append(f'ks_crit {ks_p:.4f}')
-        elif ks_p <= self.ks_warn:
+        elif ks_warn_hit:
             watch = True; reasons.append(f'ks_warn {ks_p:.4f}')
-        if abs(mean_z) >= self.mean_z_crit:
+        if mean_crit_hit:
             crit = True; reasons.append(f'mean_z_crit {mean_z:.2f}')
-        elif abs(mean_z) >= self.mean_z_warn:
+        elif mean_warn_hit:
             watch = True; reasons.append(f'mean_z_warn {mean_z:.2f}')
-        if var_ratio >= self.var_crit_high or var_ratio <= self.var_crit_low:
+        if var_crit_hit:
             crit = True; reasons.append(f'var_ratio_crit {var_ratio:.2f}')
-        elif var_ratio >= self.var_warn_high or var_ratio <= self.var_warn_low:
+        elif var_warn_hit:
             watch = True; reasons.append(f'var_ratio_warn {var_ratio:.2f}')
+
+        # Composite conditions: escalate to actionable if BOTH psi & ks warn (or psi warn + mean warn)
+        composite_psiks = psi_warn_hit and ks_warn_hit and not ks_crit_hit and not psi_crit_hit
+        composite_psimean = psi_warn_hit and mean_warn_hit and not mean_crit_hit and not psi_crit_hit
         if crit:
             return 'critical', reasons
-        if watch and (psi >= self.psi_warn and (ks_p <= self.ks_warn or abs(mean_z) >= self.mean_z_warn)):
-            actionable = True
+        if composite_psiks:
+            actionable = True; reasons.append('composite_psiks')
+        elif composite_psimean:
+            actionable = True; reasons.append('composite_psimean')
+        elif watch and psi_warn_hit and (ks_warn_hit or mean_warn_hit):
+            # Legacy fallback composite condition
+            actionable = True; reasons.append('composite_legacy')
         if actionable:
             return 'actionable', reasons
         if watch:
