@@ -329,16 +329,18 @@ def _evaluate_ready_events() -> None:
                 coverage_pct = (sum(cov_deque) / max(1, len(cov_deque))) * 100.0
                 norm_error_mean = sum(norm_deque) / max(1, len(norm_deque))
             _LAST_EVAL_TS[key] = int(time.time()*1000)
-        # Export Prometheus gauge
+        # Export Prometheus gauge + histograms
         try:
             from .prom_metrics import (
                 set_forecast_mae,
                 set_forecast_coverage,
                 set_forecast_norm_error,
+                observe_forecast_errors,
             )  # type: ignore
             set_forecast_mae(idx, horizon, mae)
             set_forecast_coverage(idx, horizon, coverage_pct)
             set_forecast_norm_error(idx, horizon, norm_error_mean)
+            observe_forecast_errors(idx, horizon, error, norm_error_val)
         except Exception:
             pass
     # After processing ready batch, attempt periodic flush

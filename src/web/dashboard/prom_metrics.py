@@ -14,6 +14,8 @@ Metrics exposed:
 - g6_forecast_mae: Gauge of rolling mean absolute error for p50 forecasts (per index,horizon)
 - g6_forecast_coverage_pct: Gauge of rolling coverage percentage for band_low/band_high (per index,horizon)
 - g6_forecast_norm_error: Gauge of rolling normalized error (MAE divided by band width) (per index,horizon)
+ - g6_forecast_error_hist: Histogram of per-evaluation absolute forecast error (per index,horizon)
+ - g6_forecast_norm_error_hist: Histogram of per-evaluation normalized error (per index,horizon)
 """
 from __future__ import annotations
 
@@ -38,6 +40,8 @@ _RECENT_WINDOW_CACHE_SIZE: Any = None
 _FORECAST_ROLLING_MAE: Any = None
 _FORECAST_COVERAGE: Any = None
 _FORECAST_NORM_ERROR: Any = None
+_FORECAST_ERROR_HIST: Any = None
+_FORECAST_NORM_ERROR_HIST: Any = None
 
 
 def _is_enabled() -> bool:
@@ -139,6 +143,44 @@ def _init_metrics() -> bool:
             labelnames=["index", "horizon"],
             registry=_REGISTRY,
         )
+        # Optional histograms for percentile analysis; buckets configurable via env vars
+        try:
+            import os
+            def _parse_buckets(env_name: str, default: str) -> list[float]:
+                raw = os.environ.get(env_name, default)
+                vals = []
+                for part in raw.split(','):
+                    part = part.strip()
+                    if not part:
+                        continue
+                    try:
+                        vals.append(float(part))
+                    except ValueError:
+                        continue
+                vals = sorted(set(vals))
+                if not vals or vals[-1] != float('inf'):
+                    vals.append(float('inf'))
+                return vals
+            error_buckets = _parse_buckets('G6_ROLLING_ERROR_BUCKETS', '0.5,1,2,5,10,20,50')
+            norm_error_buckets = _parse_buckets('G6_ROLLING_NORM_ERROR_BUCKETS', '0.01,0.02,0.05,0.1,0.2,0.5,1')
+            from prometheus_client import Histogram  # type: ignore
+            _FORECAST_ERROR_HIST = Histogram(
+                "g6_forecast_error_hist",
+                "Absolute forecast error distribution",
+                labelnames=["index", "horizon"],
+                buckets=error_buckets,
+                registry=_REGISTRY,
+            )
+            _FORECAST_NORM_ERROR_HIST = Histogram(
+                "g6_forecast_norm_error_hist",
+                "Normalized forecast error distribution",
+                labelnames=["index", "horizon"],
+                buckets=norm_error_buckets,
+                registry=_REGISTRY,
+            )
+        except Exception as _e:  # pragma: no cover
+            # Histograms optional; failure should not break init
+            _LOG.debug(f"Optional histogram init failed: {_e}")
 
         _METRICS_INITIALIZED = True
         _LOG.info("Prometheus metrics initialized for path forecast")
@@ -327,6 +369,23 @@ def set_forecast_norm_error(index: str, horizon: int, norm_error: float) -> None
             _LOG.debug(f"Failed to set forecast normalized error: {e}")
 
 
+def observe_forecast_errors(index: str, horizon: int, abs_error: float, norm_error: float) -> None:
+    """Observe single evaluation errors into histograms (if enabled)."""
+    if not _is_enabled():
+        return
+    _init_metrics()
+    try:
+        if _FORECAST_ERROR_HIST is not None:
+            _FORECAST_ERROR_HIST.labels(index=index, horizon=str(horizon)).observe(abs_error)
+    except Exception as e:
+        _LOG.debug(f"Failed to observe abs error: {e}")
+    try:
+        if _FORECAST_NORM_ERROR_HIST is not None:
+            _FORECAST_NORM_ERROR_HIST.labels(index=index, horizon=str(horizon)).observe(norm_error)
+    except Exception as e:
+        _LOG.debug(f"Failed to observe norm error: {e}")
+
+
 def get_registry() -> Optional[Any]:
     """Get the Prometheus registry if metrics are enabled.
 
@@ -351,5 +410,6 @@ __all__ = [
     "set_forecast_mae",
     "set_forecast_coverage",
     "set_forecast_norm_error",
+    "observe_forecast_errors",
     "get_registry",
 ]
