@@ -926,6 +926,27 @@ async def regime_status(index: Optional[str] = Query(None, description="Optional
         _LOG.warning(f"regime_status_failed: {e}")
         raise HTTPException(status_code=500, detail="regime_status_failed")
 
+
+@router.get('/regime/breaches', response_model=list[RegimeBreach])
+async def regime_breaches(index: str = Query(..., description="Index e.g. NIFTY")):
+    """Return only the breaches array for the given index for easy table rendering.
+
+    If no summary is available yet, returns an empty list.
+    """
+    try:
+        from ..regime_alerts import get_regime_summary  # type: ignore
+        data = get_regime_summary(index=index)
+        if not data:
+            return []
+        breaches = data.get("breaches") or []
+        # Ensure list of objects
+        if isinstance(breaches, list):
+            return breaches
+        return []
+    except Exception as e:
+        _LOG.warning(f"regime_breaches_failed: {e}")
+        raise HTTPException(status_code=500, detail="regime_breaches_failed")
+
 @router.post('/metrics/flush')
 async def metrics_flush():
     """Force flush rolling MAE & coverage state to persistence file (Phase 10).

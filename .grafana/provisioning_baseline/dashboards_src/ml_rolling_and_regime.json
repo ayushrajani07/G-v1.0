@@ -89,6 +89,35 @@
       ],
       "title": "Regime Alerts (count)",
       "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 17 },
+      "id": 5,
+      "options": {
+        "showHeader": true,
+        "footer": { "show": false, "fields": "*", "reducer": ["count"] }
+      },
+      "targets": [
+        {
+          "columns": [],
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/ml/ensemble/regime/breaches?index=${index_pick}",
+          "url_options": { "data": "", "method": "GET" },
+          "filters": [],
+          "global_query_id": "",
+          "root_selector": ""
+        }
+      ],
+      "title": "Regime Breaches (${index_pick})",
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": {}, "renameByName": { "coverage_window_pct": "coverage%", "norm_error_p90": "norm_p90" } } }
+      ],
+      "type": "table"
     }
   ],
   "refresh": "30s",
@@ -102,6 +131,19 @@
         "hide": 0,
         "label": "Index (regex)",
         "name": "index",
+        "options": [],
+        "query": "label_values(g6_forecast_mae, index)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "PROM" }
+      },
+      {
+        "current": { "selected": false, "text": "NIFTY", "value": "NIFTY" },
+        "hide": 0,
+        "label": "Index (single)",
+        "name": "index_pick",
         "options": [],
         "query": "label_values(g6_forecast_mae, index)",
         "refresh": 2,
