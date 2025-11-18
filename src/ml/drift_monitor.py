@@ -71,13 +71,13 @@ class FeatureLoader:
     def __init__(self, root: Path):
         self.root = root
 
-    def load_recent_rows(self, index: str, limit: int) -> List[Dict[str, float]]:
+    def load_recent_rows(self, index: str, limit: int, date_ymd: Optional[str] = None) -> List[Dict[str, float]]:
         if limit <= 0:
             return []
-        today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        day = date_ymd or datetime.now(timezone.utc).strftime('%Y-%m-%d')
         candidates = [
-            self.root / index.upper() / 'this_month' / '0' / f'{today}.csv',
-            self.root / index.upper() / 'this_week' / '0' / f'{today}.csv',
+            self.root / index.upper() / 'this_month' / '0' / f'{day}.csv',
+            self.root / index.upper() / 'this_week' / '0' / f'{day}.csv',
         ]
         path = next((p for p in candidates if p.exists()), None)
         if path is None:
@@ -112,6 +112,19 @@ class FeatureLoader:
             if v is not None and math.isfinite(v):
                 values.append(float(v))
         return values
+
+    def load_range_rows(self, index: str, days: int, daily_limit: Optional[int] = None) -> List[Dict[str, float]]:
+        if days <= 0:
+            return []
+        out: List[Dict[str, float]] = []
+        now = datetime.now(timezone.utc)
+        for i in range(days):
+            day = (now - timedelta(days=i)).strftime('%Y-%m-%d')
+            rows = self.load_recent_rows(index, daily_limit or 10**9, date_ymd=day)
+            if not rows:
+                continue
+            out.extend(rows)
+        return out
 
 def _project_root() -> Path:
     start = Path(__file__).resolve()
@@ -151,8 +164,11 @@ class DriftMonitor:
         self._quantile_cache: Dict[str, List[float]] = {}
 
     def compute_feature_distributions(self, index: str, lookback_days: int, features: Optional[List[str]] = None) -> Dict[str, Any]:
-        # Note: multi-day aggregation for baseline pending (P2). Quantile edges cached only for baseline.
-        rows = self.loader.load_recent_rows(index, self.recent_rows if lookback_days == 0 else self.recent_rows)
+        # Multi-day baseline aggregation via loader; recent uses only latest day window
+        if lookback_days > 0:
+            rows = self.loader.load_range_rows(index, lookback_days, daily_limit=self.recent_rows)
+        else:
+            rows = self.loader.load_recent_rows(index, self.recent_rows)
         if features is None:
             # Initial feature selection (placeholder list)
             features = [
