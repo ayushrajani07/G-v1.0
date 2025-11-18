@@ -171,6 +171,9 @@ async def api_ml_universal_advisor_drift_advice(
     entries = []
     counts = {'stable':0,'watch':0,'actionable':0,'critical':0}
     severity_map = {0:'stable',1:'watch',2:'actionable',3:'critical'}
+    data_insufficient = False
+    if not snapshot:
+        data_insufficient = True
     for rec in snapshot:
         raw_sev = rec.get('severity')
         sev_label: str
@@ -206,6 +209,7 @@ async def api_ml_universal_advisor_drift_advice(
         'thresholds': _THRESHOLDS,
         'summary': counts,
         'recommend_retrain': recommend_retrain,
+        'data_insufficient': data_insufficient,
     }
     if detail:
         result['features'] = entries
@@ -266,26 +270,6 @@ async def api_ml_drift_daily_report_trend(days: int = 7):
         series.append({'generated_at': gen_at, 'aggregate_counts': d.get('aggregate_counts', {})})
         for pi in d.get('per_index', []):
             idx = pi.get('index')
-
-        @router.get('/api/ml/drift/daily_reports/top_critical_count')
-        async def api_ml_drift_daily_report_top_critical_count(index: str):
-            """Return the count of top critical features for the selected index from the latest report."""
-            import os, json, glob
-            base = os.path.join(os.getcwd(), 'reports', 'drift')
-            files = sorted(glob.glob(os.path.join(base, 'daily_*.json')))
-            if not files:
-                return JSONResponse({'count': 0})
-            latest = files[-1]
-            try:
-                data = json.load(open(latest, 'r', encoding='utf-8'))
-                idx = index.strip().upper()
-                for pi in data.get('per_index', []):
-                    if str(pi.get('index','')).upper() == idx:
-                        arr = pi.get('top_critical') or []
-                        return JSONResponse({'count': len(arr)})
-                return JSONResponse({'count': 0})
-            except Exception:
-                return JSONResponse({'count': 0})
             if not idx:
                 continue
             counts = pi.get('counts', {}) or {}
@@ -337,3 +321,23 @@ async def api_ml_drift_daily_report_top_critical(index: str, limit: int = 10):
         return JSONResponse([], status_code=200)
     except Exception:
         return JSONResponse({'error': 'read_failed'}, status_code=500)
+
+@router.get('/api/ml/drift/daily_reports/top_critical_count')
+async def api_ml_drift_daily_report_top_critical_count(index: str):
+    """Return the count of top critical features for the selected index from the latest daily report."""
+    import os, json, glob
+    base = os.path.join(os.getcwd(), 'reports', 'drift')
+    files = sorted(glob.glob(os.path.join(base, 'daily_*.json')))
+    if not files:
+        return JSONResponse({'count': 0})
+    latest = files[-1]
+    try:
+        data = json.load(open(latest, 'r', encoding='utf-8'))
+        idx = index.strip().upper()
+        for pi in data.get('per_index', []):
+            if str(pi.get('index','')).upper() == idx:
+                arr = pi.get('top_critical') or []
+                return JSONResponse({'count': len(arr)})
+        return JSONResponse({'count': 0})
+    except Exception:
+        return JSONResponse({'count': 0})
