@@ -107,11 +107,20 @@ def _quantile_to_label(q: float) -> str:
     return f"p{pct}"
 
 # --------------------------- Simple In-Memory Forecast Cache ---------------------------
-_CACHE: OrderedDict[Tuple[str,int,str,float,float,float,int], ForecastResponse] = OrderedDict()
+_CACHE: OrderedDict[Tuple[str,int,str,float,float,float,int,str], ForecastResponse] = OrderedDict()
 _CACHE_LOCK = threading.Lock()
 _CACHE_TTL_SEC = max(0, int(os.environ.get('G6_FORECAST_CACHE_TTL', '30')))
 _CACHE_MAX_SIZE = max(1, int(os.environ.get('G6_FORECAST_CACHE_MAX', '500')))
-_CACHE_TIME: OrderedDict[Tuple[str,int,str,float,float,float,int], float] = OrderedDict()
+_CACHE_TIME: OrderedDict[Tuple[str,int,str,float,float,float,int,str], float] = OrderedDict()
+# Per-key TTL map (seconds) to support adaptive TTL prototype
+_CACHE_TTL_MAP: Dict[Tuple[str,int,str,float,float,float,int,str], float] = {}
+# Adaptive TTL controls (prototype, behind flag)
+_ADAPTIVE_TTL_ENABLED = str(os.environ.get('G6_FORECAST_CACHE_ADAPTIVE_TTL', '0')).lower() in ('1','true','yes','on')
+_ADAPTIVE_TTL_MIN = max(1, int(os.environ.get('G6_FORECAST_CACHE_TTL_MIN', '10')))
+_ADAPTIVE_TTL_MAX = max(_ADAPTIVE_TTL_MIN, int(os.environ.get('G6_FORECAST_CACHE_TTL_MAX', '60')))
+_ADAPTIVE_TTL_IV_REF = max(1e-6, float(os.environ.get('G6_ADAPTIVE_TTL_IV_REF', '0.35')))
+_ADAPTIVE_TTL_W_IV = min(1.0, max(0.0, float(os.environ.get('G6_ADAPTIVE_TTL_W_IV', '0.7'))))
+_ADAPTIVE_TTL_W_WIN = min(1.0, max(0.0, float(os.environ.get('G6_ADAPTIVE_TTL_W_WIN', '0.3'))))
 _CACHE_HITS = 0
 _CACHE_MISSES = 0
 _CACHE_EVICTIONS = 0
@@ -140,10 +149,13 @@ def _cache_get(key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[Fo
             except Exception:
                 pass
             return None
-        if (time.time() - ts) > _CACHE_TTL_SEC:
+        # Determine per-key TTL (adaptive if stored), else fallback to default
+        ttl_for_key = _CACHE_TTL_MAP.get(key, float(_CACHE_TTL_SEC))
+        if (time.time() - ts) > ttl_for_key:
             # expired - purge
             _CACHE.pop(key, None)
             _CACHE_TIME.pop(key, None)
+            _CACHE_TTL_MAP.pop(key, None)
             _CACHE_MISSES += 1
             # Track Prometheus metric
             try:
@@ -165,13 +177,18 @@ def _cache_get(key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[Fo
             pass
         return _CACHE.get(key)
 
-def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: ForecastResponse) -> None:
+def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: ForecastResponse, ttl_override: float | None = None) -> None:
     if _CACHE_TTL_SEC == 0:
         return
     global _CACHE_EVICTIONS
     with _CACHE_LOCK:
         _CACHE[key] = value
         _CACHE_TIME[key] = time.time()
+        # Store per-key TTL (adaptive or default)
+        if ttl_override is not None and ttl_override > 0:
+            _CACHE_TTL_MAP[key] = float(ttl_override)
+        else:
+            _CACHE_TTL_MAP[key] = float(_CACHE_TTL_SEC)
         # Move to end to mark as most recently used
         _CACHE.move_to_end(key)
         _CACHE_TIME.move_to_end(key)
@@ -182,6 +199,7 @@ def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: Forecas
             oldest_key = next(iter(_CACHE))
             _CACHE.pop(oldest_key, None)
             _CACHE_TIME.pop(oldest_key, None)
+            _CACHE_TTL_MAP.pop(oldest_key, None)
             _CACHE_EVICTIONS += 1
         
         # Update Prometheus gauge
@@ -201,14 +219,18 @@ async def cache_stats():
         entries = []
         for k, ts in _CACHE_TIME.items():
             age = now - ts
+            ttl_val = _CACHE_TTL_MAP.get(k, float(_CACHE_TTL_SEC))
             entries.append({'key': {
                 'index': k[0], 'horizon': k[1], 'quantiles': k[2], 'underlying': k[3], 'avg_iv': k[4], 'minutes_to_expiry': k[5], 'recent_window_size': k[6], 'detail': k[7]
-            }, 'age_sec': round(age, 3)})
+            }, 'age_sec': round(age, 3), 'ttl_sec': ttl_val})
         oldest = max((e['age_sec'] for e in entries), default=0.0)
         newest = min((e['age_sec'] for e in entries), default=0.0)
         hit_ratio = (_CACHE_HITS / (_CACHE_HITS + _CACHE_MISSES)) if (_CACHE_HITS + _CACHE_MISSES) else 0.0
         forecast_cache_stats = {
-            'ttl_sec': _CACHE_TTL_SEC,
+            'ttl_sec_default': _CACHE_TTL_SEC,
+            'adaptive': _ADAPTIVE_TTL_ENABLED,
+            'ttl_min': _ADAPTIVE_TTL_MIN,
+            'ttl_max': _ADAPTIVE_TTL_MAX,
             'max_size': _CACHE_MAX_SIZE,
             'size': len(entries),
             'hits': _CACHE_HITS,
@@ -581,6 +603,68 @@ def _infer_live_params(index: str) -> Dict[str, float]:
     return result
 
 # --------------------------- Endpoints ---------------------------
+def _compute_adaptive_ttl(
+    index: str,
+    horizon: int,
+    underlying: float,
+    avg_iv: float,
+    minutes_to_expiry: float,
+    recent_window: list[list[float]] | None,
+) -> float | None:
+    """Compute adaptive TTL seconds based on simple volatility proxies.
+
+    Uses weighted combination of:
+    - avg_iv normalized to reference (_ADAPTIVE_TTL_IV_REF)
+    - recent window normalized return volatility
+
+    Returns None when adaptive TTL is disabled.
+    """
+    if not _ADAPTIVE_TTL_ENABLED:
+        return None
+    try:
+        # Normalize IV approximately to 0..1 by comparing to reference
+        iv_norm = max(0.0, min(1.0, float(avg_iv) / float(_ADAPTIVE_TTL_IV_REF)))
+        iv_norm = min(iv_norm, 2.0) / 2.0  # cap at 2x ref, then map to 0..1
+
+        # Recent window normalized volatility (std of absolute returns)
+        win_norm = 0.0
+        vals: list[float] = []
+        if recent_window:
+            try:
+                vals = [float(row[0]) for row in recent_window if row and len(row) > 0]
+            except Exception:
+                vals = []
+        if len(vals) >= 8:  # need at least 8 points for a rough estimate
+            # Use last up to 60 points
+            seg = vals[-60:]
+            rets: list[float] = []
+            for i in range(1, len(seg)):
+                a = seg[i-1]
+                b = seg[i]
+                denom = max(abs(b), 1e-6)
+                rets.append(abs(b - a) / denom)
+            if rets:
+                # population stddev
+                m = sum(rets) / len(rets)
+                var = sum((r - m) ** 2 for r in rets) / len(rets)
+                std = var ** 0.5
+                # Normalize against 1% baseline
+                win_norm = max(0.0, min(1.0, std / 0.01))
+        # Weighted vol score
+        w_sum = max(1e-6, (_ADAPTIVE_TTL_W_IV + _ADAPTIVE_TTL_W_WIN))
+        vol_score = (_ADAPTIVE_TTL_W_IV * iv_norm + _ADAPTIVE_TTL_W_WIN * win_norm) / w_sum
+        vol_score = max(0.0, min(1.0, vol_score))
+        ttl_span = float(max(0, _ADAPTIVE_TTL_MAX - _ADAPTIVE_TTL_MIN))
+        ttl = float(_ADAPTIVE_TTL_MAX) - vol_score * ttl_span
+        # Final clamp
+        if ttl < _ADAPTIVE_TTL_MIN:
+            ttl = float(_ADAPTIVE_TTL_MIN)
+        if ttl > _ADAPTIVE_TTL_MAX:
+            ttl = float(_ADAPTIVE_TTL_MAX)
+        return ttl
+    except Exception:
+        return None
+
 @router.get('/forecast', response_model=ForecastResponse)
 async def forecast(
     index: str = Query(..., description="Index e.g. NIFTY"),
@@ -739,7 +823,9 @@ async def forecast(
         time_grid=time_grid_obj,
         quantile_paths=quantile_paths_obj
     )
-    _cache_put(cache_key, resp)
+    # Compute adaptive TTL (if enabled) and store alongside entry
+    ttl_override = _compute_adaptive_ttl(idx, horizon, underlying, avg_iv, minutes_to_expiry, recent_window)
+    _cache_put(cache_key, resp, ttl_override=ttl_override)
     
     # Track Prometheus latency metric
     try:
