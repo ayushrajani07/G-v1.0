@@ -782,6 +782,13 @@ async def forecast(
         quantile_paths=quantile_paths_obj
     )
     _cache_put(cache_key, resp)
+
+    # Expose dynamic TTL gauge (adaptive or static) per index
+    try:
+        from ..prom_metrics import set_forecast_cache_dynamic_ttl
+        set_forecast_cache_dynamic_ttl(idx, _current_cache_ttl_sec())
+    except Exception:
+        pass
     
     # Track Prometheus latency metric
     try:

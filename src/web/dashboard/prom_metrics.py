@@ -42,6 +42,7 @@ _FORECAST_COVERAGE: Any = None
 _FORECAST_NORM_ERROR: Any = None
 _FORECAST_ERROR_HIST: Any = None
 _FORECAST_NORM_ERROR_HIST: Any = None
+_FORECAST_CACHE_DYNAMIC_TTL: Any = None
 
 
 def _is_enabled() -> bool:
@@ -141,6 +142,12 @@ def _init_metrics() -> bool:
             "g6_forecast_norm_error",
             "Rolling normalized error (mean abs error divided by band width)",
             labelnames=["index", "horizon"],
+            registry=_REGISTRY,
+        )
+        _FORECAST_CACHE_DYNAMIC_TTL = Gauge(
+            "g6_forecast_cache_dynamic_ttl",
+            "Adaptive forecast cache TTL seconds (current applied value)",
+            labelnames=["index"],
             registry=_REGISTRY,
         )
         # Optional histograms for percentile analysis; buckets configurable via env vars
@@ -413,6 +420,18 @@ __all__ = [
     "observe_forecast_errors",
     "get_registry",
 ]
+
+def set_forecast_cache_dynamic_ttl(index: str, ttl_sec: float) -> None:
+    if not _is_enabled():
+        return
+    _init_metrics()
+    if _FORECAST_CACHE_DYNAMIC_TTL is not None:
+        try:
+            _FORECAST_CACHE_DYNAMIC_TTL.labels(index=index).set(ttl_sec)
+        except Exception as e:  # pragma: no cover
+            _LOG.debug(f"Failed to set dynamic ttl gauge: {e}")
+
+__all__.append('set_forecast_cache_dynamic_ttl')
 
 def get_feature_drift_snapshot(index: str | None = None) -> list[dict[str, float | str]]:
     """Snapshot drift metrics from unified drift registry (if drift enabled).
