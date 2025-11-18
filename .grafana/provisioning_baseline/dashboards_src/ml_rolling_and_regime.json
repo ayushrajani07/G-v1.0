@@ -1,0 +1,134 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "targets": [
+        {
+          "expr": "g6_forecast_mae{index=~\"$index\",horizon=~\"$horizon\"}",
+          "legendFormat": "{{index}} h={{horizon}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Rolling MAE (p50 absolute error)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": {
+        "defaults": { "custom": {}, "unit": "percent" },
+        "overrides": []
+      },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "targets": [
+        {
+          "expr": "g6_forecast_coverage_pct{index=~\"$index\",horizon=~\"$horizon\"}",
+          "legendFormat": "{{index}} h={{horizon}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Coverage % (p10–p90)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": { "defaults": { "custom": {}, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "id": 3,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "targets": [
+        { "expr": "g6_drift_alert_count{index=~\"$index\"}", "legendFormat": "drift {{index}}", "refId": "A" }
+      ],
+      "title": "Drift Alerts (count)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": { "defaults": { "custom": {}, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "id": 4,
+      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "targets": [
+        { "expr": "g6_regime_alert_count{index=~\"$index\"}", "legendFormat": "regime {{index}}", "refId": "A" }
+      ],
+      "title": "Regime Alerts (count)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["g6", "ml", "ensemble"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "NIFTY|BANKNIFTY", "value": "NIFTY|BANKNIFTY" },
+        "hide": 0,
+        "label": "Index (regex)",
+        "name": "index",
+        "options": [],
+        "query": "label_values(g6_forecast_mae, index)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "PROM" }
+      },
+      {
+        "current": { "selected": false, "text": "60|120", "value": "60|120" },
+        "hide": 0,
+        "label": "Horizon (regex)",
+        "name": "horizon",
+        "options": [],
+        "query": "label_values(g6_forecast_mae, horizon)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "PROM" }
+      }
+    ]
+  },
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "ML Ensemble: Rolling & Regime",
+  "version": 1,
+  "weekStart": ""
+}
