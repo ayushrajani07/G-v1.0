@@ -45,6 +45,8 @@ try:
 except Exception:  # pragma: no cover
     stats = None  # type: ignore
 
+from .feature_loader import load_feature_map, feature_names_sorted_by_importance, apply_transform
+
 _LOG = logging.getLogger(__name__)
 
 _DEF_BASELINE_DAYS = 30
@@ -105,12 +107,24 @@ class FeatureLoader:
             _LOG.debug(f"feature_loader recent load failed index={index}: {e}")
         return rows
 
-    def aggregate_feature_values(self, rows: List[Dict[str, float]], feature: str) -> List[float]:
+    def aggregate_feature_values(self, rows: List[Dict[str, float]], feature: str, feature_map: Optional[Dict[str, Any]] = None) -> List[float]:
         values: List[float] = []
+        fmap = feature_map or {}
+        spec = fmap.get(feature)
+        csv_col = spec.csv_col if spec else feature
         for r in rows:
-            v = r.get(feature)
-            if v is not None and math.isfinite(v):
-                values.append(float(v))
+            v = r.get(csv_col)
+            if v is None:
+                continue
+            try:
+                val = float(v)
+            except Exception:
+                continue
+            if not math.isfinite(val):
+                continue
+            if spec:
+                val = apply_transform(fmap, feature, val)
+            values.append(val)
         return values
 
     def load_range_rows(self, index: str, days: int, daily_limit: Optional[int] = None) -> List[Dict[str, float]]:
@@ -158,6 +172,8 @@ class DriftMonitor:
         self.baseline_dir.mkdir(parents=True, exist_ok=True)
         self.baseline_history_dir.mkdir(parents=True, exist_ok=True)
         self.loader = FeatureLoader(self.root / 'data' / 'g6_data')
+        # Feature mapping
+        self.feature_map = load_feature_map()
         # Smoothing config
         self.smoothing_enabled = bool(_env_int('G6_DRIFT_ENABLE_SMOOTHING', 0))
         self.smoothing_half_life = _env_float('G6_DRIFT_SMOOTHING_HALF_LIFE', 5.0)
@@ -172,13 +188,10 @@ class DriftMonitor:
         else:
             rows = self.loader.load_recent_rows(index, self.recent_rows)
         if features is None:
-            # Initial feature selection (placeholder list)
-            features = [
-                'tp','ce_iv','pe_iv','ce_gamma','pe_gamma','ce_vega','pe_vega','ce_theta','pe_theta','ce_vol','pe_vol','ce_oi','pe_oi'
-            ]
+            features = feature_names_sorted_by_importance(self.feature_map)
         data: Dict[str, Any] = {}
         for feat in features:
-            vals = self.loader.aggregate_feature_values(rows, feat)
+            vals = self.loader.aggregate_feature_values(rows, feat, self.feature_map)
             if not vals:
                 continue
             arr = np.array(vals)
