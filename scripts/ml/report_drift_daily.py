@@ -137,6 +137,9 @@ def main():
     ap.add_argument('--output', help='Output JSON file path', required=True)
     ap.add_argument('--pretty', action='store_true', help='Pretty-print JSON')
     ap.add_argument('--textfile-dir', help='Optional directory to emit Prometheus textfile metrics', default=None)
+    ap.add_argument('--retain-days', type=int, default=None, help='Delete daily_*.json older than N days in reports/drift')
+    ap.add_argument('--trend-days', type=int, default=None, help='Build trend.json from last N days of daily_*.json')
+    ap.add_argument('--trend-output', default='reports/drift/trend.json', help='Path to write severity trend JSON')
     args = ap.parse_args()
     if args.indices:
         indices = [s.strip().upper() for s in args.indices.split(',') if s.strip()]
@@ -178,6 +181,52 @@ def main():
     print(args.output)
     if textfile_path:
         print(textfile_path)
+    # Retention & trend generation
+    import glob, os
+    from datetime import timedelta
+    drift_dir = os.path.dirname(args.output) or '.'
+    if args.retain_days is not None:
+        cutoff = datetime.now(timezone.utc) - timedelta(days=int(args.retain_days))
+        removed = []
+        for p in glob.glob(os.path.join(drift_dir, 'daily_*.json')):
+            try:
+                with open(p,'r',encoding='utf-8') as f:
+                    d = json.load(f)
+                ts = d.get('generated_at')
+                dt = datetime.fromisoformat(str(ts).replace('Z','+00:00')) if ts else None
+                if dt and dt < cutoff:
+                    os.remove(p)
+                    removed.append(os.path.basename(p))
+            except Exception:
+                continue
+        if removed:
+            print('pruned:', ','.join(removed))
+    if args.trend_days is not None:
+        series = []
+        files = sorted(glob.glob(os.path.join(drift_dir, 'daily_*.json')))
+        # Use last N files by generated_at
+        items = []
+        for p in files:
+            try:
+                d = json.load(open(p,'r',encoding='utf-8'))
+                ts = d.get('generated_at')
+                dt = datetime.fromisoformat(str(ts).replace('Z','+00:00')) if ts else None
+                if dt:
+                    items.append((dt, d))
+            except Exception:
+                continue
+        items.sort(key=lambda x: x[0])
+        if args.trend_days > 0:
+            items = items[-int(args.trend_days):]
+        for dt, d in items:
+            series.append({
+                'generated_at': d.get('generated_at'),
+                'aggregate_counts': d.get('aggregate_counts', {}),
+            })
+        os.makedirs(os.path.dirname(args.trend_output) or '.', exist_ok=True)
+        with open(args.trend_output, 'w', encoding='utf-8') as tf:
+            json.dump({'series': series, 'count': len(series)}, tf, indent=2)
+        print(args.trend_output)
 
 if __name__ == '__main__':
     main()

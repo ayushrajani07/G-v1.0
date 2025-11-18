@@ -210,3 +210,53 @@ async def api_ml_universal_advisor_drift_advice(
     if detail:
         result['features'] = entries
     return JSONResponse(result)
+
+# ---- Drift reporting JSON endpoints (for Infinity/JSON API ingestion) ----
+@router.get('/api/ml/drift/daily_reports/latest')
+async def api_ml_drift_daily_report_latest():
+    """Return latest daily drift report JSON from reports/drift.
+
+    This enables Grafana JSON API/Infinity to ingest historical summaries without re-computation.
+    """
+    import os, json, glob
+    from datetime import datetime
+    try:
+        base = os.path.join(os.getcwd(), 'reports', 'drift')
+        files = sorted(glob.glob(os.path.join(base, 'daily_*.json')))
+        if not files:
+            # Fallback: any daily*.json
+            files = sorted(glob.glob(os.path.join(base, 'daily*.json')))
+        if not files:
+            return JSONResponse({'error': 'no_reports'}, status_code=404)
+        latest = files[-1]
+        with open(latest, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return JSONResponse(data)
+    except Exception:
+        return JSONResponse({'error': 'read_failed'}, status_code=500)
+
+@router.get('/api/ml/drift/daily_reports/trend')
+async def api_ml_drift_daily_report_trend(days: int = 7):
+    """Return severity trend series aggregated from reports/drift daily_*.json (last N days)."""
+    import os, json, glob
+    from datetime import datetime
+    base = os.path.join(os.getcwd(), 'reports', 'drift')
+    files = sorted(glob.glob(os.path.join(base, 'daily_*.json')))
+    items = []
+    for p in files:
+        try:
+            d = json.load(open(p,'r',encoding='utf-8'))
+            ts = d.get('generated_at')
+            dt = datetime.fromisoformat(str(ts).replace('Z','+00:00')) if ts else None
+            if dt:
+                items.append((dt, d))
+        except Exception:
+            continue
+    items.sort(key=lambda x: x[0])
+    if days and days > 0:
+        items = items[-int(days):]
+    series = [{
+        'generated_at': d.get('generated_at'),
+        'aggregate_counts': d.get('aggregate_counts', {}),
+    } for _, d in items]
+    return JSONResponse({'series': series, 'count': len(series)})
