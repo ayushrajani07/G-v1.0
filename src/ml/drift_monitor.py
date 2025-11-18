@@ -1,4 +1,4 @@
-"""Drift Monitoring Module (Phase 10 – P1 Hardening)
+"""Drift Monitoring Module (Phase 10 – P4 Smoothing & Quantile Caching)
 
 Implements production-ready drift detection for feature distributions:
  - PSI (Population Stability Index) using quantile binning
@@ -26,6 +26,8 @@ Environment Variables (core):
  - G6_DRIFT_VAR_RATIO_CRIT_LOW (default 0.5)
  - G6_DRIFT_MAX_FEATURES (default 30)
  - G6_DRIFT_BASELINE_REFRESH_DAYS (default 30)
+ - G6_DRIFT_ENABLE_SMOOTHING (default 0)
+ - G6_DRIFT_SMOOTHING_HALF_LIFE (default 5) (cycles)
 
 Note: Baseline refresh logic will be implemented in P2; hooks included now.
 """
@@ -141,9 +143,15 @@ class DriftMonitor:
         self.baseline_dir = self.root / 'metrics' / 'drift_baselines'
         self.baseline_dir.mkdir(parents=True, exist_ok=True)
         self.loader = FeatureLoader(self.root / 'data' / 'g6_data')
+        # Smoothing config
+        self.smoothing_enabled = bool(_env_int('G6_DRIFT_ENABLE_SMOOTHING', 0))
+        self.smoothing_half_life = _env_float('G6_DRIFT_SMOOTHING_HALF_LIFE', 5.0)
+        self._smoothing_state: Dict[str, Dict[str, float]] = {}
+        # Quantile edge cache (feature -> edges list)
+        self._quantile_cache: Dict[str, List[float]] = {}
 
     def compute_feature_distributions(self, index: str, lookback_days: int, features: Optional[List[str]] = None) -> Dict[str, Any]:
-        # For now only loads recent rows for baseline aggregation (no multi-day merge yet – P2 enhancement).
+        # Note: multi-day aggregation for baseline pending (P2). Quantile edges cached only for baseline.
         rows = self.loader.load_recent_rows(index, self.recent_rows if lookback_days == 0 else self.recent_rows)
         if features is None:
             # Initial feature selection (placeholder list)
@@ -156,14 +164,20 @@ class DriftMonitor:
             if not vals:
                 continue
             arr = np.array(vals)
-            quantiles = list(np.quantile(arr, np.linspace(0,1,self.num_bins+1)))
+            # For baseline (lookback_days>0) compute and cache quantiles; for recent reuse baseline quantiles
+            if lookback_days > 0:
+                quantiles = list(np.quantile(arr, np.linspace(0,1,self.num_bins+1)))
+                self._quantile_cache[feat] = [float(q) for q in quantiles]
+            else:
+                # Recent window: do not recompute quantiles; rely on baseline cache (may be missing if feature newly added)
+                quantiles = self._quantile_cache.get(feat)
             data[feat] = {
                 'values': vals,
                 'mean': float(arr.mean()),
                 'std': float(arr.std(ddof=0)),
                 'min': float(arr.min()),
                 'max': float(arr.max()),
-                'quantiles': [float(q) for q in quantiles]
+                'quantiles': [float(q) for q in quantiles] if quantiles is not None else None
             }
             if len(data) >= self.max_features:
                 break
@@ -202,6 +216,14 @@ class DriftMonitor:
             baseline_std = b['std'] if b['std'] > 0 else 1.0
             mean_z = mean_delta / baseline_std
             var_delta_ratio = (r['std']**2) / (b['std']**2) if b['std'] > 0 else 1.0
+            # Optional EWMA smoothing prior to classification
+            original = {
+                'psi': psi,
+                'mean_z': mean_z,
+                'var_ratio': var_delta_ratio,
+            }
+            if self.smoothing_enabled:
+                psi, mean_z, var_delta_ratio = self._apply_smoothing(feat, psi, mean_z, var_delta_ratio)
             severity, reasons = self._classify(psi, ks_p, mean_z, var_delta_ratio)
             out[feat] = {
                 'psi': psi,
@@ -210,6 +232,9 @@ class DriftMonitor:
                 'mean_delta': mean_delta,
                 'mean_delta_zscore': mean_z,
                 'var_ratio': var_delta_ratio,
+                'psi_raw': original['psi'],
+                'mean_delta_zscore_raw': original['mean_z'],
+                'var_ratio_raw': original['var_ratio'],
                 'severity': severity,
                 'reasons': reasons,
                 'bins': bins
@@ -267,6 +292,24 @@ class DriftMonitor:
         if watch:
             return 'watch', reasons
         return 'stable', reasons
+
+    def _apply_smoothing(self, feat: str, psi: float, mean_z: float, var_ratio: float) -> Tuple[float,float,float]:
+        # Half-life smoothing: alpha derived from half-life cycles H: alpha = 1 - 0.5^(1/H)
+        H = max(self.smoothing_half_life, 0.1)
+        alpha = 1.0 - math.pow(0.5, 1.0 / H)
+        st = self._smoothing_state.setdefault(feat, {})
+        def _ewma(key: str, current: float) -> float:
+            prev = st.get(key)
+            if prev is None:
+                st[key] = current
+                return current
+            val = alpha * current + (1 - alpha) * prev
+            st[key] = val
+            return val
+        s_psi = _ewma('psi', psi)
+        s_mean_z = _ewma('mean_z', mean_z)
+        s_var_ratio = _ewma('var_ratio', var_ratio)
+        return s_psi, s_mean_z, s_var_ratio
 
     # Persistence
     def baseline_path(self, index: str) -> Path:
