@@ -143,6 +143,29 @@ _CACHE_MISSES = 0
 _CACHE_EVICTIONS = 0
 _CACHE_START_TIME = time.time()
 
+# Key normalization (bucket avg_iv) optional controls
+_NORMALIZE_AVG_IV = str(os.environ.get('G6_FORECAST_CACHE_NORMALIZE_AVG_IV', '0')).lower() in ('1','true','yes','on')
+_AVG_IV_BUCKET_EDGES: list[float] = []
+try:
+    _AVG_IV_BUCKET_EDGES = [float(p.strip()) for p in os.environ.get('G6_FORECAST_CACHE_AVG_IV_BUCKETS', '0.2,0.35,0.5').split(',') if p.strip()]
+    _AVG_IV_BUCKET_EDGES = sorted({e for e in _AVG_IV_BUCKET_EDGES if e > 0.0})
+except Exception:
+    _AVG_IV_BUCKET_EDGES = [0.2, 0.35, 0.5]
+if not _AVG_IV_BUCKET_EDGES:
+    _AVG_IV_BUCKET_EDGES = [0.2, 0.35, 0.5]
+
+def _bucket_avg_iv(val: float) -> float:
+    """Return bucket edge for avg_iv if normalization enabled else original.
+
+    Uses first edge >= val else returns last edge.
+    """
+    if not _NORMALIZE_AVG_IV:
+        return val
+    for edge in _AVG_IV_BUCKET_EDGES:
+        if val <= edge:
+            return edge
+    return _AVG_IV_BUCKET_EDGES[-1]
+
 # --------------------------- Recent Window File Cache ---------------------------
 # Cache for recent TP window loaded from CSV to reduce disk I/O and parsing
 _RECENT_FILE_CACHE: Dict[Tuple[str, str, int], Dict[str, Any]] = {}
@@ -288,6 +311,8 @@ async def cache_stats():
             'ttl_remaining_max_sec': round(ttl_remaining_max, 3),
             'ttl_remaining_avg_sec': round(ttl_remaining_avg, 3),
             'ttl_distribution': buckets,
+            'avg_iv_normalization_enabled': _NORMALIZE_AVG_IV,
+            'avg_iv_bucket_edges': _AVG_IV_BUCKET_EDGES,
             'entries': entries[:50],  # cap detail
         }
     
@@ -774,7 +799,9 @@ async def forecast(
 
     # Cache key derived from stable inputs - include detail param to avoid returning wrong response type
     detail_normalized = detail.lower() if detail else ""
-    cache_key = (idx, horizon, quantiles, underlying, avg_iv, minutes_to_expiry, recent_window_size, detail_normalized)
+    # Apply avg_iv bucket normalization ONLY to cache key (response retains original avg_iv)
+    avg_iv_bucket = _bucket_avg_iv(avg_iv)
+    cache_key = (idx, horizon, quantiles, underlying, avg_iv_bucket, minutes_to_expiry, recent_window_size, detail_normalized)
     cached: Optional[ForecastResponse] = None
     if cache_bust == 0:
         cached = _cache_get(cache_key)
