@@ -62,21 +62,26 @@ jobs:
           curl http://localhost:9210/health || exit 1
         timeout-minutes: 2
       
-      - name: Run short load test (sync version)
+      - name: Run short load test (async version)
         run: |
           DURATION=${{ github.event.inputs.duration || '10' }}
-          QPS=${{ github.event.inputs.qps || '5' }}
+          QPS=${{ github.event.inputs.qps || '10' }}
           
-          echo "Running load test: duration=${DURATION}s, qps=${QPS}"
+          echo "Running async load test: duration=${DURATION}s, qps=${QPS}"
           
-          # Use legacy sync version for CI (no httpx dependency issues)
-          python scripts/ml/load_test_ensemble_legacy.py \
+          # Create reports directory
+          mkdir -p reports
+          
+          # Use async version with httpx for higher concurrency
+          python scripts/ml/load_test_ensemble_async.py \
             --api-host localhost \
             --api-port 9210 \
-            --index NIFTY \
-            --concurrent-requests 5 \
+            --indices NIFTY \
+            --qps ${QPS} \
+            --concurrency 5 \
             --duration ${DURATION} \
-            --output reports/load_test_results.json
+            --output reports/load_test_results.json \
+            --csv-out reports/load_test_latencies.csv
         continue-on-error: true
         timeout-minutes: 5
       
@@ -109,9 +114,64 @@ jobs:
           name: load-test-results
           path: |
             reports/load_test_results.json
+            reports/load_test_latencies.csv
             reports/metrics_validation.json
             reports/cache_metrics.json
           retention-days: 30
+      
+      - name: Check performance thresholds
+        if: always()
+        run: |
+          echo "========================================"
+          echo "Checking Performance Thresholds"
+          echo "========================================"
+          
+          if [ ! -f reports/load_test_results.json ]; then
+            echo "ERROR: Load test results not found"
+            exit 1
+          fi
+          
+          # Extract metrics using jq
+          ERROR_RATE=$(jq -r '.summary.error_rate // 1' reports/load_test_results.json)
+          P95_LATENCY=$(jq -r '.latency_ms.p95 // 9999' reports/load_test_results.json)
+          OVERALL_PASS=$(jq -r '.targets.overall_pass // false' reports/load_test_results.json)
+          
+          echo "Metrics:"
+          echo "  Error Rate: ${ERROR_RATE}"
+          echo "  P95 Latency: ${P95_LATENCY}ms"
+          echo "  Overall Pass: ${OVERALL_PASS}"
+          echo ""
+          
+          # Check thresholds (error rate > 2%, p95 > 1000ms)
+          THRESHOLD_ERROR_RATE=0.02
+          THRESHOLD_P95=1000
+          
+          # Use awk for float comparison
+          ERROR_RATE_OK=$(awk -v rate="$ERROR_RATE" -v threshold="$THRESHOLD_ERROR_RATE" 'BEGIN {print (rate <= threshold) ? "true" : "false"}')
+          P95_OK=$(awk -v p95="$P95_LATENCY" -v threshold="$THRESHOLD_P95" 'BEGIN {print (p95 <= threshold) ? "true" : "false"}')
+          
+          echo "Threshold Checks:"
+          echo "  Error Rate <= ${THRESHOLD_ERROR_RATE} (2%): ${ERROR_RATE_OK}"
+          echo "  P95 <= ${THRESHOLD_P95}ms: ${P95_OK}"
+          echo "========================================"
+          
+          # Fail if thresholds are violated
+          if [ "$ERROR_RATE_OK" = "false" ]; then
+            echo "ERROR: Error rate ${ERROR_RATE} exceeds threshold ${THRESHOLD_ERROR_RATE}"
+            exit 1
+          fi
+          
+          if [ "$P95_OK" = "false" ]; then
+            echo "ERROR: P95 latency ${P95_LATENCY}ms exceeds threshold ${THRESHOLD_P95}ms"
+            exit 1
+          fi
+          
+          if [ "$OVERALL_PASS" = "false" ]; then
+            echo "ERROR: Load test did not pass overall checks"
+            exit 1
+          fi
+          
+          echo "✓ All performance thresholds passed"
       
       - name: Display results summary
         if: always()

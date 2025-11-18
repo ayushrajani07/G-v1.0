@@ -747,6 +747,14 @@ async def forecast(
         observe_forecast_latency(idx, horizon, latency_ms)
     except Exception:
         pass
+
+    # Rolling MAE: log p50 forecast for future evaluation (Phase 10 initial stub)
+    try:
+        from ..rolling_mae import log_forecast_event, ensure_started  # type: ignore
+        ensure_started()
+        log_forecast_event(idx, horizon, now_ms, p50, underlying, band_low, band_high)
+    except Exception:
+        pass
     
     return resp
 
@@ -792,3 +800,51 @@ async def retrain(req: RetrainRequest):
         raise HTTPException(status_code=404, detail=f"forecaster_unavailable: {idx}")
     job_id = f"retrain_{idx}_{int(time.time())}"
     return RetrainResponse(index=idx, status='scheduled', job_id=job_id, parameters={'training_days': req.days, 'validate': req.run_validation}, estimated_completion='in 2 hours', message='Retraining job scheduled successfully')
+
+@router.post('/metrics/flush')
+async def metrics_flush():
+    """Force flush rolling MAE & coverage state to persistence file (Phase 10).
+
+    Returns summary of persisted keys; no-op if persistence disabled.
+    """
+    try:
+        from ..rolling_mae import ensure_started, force_flush_state  # type: ignore
+        ensure_started()
+        result = force_flush_state()
+        return {"status": "ok", **result}
+    except Exception as e:
+        _LOG.warning(f"metrics_flush_failed: {e}")
+        raise HTTPException(status_code=500, detail="metrics_flush_failed")
+
+@router.get('/metrics/compare')
+async def metrics_compare(
+    index: Optional[str] = Query(None, description="Optional index filter e.g. NIFTY"),
+    horizon: Optional[int] = Query(None, ge=1, le=720, description="Optional horizon filter in minutes"),
+):
+    """Return comparison of rolling window vs EMA metrics (Phase 10 diagnostic).
+
+    Supports optional filtering by index & horizon. Includes:
+    - window & EMA MAE
+    - window & EMA coverage
+    - window & EMA normalized error
+    - p50/p90 percentiles for error, normalized error, band width (if >=5 samples)
+    - last evaluation timestamp (epoch ms)
+    """
+    try:
+        from ..rolling_mae import ensure_started, get_metric_comparison  # type: ignore
+        ensure_started()
+        return get_metric_comparison(index=index, horizon=horizon)
+    except Exception as e:
+        _LOG.warning(f"metrics_compare_failed: {e}")
+        raise HTTPException(status_code=500, detail="metrics_compare_failed")
+
+@router.get('/metrics/decay/validate')
+async def metrics_decay_validate():
+    """Return decay configuration validation (precedence & derived alpha)."""
+    try:
+        from ..rolling_mae import ensure_started, validate_decay_config  # type: ignore
+        ensure_started()
+        return validate_decay_config()
+    except Exception as e:
+        _LOG.warning(f"metrics_decay_validate_failed: {e}")
+        raise HTTPException(status_code=500, detail="metrics_decay_validate_failed")

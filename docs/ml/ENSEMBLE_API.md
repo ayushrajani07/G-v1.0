@@ -1,20 +1,23 @@
 # Ensemble API Reference
 
-**Version:** 1.1  
+**Version:** 1.2  
 **Last Updated:** 2025-11-17  
-**Status:** Production
+**Status:** Production (Phase 10 kickoff)
 
 ## Overview
 
-The ML Ensemble Forecasting API provides real-time price path predictions combining multiple forecasting models (GBRT, retrieval-based, conformal prediction) with Phase 9 performance optimizations.
+The ML Ensemble Forecasting API provides real-time price path predictions combining multiple forecasting models (GBRT, retrieval-based, conformal prediction) with Phase 9 performance optimizations and new Phase 10 observability extensions (latency percentile selector, eviction rate trend).
 
 **Base URL:** `http://localhost:9500/api/ml/ensemble`
 
 **Key Features:**
 - Real-time ensemble forecasting with quantile predictions
-- Full detail mode with time grid and quantile paths
-- Phase 9 ANN cache metrics (window + disk cache)
+- Full detail mode with time grid and quantile paths (`detail=full`)
+- Caching layer (TTL + LRU bound) with eviction statistics
+- Recent window file cache (TTL + size bound, reuse larger window subsets)
+- Prometheus metrics export (latency histogram buckets, eviction counter, hit/miss counters)
 - Component diagnostics and health checks
+- Grafana dashboards (Infinity + JSON API variants) with latency percentile selector
 - Backward-compatible API design
 
 ---
@@ -221,32 +224,42 @@ python -m pytest -q
 
 ## Environment Variables
 
+### Core
+
+- `ENABLE_PATH_FORECAST_PROM_METRICS` (int, default: `1`): Enables Prometheus metrics export (`/metrics`). Set to `0` to disable.
+- `G6_DIAG_ENABLE` (int, default: `1`): Enables diagnostic endpoints.
+- `PATH_FORECAST_DISABLE_WEIGHTED` (int, default: `0`): Disable weighted quantile computation (performance fallback).
+
 ### Forecast Cache Configuration
 
 - `G6_FORECAST_CACHE_TTL` (int, default: `30`): Time-to-live in seconds for forecast cache entries.
+- `G6_FORECAST_CACHE_MAX` (int, default: `500`): Maximum number of forecast cache entries (LRU eviction enforced when exceeded).
 
 ### Recent Window File Cache Configuration
 
-The recent window file cache reduces disk I/O and CSV parsing overhead when loading recent TP data:
+Reduces disk I/O and CSV parsing overhead when loading recent TP data.
 
-- `G6_RECENT_FILE_CACHE_TTL` (int, default: `60`): Time-to-live in seconds for cached recent window data. Set to `0` to disable caching.
-- `G6_RECENT_FILE_CACHE_MAX_SIZE` (int, default: `50`): Maximum number of cache entries. Oldest entries are evicted when limit is reached.
+- `G6_RECENT_FILE_CACHE_TTL` (int, default: `60`): TTL for cached recent window data (set `0` to disable).
+- `G6_RECENT_FILE_CACHE_MAX_SIZE` (int, default: `50`): Maximum number of cached recent file windows.
 
-**Cache Key:** `(index, date_str, window_size)`
-- Cache automatically invalidates when file mtime changes
-- Cache can reuse larger windows for smaller requests (e.g., cached 100 rows can serve request for 60 rows)
+**Recent File Cache Key:** `(index, date_str, window_size)`
+- Invalidates automatically on file mtime change.
+- Larger cached window can serve smaller requested window sizes.
 
 **Example:**
 ```bash
+export G6_FORECAST_CACHE_TTL=30
+export G6_FORECAST_CACHE_MAX=500
 export G6_RECENT_FILE_CACHE_TTL=120
 export G6_RECENT_FILE_CACHE_MAX_SIZE=100
+export ENABLE_PATH_FORECAST_PROM_METRICS=1
 ```
 
 ---
 
-## Cache Statistics
+## Cache & Metrics Statistics
 
-The `/api/ml/ensemble/cache/stats` endpoint returns statistics for both forecast cache and recent file cache:
+The `/api/ml/ensemble/cache/stats` endpoint returns statistics for both forecast cache and recent file cache (subset of fields shown). Additional metrics are exposed via Prometheus when `ENABLE_PATH_FORECAST_PROM_METRICS=1`.
 
 **Response Structure:**
 ```json
@@ -285,187 +298,47 @@ The `/api/ml/ensemble/cache/stats` endpoint returns statistics for both forecast
 }
 ```
 
-**Cache Metrics:**
-- `recent_file_cache_hits`: Number of times data was served from cache
-- `recent_file_cache_misses`: Number of times data was loaded from disk
-- `recent_file_cache_current_entries`: Current number of entries in cache
+### Cache Metrics (Prometheus Counters/Gauges)
+- `g6_forecast_cache_hits_total`: Total forecast cache hits
+- `g6_forecast_cache_misses_total`: Total forecast cache misses
+- `g6_forecast_cache_evictions_total`: Total forecast cache evictions (LRU)
+- `g6_forecast_cache_size`: Current number of forecast cache entries
+- `g6_recent_file_cache_hits_total`: Recent file cache hits
+- `g6_recent_file_cache_misses_total`: Recent file cache misses
+- `g6_recent_file_cache_entries`: Current recent file cache entry count
 
-The cache significantly reduces latency when the same recent window is requested multiple times within the TTL period.
+### Latency Histogram Metrics
+Histogram: `g6_forecast_latency_ms_bucket`, with companion `g6_forecast_latency_ms_sum`, `g6_forecast_latency_ms_count`.
 
----
-
-## Prometheus Metrics
-
-The ensemble API exposes Prometheus metrics when enabled via `ENABLE_PATH_FORECAST_PROM_METRICS=1`.
-
-### Available Metrics
-
-| Metric Name | Type | Labels | Description |
-|-------------|------|--------|-------------|
-| `g6_forecast_latency_ms` | Histogram | `index`, `horizon` | Distribution of forecast request latency in milliseconds |
-| `g6_forecast_cache_hits_total` | Counter | `index` | Total number of forecast cache hits |
-| `g6_forecast_cache_misses_total` | Counter | `index` | Total number of forecast cache misses |
-| `g6_forecast_cache_size` | Gauge | - | Current number of entries in forecast cache |
-| `g6_recent_window_cache_hits_total` | Counter | `index` | Total number of recent window file cache hits |
-| `g6_recent_window_cache_misses_total` | Counter | `index` | Total number of recent window file cache misses |
-| `g6_recent_window_cache_size` | Gauge | - | Current number of entries in recent window cache |
-
-### Example Queries
-
-**Check forecast latency:**
-```bash
-curl http://localhost:9500/metrics | grep g6_forecast_latency_ms
+Quantiles (Grafana):
+```promql
+histogram_quantile(${lat_q}, sum by (le) (rate(g6_forecast_latency_ms_bucket[5m])))
 ```
 
-**Monitor cache hit ratio:**
-```bash
-curl http://localhost:9500/metrics | grep -E "g6_forecast_cache_(hits|misses)_total"
+Mean latency:
+```promql
+rate(g6_forecast_latency_ms_sum[5m]) / rate(g6_forecast_latency_ms_count[5m])
 ```
 
-**Check recent window cache performance:**
-```bash
-curl http://localhost:9500/metrics | grep g6_recent_window_cache
+Eviction rate (LRU pressure):
+```promql
+rate(g6_forecast_cache_evictions_total[5m])
 ```
 
-For complete Prometheus integration guide, see [`docs/prometheus_metrics_guide.md`](../prometheus_metrics_guide.md).
+### Dashboard Variables
+- `index` (e.g., NIFTY, BANKNIFTY)
+- `horizon` (15,30,60,120,240)
+- `lat_q` (0.90,0.95,0.99) – used in latency histogram quantile selection
 
----
+### Operational Notes
+- High eviction rate with stable size indicates LRU pressure: consider increasing `G6_FORECAST_CACHE_MAX` or optimizing key cardinality.
+- Low hit ratio with frequent evictions may indicate overly aggressive horizon diversity; review typical query distribution.
+- Recent file cache hit ratio <50%: consider raising TTL or window reuse strategy.
 
-## Common Integration Patterns
+### Alerting Suggestions
+- Latency p95 > 500ms for 5m → Performance degradation alert.
+- Eviction rate spikes > 2/sec sustained 5m → Investigate cache size; possible thrashing.
+- Cache hit ratio <40% over 15m → Inspect request diversity & TTL.
+- Recent file cache hit ratio <50% over 30m → Validate data freshness vs TTL.
 
-### 1. Polling for Updates
-
-Poll the forecast endpoint at regular intervals to track market predictions:
-
-```bash
-# Poll every 30 seconds
-while true; do
-  curl -s "http://localhost:9500/api/ml/ensemble/forecast?index=NIFTY&horizon=60" | jq '.forecast'
-  sleep 30
-done
-```
-
-### 2. Diffing Snapshots
-
-Compare consecutive forecasts to identify significant changes:
-
-```python
-import requests
-import time
-import json
-
-def get_forecast(index="NIFTY", horizon=60):
-    url = f"http://localhost:9500/api/ml/ensemble/forecast"
-    params = {"index": index, "horizon": horizon}
-    return requests.get(url, params=params).json()
-
-def diff_forecasts(old, new):
-    """Compare two forecast snapshots."""
-    changes = {}
-    for key in ['p10', 'p50', 'p90']:
-        old_val = old['forecast'].get(key, 0)
-        new_val = new['forecast'].get(key, 0)
-        change_pct = ((new_val - old_val) / old_val * 100) if old_val != 0 else 0
-        changes[key] = {
-            'old': old_val,
-            'new': new_val,
-            'change_pct': round(change_pct, 2)
-        }
-    return changes
-
-# Example usage
-old_forecast = get_forecast()
-time.sleep(60)
-new_forecast = get_forecast()
-print(json.dumps(diff_forecasts(old_forecast, new_forecast), indent=2))
-```
-
-### 3. Path Visualization
-
-Use `detail=full` mode to retrieve time series data for visualization:
-
-```python
-import requests
-import matplotlib.pyplot as plt
-from datetime import datetime
-
-def visualize_forecast_paths(index="NIFTY", horizon=120):
-    url = "http://localhost:9500/api/ml/ensemble/forecast"
-    params = {
-        "index": index,
-        "horizon": horizon,
-        "detail": "full",
-        "quantiles": "0.1,0.5,0.9"
-    }
-    
-    response = requests.get(url, params=params).json()
-    
-    # Extract time grid and paths
-    time_values = [datetime.fromtimestamp(t/1000) for t in response['time_grid']['values']]
-    
-    # Plot quantile paths
-    plt.figure(figsize=(12, 6))
-    plt.plot(time_values, response['quantile_paths']['p10'], label='P10', linestyle='--')
-    plt.plot(time_values, response['quantile_paths']['p50'], label='P50 (Median)', linewidth=2)
-    plt.plot(time_values, response['quantile_paths']['p90'], label='P90', linestyle='--')
-    plt.fill_between(time_values, 
-                     response['quantile_paths']['p10'], 
-                     response['quantile_paths']['p90'], 
-                     alpha=0.2)
-    
-    plt.xlabel('Time')
-    plt.ylabel('Forecast Value')
-    plt.title(f'{index} Ensemble Forecast - {horizon} min horizon')
-    plt.legend()
-    plt.grid(True, alpha=0.3)
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
-
-# Example usage
-visualize_forecast_paths(index="NIFTY", horizon=120)
-```
-
----
-
-## Versioning & Deprecation Guarantees
-
-**Current Version:** 1.1
-
-### API Stability Commitment
-
-- **Backward Compatibility:** All existing response fields are guaranteed to remain stable across minor version updates (1.x).
-- **Additive Changes Only:** New fields may be added without version bump; clients should ignore unknown fields.
-- **Deprecation Notice:** Any field deprecation will include:
-  - Minimum 2 minor version notice period
-  - Warning headers in API responses
-  - Migration guide in release notes
-- **Breaking Changes:** Major version bump (2.0) required for:
-  - Removing or renaming existing fields
-  - Changing field types or semantics
-  - Modifying default behavior
-
-### Current Guarantees
-
-- **Port 9500** confirmed as stable production port
-- **Full detail mode** (`detail=full`) schema locked for Phase 9
-- **Cache TTL** environment variables maintain backward compatibility with defaults
-- **Metrics endpoint** (`/metrics`) contract stable when `ENABLE_PATH_FORECAST_PROM_METRICS=1`
-
-For detailed deprecation timeline and migration paths, see [`docs/DEPRECATIONS.md`](../DEPRECATIONS.md).
-
----
-
-## Phase 9 Issue Traceability
-
-This API implementation incorporates features from the following Phase 9 issues:
-
-- **ISSUE_FULL_DETAIL_MODE.md** - Time grid and quantile paths support
-- **ISSUE_FORECAST_CACHE_LRU.md** - Forecast cache with TTL configuration
-- **ISSUE_RECENT_WINDOW_FILE_CACHE.md** - Recent window file caching optimization
-- **ISSUE_PROMETHEUS_METRICS.md** - Prometheus metrics exposure
-- **ISSUE_ASYNC_LOAD_TEST_AND_CI.md** - Load testing and CI integration
-- **ISSUE_METRICS_VALIDATOR.md** - Metrics validation and integrity
-- **ISSUE_DOCS_HARDENING.md** - Documentation consolidation (this document)
-
-See [`docs/ml/issues/`](./issues/) for detailed implementation specifications. 
+The cache layers significantly reduce latency when identical or similar requests recur within TTL windows; latency histogram plus eviction trend aid adaptive tuning in Phase 10.
