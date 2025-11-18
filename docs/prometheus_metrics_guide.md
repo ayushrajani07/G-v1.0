@@ -246,9 +246,39 @@ The `/metrics` endpoint does not require authentication by default. In productio
 3. Exposing metrics on a separate port/interface
 4. Using Prometheus federation for multi-tier scraping
 
+## Integration with Ensemble API
+
+The metrics exposed here integrate with the ML Ensemble Forecasting API. For detailed API documentation including:
+- Full forecast response schemas
+- Cache configuration options
+- Common integration patterns
+- Phase 9 feature descriptions
+
+See **[ML Ensemble API Reference](./ml/ENSEMBLE_API.md)**.
+
+### Quick Examples for Ensemble API
+
+**Test metrics are being collected:**
+```bash
+# Make a forecast request
+curl "http://localhost:9500/api/ml/ensemble/forecast?index=NIFTY&horizon=60"
+
+# Check metrics were recorded
+curl http://localhost:9500/metrics | grep g6_forecast_latency_ms
+```
+
+**Monitor cache effectiveness:**
+```bash
+# Check cache stats via API
+curl "http://localhost:9500/api/ml/ensemble/cache/stats" | jq
+
+# Check metrics
+curl http://localhost:9500/metrics | grep -E "g6_(forecast|recent_window)_cache"
+```
+
 ## Related Documentation
 
-- [Path Forecast API Documentation](./path_forecast_api.md)
-- [Cache Configuration Guide](./cache_configuration.md)
+- [ML Ensemble API Reference](./ml/ENSEMBLE_API.md) - **Primary API documentation**
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
+- [G6 Environment Variables Catalog](./ENV_VARS_CATALOG.md)
