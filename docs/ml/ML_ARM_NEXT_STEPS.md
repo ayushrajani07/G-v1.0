@@ -138,6 +138,7 @@ The following real-time performance & quality metrics have been implemented to e
     # Export the printed lines (PowerShell):
     $env:G6_REGIME_MAE_DRIFT_RATIO_WARN="1.42"; $env:G6_REGIME_MAE_DRIFT_RATIO_CRIT="1.61"
     ```
+  - Stability harness: `scripts/ml/validate_drift_threshold_stability.py` checks relative shift of latest calibrated thresholds against prior median and exits non-zero if >15% (configurable). Integrate into CI to guard against noisy autorecalibration.
 
 **Adaptive Smoothing Features:**
 - Supports direct alpha (`G6_ROLLING_MAE_DECAY`), observation half-life (`G6_ROLLING_MAE_HALF_LIFE`), or time-based half-life in minutes (`G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES`) with precedence: HALF_LIFE > TIME_HALF_LIFE_MINUTES > DECAY.
