@@ -1,0 +1,87 @@
+# Generated per-index alert rules for ML Drift Monitoring
+# Placeholder __INDEX__ will be replaced with the index symbol in generator.
+# Validate with: promtool check rules <generated-file>
+
+groups:
+  - name: ml_drift_monitoring___INDEX__
+    interval: 60s
+    rules:
+      - alert: MLFeatureDriftCritical___INDEX__
+        expr: g6_feature_drift_severity{index="__INDEX__"}==3
+        for: 0m
+        labels:
+          severity: critical
+          component: ml_drift
+          index: "__INDEX__"
+        annotations:
+          summary: "Critical drift: feature {{ $labels.feature }} on __INDEX__"
+          description: |
+            Feature {{ $labels.feature }} shows critical drift severity (3) on __INDEX__.
+            Actions:
+            1. Inspect advisor drift advice endpoint for __INDEX__
+            2. Verify data integrity & pipeline
+            3. Consider baseline refresh & retraining
+
+      - alert: MLFeatureDriftActionablePersistent___INDEX__
+        expr: sum_over_time((g6_feature_drift_severity{index="__INDEX__"}==2)[15m]) >= 3
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_drift
+          index: "__INDEX__"
+        annotations:
+          summary: "Persistent actionable drift on __INDEX__: {{ $labels.feature }}"
+          description: |
+            Feature actionable severity observed in >=3 evaluations over last 15m for __INDEX__.
+            Investigate feature pipeline and recent data quality.
+
+      - alert: MLBroadCriticalDrift___INDEX__
+        expr: sum(g6_feature_drift_severity{index="__INDEX__"}==3) > 5
+        for: 15m
+        labels:
+          severity: critical
+          component: ml_drift
+          index: "__INDEX__"
+        annotations:
+          summary: "Broad critical drift across features on __INDEX__ (count={{ $value }})"
+          description: |
+            More than 5 features at critical severity for __INDEX__ in the window.
+            Possible regime shift or systemic data issue.
+
+      - alert: MLDriftSeveritySpike___INDEX__
+        expr: increase(sum(g6_feature_drift_severity{index="__INDEX__"}==3)[30m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+          component: ml_drift
+          index: "__INDEX__"
+        annotations:
+          summary: "Spike in critical drift count on __INDEX__"
+          description: |
+            Critical severity features increased by >3 in last 30m on __INDEX__.
+
+      - alert: MLStaleDriftEvaluation___INDEX__
+        expr: (time() - (g6_drift_last_eval_ms{index="__INDEX__"}/1000)) > 600
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_drift
+          index: "__INDEX__"
+        annotations:
+          summary: "Drift evaluator stale (__INDEX__)"
+          description: |
+            Last drift evaluation older than 10 minutes for __INDEX__.
+            Check evaluator thread, G6_DRIFT_ENABLE, logs, resource usage.
+
+      - alert: MLAcceleratedBaselineRefresh___INDEX__
+        expr: g6_drift_baseline_age_days{index="__INDEX__"} > 0 and g6_drift_critical_feature_count{index="__INDEX__"} >= 3
+        for: 10m
+        labels:
+          severity: info
+          component: ml_drift
+          index: "__INDEX__"
+        annotations:
+          summary: "Baseline nearing forced refresh condition (__INDEX__)"
+          description: |
+            Critical feature count >=3 while baseline age is positive on __INDEX__.
+            Baseline refresh may be triggered soon; review pending changes.
