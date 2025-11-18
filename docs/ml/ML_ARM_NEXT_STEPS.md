@@ -132,6 +132,12 @@ The following real-time performance & quality metrics have been implemented to e
 - `GET  /api/ml/ensemble/metrics/decay/validate` – Decay/half-life/time-half-life precedence and derived alpha diagnostics.
 - `GET  /api/ml/ensemble/regime/dynamic_thresholds?index=NIFTY&include_percentiles=1` – Per-horizon static vs dynamic drift thresholds (MAE ratio, normalized error ratio, coverage delta), baseline percentile snapshot & breach reasons for panel rendering.
   - Grafana dashboard JSON added: `grafana/dashboards/regime_dynamic_thresholds.json` (Infinity datasource). Polls every 60s and colors rows by breach state.
+  - Threshold auto-calibration script: `scripts/ml/calibrate_drift_thresholds.py` produces recommended env overrides from rolling baselines. Example:
+    ```powershell
+    python scripts/ml/calibrate_drift_thresholds.py --indices NIFTY,BANKNIFTY --min-count 30
+    # Export the printed lines (PowerShell):
+    $env:G6_REGIME_MAE_DRIFT_RATIO_WARN="1.42"; $env:G6_REGIME_MAE_DRIFT_RATIO_CRIT="1.61"
+    ```
 
 **Adaptive Smoothing Features:**
 - Supports direct alpha (`G6_ROLLING_MAE_DECAY`), observation half-life (`G6_ROLLING_MAE_HALF_LIFE`), or time-based half-life in minutes (`G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES`) with precedence: HALF_LIFE > TIME_HALF_LIFE_MINUTES > DECAY.
