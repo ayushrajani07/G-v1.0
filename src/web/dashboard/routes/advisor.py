@@ -105,3 +105,94 @@ async def api_ml_universal_advisor_generated_at_age_minutes(
         # Import failure, missing attribute, or type error - skip metrics update
         pass
     return JSONResponse({'age_minutes': age_minutes, 'generated_at': ts_iso, 'indices': idxs})
+
+# ---------------- Drift Advice Extension (Phase 10) ----------------
+def _env_float(name: str, default: float) -> float:
+    import os
+    try:
+        return float(os.environ.get(name, str(default)).strip())
+    except Exception:
+        return default
+
+_THRESHOLDS = {
+    'psi_warn': _env_float('G6_DRIFT_PSI_WARN', 0.25),
+    'psi_crit': _env_float('G6_DRIFT_PSI_CRIT', 0.40),
+    'ks_warn': _env_float('G6_DRIFT_KS_WARN', 0.01),
+    'ks_crit': _env_float('G6_DRIFT_KS_CRIT', 0.001),
+    'mean_z_warn': _env_float('G6_DRIFT_MEAN_Z_WARN', 2.0),
+    'mean_z_crit': _env_float('G6_DRIFT_MEAN_Z_CRIT', 3.0),
+    'var_ratio_warn_high': _env_float('G6_DRIFT_VAR_RATIO_WARN_HIGH', 1.5),
+    'var_ratio_warn_low': _env_float('G6_DRIFT_VAR_RATIO_WARN_LOW', 0.67),
+    'var_ratio_crit_high': _env_float('G6_DRIFT_VAR_RATIO_CRIT_HIGH', 2.0),
+    'var_ratio_crit_low': _env_float('G6_DRIFT_VAR_RATIO_CRIT_LOW', 0.5),
+}
+
+def _classify(rec: dict) -> tuple[str, list[str]]:
+    psi = rec.get('psi', 0.0)
+    ks = rec.get('ks_pvalue', 1.0)
+    mean_delta = abs(rec.get('mean_delta', 0.0))
+    var_delta = rec.get('var_delta', 0.0)
+    # Convert variance delta to ratio if baseline embedded later; assume var_delta already ratio or difference
+    ratio = var_delta if var_delta > 0 else 1.0
+    t = _THRESHOLDS
+    severity = 'stable'
+    actions: list[str] = []
+    warn_conditions = (
+        (psi >= t['psi_warn']) or (ks <= t['ks_warn']) or (mean_delta >= t['mean_z_warn']) or (ratio >= t['var_ratio_warn_high']) or (ratio <= t['var_ratio_warn_low'])
+    )
+    crit_conditions = (
+        (psi >= t['psi_crit']) or (ks <= t['ks_crit']) or (mean_delta >= t['mean_z_crit']) or (ratio >= t['var_ratio_crit_high']) or (ratio <= t['var_ratio_crit_low'])
+    )
+    if crit_conditions:
+        severity = 'critical'
+        actions = ['raise_alert', 'consider_baseline_refresh', 'evaluate_retraining']
+    elif warn_conditions and ((psi >= t['psi_warn'] and (ks <= t['ks_warn'] or mean_delta >= t['mean_z_warn'])) or (mean_delta >= t['mean_z_warn'] and psi >= t['psi_warn'])):
+        severity = 'actionable'
+        actions = ['investigate_feature_pipeline', 'validate_recent_data']
+    elif warn_conditions:
+        severity = 'watch'
+        actions = ['monitor_next_cycles']
+    return severity, actions
+
+@router.get('/api/ml/universal_advisor/drift_advice')
+async def api_ml_universal_advisor_drift_advice(
+    index: str = Query('NIFTY', description='Index symbol'),
+    detail: bool = Query(True, description='Include per-feature breakdown'),
+):
+    """Return drift classification & recommended actions based on current drift gauges.
+
+    Uses thresholds from environment variables (G6_DRIFT_*). Falls back to defaults if unset.
+    """
+    # Obtain drift metric snapshot from prom_metrics (placeholder tolerant)
+    try:
+        from src.web.dashboard.prom_metrics import get_feature_drift_snapshot  # type: ignore
+        snapshot = get_feature_drift_snapshot(index.upper()) or []
+    except Exception:
+        snapshot = []
+    entries = []
+    counts = {'stable':0,'watch':0,'actionable':0,'critical':0}
+    for rec in snapshot:
+        sev, acts = _classify(rec)
+        counts[sev] += 1
+        if detail:
+            entries.append({
+                'feature': rec.get('feature'),
+                'psi': rec.get('psi'),
+                'ks_pvalue': rec.get('ks_pvalue'),
+                'mean_delta': rec.get('mean_delta'),
+                'var_delta': rec.get('var_delta'),
+                'drift_flag': rec.get('drift_flag'),
+                'severity': sev,
+                'actions': acts,
+            })
+    recommend_retrain = counts['critical'] >= 2 or counts['actionable'] >= 5
+    result = {
+        'index': index.upper(),
+        'generated_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+        'thresholds': _THRESHOLDS,
+        'summary': counts,
+        'recommend_retrain': recommend_retrain,
+    }
+    if detail:
+        result['features'] = entries
+    return JSONResponse(result)

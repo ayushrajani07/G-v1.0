@@ -480,3 +480,48 @@ def set_feature_drift_metrics(index: str, feature: str, psi: float, ks_pvalue: f
         _LOG.debug(f"set_feature_drift_metrics failed: {e}")
 
 __all__.append("set_feature_drift_metrics")
+
+def get_feature_drift_snapshot(index: str | None = None) -> list[dict[str, float | str]]:
+    """Return current drift metric samples per feature for optional index filter.
+
+    Each entry includes: feature, index, psi, ks_pvalue, mean_delta, var_delta, drift_flag.
+    Missing metrics default to 0 / stable values so advisor can operate even before data accrues.
+    """
+    if not _is_enabled():
+        return []
+    _init_drift_metrics()
+    out: dict[str, dict[str, float | str]] = {}
+    def _ingest(gauge, key_name: str):
+        if gauge is None:
+            return
+        try:
+            fams = list(gauge.collect())
+            if not fams:
+                return
+            for s in fams[0].samples:
+                lbl_index = s.labels.get('index')
+                feat = s.labels.get('feature')
+                if feat is None:
+                    continue
+                if index and lbl_index != index.upper():
+                    continue
+                rec = out.setdefault((lbl_index or '') + '::' + feat, {
+                    'index': lbl_index,
+                    'feature': feat,
+                    'psi': 0.0,
+                    'ks_pvalue': 1.0,
+                    'mean_delta': 0.0,
+                    'var_delta': 0.0,
+                    'drift_flag': 0.0,
+                })
+                rec[key_name] = float(s.value)
+        except Exception as e:  # pragma: no cover
+            _LOG.debug(f"drift snapshot ingest failed for {key_name}: {e}")
+    _ingest(_FEATURE_PSI, 'psi')
+    _ingest(_FEATURE_KS, 'ks_pvalue')
+    _ingest(_FEATURE_MEAN_DELTA, 'mean_delta')
+    _ingest(_FEATURE_VAR_DELTA, 'var_delta')
+    _ingest(_FEATURE_DRIFT_FLAG, 'drift_flag')
+    return list(out.values())
+
+__all__.append("get_feature_drift_snapshot")
