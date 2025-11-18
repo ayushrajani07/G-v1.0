@@ -1,0 +1,52 @@
+{
+  "type": "stat",
+  "title": "Drift Data Status",
+  "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+  "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+  "targets": [
+    {
+      "refId": "A",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+      "type": "json",
+      "url": "${BACKEND_BASE}/api/ml/universal_advisor/drift_advice?index=${index}&detail=false",
+      "root_selector": ".",
+      "columns": [
+        { "selector": "data_insufficient", "text": "data_insufficient" }
+      ]
+    }
+  ],
+  "options": {
+    "reduceOptions": {
+      "calcs": ["lastNotNull"],
+      "fields": "/^data_insufficient$/",
+      "values": false
+    },
+    "orientation": "auto",
+    "graphMode": "none",
+    "justifyMode": "auto",
+    "textMode": "auto",
+    "colorMode": "value"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "mappings": [
+        {
+          "type": "value",
+          "options": {
+            "true": { "text": "No current data", "color": "orange" },
+            "false": { "text": "Data available", "color": "green" }
+          }
+        }
+      ],
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          { "color": "green", "value": null },
+          { "color": "orange", "value": 1 }
+        ]
+      }
+    },
+    "overrides": []
+  },
+  "description": "Reflects whether drift data is currently available for ${index} using data_insufficient from drift_advice."
+}

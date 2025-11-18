@@ -1,0 +1,48 @@
+{
+  "type": "stat",
+  "title": "Drift Eval Age (sec)",
+  "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+  "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+  "targets": [
+    {
+      "refId": "A",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+      "type": "json",
+      "url": "${BACKEND_BASE}/api/ml/universal_advisor/drift_evaluator_health?indices=${index}",
+      "root_selector": "rows",
+      "columns": [
+        { "selector": "index", "text": "index" },
+        { "selector": "age_sec", "text": "age_sec" },
+        { "selector": "stale", "text": "stale" }
+      ]
+    }
+  ],
+  "options": {
+    "reduceOptions": {
+      "calcs": ["lastNotNull"],
+      "fields": "/^age_sec$/",
+      "values": false
+    },
+    "orientation": "auto",
+    "text": {},
+    "graphMode": "none",
+    "justifyMode": "auto",
+    "colorMode": "value",
+    "textMode": "auto"
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "s",
+      "decimals": 0,
+      "thresholds": {
+        "mode": "absolute",
+        "steps": [
+          { "color": "green", "value": null },
+          { "color": "red", "value": 600 }
+        ]
+      }
+    },
+    "overrides": []
+  },
+  "description": "Shows the last drift evaluator age in seconds for ${index}. Turns red when age >= 600s (configurable by G6_DRIFT_EVAL_STALE_SEC)."
+}
