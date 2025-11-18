@@ -42,6 +42,9 @@ Ensure Prometheus scrapes the dashboard API's `/metrics` endpoint.
 - `data_insufficient` shows "No current data" until drift snapshot fills.
 - MAE / coverage gauges change as forecasts are requested.
 
+## 5) Optional
+- Add Prometheus alerts using `prometheus_alerts_drift.yml` and/or generated per-index rules (`prometheus_alerts_drift.generated.yml`).
+- Add Prometheus regime alerts using `prometheus_alerts_regime.yml`.
 ## 5) Performance & Reliability Alerts
 
 Add Prometheus alert rules for key performance and reliability signals:
@@ -98,6 +101,57 @@ g6_forecast_cache_dynamic_ttl{index="NIFTY"}
 ## 6) Optional
 - Generate per-index drift rules using `prometheus_alerts_drift.generated.yml`.
 - Tune eval interval and staleness threshold via env vars to suit your environment.
+
+## 6) Regime Detection Panels
+
+The regime detection feature provides metrics for market regime shift detection.
+
+### Available Metrics
+
+- `g6_regime_shift_distance{index}` - Distance from last stable regime centroid (0.0 = identical, higher = more different)
+- `g6_regime_status{index}` - Regime status (0=stable, 1=warn, 2=critical)
+
+### API Endpoints for Infinity Queries
+
+- `/api/ml/ensemble/regime?index=NIFTY` - Get current regime status and embedding
+- `/api/ml/ensemble/metrics/compare?index=NIFTY` - Includes regime_status and regime_distance fields
+
+### Example PromQL Queries
+
+**Regime shift distance trend:**
+```promql
+g6_regime_shift_distance{index="NIFTY"}
+```
+
+**Last critical regime change:**
+```promql
+changes(g6_regime_status{index="NIFTY"}[7d])
+```
+
+**Time since last regime change:**
+```promql
+time() - max_over_time(timestamp(g6_regime_status{index="NIFTY"})[7d])
+```
+
+### Creating a Regime Panel
+
+1. In Grafana, add a new panel to your dashboard
+2. Select Prometheus as datasource
+3. Use query: `g6_regime_shift_distance{index="$index"}`
+4. Set visualization to Time series or Gauge
+5. For status, create a separate panel with: `g6_regime_status{index="$index"}`
+6. Add value mappings: 0=Stable (green), 1=Warning (yellow), 2=Critical (red)
+
+### Infinity Panel for Regime Details
+
+To display current regime embedding details:
+
+1. Add a new panel, select Infinity datasource
+2. Type: JSON
+3. URL: `${BACKEND_BASE}/api/ml/ensemble/regime?index=${index}`
+4. Parser: Backend
+5. Format: Table
+6. Add transformations to display embedding features
 
 ## Import the Drift Quickstart dashboard
 

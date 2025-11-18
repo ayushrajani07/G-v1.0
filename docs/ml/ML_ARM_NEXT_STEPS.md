@@ -91,7 +91,7 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 1. Drift monitoring integration (feature importance + distribution shift panels).  ☐
 2. Add rolling MAE & coverage Prometheus gauges + Grafana panels.  ✅ (completed: gauges + endpoints + persistence added)
 3. Implement adaptive TTL prototype (volatility-driven) behind flag.  ☐
-4. Begin regime change alert pipeline (weekly cron + threshold evaluation).  ☐
+4. Begin regime change alert pipeline (weekly cron + threshold evaluation).  ✅ (completed: detector module, APIs, metrics, alerts, weekly cron)
 5. Extend load test to multi-index comparative mode (NIFTY vs BANKNIFTY).  ☐
 6. Add alert rules tied to new metrics (p95 latency, eviction rate, cache hit ratio thresholds).  ✅ (completed: prometheus_alerts_performance.yml with CI validation)
 7. Add normalized error metric & histogram distribution for tail risk tracking.  ✅
@@ -182,6 +182,16 @@ The following real-time performance & quality metrics have been implemented to e
 | `G6_ALERT_TTL_TOO_SHORT_SEC` | Min TTL alert threshold | `15` sec |
 | `G6_ALERT_TTL_TOO_LONG_SEC` | Max TTL alert threshold | `55` sec |
 
+**Regime Detection Environment Variables (Phase 10 - New):**
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `G6_REGIME_EMBED_HISTORY_DAYS` | Days of regime history to maintain | `30` |
+| `G6_REGIME_SHIFT_DISTANCE_WARN` | Distance threshold for warning status | `0.35` |
+| `G6_REGIME_SHIFT_DISTANCE_CRIT` | Distance threshold for critical status | `0.55` |
+| `G6_REGIME_WEEKLY_ENABLED` | Enable weekly regime evaluation | `1` |
+| `G6_REGIME_FEATURES` | Comma-separated list of embedding features | `volatility,bandwidth,drift_severity,cache_hit_ratio,norm_error_p90` |
+| `G6_REGIME_DISTANCE_METRIC` | Distance metric (cosine or euclidean) | `cosine` |
+
 **Operational Usage Examples:**
 ```bash
 export G6_ROLLING_MAE_ENABLE=1
@@ -209,9 +219,69 @@ histogram_quantile(0.90, sum(rate(g6_forecast_norm_error_hist_bucket[30m])) by (
 **Next Focus (Remaining Phase 10 Items):**
 - Integrate drift detector outputs into comparison endpoint.
 - Adaptive TTL prototype (volatility-responsive) & impact study.
-- Regime change alerts aligned with normalized error + coverage deviations.
 - Multi-index load test scalability validation.
 - Alert rule set for p95 latency, eviction surge, low coverage, rising normalized p90.
+
+---
+
+### Phase 10 Regime Detection Implementation (2025-11-18)
+
+Market regime change detection has been implemented to provide early warning of systematic shifts in market behavior or model performance.
+
+**Architecture:**
+- **Module:** `src/ml/regime_detector.py` - Core detection logic with embedding computation and distance metrics
+- **Persistence:** Rolling history stored in `data/regime/<index>/history.json` (default 30 days)
+- **Metrics:** Prometheus gauges `g6_regime_shift_distance{index}` and `g6_regime_status{index}`
+- **Alerts:** `prometheus_alerts_regime.yml` with critical, warning, and info-level rules
+- **Weekly Evaluation:** `scripts/ml/weekly_regime_eval.py` generates weekly reports in `reports/regime/`
+
+**Regime Embedding Features:**
+1. **Volatility** - Normalized recent volatility metric
+2. **Bandwidth** - Average forecast band width
+3. **Drift Severity** - Aggregate feature drift severity
+4. **Cache Hit Ratio** - Forecast cache performance indicator
+5. **Normalized Error P90** - 90th percentile of normalized forecast errors
+
+**Distance Metrics:**
+- **Cosine Distance** (default): Measures angular similarity between embedding vectors, normalized to [0, 1] range
+- **Euclidean Distance**: Standard L2 distance, useful for magnitude-sensitive comparisons
+
+**Status Thresholds:**
+- **Stable** (0): Distance < 0.35 (default)
+- **Warn** (1): Distance ≥ 0.35 and < 0.55
+- **Critical** (2): Distance ≥ 0.55
+
+**API Endpoints:**
+- `GET /api/ml/ensemble/regime?index=NIFTY` - Current regime status, embedding, distance, and last change timestamp
+- `GET /api/ml/ensemble/metrics/compare?index=NIFTY` - Extended to include `regime_status` and `regime_distance` fields
+
+**Weekly Cron Script:**
+```bash
+# Run weekly evaluation (typically on Sunday)
+python scripts/ml/weekly_regime_eval.py --indices NIFTY,BANKNIFTY
+
+# Generates: reports/regime/weekly_<YYYY-MM-DD>.json
+# Output includes: current week average, prior week centroid, distance, status
+```
+
+**Prometheus Alerts:**
+- `MLRegimeShiftCritical`: Fires when status=2 for 15m
+- `MLRegimeShiftDistanceHigh`: Fires when distance > 0.55 for 30m
+- `MLRegimeShiftWarning`: Fires when status=1 for 1h
+- `MLRegimeFrequentChanges`: Fires when >10 status changes in 7d
+- `MLRegimeDetectionStale`: Fires when metrics absent for 1h
+
+**Grafana Integration:**
+See `docs/ml/PHASE10_GRAFANA_QUICKSTART.md` for panel setup instructions, including:
+- Time series panels for distance trends
+- Gauge panels for current status (with color mappings)
+- Infinity panels for detailed embedding visualization
+
+**Use Cases:**
+1. **Model Staleness Detection**: Rising distance indicates model may need retraining
+2. **Market Regime Shifts**: Captures transitions between high/low volatility, trending/sideways markets
+3. **Data Quality Issues**: Sudden critical status can indicate collection pipeline problems
+4. **Performance Degradation**: Correlate regime changes with MAE/coverage deterioration
 
 ---
 
