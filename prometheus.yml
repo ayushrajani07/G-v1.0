@@ -7,6 +7,7 @@ rule_files:
   - "prometheus_alerts.yml"
   - "prometheus_recording_rules_generated.sanitized.yml"
   - "prometheus_recording_rules_dynamic_drift.yml"
+  - "prometheus_alerts_ml_drift.yml"
 
 scrape_configs:
   # DEPRECATED: Ports 9108 (start_metrics_server.py) and 9109 (overlay_exporter.py) removed

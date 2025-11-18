@@ -1,0 +1,127 @@
+groups:
+- name: g6_ml_drift_alerts
+  interval: 30s
+  rules:
+  # ---------------- MAE Drift Alerts ----------------
+  - alert: G6MaeDriftWarn
+    expr: g6_forecast_mae_drift_severity == 1
+    for: 5m
+    labels:
+      severity: warn
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "MAE drift warn for {{ $labels.index }} horizon {{ $labels.horizon }}"
+      description: "Short/long MAE ratio elevated (warn band). ratio={{ printf \"%.3f\" (g6_forecast_mae_drift_ratio{index=$labels.index,horizon=$labels.horizon}) }}"
+  - alert: G6MaeDriftCrit
+    expr: g6_forecast_mae_drift_severity == 2
+    for: 3m
+    labels:
+      severity: critical
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "MAE drift critical for {{ $labels.index }} horizon {{ $labels.horizon }}"
+      description: "Short/long MAE ratio exceeds critical threshold. ratio={{ printf \"%.3f\" (g6_forecast_mae_drift_ratio{index=$labels.index,horizon=$labels.horizon}) }}"
+
+  # ---------------- Normalized Error Drift Alerts ----------------
+  - alert: G6NormErrorDriftWarn
+    expr: g6_forecast_norm_drift_severity == 1
+    for: 5m
+    labels:
+      severity: warn
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Normalized error drift warn for {{ $labels.index }} horizon {{ $labels.horizon }}"
+      description: "Normalized short/long error ratio elevated. ratio={{ printf \"%.3f\" (g6_forecast_norm_error_drift_ratio{index=$labels.index,horizon=$labels.horizon}) }}"
+  - alert: G6NormErrorDriftCrit
+    expr: g6_forecast_norm_drift_severity == 2
+    for: 3m
+    labels:
+      severity: critical
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Normalized error drift critical for {{ $labels.index }} horizon {{ $labels.horizon }}"
+      description: "Normalized error drift ratio critical. ratio={{ printf \"%.3f\" (g6_forecast_norm_error_drift_ratio{index=$labels.index,horizon=$labels.horizon}) }}"
+
+  # ---------------- Coverage Drift Alerts ----------------
+  - alert: G6CoverageDriftWarn
+    expr: g6_forecast_coverage_drift_severity == 1
+    for: 5m
+    labels:
+      severity: warn
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Coverage drift warn for {{ $labels.index }} horizon {{ $labels.horizon }}"
+      description: "Coverage delta deteriorating. delta_pct={{ printf \"%.2f\" (g6_forecast_coverage_drift_delta_pct{index=$labels.index,horizon=$labels.horizon}) }}"
+  - alert: G6CoverageDriftCrit
+    expr: g6_forecast_coverage_drift_severity == 2
+    for: 3m
+    labels:
+      severity: critical
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Coverage drift critical for {{ $labels.index }} horizon {{ $labels.horizon }}"
+      description: "Coverage delta severe. delta_pct={{ printf \"%.2f\" (g6_forecast_coverage_drift_delta_pct{index=$labels.index,horizon=$labels.horizon}) }}"
+
+  # ---------------- Composite Drift Alerts ----------------
+  - alert: G6AnyDriftWarn
+    expr: g6_forecast_drift_any_warn == 1
+    for: 5m
+    labels:
+      severity: warn
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Any drift warn triggered ({{ $labels.index }}, horizon {{ $labels.horizon }})"
+      description: "One or more drift dimensions in warn state. Investigate MAE/Norm/Coverage panels."
+  - alert: G6AnyDriftCrit
+    expr: g6_forecast_drift_any_crit == 1
+    for: 3m
+    labels:
+      severity: critical
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Any drift critical triggered ({{ $labels.index }}, horizon {{ $labels.horizon }})"
+      description: "One or more drift dimensions in critical state. Consider retraining or threshold adjustment."
+
+  # ---------------- Latency SLA ----------------
+  - alert: G6LatencySlaBreach
+    expr: g6_forecast_latency_sla_breach == 1
+    for: 10m
+    labels:
+      severity: warn
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Latency SLA breach sustained (p95)"
+      description: "Forecast p95 latency >250ms for 10m. Investigate cache hit ratio & underlying volatility."
+
+  # ---------------- Band Efficiency Degradation ----------------
+  - alert: G6BandEfficiencyLow
+    expr: g6_forecast_band_efficiency < 0.35
+    for: 15m
+    labels:
+      severity: warn
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Band efficiency degraded ({{ $labels.index }} horizon {{ $labels.horizon }})"
+      description: "Coverage / normalized error ratio low. Consider widening band or recalibrating conformal component."
+
+  # ---------------- Tail Risk Escalation ----------------
+  - alert: G6NormErrorTailEscalation
+    expr: g6_forecast_norm_error_tail_index > 1.20
+    for: 10m
+    labels:
+      severity: warn
+      team: ml
+      pipeline: ensemble
+    annotations:
+      summary: "Normalized error tail escalation ({{ $labels.index }} horizon {{ $labels.horizon }})"
+      description: "p99 / p95 ratio elevated; indicates emerging heavy-tail behavior. Review recent anomalies."
