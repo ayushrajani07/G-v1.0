@@ -10,6 +10,7 @@ Run with:
 from __future__ import annotations
 
 import json
+import warnings
 import urllib.request
 import urllib.error
 from typing import Dict
@@ -144,8 +145,12 @@ class TestMLEnsembleAPI:
             
             # Ideally should be under 1 second
             if latency > 1.0:
-                pytest.warns(UserWarning, 
-                    f"Forecast latency {latency:.2f}s exceeds production target of 1s")
+                # Assert a warning is emitted using proper context manager
+                with pytest.warns(UserWarning, match=r"exceeds production target"):
+                    warnings.warn(
+                        f"Forecast latency {latency:.2f}s exceeds production target of 1s",
+                        UserWarning,
+                    )
             
         except urllib.error.URLError:
             pytest.skip("API not running")
