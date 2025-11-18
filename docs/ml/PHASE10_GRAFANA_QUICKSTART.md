@@ -35,6 +35,7 @@ Ensure Prometheus scrapes the dashboard API's `/metrics` endpoint.
     - `index` (e.g., `NIFTY,BANKNIFTY`)
     - `DS_INFINITY` (Infinity datasource UID)
     - `BACKEND_BASE` (e.g., `http://127.0.0.1:9500`)
+ - Or import the combined dashboard: `grafana/dashboards/drift_quickstart.json` (pre-wired with both panels and a severity summary table).
 
 ## 4) Verify real-time updates
 - Drift evaluator age advances every `G6_DRIFT_EVAL_INTERVAL_SEC`.
@@ -44,3 +45,13 @@ Ensure Prometheus scrapes the dashboard API's `/metrics` endpoint.
 ## 5) Optional
 - Add Prometheus alerts using `prometheus_alerts_drift.yml` and/or generated per-index rules (`prometheus_alerts_drift.generated.yml`).
 - Tune eval interval and staleness threshold via env vars to suit your environment.
+
+## Import the Drift Quickstart dashboard
+
+- File: `grafana/dashboards/drift_quickstart.json`
+- Steps:
+  1. In Grafana, go to Dashboards → Import.
+  2. Upload the JSON file or paste its contents.
+  3. Select the Infinity datasource for `DS_INFINITY` and set `BACKEND_BASE` (e.g., `http://127.0.0.1:9500`).
+  4. Pick an `index` (e.g., NIFTY) and Save.
+  5. Confirm panels load and refresh every 10s.
