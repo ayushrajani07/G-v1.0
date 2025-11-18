@@ -45,6 +45,61 @@ Ensure Prometheus scrapes the dashboard API's `/metrics` endpoint.
 ## 5) Optional
 - Add Prometheus alerts using `prometheus_alerts_drift.yml` and/or generated per-index rules (`prometheus_alerts_drift.generated.yml`).
 - Add Prometheus regime alerts using `prometheus_alerts_regime.yml`.
+## 5) Performance & Reliability Alerts
+
+Add Prometheus alert rules for key performance and reliability signals:
+
+- **Drift Alerts:** `prometheus_alerts_drift.yml` (feature drift severity-based)
+- **Performance Alerts:** `prometheus_alerts_performance.yml` (latency, cache, coverage, error tail)
+
+### Performance Alert Rules
+
+Include `prometheus_alerts_performance.yml` in your `prometheus.yml`:
+
+```yaml
+rule_files:
+  - prometheus_alerts_drift.yml
+  - prometheus_alerts_performance.yml
+```
+
+**Key Alerts:**
+- `MLForecastLatencyP95Degraded`: P95 latency > 500ms for 10m
+- `MLForecastCacheEvictionSurge`: Eviction rate > 2/sec for 10m
+- `MLForecastLowCoverage`: Coverage < 70% for 15m
+- `MLForecastHighNormErrorTail`: P90 normalized error > 0.15 for 10m
+- `MLAdaptiveTTLTooShortPersistent`: Dynamic TTL < 15s for 30m
+- `MLAdaptiveTTLTooLongHighLatency`: TTL > 55s while P95 latency > 400ms
+
+**Configure Thresholds via Environment Variables:**
+```bash
+export G6_ALERT_LATENCY_P95_MS=500           # P95 latency threshold (ms)
+export G6_ALERT_NORM_ERR_P90=0.15            # P90 normalized error threshold
+export G6_ALERT_COVERAGE_MIN_PCT=70          # Minimum coverage percentage
+export G6_ALERT_CACHE_EVICTION_RATE=2        # Max eviction rate (per sec)
+export G6_ALERT_TTL_TOO_SHORT_SEC=15         # Min TTL threshold (seconds)
+export G6_ALERT_TTL_TOO_LONG_SEC=55          # Max TTL threshold (seconds)
+```
+
+**Manual Verification (PromQL):**
+```promql
+# P95 latency for NIFTY 60m horizon (5m window)
+histogram_quantile(0.95, sum(rate(g6_forecast_latency_ms_bucket{index="NIFTY",horizon="60"}[5m])) by (le))
+
+# Cache eviction rate (5m window)
+sum(rate(g6_forecast_cache_evictions_total{index="NIFTY"}[5m]))
+
+# Current coverage for NIFTY 60m
+g6_forecast_coverage_pct{index="NIFTY",horizon="60"}
+
+# P90 normalized error (10m window)
+histogram_quantile(0.90, sum(rate(g6_forecast_norm_error_hist_bucket{index="NIFTY",horizon="60"}[10m])) by (le))
+
+# Current adaptive TTL
+g6_forecast_cache_dynamic_ttl{index="NIFTY"}
+```
+
+## 6) Optional
+- Generate per-index drift rules using `prometheus_alerts_drift.generated.yml`.
 - Tune eval interval and staleness threshold via env vars to suit your environment.
 
 ## 6) Regime Detection Panels

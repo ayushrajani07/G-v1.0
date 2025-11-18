@@ -68,6 +68,9 @@ jobs:
       - name: Validate regime alert rules
         run: |
           "$PROMTOOL" check rules prometheus_alerts_regime.yml
+      - name: Validate performance alert rules
+        run: |
+          "$PROMTOOL" check rules prometheus_alerts_performance.yml
 
   promtool-generated-rules:
     name: Generated per-index rules validation

@@ -119,4 +119,5 @@ data/regime/TEST_*/
 *.bat~
 *.tmp
 
-# End of file
+# End of fileprometheus-*.linux-amd64/
+prom.tar.gz
