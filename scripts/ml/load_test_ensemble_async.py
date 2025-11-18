@@ -648,6 +648,11 @@ def main():
         help="Add random parameter to bust cache"
     )
     parser.add_argument(
+        "--cache-bust-pass",
+        action="store_true",
+        help="Run second pass with cache-bust=1 to compare warm vs cold cache"
+    )
+    parser.add_argument(
         "--csv-out",
         type=Path,
         help="CSV output file for latency samples"
@@ -663,7 +668,11 @@ def main():
     # Parse horizons
     horizons = [int(h.strip()) for h in args.horizons.split(',')]
     
-    # Create load tester
+    # Run warm cache test first (normal mode)
+    logger.info("\n" + "=" * 70)
+    logger.info("WARM CACHE TEST (cache enabled)")
+    logger.info("=" * 70)
+    
     tester = AsyncLoadTester(
         api_host=args.api_host,
         api_port=args.api_port,
@@ -679,6 +688,68 @@ def main():
     
     # Run load test
     results = asyncio.run(tester.run_load_test())
+    
+    # If cache-bust-pass is enabled, run second test with cache busting
+    if args.cache_bust_pass:
+        logger.info("\n" + "=" * 70)
+        logger.info("COLD CACHE TEST (cache busting enabled)")
+        logger.info("=" * 70)
+        
+        tester_cold = AsyncLoadTester(
+            api_host=args.api_host,
+            api_port=args.api_port,
+            indices=args.indices,
+            qps=args.qps,
+            concurrency=args.concurrency,
+            duration=args.duration,
+            warmup=0,  # No warmup for cold cache test
+            horizons=horizons,
+            detail=args.detail,
+            cache_bust=True,  # Force cache busting
+        )
+        
+        results_cold = asyncio.run(tester_cold.run_load_test())
+        
+        # Compare warm vs cold cache metrics
+        logger.info("\n" + "=" * 70)
+        logger.info("CACHE COMPARISON (Warm vs Cold)")
+        logger.info("=" * 70)
+        
+        warm_p50 = results.get("latency_ms", {}).get("p50", 0)
+        cold_p50 = results_cold.get("latency_ms", {}).get("p50", 0)
+        warm_p95 = results.get("latency_ms", {}).get("p95", 0)
+        cold_p95 = results_cold.get("latency_ms", {}).get("p95", 0)
+        
+        if cold_p50 > 0:
+            p50_speedup = cold_p50 / warm_p50 if warm_p50 > 0 else 0
+            p95_speedup = cold_p95 / warm_p95 if warm_p95 > 0 else 0
+            
+            logger.info(f"\nLatency P50:")
+            logger.info(f"  Warm cache: {warm_p50:.0f}ms")
+            logger.info(f"  Cold cache: {cold_p50:.0f}ms")
+            logger.info(f"  Speedup: {p50_speedup:.2f}x")
+            
+            logger.info(f"\nLatency P95:")
+            logger.info(f"  Warm cache: {warm_p95:.0f}ms")
+            logger.info(f"  Cold cache: {cold_p95:.0f}ms")
+            logger.info(f"  Speedup: {p95_speedup:.2f}x")
+        
+        # Add cold cache results to output
+        results["cache_bust_pass"] = {
+            "enabled": True,
+            "warm_cache": {
+                "p50_ms": warm_p50,
+                "p95_ms": warm_p95,
+                "throughput": results.get("summary", {}).get("throughput", 0),
+            },
+            "cold_cache": {
+                "p50_ms": cold_p50,
+                "p95_ms": cold_p95,
+                "throughput": results_cold.get("summary", {}).get("throughput", 0),
+            },
+        }
+        
+        logger.info("=" * 70)
     
     # Save CSV if requested
     if args.csv_out:
