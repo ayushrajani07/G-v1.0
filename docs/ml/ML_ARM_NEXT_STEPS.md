@@ -86,7 +86,7 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 - `PATH_FORECAST_DISABLE_WEIGHTED` (performance toggle, optional)
 
 **Phase 10 Next Local Actions (Updated):**
-1. Drift monitoring integration (feature importance + distribution shift panels).  ✅ (completed: drift_monitor.py, API endpoint, Prometheus gauges, Grafana panel, alert rules)
+1. Drift monitoring integration (feature importance + distribution shift panels).  ✅ (completed: drift_monitor.py, API endpoint, Prometheus gauges, Grafana panel, alert rules, health gauges `g6_drift_last_eval_ms`, `g6_drift_alert_count`; placeholder data pending real feed integration)
 2. Add rolling MAE & coverage Prometheus gauges + Grafana panels.  ✅ (completed: gauges + endpoints + persistence added)
 3. Implement adaptive TTL prototype (volatility-driven) behind flag.  ☐
 4. Begin regime change alert pipeline (weekly cron + threshold evaluation).  ☐

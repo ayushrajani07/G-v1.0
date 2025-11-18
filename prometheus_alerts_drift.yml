@@ -190,25 +190,26 @@ groups:
       # Triggers when drift metrics are not being updated (stale data)
       - alert: MLDriftEvaluationStale
         expr: |
-          (time() - timestamp(g6_feature_drift_flag)) > 600
+          (time() * 1000 - max_over_time(g6_drift_last_eval_ms[5m])) > 600000
         for: 5m
         labels:
           severity: warning
           component: ml_drift
         annotations:
-          summary: "Drift metrics are stale"
+          summary: "Drift evaluator stale"
           description: |
-            Drift metrics for {{ $labels.index }} have not been updated for over 10 minutes.
-            Last update: {{ $value | humanizeDuration }} ago
+            No drift evaluation completed in the last 10 minutes.
+            last_eval_ms = max_over_time(g6_drift_last_eval_ms[5m])
+            age_ms = time()*1000 - last_eval_ms
             
-            This may indicate:
-            - Drift evaluator thread not running
-            - G6_DRIFT_ENABLE not set to 1
-            - Errors in drift calculation
-            - Resource constraints
+            Possible causes:
+            - Evaluator thread stopped
+            - Misconfiguration (G6_DRIFT_ENABLE not = 1)
+            - Unhandled exception during evaluation
+            - Resource exhaustion
             
             Actions:
-            1. Check drift evaluator thread status
-            2. Review application logs for drift calculation errors
-            3. Verify G6_DRIFT_ENABLE=1 environment variable
-            4. Check resource utilization (CPU, memory)
+            1. Inspect application logs for 'Drift evaluator'
+            2. Confirm env vars: G6_DRIFT_ENABLE=1
+            3. Verify metrics endpoint exposes g6_drift_last_eval_ms
+            4. Restart service if thread dead

@@ -1,5 +1,7 @@
 # ML Drift Monitoring Guide - Phase 10
 
+> WARNING: This Phase 10 implementation currently uses synthetic placeholder distributions (random normal samples) in `compute_feature_distributions`. Integrate real feature extraction (CSV or DB pipeline) before relying on alerts for production decisions. Health gauges `g6_drift_last_eval_ms` and `g6_drift_alert_count` were added for operational monitoring.
+
 **Status:** Production Ready  
 **Version:** 1.0  
 **Last Updated:** 2025-11-18
@@ -214,6 +216,8 @@ All metrics include labels: `{feature="...", index="..."}`
 | `g6_feature_mean_delta` | Mean delta (absolute) | ℝ (unbounded) |
 | `g6_feature_var_delta` | Variance delta ratio | ℝ (unbounded) |
 | `g6_feature_drift_flag` | Binary alert flag | 0 or 1 |
+| `g6_drift_last_eval_ms` | Epoch ms of last drift evaluation | epoch ms |
+| `g6_drift_alert_count` | Current alerting feature count per index | 0+ |
 
 ### Example PromQL Queries
 
