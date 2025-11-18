@@ -97,6 +97,7 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 9. Provide comparison endpoint with percentiles & filtering.  ✅ (plus `include_drift=1` to attach drift summary)
 10. Add config validation endpoint for decay precedence.  ✅
 11. Add persistence + manual flush of rolling metric state.  ✅
+12. Dynamic drift threshold visualization endpoint. ✅ (`/api/ml/ensemble/regime/dynamic_thresholds` returns static vs dynamic thresholds, baseline percentiles, latest ratios & reasons.)
 
 **Phase 10 Risks & Watchpoints:**
 - Drift false positives → calibrate thresholds using last 30 days.
@@ -129,6 +130,8 @@ The following real-time performance & quality metrics have been implemented to e
 - `POST /api/ml/ensemble/metrics/flush` – Force persistence flush of rolling metric state.
 - `GET  /api/ml/ensemble/metrics/compare?index=...&horizon=...` – Window vs EMA comparison, includes percentiles (p50/p90) for error, normalized error, band width, plus last evaluation timestamp and decay parameters.
 - `GET  /api/ml/ensemble/metrics/decay/validate` – Decay/half-life/time-half-life precedence and derived alpha diagnostics.
+- `GET  /api/ml/ensemble/regime/dynamic_thresholds?index=NIFTY&include_percentiles=1` – Per-horizon static vs dynamic drift thresholds (MAE ratio, normalized error ratio, coverage delta), baseline percentile snapshot & breach reasons for panel rendering.
+  - Grafana dashboard JSON added: `grafana/dashboards/regime_dynamic_thresholds.json` (Infinity datasource). Polls every 60s and colors rows by breach state.
 
 **Adaptive Smoothing Features:**
 - Supports direct alpha (`G6_ROLLING_MAE_DECAY`), observation half-life (`G6_ROLLING_MAE_HALF_LIFE`), or time-based half-life in minutes (`G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES`) with precedence: HALF_LIFE > TIME_HALF_LIFE_MINUTES > DECAY.
@@ -156,6 +159,9 @@ The following real-time performance & quality metrics have been implemented to e
 | `G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES` | Time-based half-life (minutes) | Used if HALF_LIFE & DECAY unset |
 | `G6_ROLLING_ERROR_BUCKETS` | Buckets for absolute error histogram | Comma-separated floats |
 | `G6_ROLLING_NORM_ERROR_BUCKETS` | Buckets for normalized error histogram | Comma-separated floats |
+| `G6_REGIME_DRIFT_AUTOTUNE` | Enable percentile-based dynamic drift thresholds | `0` |
+| `G6_REGIME_DRIFT_WARN_PCTL` / `G6_REGIME_DRIFT_CRIT_PCTL` | Upper tail percentile cutoffs for ratios | `0.85` / `0.95` |
+| `G6_REGIME_COVERAGE_DRIFT_WARN_PCTL` / `G6_REGIME_COVERAGE_DRIFT_CRIT_PCTL` | Lower tail percentiles for coverage delta | `0.15` / `0.05` |
 
 **Operational Usage Examples:**
 ```bash
@@ -173,6 +179,12 @@ histogram_quantile(0.95, sum(rate(g6_forecast_error_hist_bucket{index="NIFTY",ho
 
 # 90th percentile normalized error across horizons (30m window)
 histogram_quantile(0.90, sum(rate(g6_forecast_norm_error_hist_bucket[30m])) by (le))
+
+# Dynamic MAE drift ratio vs p95 baseline (example panel expression)
+avg_over_time(g6_regime_drift_alert_count{index="NIFTY"}[5m])
+
+# Coverage delta critical dynamic threshold reference (assuming exported as gauge via recording rule)
+recorded_dynamic_coverage_drop_crit{index="NIFTY",horizon="60"}
 ```
 
 **Initial Outcomes (Instrumented):**
@@ -186,6 +198,7 @@ histogram_quantile(0.90, sum(rate(g6_forecast_norm_error_hist_bucket[30m])) by (
 - Fine-tune regime thresholds and breach reasons; add per-horizon annotations in Grafana.
 - Add Infinity panel for `/metrics/compare?include_drift=1` with index/horizon selectors.
 - Add small runbook for triaging regime vs drift alerts.
+- Implement dashboard panel consuming `/regime/dynamic_thresholds` (table + sparkline hist overlay) – IN PROGRESS.
 
 ---
 
@@ -1263,6 +1276,7 @@ The completion of the ML ARM Implementation Roadmap marks a significant mileston
 ---
 
 **Immediate Next Action:** Stand up new Grafana panels (MAE, coverage, drift) and start first rolling performance capture for Phase 10.
+**Panel Addition:** Add Dynamic Drift Thresholds panel hitting `/api/ml/ensemble/regime/dynamic_thresholds?index=${var_index}` every 60s; show columns: Horizon | MAE Ratio (curr / warn / crit) | Norm Ratio (curr / warn / crit) | Coverage Δ (curr / warn / crit) | Reasons. Color by `breach.drift_triggered`.
 
 **Contact:**
 - ML Engineering Team: ml-team@example.com
