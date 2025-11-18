@@ -237,7 +237,10 @@ async def api_ml_drift_daily_report_latest():
 
 @router.get('/api/ml/drift/daily_reports/trend')
 async def api_ml_drift_daily_report_trend(days: int = 7):
-    """Return severity trend series aggregated from reports/drift daily_*.json (last N days)."""
+    """Return severity trend series aggregated from reports/drift daily_*.json (last N days).
+
+    Response includes aggregate series and per_index_series for direct Grafana JSON ingestion.
+    """
     import os, json, glob
     from datetime import datetime
     base = os.path.join(os.getcwd(), 'reports', 'drift')
@@ -255,8 +258,17 @@ async def api_ml_drift_daily_report_trend(days: int = 7):
     items.sort(key=lambda x: x[0])
     if days and days > 0:
         items = items[-int(days):]
-    series = [{
-        'generated_at': d.get('generated_at'),
-        'aggregate_counts': d.get('aggregate_counts', {}),
-    } for _, d in items]
-    return JSONResponse({'series': series, 'count': len(series)})
+    series = []
+    per_index_series = {}
+    for _, d in items:
+        gen_at = d.get('generated_at')
+        series.append({'generated_at': gen_at, 'aggregate_counts': d.get('aggregate_counts', {})})
+        for pi in d.get('per_index', []):
+            idx = pi.get('index')
+            if not idx:
+                continue
+            per_index_series.setdefault(idx, []).append({
+                'generated_at': gen_at,
+                'counts': pi.get('counts', {}),
+            })
+    return JSONResponse({'series': series, 'per_index_series': per_index_series, 'count': len(series)})

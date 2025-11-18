@@ -154,7 +154,9 @@ class DriftMonitor:
         self.max_features = _env_int('G6_DRIFT_MAX_FEATURES', 30)
         self.root = _project_root()
         self.baseline_dir = self.root / 'metrics' / 'drift_baselines'
+        self.baseline_history_dir = self.baseline_dir / 'history'
         self.baseline_dir.mkdir(parents=True, exist_ok=True)
+        self.baseline_history_dir.mkdir(parents=True, exist_ok=True)
         self.loader = FeatureLoader(self.root / 'data' / 'g6_data')
         # Smoothing config
         self.smoothing_enabled = bool(_env_int('G6_DRIFT_ENABLE_SMOOTHING', 0))
@@ -363,12 +365,23 @@ class DriftMonitor:
     def save_baseline(self, index: str, data: Dict[str, Any]) -> bool:
         path = self.baseline_path(index)
         tmp = path.with_suffix('.tmp')
-        data['saved_at'] = datetime.now(timezone.utc).isoformat()
+        now_iso = datetime.now(timezone.utc).isoformat()
+        data['saved_at'] = now_iso
         data['version'] = str(int(data.get('version', 0)) + 1)
         try:
             with tmp.open('w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
             os.replace(tmp, path)
+            # Write history copy
+            try:
+                idx_dir = self.baseline_history_dir / index.upper()
+                idx_dir.mkdir(parents=True, exist_ok=True)
+                ts = now_iso.replace(':','').replace('-','').replace('+00:00','Z')
+                hist_path = idx_dir / f"baseline_{ts}_v{data['version']}.json"
+                with hist_path.open('w', encoding='utf-8') as hf:
+                    json.dump(data, hf, indent=2)
+            except Exception as he:  # pragma: no cover
+                _LOG.warning(f'baseline_history_write_failed index={index}: {he}')
             return True
         except Exception as e:
             _LOG.error(f'baseline_save_failed index={index}: {e}')

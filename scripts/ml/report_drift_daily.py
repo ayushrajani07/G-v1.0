@@ -203,6 +203,7 @@ def main():
             print('pruned:', ','.join(removed))
     if args.trend_days is not None:
         series = []
+        per_index_series: Dict[str, list] = {}
         files = sorted(glob.glob(os.path.join(drift_dir, 'daily_*.json')))
         # Use last N files by generated_at
         items = []
@@ -219,13 +220,20 @@ def main():
         if args.trend_days > 0:
             items = items[-int(args.trend_days):]
         for dt, d in items:
-            series.append({
-                'generated_at': d.get('generated_at'),
-                'aggregate_counts': d.get('aggregate_counts', {}),
-            })
+            gen_at = d.get('generated_at')
+            series.append({'generated_at': gen_at, 'aggregate_counts': d.get('aggregate_counts', {})})
+            # Build per-index series element
+            for pi in d.get('per_index', []):
+                idx = pi.get('index')
+                if not idx:
+                    continue
+                per_index_series.setdefault(idx, []).append({
+                    'generated_at': gen_at,
+                    'counts': pi.get('counts', {}),
+                })
         os.makedirs(os.path.dirname(args.trend_output) or '.', exist_ok=True)
         with open(args.trend_output, 'w', encoding='utf-8') as tf:
-            json.dump({'series': series, 'count': len(series)}, tf, indent=2)
+            json.dump({'series': series, 'per_index_series': per_index_series, 'count': len(series)}, tf, indent=2)
         print(args.trend_output)
 
 if __name__ == '__main__':

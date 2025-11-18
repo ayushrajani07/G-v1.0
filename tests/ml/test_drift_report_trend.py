@@ -30,6 +30,8 @@ def test_trend_endpoint_reads_reports(tmp_path, monkeypatch):
     assert r.status_code == 200
     data = r.json()
     assert data['count'] == 2
+    # per-index series present and contains NIFTY
+    assert 'per_index_series' in data and 'NIFTY' in data['per_index_series']
     # Latest two days should be 17 and 18
     assert data['series'][0]['generated_at'].startswith('2025-11-17')
     assert data['series'][1]['generated_at'].startswith('2025-11-18')
