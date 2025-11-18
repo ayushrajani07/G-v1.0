@@ -16,6 +16,8 @@ jobs:
   drift-report:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      G6_DRIFT_FEATURE_MAP_JSON: configs/ml/feature_map.sample.json
     steps:
       - name: Checkout
         uses: actions/checkout@v4

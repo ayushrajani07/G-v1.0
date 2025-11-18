@@ -69,6 +69,35 @@ Endpoint `/api/ml/universal_advisor/drift_advice` now reads `g6_feature_drift_se
 4. Advisor aggregates severity snapshot for decision support.
 5. Alerts fire based on severity and aggregate conditions.
 
+## Feature Mapping & Transforms
+Drift uses a configurable feature map to bind logical feature names to CSV columns and simple transforms.
+
+- Env var: `G6_DRIFT_FEATURE_MAP_JSON` (optional). If unset, a built-in default is used.
+- Sample: `configs/ml/feature_map.sample.json`
+
+Spec format (per feature):
+```
+{
+	"<feature_name>": {
+		"csv_col": "<column_in_csv>",
+		"importance": <int for ordering>,
+		"transform": "identity|log1p|abs"
+	}
+}
+```
+
+Notes:
+- `importance` orders default exposure; lower = earlier.
+- `transform` applies to values before statistics are computed (e.g., `tp_log` uses `log1p` of `tp`).
+- The runtime feature cap still prioritizes by `psi + |mean_z|`; `importance` can act as a tiebreaker by placing key features earlier.
+
+Quick start (local):
+```
+export G6_DRIFT_FEATURE_MAP_JSON=configs/ml/feature_map.sample.json
+export G6_DRIFT_INDICES=NIFTY,BANKNIFTY
+python scripts/ml/report_drift_daily.py --output reports/drift/daily_$(date +%F).json --trend-days 14
+```
+
 ## Next Hardening Items
 - Multi-day baseline aggregation.
 - EWMA smoothing of metrics to reduce transient noise.
@@ -83,6 +112,7 @@ Endpoint `/api/ml/universal_advisor/drift_advice` now reads `g6_feature_drift_se
 
 ## References
 - `src/ml/drift_monitor.py`
+- `src/ml/feature_loader.py`
 - `src/web/dashboard/drift_metrics.py`
 - `prometheus_alerts_drift.yml`
 - Advisor endpoint implementation
