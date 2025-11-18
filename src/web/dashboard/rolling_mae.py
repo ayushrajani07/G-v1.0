@@ -47,6 +47,7 @@ _EVENTS: List[Tuple[str,int,int,float,float,float,float]] = []  # pending evalua
 _LOCK = threading.Lock()
 _ERRORS: Dict[Tuple[str,int], deque] = {}
 _COVER_FLAGS: Dict[Tuple[str,int], deque] = {}
+_NORM_ERRORS: Dict[Tuple[str,int], deque] = {}
 _STARTED = False
 
 def log_forecast_event(index: str, horizon: int, ts_ms: int, p50: float, underlying: float, band_low: float, band_high: float) -> None:
@@ -168,6 +169,8 @@ def _evaluate_ready_events() -> None:
         error = abs(latest_underlying - p50)
         key = (idx, horizon)
         covered = 1 if (band_low <= latest_underlying <= band_high) else 0
+        band_width = max(1e-9, band_high - band_low)
+        norm_error_val = error / band_width
         with _LOCK:
             err_deque = _ERRORS.get(key)
             if err_deque is None:
@@ -177,15 +180,26 @@ def _evaluate_ready_events() -> None:
             if cov_deque is None:
                 cov_deque = deque(maxlen=_WINDOW_SIZE)
                 _COVER_FLAGS[key] = cov_deque
+            norm_deque = _NORM_ERRORS.get(key)
+            if norm_deque is None:
+                norm_deque = deque(maxlen=_WINDOW_SIZE)
+                _NORM_ERRORS[key] = norm_deque
             err_deque.append(error)
             cov_deque.append(covered)
+            norm_deque.append(norm_error_val)
             mae = sum(err_deque) / max(1, len(err_deque))
             coverage_pct = (sum(cov_deque) / max(1, len(cov_deque))) * 100.0
+            norm_error_mean = sum(norm_deque) / max(1, len(norm_deque))
         # Export Prometheus gauge
         try:
-            from .prom_metrics import set_forecast_mae, set_forecast_coverage  # type: ignore
+            from .prom_metrics import (
+                set_forecast_mae,
+                set_forecast_coverage,
+                set_forecast_norm_error,
+            )  # type: ignore
             set_forecast_mae(idx, horizon, mae)
             set_forecast_coverage(idx, horizon, coverage_pct)
+            set_forecast_norm_error(idx, horizon, norm_error_mean)
         except Exception:
             pass
     # After processing ready batch, attempt periodic flush

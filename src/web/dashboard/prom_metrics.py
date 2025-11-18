@@ -13,6 +13,7 @@ Metrics exposed:
 - g6_recent_window_cache_size: Gauge of current recent window cache entries
 - g6_forecast_mae: Gauge of rolling mean absolute error for p50 forecasts (per index,horizon)
 - g6_forecast_coverage_pct: Gauge of rolling coverage percentage for band_low/band_high (per index,horizon)
+- g6_forecast_norm_error: Gauge of rolling normalized error (MAE divided by band width) (per index,horizon)
 """
 from __future__ import annotations
 
@@ -36,6 +37,7 @@ _FORECAST_CACHE_SIZE: Any = None
 _RECENT_WINDOW_CACHE_SIZE: Any = None
 _FORECAST_ROLLING_MAE: Any = None
 _FORECAST_COVERAGE: Any = None
+_FORECAST_NORM_ERROR: Any = None
 
 
 def _is_enabled() -> bool:
@@ -128,6 +130,12 @@ def _init_metrics() -> bool:
         _FORECAST_COVERAGE = Gauge(
             "g6_forecast_coverage_pct",
             "Rolling coverage percentage (0-100) for forecast band",
+            labelnames=["index", "horizon"],
+            registry=_REGISTRY,
+        )
+        _FORECAST_NORM_ERROR = Gauge(
+            "g6_forecast_norm_error",
+            "Rolling normalized error (mean abs error divided by band width)",
             labelnames=["index", "horizon"],
             registry=_REGISTRY,
         )
@@ -301,6 +309,24 @@ def set_forecast_coverage(index: str, horizon: int, coverage_pct: float) -> None
             _LOG.debug(f"Failed to set forecast coverage: {e}")
 
 
+def set_forecast_norm_error(index: str, horizon: int, norm_error: float) -> None:
+    """Set rolling normalized error gauge.
+
+    Args:
+        index: Index name
+        horizon: Horizon minutes
+        norm_error: Normalized error value (error / band_width)
+    """
+    if not _is_enabled():
+        return
+    _init_metrics()
+    if _FORECAST_NORM_ERROR is not None:
+        try:
+            _FORECAST_NORM_ERROR.labels(index=index, horizon=str(horizon)).set(norm_error)
+        except Exception as e:
+            _LOG.debug(f"Failed to set forecast normalized error: {e}")
+
+
 def get_registry() -> Optional[Any]:
     """Get the Prometheus registry if metrics are enabled.
 
@@ -324,5 +350,6 @@ __all__ = [
     "set_recent_window_cache_size",
     "set_forecast_mae",
     "set_forecast_coverage",
+    "set_forecast_norm_error",
     "get_registry",
 ]
