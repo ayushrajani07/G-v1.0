@@ -1,0 +1,101 @@
+# Prometheus Alert Rules for ML Regime Detection - Phase 10
+# Uses regime metrics: g6_regime_shift_distance, g6_regime_status
+# Validate: promtool check rules prometheus_alerts_regime.yml
+# Include in prometheus.yml under rule_files.
+
+groups:
+  - name: ml_regime_detection
+    interval: 60s
+    rules:
+      - alert: MLRegimeShiftCritical
+        expr: g6_regime_status == 2
+        for: 15m
+        labels:
+          severity: critical
+          component: ml_regime
+        annotations:
+          summary: "Critical regime shift detected for {{ $labels.index }}"
+          description: |
+            Index {{ $labels.index }} has been in critical regime status for 15 minutes.
+            Current status: Critical (2)
+            
+            Actions:
+            1. Check /api/ml/ensemble/regime?index={{ $labels.index }} for details
+            2. Review recent market events and data quality
+            3. Consider baseline refresh and model retraining
+            4. Verify data collection pipeline integrity
+
+      - alert: MLRegimeShiftDistanceHigh
+        expr: g6_regime_shift_distance > 0.55
+        for: 30m
+        labels:
+          severity: warning
+          component: ml_regime
+        annotations:
+          summary: "High regime shift distance for {{ $labels.index }} (distance={{ $value }})"
+          description: |
+            Regime shift distance has exceeded critical threshold (0.55) for 30 minutes.
+            Current distance: {{ $value }}
+            Index: {{ $labels.index }}
+            
+            This indicates significant deviation from the last stable regime centroid.
+            
+            Actions:
+            1. Inspect /api/ml/ensemble/regime?index={{ $labels.index }}
+            2. Compare with /api/ml/ensemble/metrics/compare?index={{ $labels.index }}
+            3. Check for systematic data issues or market regime changes
+            4. Review drift metrics for correlated feature shifts
+
+      - alert: MLRegimeShiftWarning
+        expr: g6_regime_status == 1
+        for: 1h
+        labels:
+          severity: warning
+          component: ml_regime
+        annotations:
+          summary: "Persistent regime shift warning for {{ $labels.index }}"
+          description: |
+            Index {{ $labels.index }} has been in warn regime status for 1 hour.
+            Current status: Warning (1)
+            
+            Monitor for potential escalation to critical status.
+            
+            Actions:
+            1. Review regime embedding features via /api/ml/ensemble/regime?index={{ $labels.index }}
+            2. Check rolling MAE and coverage metrics
+            3. Investigate feature drift patterns
+
+      - alert: MLRegimeFrequentChanges
+        expr: changes(g6_regime_status[7d]) > 10
+        for: 5m
+        labels:
+          severity: info
+          component: ml_regime
+        annotations:
+          summary: "Frequent regime status changes for {{ $labels.index }}"
+          description: |
+            Index {{ $labels.index }} has experienced more than 10 regime status changes in the last 7 days.
+            This may indicate:
+            - Threshold misconfiguration
+            - High market volatility period
+            - Model instability
+            
+            Review regime history and consider adjusting thresholds or retraining models.
+
+      - alert: MLRegimeDetectionStale
+        expr: absent(g6_regime_status)
+        for: 1h
+        labels:
+          severity: warning
+          component: ml_regime
+        annotations:
+          summary: "Regime detection metrics absent"
+          description: |
+            No regime status metrics have been reported for 1 hour.
+            
+            Possible causes:
+            - Regime detector not running
+            - Metrics endpoint disabled (ENABLE_PATH_FORECAST_PROM_METRICS != 1)
+            - Scraping issue
+            
+            Verify regime detector service is running and metrics are being exposed.

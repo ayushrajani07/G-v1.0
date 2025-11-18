@@ -65,6 +65,9 @@ jobs:
       - name: Validate drift alert rules
         run: |
           "$PROMTOOL" check rules prometheus_alerts_drift.yml
+      - name: Validate regime alert rules
+        run: |
+          "$PROMTOOL" check rules prometheus_alerts_regime.yml
 
   promtool-generated-rules:
     name: Generated per-index rules validation

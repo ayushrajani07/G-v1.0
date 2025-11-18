@@ -109,6 +109,9 @@ scratch/
 *secret*.json
 *credentials*.json
 
+# --- Regime detector test artifacts ---
+data/regime/TEST_*/
+
 # --- Allowlist important config templates ---
 !config/environment.template
 

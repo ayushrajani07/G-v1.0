@@ -43,6 +43,8 @@ _FORECAST_NORM_ERROR: Any = None
 _FORECAST_ERROR_HIST: Any = None
 _FORECAST_NORM_ERROR_HIST: Any = None
 _FORECAST_CACHE_DYNAMIC_TTL: Any = None
+_REGIME_SHIFT_DISTANCE: Any = None
+_REGIME_STATUS: Any = None
 
 
 def _is_enabled() -> bool:
@@ -57,6 +59,7 @@ def _init_metrics() -> bool:
     global _RECENT_WINDOW_CACHE_HITS, _RECENT_WINDOW_CACHE_MISSES
     global _FORECAST_CACHE_SIZE, _RECENT_WINDOW_CACHE_SIZE
     global _FORECAST_CACHE_DYNAMIC_TTL
+    global _REGIME_SHIFT_DISTANCE, _REGIME_STATUS
 
     if _METRICS_INITIALIZED:
         return True
@@ -151,6 +154,21 @@ def _init_metrics() -> bool:
             labelnames=["index"],
             registry=_REGISTRY,
         )
+        
+        # Regime detection metrics (Phase 10)
+        _REGIME_SHIFT_DISTANCE = Gauge(
+            "g6_regime_shift_distance",
+            "Distance from last stable regime centroid (0.0 = identical, higher = more different)",
+            labelnames=["index"],
+            registry=_REGISTRY,
+        )
+        _REGIME_STATUS = Gauge(
+            "g6_regime_status",
+            "Regime shift status (0=stable, 1=warn, 2=critical)",
+            labelnames=["index"],
+            registry=_REGISTRY,
+        )
+        
         # Optional histograms for percentile analysis; buckets configurable via env vars
         try:
             import os
@@ -485,3 +503,49 @@ def get_feature_drift_snapshot(index: str | None = None) -> list[dict[str, float
         return []
 
 __all__.append('get_feature_drift_snapshot')
+
+
+def set_regime_shift_distance(index: str, distance: float) -> None:
+    """Set the regime shift distance gauge for given index.
+    
+    Args:
+        index: Index name (e.g., "NIFTY")
+        distance: Distance from stable centroid (0.0 = identical, higher = more different)
+    """
+    if not _is_enabled():
+        return
+    
+    _init_metrics()
+    if _REGIME_SHIFT_DISTANCE is not None:
+        try:
+            _REGIME_SHIFT_DISTANCE.labels(index=index).set(distance)
+        except Exception as e:
+            _LOG.debug(f"Failed to set regime shift distance: {e}")
+
+
+def set_regime_status(index: str, status: str) -> None:
+    """Set the regime status gauge for given index.
+    
+    Args:
+        index: Index name (e.g., "NIFTY")
+        status: One of 'stable', 'warn', 'critical'
+    """
+    if not _is_enabled():
+        return
+    
+    _init_metrics()
+    if _REGIME_STATUS is not None:
+        try:
+            # Encode status as numeric value
+            status_value = 0  # stable
+            if status == "warn":
+                status_value = 1
+            elif status == "critical":
+                status_value = 2
+            
+            _REGIME_STATUS.labels(index=index).set(status_value)
+        except Exception as e:
+            _LOG.debug(f"Failed to set regime status: {e}")
+
+
+__all__.extend(['set_regime_shift_distance', 'set_regime_status'])

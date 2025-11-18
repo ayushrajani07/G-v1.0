@@ -878,11 +878,28 @@ async def metrics_compare(
     - window & EMA normalized error
     - p50/p90 percentiles for error, normalized error, band width (if >=5 samples)
     - last evaluation timestamp (epoch ms)
+    - regime_status: Current regime status for the index (if index specified)
+    - regime_distance: Distance from stable centroid (if index specified)
     """
     try:
         from ..rolling_mae import ensure_started, get_metric_comparison  # type: ignore
         ensure_started()
-        return get_metric_comparison(index=index, horizon=horizon)
+        result = get_metric_comparison(index=index, horizon=horizon)
+        
+        # Add regime information if index is specified
+        if index:
+            try:
+                from src.ml import regime_detector
+                regime_info = regime_detector.get_current_regime(index)
+                result["regime_status"] = regime_info.get("shift_status", "stable")
+                result["regime_distance"] = regime_info.get("distance", 0.0)
+            except Exception as e:
+                _LOG.warning(f"Failed to fetch regime info for {index}: {e}")
+                # Don't fail the whole request, just omit regime info
+                result["regime_status"] = "unknown"
+                result["regime_distance"] = 0.0
+        
+        return result
     except Exception as e:
         _LOG.warning(f"metrics_compare_failed: {e}")
         raise HTTPException(status_code=500, detail="metrics_compare_failed")
@@ -907,3 +924,25 @@ async def drift(index: Optional[str] = Query(None, description="Index symbol e.g
     Currently returns 501 to indicate not implemented while reserving route & query schema.
     """
     raise HTTPException(status_code=501, detail="drift_monitor_not_implemented_placeholder")
+
+# --------------------------- Regime Detection Endpoints ---------------------------
+@router.get('/regime')
+async def regime(
+    index: str = Query(..., description="Index symbol e.g. NIFTY"),
+):
+    """Get current regime status and embedding for given index (Phase 10).
+    
+    Returns:
+    - embedding: Dict of current feature values
+    - distance: Distance from last stable centroid
+    - shift_status: One of 'stable', 'warn', 'critical'
+    - last_change_timestamp: ISO timestamp of last status change
+    - history_count: Number of historical entries
+    """
+    try:
+        from src.ml import regime_detector
+        result = regime_detector.get_current_regime(index)
+        return result
+    except Exception as e:
+        _LOG.error(f"regime_endpoint_failed index={index}: {e}")
+        raise HTTPException(status_code=500, detail=f"regime_endpoint_failed: {str(e)}")
