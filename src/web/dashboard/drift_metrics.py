@@ -35,6 +35,7 @@ _FEATURE_VAR_DELTA: Any = None
 _FEATURE_DRIFT_FLAG: Any = None
 _DRIFT_LAST_EVAL_MS: Any = None
 _DRIFT_ALERT_COUNT: Any = None
+_LAST_SUMMARY: Dict[str, Dict[str, Any]] = {}
 
 
 def _is_enabled() -> bool:
@@ -271,6 +272,13 @@ def _drift_evaluator_loop():
                         alert_count = sum(1 for m in drift_metrics.values() if m.get('alert_flag'))
                         if _DRIFT_ALERT_COUNT is not None:
                             _DRIFT_ALERT_COUNT.labels(index=index).set(alert_count)
+                        # Store summary for lightweight retrieval
+                        _LAST_SUMMARY[index] = {
+                            "index": index,
+                            "ts_ms": int(time.time()*1000.0),
+                            "alert_count": int(alert_count),
+                            "feature_count": len(drift_metrics),
+                        }
                         _LOG.info(
                             f"Drift evaluation complete for {index}: "
                             f"{len(drift_metrics)} features, {alert_count} alerts"
@@ -279,6 +287,12 @@ def _drift_evaluator_loop():
                         # Not ready: set alert count 0, last eval, skip metrics
                         if _DRIFT_ALERT_COUNT is not None:
                             _DRIFT_ALERT_COUNT.labels(index=index).set(0)
+                        _LAST_SUMMARY[index] = {
+                            "index": index,
+                            "ts_ms": int(time.time()*1000.0),
+                            "alert_count": 0,
+                            "feature_count": len((baseline or {}).get("features", {})),
+                        }
                         _LOG.info(
                             f"Drift evaluation skipped for {index}: baseline/recent not ready"
                         )
@@ -348,3 +362,13 @@ def get_registry():
     """Get the Prometheus registry (for /metrics endpoint)."""
     _init_metrics()
     return _REGISTRY
+
+
+def get_drift_summary(index: Optional[str] = None) -> Dict[str, Any]:
+    """Return last drift evaluation summary for index or all indices.
+
+    Structure per index: { index, ts_ms, alert_count, feature_count }
+    """
+    if index:
+        return _LAST_SUMMARY.get(index.upper(), {})
+    return dict(_LAST_SUMMARY)

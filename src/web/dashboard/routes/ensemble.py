@@ -945,6 +945,7 @@ async def metrics_flush():
 async def metrics_compare(
     index: Optional[str] = Query(None, description="Optional index filter e.g. NIFTY"),
     horizon: Optional[int] = Query(None, ge=1, le=720, description="Optional horizon filter in minutes"),
+    include_drift: int = Query(0, ge=0, le=1, description="Include drift summary when index provided (0/1)"),
 ):
     """Return comparison of rolling window vs EMA metrics (Phase 10 diagnostic).
 
@@ -958,7 +959,16 @@ async def metrics_compare(
     try:
         from ..rolling_mae import ensure_started, get_metric_comparison  # type: ignore
         ensure_started()
-        return get_metric_comparison(index=index, horizon=horizon)
+        result = get_metric_comparison(index=index, horizon=horizon)
+        if include_drift == 1 and index:
+            try:
+                from ..drift_metrics import get_drift_summary  # type: ignore
+                drift = get_drift_summary(index=index)
+                if isinstance(result, dict):
+                    result["drift_summary"] = drift
+            except Exception:
+                pass
+        return result
     except Exception as e:
         _LOG.warning(f"metrics_compare_failed: {e}")
         raise HTTPException(status_code=500, detail="metrics_compare_failed")
