@@ -11,6 +11,57 @@ except (ImportError, ModuleNotFoundError):  # fallback to relative (legacy) if a
     from ....advisor.core import AdvisorContext, build_default_engine  # type: ignore
 
 router = APIRouter()
+def _env_int(name: str, default: int) -> int:
+    import os
+    try:
+        return int(os.environ.get(name, str(default)).strip())
+    except Exception:
+        return default
+
+def _read_last_eval_ages(indices: list[str]) -> list[dict]:
+    """Read g6_drift_last_eval_ms from the in-process registry and compute age seconds.
+
+    Returns a list of dicts with keys: index, last_eval_ms, age_sec, stale.
+    """
+    try:
+        from src.web.dashboard import drift_metrics  # type: ignore
+        reg = drift_metrics.get_registry()
+        if reg is None:
+            return []
+        # collect samples from the family named g6_drift_last_eval_ms
+        family = None
+        for fam in reg.collect():  # type: ignore[attr-defined]
+            name = getattr(fam, 'name', None) or getattr(fam, 'sample_name', None)
+            if name == 'g6_drift_last_eval_ms':
+                family = fam
+                break
+        if family is None:
+            return []
+        now_ms = time.time() * 1000.0
+        stale_sec = _env_int('G6_DRIFT_EVAL_STALE_SEC', 600)
+        out = []
+        wanted = {i.upper() for i in indices} if indices else None
+        for s in getattr(family, 'samples', []):
+            idx = (s.labels or {}).get('index')
+            if not idx:
+                continue
+            if wanted is not None and idx.upper() not in wanted:
+                continue
+            try:
+                last_ms = float(s.value)
+            except Exception:
+                continue
+            age_sec = max(0.0, (now_ms - last_ms) / 1000.0)
+            out.append({
+                'index': idx,
+                'last_eval_ms': last_ms,
+                'age_sec': age_sec,
+                'stale': bool(age_sec >= stale_sec),
+            })
+        return out
+    except Exception:
+        return []
+
 
 @router.get("/api/ml/universal_advisor")
 async def api_ml_universal_advisor(
@@ -203,6 +254,10 @@ async def api_ml_universal_advisor_drift_advice(
                 'actions': acts,
             })
     recommend_retrain = counts['critical'] >= 2 or counts['actionable'] >= 5
+    # Evaluate drift evaluator recency for this index
+    eval_infos = _read_last_eval_ages([index])
+    eval_info = next((e for e in eval_infos if str(e.get('index','')).upper() == index.upper()), None)
+
     result = {
         'index': index.upper(),
         'generated_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
@@ -211,9 +266,23 @@ async def api_ml_universal_advisor_drift_advice(
         'recommend_retrain': recommend_retrain,
         'data_insufficient': data_insufficient,
     }
+    if eval_info:
+        result['evaluator'] = eval_info
     if detail:
         result['features'] = entries
     return JSONResponse(result)
+
+@router.get('/api/ml/universal_advisor/drift_evaluator_health')
+async def api_ml_universal_advisor_drift_evaluator_health(
+    indices: str = Query('NIFTY,BANKNIFTY', description='Comma-separated indices')
+):
+    """Return last evaluator run age per index based on g6_drift_last_eval_ms.
+
+    Includes age_sec and a stale boolean using threshold G6_DRIFT_EVAL_STALE_SEC (default 600s).
+    """
+    idxs = [s.strip() for s in indices.split(',') if s.strip()]
+    rows = _read_last_eval_ages(idxs)
+    return JSONResponse({'indices': idxs, 'rows': rows, 'generated_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())})
 
 # ---- Drift reporting JSON endpoints (for Infinity/JSON API ingestion) ----
 @router.get('/api/ml/drift/daily_reports/latest')

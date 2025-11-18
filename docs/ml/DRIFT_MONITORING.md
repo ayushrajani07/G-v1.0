@@ -62,12 +62,25 @@ Endpoint `/api/ml/universal_advisor/drift_advice` now reads `g6_feature_drift_se
 - Actionable: investigate pipeline & validate recent data.
 - Watch: monitor next cycles.
 
+Note on data_insufficient
+- The advice payload includes `data_insufficient: true` when no drift snapshot is available (e.g., evaluator not yet run or metrics disabled).
+- Dashboards should reflect this by:
+	- Showing a neutral badge or info state (e.g., “No current data”)
+	- Avoiding red/amber status until real data arrives
+	- Optionally displaying the evaluator recency (see Evaluator Health below)
+
 ## Data Flow
 1. `DriftMonitor` loads baseline (or creates if missing).
 2. Evaluator thread computes recent window, metrics, severity.
 3. Gauges updated; baseline refresh may occur.
 4. Advisor aggregates severity snapshot for decision support.
 5. Alerts fire based on severity and aggregate conditions.
+
+## Evaluator Health (Recency)
+Gauge `g6_drift_last_eval_ms{index}` records the last evaluator timestamp (ms since epoch) per index. An advisor endpoint exposes an age calculation and a boolean `stale` using a threshold (default 600 seconds). Suggested dashboard usage:
+- Show a stat “Last drift eval age” per index
+- Color as warning when `stale=true`
+- Link to evaluator logs when stale persists
 
 ## Feature Mapping & Transforms
 Drift uses a configurable feature map to bind logical feature names to CSV columns and simple transforms.
