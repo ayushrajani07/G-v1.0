@@ -1,0 +1,45 @@
+name: Drift Daily Report
+
+on:
+  schedule:
+    - cron: '55 23 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  id-token: write
+  pull-requests: read
+
+jobs:
+  drift-report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.core.txt ]; then pip install -r requirements.core.txt; else pip install -r requirements.txt; fi
+      - name: Generate drift report
+        run: |
+          mkdir -p reports/drift
+          python scripts/ml/report_drift_daily.py --indices NIFTY,BANKNIFTY --output reports/drift/daily_ci.json --textfile-dir reports/drift/textfile
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-daily-report
+          path: |
+            reports/drift/daily_ci.json
+            reports/drift/textfile/drift_daily.prom
+      - name: Summary
+        run: |
+          echo "### Drift Daily Report Artifact" >> $GITHUB_STEP_SUMMARY
+          echo "Generated at $(date -u)" >> $GITHUB_STEP_SUMMARY
+          python -c "import json, pathlib; p=pathlib.Path('reports/drift/daily_ci.json');\nprint('No report found' if not p.exists() else 'Aggregate severity counts: '+str(json.loads(p.read_text()).get('aggregate_counts',{})))"

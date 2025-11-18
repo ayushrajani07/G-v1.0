@@ -1,0 +1,100 @@
+{
+  "uid": "ml_drift_severity_trend",
+  "title": "ML Drift Severity Trend",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Critical Features Count",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "sum by (index) (g6_feature_drift_severity==3)",
+          "legendFormat": "{{index}}",
+          "interval": "1m",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    },
+    {
+      "type": "timeseries",
+      "title": "Actionable + Critical (Composite Pressure)",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+      "targets": [
+        {
+          "expr": "sum by (index) (g6_feature_drift_severity==2 or g6_feature_drift_severity==3)",
+          "legendFormat": "{{index}}",
+          "interval": "1m",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    },
+    {
+      "type": "timeseries",
+      "title": "Baseline Age (Days)",
+      "gridPos": {"x": 0, "y": 8, "w": 8, "h": 6},
+      "targets": [
+        {
+          "expr": "g6_drift_baseline_age_days",
+          "legendFormat": "{{index}}",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "d"}, "overrides": []}
+    },
+    {
+      "type": "timeseries",
+      "title": "Evaluator Duration (ms)",
+      "gridPos": {"x": 8, "y": 8, "w": 8, "h": 6},
+      "targets": [
+        {
+          "expr": "g6_drift_eval_duration_ms",
+          "legendFormat": "{{index}}",
+          "refId": "D"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "ms"}, "overrides": []}
+    },
+    {
+      "type": "stat",
+      "title": "Latest Critical Count (NIFTY)",
+      "gridPos": {"x": 16, "y": 8, "w": 8, "h": 6},
+      "targets": [
+        {
+          "expr": "sum(g6_feature_drift_severity==3 and index=\"NIFTY\")",
+          "refId": "E"
+        }
+      ],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}}
+    },
+    {
+      "type": "table",
+      "title": "Top Critical Features (Approx PSI Rank)",
+      "gridPos": {"x": 0, "y": 14, "w": 24, "h": 10},
+      "targets": [
+        {
+          "expr": "topk(10, g6_feature_psi * on(feature,index) group_left() (g6_feature_drift_severity==3))",
+          "refId": "F"
+        }
+      ],
+      "transformations": [],
+      "options": {"showHeader": true}
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "index",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(g6_feature_drift_severity, index)",
+        "refresh": 1
+      }
+    ]
+  }
+}

@@ -93,11 +93,50 @@ def collect_index_summary(index: str) -> Dict[str, Any]:
     }
 
 
+def _emit_textfile_metrics(out: Dict[str, Any], textfile_dir: str) -> str:
+    """Emit Prometheus textfile metrics for node_exporter textfile collector.
+
+    Metrics emitted:
+      g6_drift_daily_severity_count{index="NIFTY",severity="critical"} <value>
+      g6_drift_daily_baseline_age_days{index="NIFTY"} <age>
+      g6_drift_daily_eval_last_ms{index="NIFTY"} <timestamp_ms>
+      g6_drift_daily_top_feature_psi{index="NIFTY",feature="ce_iv",rank="1"} <psi>
+    """
+    import os
+    lines = []
+    ts = int(datetime.now(timezone.utc).timestamp())
+    for idx_summary in out.get('per_index', []):
+        index = idx_summary['index']
+        for sev, val in idx_summary['counts'].items():
+            lines.append(f'g6_drift_daily_severity_count{{index="{index}",severity="{sev}"}} {val}')
+        age = idx_summary.get('baseline_age_days')
+        if age is not None:
+            lines.append(f'g6_drift_daily_baseline_age_days{{index="{index}"}} {age}')
+        eval_ms = idx_summary.get('eval_last_ms')
+        if eval_ms is not None:
+            lines.append(f'g6_drift_daily_eval_last_ms{{index="{index}"}} {eval_ms}')
+        top = idx_summary.get('top_critical') or []
+        for rank, feat in enumerate(top, start=1):
+            f_name = feat.get('feature')
+            psi = feat.get('psi')
+            if f_name is not None and psi is not None:
+                lines.append(f'g6_drift_daily_top_feature_psi{{index="{index}",feature="{f_name}",rank="{rank}"}} {psi}')
+    # Aggregate counts
+    for sev, val in out.get('aggregate_counts', {}).items():
+        lines.append(f'g6_drift_daily_severity_count_aggregate{{severity="{sev}"}} {val}')
+    lines.append(f'g6_drift_daily_generation_timestamp {ts}')
+    os.makedirs(textfile_dir, exist_ok=True)
+    filepath = os.path.join(textfile_dir, 'drift_daily.prom')
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines) + '\n')
+    return filepath
+
 def main():
     ap = argparse.ArgumentParser(description='Daily drift summary reporter')
     ap.add_argument('--indices', help='Comma-separated indices', default=None)
     ap.add_argument('--output', help='Output JSON file path', required=True)
     ap.add_argument('--pretty', action='store_true', help='Pretty-print JSON')
+    ap.add_argument('--textfile-dir', help='Optional directory to emit Prometheus textfile metrics', default=None)
     args = ap.parse_args()
     if args.indices:
         indices = [s.strip().upper() for s in args.indices.split(',') if s.strip()]
@@ -130,7 +169,15 @@ def main():
             json.dump(out,f,indent=2)
         else:
             json.dump(out,f,separators=(',',':'))
+    textfile_path = None
+    if args.textfile_dir:
+        try:
+            textfile_path = _emit_textfile_metrics(out, args.textfile_dir)
+        except Exception as e:
+            print(f'Textfile emission failed: {e}')
     print(args.output)
+    if textfile_path:
+        print(textfile_path)
 
 if __name__ == '__main__':
     main()
