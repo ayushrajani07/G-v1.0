@@ -49,6 +49,23 @@ jobs:
           name: coverage-${{ matrix.python-version }}
           path: coverage.xml
 
+  promtool-rules:
+    name: Prometheus rules validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download promtool
+        run: |
+          set -e
+          VER=2.53.0
+          curl -sSL -o prom.tar.gz https://github.com/prometheus/prometheus/releases/download/v${VER}/prometheus-${VER}.linux-amd64.tar.gz
+          tar -xzf prom.tar.gz
+          echo "PROMTOOL=$(pwd)/prometheus-${VER}.linux-amd64/promtool" >> $GITHUB_ENV
+      - name: Validate drift alert rules
+        run: |
+          "$PROMTOOL" check rules prometheus_alerts_drift.yml
+
   lint:
     name: Lint (non-blocking)
     runs-on: ubuntu-latest

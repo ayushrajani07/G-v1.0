@@ -111,7 +111,17 @@ class FeatureLoader:
         values: List[float] = []
         fmap = feature_map or {}
         spec = fmap.get(feature)
-        csv_col = spec.csv_col if spec else feature
+        # If we have a FeatureSpec with potential composite transform, compute from the row via feature_loader helper
+        if spec is not None:
+            from .feature_loader import _compute_from_row  # type: ignore
+            for r in rows:
+                val = _compute_from_row(spec, r)
+                if val is None or not math.isfinite(val):
+                    continue
+                values.append(float(val))
+            return values
+        # Fallback: direct column with basic numeric cast
+        csv_col = feature
         for r in rows:
             v = r.get(csv_col)
             if v is None:
@@ -122,8 +132,6 @@ class FeatureLoader:
                 continue
             if not math.isfinite(val):
                 continue
-            if spec:
-                val = apply_transform(fmap, feature, val)
             values.append(val)
         return values
 
