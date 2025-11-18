@@ -97,12 +97,14 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 9. Provide comparison endpoint with percentiles & filtering.  ✅
 10. Add config validation endpoint for decay precedence.  ✅
 11. Add persistence + manual flush of rolling metric state.  ✅
+12. Severity-based drift metrics & alerts (g6_feature_drift_severity, baseline refresh, advisor integration). ✅
 
 **Phase 10 Risks & Watchpoints:**
 - Drift false positives → calibrate thresholds using last 30 days.
 - Adaptive TTL instability → start with conservative bounds (min 10s, max 60s).
 - Increased metrics cardinality → avoid high-label fragmentation (stick to index,horizon).
 - Regime detection latency → pre-compute embeddings off-request path.
+- Severity gauge misuse → ensure single source; removed legacy var_delta & drift_flag from snapshot.
 
 **Phase 10 Success Targets:**
 - Coverage stability: P10-P90 coverage within 75–85% weekly.
@@ -113,6 +115,7 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
  - Eviction rate: <2/sec sustained (5m window) in normal load.
  - Forecast cache hit ratio: ≥60% sustained post-adaptive TTL.
  - Recent file cache hit ratio: ≥70% sustained.
+ - Drift severity exposure: severity gauge present; baseline auto-refresh triggers logged; critical feature count gauge stable.
 
 ### Phase 10 Instrumentation & Metrics Enhancements (2025-11-18)
 
@@ -156,6 +159,20 @@ The following real-time performance & quality metrics have been implemented to e
 | `G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES` | Time-based half-life (minutes) | Used if HALF_LIFE & DECAY unset |
 | `G6_ROLLING_ERROR_BUCKETS` | Buckets for absolute error histogram | Comma-separated floats |
 | `G6_ROLLING_NORM_ERROR_BUCKETS` | Buckets for normalized error histogram | Comma-separated floats |
+| `G6_DRIFT_PSI_WARN` | PSI warn threshold | `0.25` |
+| `G6_DRIFT_PSI_CRIT` | PSI critical threshold | `0.40` |
+| `G6_DRIFT_KS_WARN` | KS p-value warn threshold | `0.01` |
+| `G6_DRIFT_KS_CRIT` | KS p-value critical threshold | `0.001` |
+| `G6_DRIFT_MEAN_Z_WARN` | Mean Z-score warn threshold | `2.0` |
+| `G6_DRIFT_MEAN_Z_CRIT` | Mean Z-score critical threshold | `3.0` |
+| `G6_DRIFT_VAR_RATIO_WARN_HIGH` | Variance ratio upper warn | `1.5` |
+| `G6_DRIFT_VAR_RATIO_WARN_LOW` | Variance ratio lower warn | `0.67` |
+| `G6_DRIFT_VAR_RATIO_CRIT_HIGH` | Variance ratio upper critical | `2.0` |
+| `G6_DRIFT_VAR_RATIO_CRIT_LOW` | Variance ratio lower critical | `0.5` |
+| `G6_DRIFT_BASELINE_REFRESH_DAYS` | Baseline age refresh threshold | `30` |
+| `G6_DRIFT_CRITICAL_ALERT_REFRESH_COUNT` | Critical feature count refresh trigger | `3` |
+| `G6_DRIFT_MAX_FEATURES` | Cardinality cap for drift metrics | `30` |
+| `G6_DRIFT_ENABLE` | Enable drift evaluator thread | `0/1` |
 
 **Operational Usage Examples:**
 ```bash

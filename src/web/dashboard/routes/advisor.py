@@ -131,9 +131,8 @@ def _classify(rec: dict) -> tuple[str, list[str]]:
     psi = rec.get('psi', 0.0)
     ks = rec.get('ks_pvalue', 1.0)
     mean_delta = abs(rec.get('mean_delta', 0.0))
-    var_delta = rec.get('var_delta', 0.0)
-    # Convert variance delta to ratio if baseline embedded later; assume var_delta already ratio or difference
-    ratio = var_delta if var_delta > 0 else 1.0
+    var_ratio = rec.get('var_ratio', 1.0)
+    ratio = var_ratio if isinstance(var_ratio,(int,float)) and var_ratio > 0 else 1.0
     t = _THRESHOLDS
     severity = 'stable'
     actions: list[str] = []
@@ -196,7 +195,6 @@ async def api_ml_universal_advisor_drift_advice(
                 'psi': rec.get('psi'),
                 'ks_pvalue': rec.get('ks_pvalue'),
                 'mean_delta': rec.get('mean_delta'),
-                'var_delta': rec.get('var_delta'),
                 'var_ratio': rec.get('var_ratio'),
                 'severity': sev_label,
                 'actions': acts,

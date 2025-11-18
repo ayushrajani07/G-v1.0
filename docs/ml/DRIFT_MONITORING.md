@@ -1,29 +1,91 @@
-# Drift Monitoring (Phase 10) – Placeholder
+# Drift Monitoring (Phase 10)
 
-This document is a placeholder. Remote agent will populate with:
+## Overview
+Drift monitoring quantifies distribution shifts between a historical baseline and recent feature observations. It helps decide when to refresh baselines, retrain models, or investigate data quality issues.
 
-## Planned Content
-- Overview of drift detection goals
-- Feature selection & grouping (price-derived, IV, Greeks, liquidity)
-- Metrics: Population Stability Index (PSI), KS test p-value, mean delta Z-score, variance ratio
-- Thresholds & alert logic
-- Prometheus metrics reference (`g6_feature_psi`, `g6_feature_drift_flag`, etc.)
-- Endpoint schema: `/api/ml/ensemble/drift?index=...&features=...&full=1`
-- Operational playbook (investigation & remediation steps)
-- Baseline refresh policy (scheduled vs manual)
+## Implemented Metrics
+| Metric | Gauge | Description |
+|--------|-------|-------------|
+| Population Stability Index (PSI) | `g6_feature_psi` | Binned quantile divergence; higher => more shift |
+| KS p-value | `g6_feature_ks_pvalue` | Two-sample Kolmogorov–Smirnov test p-value |
+| Mean Delta | `g6_feature_mean_delta` | Recent mean minus baseline mean |
+| Variance Ratio | `g6_feature_var_ratio` | Recent variance / baseline variance |
+| Severity | `g6_feature_drift_severity` | Encoded severity (0 stable,1 watch,2 actionable,3 critical) |
+| Baseline Age | `g6_drift_baseline_age_days` | Days since baseline saved |
+| Critical Feature Count | `g6_drift_critical_feature_count` | Number of features at critical severity per index |
+| Last Eval Timestamp | `g6_drift_last_eval_ms` | Last evaluation (epoch ms) per index |
 
-## Current Status
-Implementation pending. Stubs added:
-- Module: `src/ml/drift_monitor.py`
-- Endpoint placeholder: `/api/ml/ensemble/drift` (returns 501)
-- Prometheus placeholder setters in `prom_metrics.py`
+## Severity Classification Logic
+Severity escalates based on thresholds (environment configurable):
 
-## Next Steps
-1. Implement baseline loader & recent window sampler
-2. Calculate PSI / KS / delta metrics
-3. Persist baselines under `metrics/drift_baselines/`
-4. Expose gauges & finalize endpoint response schema
-5. Add Grafana panels and alert rules
+- Watch: Any metric crosses its warn threshold (e.g., PSI >= `G6_DRIFT_PSI_WARN`).
+- Actionable: Watch plus corroboration (PSI warn AND (KS warn OR mean Z warn)).
+- Critical: Any metric crosses critical threshold (e.g., PSI >= `G6_DRIFT_PSI_CRIT`, KS p-value <= `G6_DRIFT_KS_CRIT`, |mean Z| >= `G6_DRIFT_MEAN_Z_CRIT`, variance ratio outside critical bounds).
+
+Environment Variables (selected):
+```
+G6_DRIFT_PSI_WARN=0.25
+G6_DRIFT_PSI_CRIT=0.40
+G6_DRIFT_KS_WARN=0.01
+G6_DRIFT_KS_CRIT=0.001
+G6_DRIFT_MEAN_Z_WARN=2.0
+G6_DRIFT_MEAN_Z_CRIT=3.0
+G6_DRIFT_VAR_RATIO_WARN_HIGH=1.5
+G6_DRIFT_VAR_RATIO_WARN_LOW=0.67
+G6_DRIFT_VAR_RATIO_CRIT_HIGH=2.0
+G6_DRIFT_VAR_RATIO_CRIT_LOW=0.5
+G6_DRIFT_BASELINE_REFRESH_DAYS=30
+G6_DRIFT_CRITICAL_ALERT_REFRESH_COUNT=3
+G6_DRIFT_MAX_FEATURES=30
+```
+
+## Baseline Refresh Policy
+Baseline automatically refreshes when:
+1. Age (days) >= `G6_DRIFT_BASELINE_REFRESH_DAYS`, OR
+2. Number of critical features >= `G6_DRIFT_CRITICAL_ALERT_REFRESH_COUNT`.
+
+Refresh is atomic (temp file replace), increments `version` in baseline JSON. Age exposed via `g6_drift_baseline_age_days`.
+
+## Prometheus Alert Rules (Severity-Based)
+Stored in `prometheus_alerts_drift.yml` using severity gauge:
+- `MLFeatureDriftCritical`: Any feature severity = 3.
+- `MLFeatureDriftActionablePersistent`: Actionable repeats >=3 times in 15m.
+- `MLBroadCriticalDrift`: >5 critical features sustained.
+- `MLDriftSeveritySpike`: Rapid increase in critical count.
+- `MLStaleDriftEvaluation`: Evaluator stale (>10m no update).
+- `MLAcceleratedBaselineRefresh`: Critical count threshold reached pre-refresh.
+- `MLMultiIndexCriticalDrift`: Multiple indices with >3 critical features.
+
+## Advisor Integration
+Endpoint `/api/ml/universal_advisor/drift_advice` now reads `g6_feature_drift_severity` directly. Fallback classification used only if severity gauge absent. Provides per-feature actions:
+- Critical: alert & consider retraining / baseline refresh.
+- Actionable: investigate pipeline & validate recent data.
+- Watch: monitor next cycles.
+
+## Data Flow
+1. `DriftMonitor` loads baseline (or creates if missing).
+2. Evaluator thread computes recent window, metrics, severity.
+3. Gauges updated; baseline refresh may occur.
+4. Advisor aggregates severity snapshot for decision support.
+5. Alerts fire based on severity and aggregate conditions.
+
+## Next Hardening Items
+- Multi-day baseline aggregation.
+- EWMA smoothing of metrics to reduce transient noise.
+- Feature importance weighting for exposure cap (`G6_DRIFT_MAX_FEATURES`).
+
+## Operational Playbook (Condensed)
+| Severity | Action |
+|----------|--------|
+| Watch | Observe; confirm no data gaps |
+| Actionable | Investigate feature pipeline & anomalies |
+| Critical | Baseline refresh review; potential retrain; raise alert |
+
+## References
+- `src/ml/drift_monitor.py`
+- `src/web/dashboard/drift_metrics.py`
+- `prometheus_alerts_drift.yml`
+- Advisor endpoint implementation
 
 ---
-_Last updated: 2025-11-18 (placeholder)_
+_Last updated: 2025-11-18_
