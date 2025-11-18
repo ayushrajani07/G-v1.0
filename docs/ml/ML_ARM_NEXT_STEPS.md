@@ -1,7 +1,7 @@
 # ML ARM Implementation - Next Steps After Roadmap Completion
 
 **Document Version:** 1.0  
-**Date:** 2025-11-17  
+**Date:** 2025-11-18  
 **Status:** Post-Implementation Guidance  
 **Related Documents:**
 - `docs/ml/ML_ARM_IMPLEMENTATION_ROADMAP.md` (All Phases Complete)
@@ -47,7 +47,7 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
 
 ---
 
-## ✅ Progress To Date (2025-11-17) – Phase 9 Completed
+## ✅ Progress To Date (2025-11-18) – Phase 9 Completed & Phase 10 Instrumentation Started
 
 **Local (completed):**
 - FastAPI `/forecast` hardened against missing models/retrieval; returns safe responses.
@@ -85,13 +85,18 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 - `ENABLE_PATH_FORECAST_PROM_METRICS=1` (metrics enabled)
 - `PATH_FORECAST_DISABLE_WEIGHTED` (performance toggle, optional)
 
-**Phase 10 Next Local Actions:**
-1. Drift monitoring integration (feature importance + distribution shift panels).
-2. Add rolling MAE & coverage Prometheus gauges + Grafana panels (will extend existing latency/eviction dashboard).
-3. Implement adaptive TTL prototype (volatility-driven) behind flag.
-4. Begin regime change alert pipeline (weekly cron + threshold evaluation).
-5. Extend load test to multi-index comparative mode (NIFTY vs BANKNIFTY).
-6. Add alert rules tied to new metrics (p95 latency, eviction rate, cache hit ratio thresholds).
+**Phase 10 Next Local Actions (Updated):**
+1. Drift monitoring integration (feature importance + distribution shift panels).  ☐
+2. Add rolling MAE & coverage Prometheus gauges + Grafana panels.  ✅ (completed: gauges + endpoints + persistence added)
+3. Implement adaptive TTL prototype (volatility-driven) behind flag.  ☐
+4. Begin regime change alert pipeline (weekly cron + threshold evaluation).  ☐
+5. Extend load test to multi-index comparative mode (NIFTY vs BANKNIFTY).  ☐
+6. Add alert rules tied to new metrics (p95 latency, eviction rate, cache hit ratio thresholds).  ☐
+7. Add normalized error metric & histogram distribution for tail risk tracking.  ✅
+8. Implement decay / half-life adaptive smoothing of metrics.  ✅
+9. Provide comparison endpoint with percentiles & filtering.  ✅
+10. Add config validation endpoint for decay precedence.  ✅
+11. Add persistence + manual flush of rolling metric state.  ✅
 
 **Phase 10 Risks & Watchpoints:**
 - Drift false positives → calibrate thresholds using last 30 days.
@@ -108,6 +113,82 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
  - Eviction rate: <2/sec sustained (5m window) in normal load.
  - Forecast cache hit ratio: ≥60% sustained post-adaptive TTL.
  - Recent file cache hit ratio: ≥70% sustained.
+
+### Phase 10 Instrumentation & Metrics Enhancements (2025-11-18)
+
+The following real-time performance & quality metrics have been implemented to establish the continuous improvement baseline:
+
+**New Metrics (Prometheus):**
+- `g6_forecast_mae{index,horizon}` – Rolling (window or EMA) mean absolute error (p50 absolute path error).
+- `g6_forecast_coverage_pct{index,horizon}` – Rolling coverage percentage (p10–p90 containment).
+- `g6_forecast_norm_error{index,horizon}` – Rolling normalized error (absolute error / band width).
+- `g6_forecast_error_hist{index,horizon}` – Histogram of absolute forecast errors (configurable buckets).
+- `g6_forecast_norm_error_hist{index,horizon}` – Histogram of normalized forecast errors.
+
+**New Endpoints:**
+- `POST /api/ml/ensemble/metrics/flush` – Force persistence flush of rolling metric state.
+- `GET  /api/ml/ensemble/metrics/compare?index=...&horizon=...` – Window vs EMA comparison, includes percentiles (p50/p90) for error, normalized error, band width, plus last evaluation timestamp and decay parameters.
+- `GET  /api/ml/ensemble/metrics/decay/validate` – Decay/half-life/time-half-life precedence and derived alpha diagnostics.
+
+**Adaptive Smoothing Features:**
+- Supports direct alpha (`G6_ROLLING_MAE_DECAY`), observation half-life (`G6_ROLLING_MAE_HALF_LIFE`), or time-based half-life in minutes (`G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES`) with precedence: HALF_LIFE > TIME_HALF_LIFE_MINUTES > DECAY.
+- EMA vs fixed window mode automatically reflected in comparison endpoint (fields: `decay_alpha`, `half_life_obs`, `time_half_life_minutes`).
+
+**Persistence & State Management:**
+- Rolling deques (errors, coverage flags, normalized errors, band widths) persisted to JSON (`G6_ROLLING_MAE_PERSIST_FILE`).
+- Manual flush endpoint plus periodic auto-flush every 120s.
+- Restoration across restarts preserves continuity for MAE & coverage gauge visibility.
+
+**Percentile & Distribution Visibility:**
+- Immediate p50/p90 percentiles computed from active window (≥5 samples) for errors, normalized errors, band widths.
+- Histograms enable PromQL `histogram_quantile()` for higher percentiles (e.g., p95/p99) without custom code.
+
+**Environment Variables (New / Extended):**
+| Variable | Purpose | Notes |
+|----------|---------|-------|
+| `G6_ROLLING_MAE_ENABLE` | Enable rolling metrics evaluator | Default `1` |
+| `G6_ROLLING_MAE_MAX_EVENTS` | Cap pending forecast events queue | Prevent memory growth |
+| `G6_ROLLING_MAE_WINDOW` | Window length for rolling stats | Used when EMA disabled |
+| `G6_ROLLING_MAE_PERSIST` | Enable persistence of rolling state | Default `1` |
+| `G6_ROLLING_MAE_PERSIST_FILE` | Path for saved state file | Relative to project root |
+| `G6_ROLLING_MAE_DECAY` | Direct EMA alpha (0<α<1) | Lower priority than half-life |
+| `G6_ROLLING_MAE_HALF_LIFE` | Observation half-life → alpha | Overrides decay |
+| `G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES` | Time-based half-life (minutes) | Used if HALF_LIFE & DECAY unset |
+| `G6_ROLLING_ERROR_BUCKETS` | Buckets for absolute error histogram | Comma-separated floats |
+| `G6_ROLLING_NORM_ERROR_BUCKETS` | Buckets for normalized error histogram | Comma-separated floats |
+
+**Operational Usage Examples:**
+```bash
+export G6_ROLLING_MAE_ENABLE=1
+export G6_ROLLING_MAE_WINDOW=500
+export G6_ROLLING_MAE_HALF_LIFE=40           # ~40 observations half-life
+export G6_ROLLING_ERROR_BUCKETS="0.25,0.5,1,2,5,10,20" 
+export G6_ROLLING_NORM_ERROR_BUCKETS="0.005,0.01,0.02,0.05,0.1,0.2,0.5,1" 
+```
+
+**PromQL Examples:**
+```promql
+# 95th percentile absolute error (15m window) for NIFTY 60m horizon
+histogram_quantile(0.95, sum(rate(g6_forecast_error_hist_bucket{index="NIFTY",horizon="60"}[15m])) by (le))
+
+# 90th percentile normalized error across horizons (30m window)
+histogram_quantile(0.90, sum(rate(g6_forecast_norm_error_hist_bucket[30m])) by (le))
+```
+
+**Initial Outcomes (Instrumented):**
+- Rolling metrics activated; baseline MAE & coverage curves stabilizing.
+- Normalized error provides early indication of band compression or drift.
+- EMA decouples short-term volatility from long-term trend (customizable responsiveness via half-life).
+- Percentile gaps (p90 vs mean) now visible for tail risk management.
+
+**Next Focus (Remaining Phase 10 Items):**
+- Integrate drift detector outputs into comparison endpoint.
+- Adaptive TTL prototype (volatility-responsive) & impact study.
+- Regime change alerts aligned with normalized error + coverage deviations.
+- Multi-index load test scalability validation.
+- Alert rule set for p95 latency, eviction surge, low coverage, rising normalized p90.
+
+---
 
 **Operational checks:**
 - Start script verifies `/__diag/pid` and OpenAPI forecast route.
