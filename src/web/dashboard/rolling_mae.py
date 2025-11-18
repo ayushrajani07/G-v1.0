@@ -21,6 +21,10 @@ Environment Variables:
 - G6_ROLLING_MAE_DECAY=0: If set to a float 0<alpha<1, use EMA (exponential moving average) instead of simple rolling mean. Gauges reflect EMA; deques retained for debug.
 - G6_ROLLING_MAE_HALF_LIFE=0: Optional half-life (in observations) to derive EMA alpha.
     Precedence: if HALF_LIFE > 0 it overrides DECAY. Alpha formula: alpha = 1 - exp(-ln(2)/half_life).
+ - G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES=0: Optional time-based half-life in minutes. If >0 and HALF_LIFE=0 then
+     derive observation half-life by dividing minutes by average evaluation cadence per horizon. Approx cadence: each forecast
+     evaluation occurs after its horizon elapses; we approximate using the median horizon among active keys or fallback 60.
+     Formula: obs_half_life = max(1, round(minutes / max(1, median_horizon_minutes))) then alpha as above.
 
 Notes / Limitations:
 - Underlying at evaluation approximated by latest inferred value (best-effort); fallback to underlying at forecast time if unavailable.
@@ -42,6 +46,7 @@ _ENABLE = os.environ.get("G6_ROLLING_MAE_ENABLE", "1") == "1"
 _MAX_EVENTS = int(os.environ.get("G6_ROLLING_MAE_MAX_EVENTS", "5000"))
 _WINDOW_SIZE = int(os.environ.get("G6_ROLLING_MAE_WINDOW", "500"))
 _HALF_LIFE_RAW = os.environ.get("G6_ROLLING_MAE_HALF_LIFE", "0").strip()
+_TIME_HALF_LIFE_MIN_RAW = os.environ.get("G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES", "0").strip()
 _DECAY_ALPHA_RAW = os.environ.get("G6_ROLLING_MAE_DECAY", "0").strip()
 def _parse_float(s: str) -> float:
     try:
@@ -49,10 +54,28 @@ def _parse_float(s: str) -> float:
     except ValueError:
         return 0.0
 _HALF_LIFE = _parse_float(_HALF_LIFE_RAW)
+_TIME_HALF_LIFE_MIN = _parse_float(_TIME_HALF_LIFE_MIN_RAW)
 _DECAY_ALPHA_DIRECT = _parse_float(_DECAY_ALPHA_RAW)
+def _compute_median_horizon_active() -> float:
+    keys = list(_ERRORS.keys()) or list(_COVER_FLAGS.keys()) or list(_NORM_ERRORS.keys())
+    if not keys:
+        return 60.0
+    hs = sorted([h for _, h in keys])
+    n = len(hs)
+    if n % 2:
+        return float(hs[n//2])
+    return (hs[n//2 -1] + hs[n//2]) / 2.0
+
 if _HALF_LIFE > 0:
     import math
     _DECAY_ALPHA = 1.0 - math.exp(-math.log(2.0) / _HALF_LIFE)
+elif _TIME_HALF_LIFE_MIN > 0 and _HALF_LIFE <= 0 and _DECAY_ALPHA_DIRECT <= 0:
+    # derive observation half-life from time minutes
+    median_h = _compute_median_horizon_active()
+    obs_half = max(1.0, _TIME_HALF_LIFE_MIN / max(1.0, median_h))
+    import math
+    _DECAY_ALPHA = 1.0 - math.exp(-math.log(2.0) / obs_half)
+    _HALF_LIFE = obs_half  # store derived
 else:
     _DECAY_ALPHA = _DECAY_ALPHA_DIRECT
 if not (0.0 < _DECAY_ALPHA < 1.0):
@@ -116,6 +139,7 @@ def _save_state(force: bool = False) -> None:
         state['use_decay'] = _USE_DECAY
         state['decay_alpha'] = _DECAY_ALPHA
         state['half_life'] = _HALF_LIFE
+        state['time_half_life_minutes'] = _TIME_HALF_LIFE_MIN
         for key, dq in _ERRORS.items():
             idx, horizon = key
             state.setdefault('errors', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
@@ -423,7 +447,30 @@ def get_metric_comparison(index: str | None = None, horizon: int | None = None) 
                 "norm_error_percentiles": norm_pct,
                 "band_width_percentiles": bw_pct,
                 "last_eval_ts": last_ts,
+                "decay_alpha": _DECAY_ALPHA,
+                "half_life_obs": _HALF_LIFE,
+                "time_half_life_minutes": _TIME_HALF_LIFE_MIN,
             })
     return out
+
+def validate_decay_config() -> dict:
+    """Return validation / precedence information for decay configuration."""
+    issues = []
+    if _HALF_LIFE > 0 and _DECAY_ALPHA_DIRECT > 0:
+        issues.append("HALF_LIFE overrides DECAY: DECAY ignored")
+    if _TIME_HALF_LIFE_MIN > 0 and _HALF_LIFE > 0:
+        issues.append("TIME_HALF_LIFE_MINUTES ignored because HALF_LIFE provided")
+    if _TIME_HALF_LIFE_MIN > 0 and _DECAY_ALPHA_DIRECT > 0 and _HALF_LIFE == 0:
+        issues.append("TIME_HALF_LIFE_MINUTES ignored because DECAY provided")
+    return {
+        "decay_alpha": _DECAY_ALPHA,
+        "half_life_obs": _HALF_LIFE,
+        "time_half_life_minutes": _TIME_HALF_LIFE_MIN,
+        "direct_alpha": _DECAY_ALPHA_DIRECT,
+        "use_decay": _USE_DECAY,
+        "warnings": issues,
+    }
+
+__all__.append("validate_decay_config")
 
 __all__.append("get_metric_comparison")

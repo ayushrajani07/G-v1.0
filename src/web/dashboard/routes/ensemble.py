@@ -837,3 +837,14 @@ async def metrics_compare(
     except Exception as e:
         _LOG.warning(f"metrics_compare_failed: {e}")
         raise HTTPException(status_code=500, detail="metrics_compare_failed")
+
+@router.get('/metrics/decay/validate')
+async def metrics_decay_validate():
+    """Return decay configuration validation (precedence & derived alpha)."""
+    try:
+        from ..rolling_mae import ensure_started, validate_decay_config  # type: ignore
+        ensure_started()
+        return validate_decay_config()
+    except Exception as e:
+        _LOG.warning(f"metrics_decay_validate_failed: {e}")
+        raise HTTPException(status_code=500, detail="metrics_decay_validate_failed")
