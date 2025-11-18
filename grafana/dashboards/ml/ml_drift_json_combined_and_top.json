@@ -23,6 +23,49 @@
   },
   "panels": [
     {
+      "type": "stat",
+      "title": "Critical DoD Δ ({{index}})",
+      "gridPos": {"x": 0, "y": 9, "w": 8, "h": 5},
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 0},
+              {"color": "red", "value": 1}
+            ]
+          },
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}
+      },
+      "targets": [
+        {
+          "refId": "DeltaCrit",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+          "type": "json",
+          "source": "url",
+          "url": "http://localhost:9500/api/ml/drift/daily_reports/trend?days=${days}",
+          "json_options": { "root_is_not_array": true, "root_selector": "per_index_severity_series.${index}.critical" },
+          "columns": [
+            { "selector": "generated_at", "text": "Time", "type": "time" },
+            { "selector": "value", "text": "Critical", "type": "number" }
+          ]
+        }
+      ],
+      "transformations": [
+        { "id": "difference", "options": {} },
+        { "id": "reduce", "options": { "reducers": ["lastNotNull"] } }
+      ]
+    },
+    {
       "type": "timeseries",
       "title": "Severity Stack ({{index}})",
       "gridPos": {"x": 0, "y": 0, "w": 16, "h": 9},
@@ -72,6 +115,25 @@
       "title": "Top Critical Features ({{index}} – latest)",
       "gridPos": {"x": 16, "y": 0, "w": 8, "h": 9},
       "options": {"showHeader": true},
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "PSI"},
+            "properties": [
+              {"id": "color", "value": {"mode": "thresholds"}},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "green", "value": null},
+                {"color": "orange", "value": 0.25},
+                {"color": "red", "value": 0.4}
+              ]}},
+              {"id": "custom.displayMode", "value": "color-text"},
+              {"id": "unit", "value": "short"},
+              {"id": "decimals", "value": 3}
+            ]
+          }
+        ]
+      },
       "targets": [
         {
           "refId": "TopCrit",
