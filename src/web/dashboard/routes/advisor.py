@@ -298,7 +298,22 @@ async def api_ml_drift_daily_report_top_critical(index: str, limit: int = 10):
         for pi in data.get('per_index', []):
             if str(pi.get('index','')).upper() == idx:
                 arr = pi.get('top_critical') or []
-                return JSONResponse(arr[:max(0,int(limit))])
+                out = []
+                for c in arr[:max(0,int(limit))]:
+                    try:
+                        mean_z = c.get('mean_delta_zscore')
+                        var_r = c.get('var_ratio')
+                        mean_abs = abs(mean_z) if isinstance(mean_z, (int, float)) else None
+                        var_dev = None
+                        if isinstance(var_r, (int, float)) and var_r > 0:
+                            var_dev = max(var_r, 1.0/var_r)
+                        cc = dict(c)
+                        cc['mean_delta_zscore_abs'] = mean_abs
+                        cc['var_ratio_dev'] = var_dev
+                        out.append(cc)
+                    except Exception:
+                        out.append(c)
+                return JSONResponse(out)
         return JSONResponse([], status_code=200)
     except Exception:
         return JSONResponse({'error': 'read_failed'}, status_code=500)

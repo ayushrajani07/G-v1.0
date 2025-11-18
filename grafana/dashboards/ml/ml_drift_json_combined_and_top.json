@@ -131,6 +131,34 @@
               {"id": "unit", "value": "short"},
               {"id": "decimals", "value": 3}
             ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Mean Z |abs|"},
+            "properties": [
+              {"id": "color", "value": {"mode": "thresholds"}},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "green", "value": null},
+                {"color": "orange", "value": 2},
+                {"color": "red", "value": 3}
+              ]}},
+              {"id": "custom.displayMode", "value": "color-text"},
+              {"id": "unit", "value": "short"},
+              {"id": "decimals", "value": 2}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Var Ratio dev"},
+            "properties": [
+              {"id": "color", "value": {"mode": "thresholds"}},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "green", "value": null},
+                {"color": "orange", "value": 1.5},
+                {"color": "red", "value": 2}
+              ]}},
+              {"id": "custom.displayMode", "value": "color-text"},
+              {"id": "unit", "value": "short"},
+              {"id": "decimals", "value": 2}
+            ]
           }
         ]
       },
@@ -146,7 +174,9 @@
             { "selector": "feature", "text": "Feature", "type": "string" },
             { "selector": "psi", "text": "PSI", "type": "number" },
             { "selector": "mean_delta_zscore", "text": "Mean Z", "type": "number" },
-            { "selector": "var_ratio", "text": "Var Ratio", "type": "number" }
+            { "selector": "mean_delta_zscore_abs", "text": "Mean Z |abs|", "type": "number" },
+            { "selector": "var_ratio", "text": "Var Ratio", "type": "number" },
+            { "selector": "var_ratio_dev", "text": "Var Ratio dev", "type": "number" }
           ]
         }
       ]
