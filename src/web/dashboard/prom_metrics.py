@@ -414,99 +414,40 @@ __all__ = [
     "get_registry",
 ]
 
-# --------------------------- Drift Metric Placeholders (Phase 10) ---------------------------
-# These stubs reduce merge diff when the drift monitoring implementation lands.
-# Remote agent will replace/extend with real gauges:
-#   g6_feature_psi{feature,index}
-#   g6_feature_ks_pvalue{feature,index}
-#   g6_feature_mean_delta{feature,index}
-#   g6_feature_var_delta{feature,index}
-#   g6_feature_drift_flag{feature,index}
-
-_FEATURE_PSI = None
-_FEATURE_KS = None
-_FEATURE_MEAN_DELTA = None
-_FEATURE_VAR_DELTA = None
-_FEATURE_DRIFT_FLAG = None
-
-def _init_drift_metrics() -> None:  # pragma: no cover
-    if not _is_enabled():
-        return
-    _init_metrics()
-    # Real initialization will be performed by remote agent; keep placeholder.
-    try:
-        from prometheus_client import Gauge  # type: ignore
-        global _FEATURE_PSI, _FEATURE_KS, _FEATURE_MEAN_DELTA, _FEATURE_VAR_DELTA, _FEATURE_DRIFT_FLAG
-        if _FEATURE_PSI is None:
-            _FEATURE_PSI = Gauge("g6_feature_psi", "Population Stability Index per feature", ["index", "feature"], registry=_REGISTRY)
-        if _FEATURE_KS is None:
-            _FEATURE_KS = Gauge("g6_feature_ks_pvalue", "KS test p-value per feature", ["index", "feature"], registry=_REGISTRY)
-        if _FEATURE_MEAN_DELTA is None:
-            _FEATURE_MEAN_DELTA = Gauge("g6_feature_mean_delta", "Mean delta recent vs baseline", ["index", "feature"], registry=_REGISTRY)
-        if _FEATURE_VAR_DELTA is None:
-            _FEATURE_VAR_DELTA = Gauge("g6_feature_var_delta", "Variance delta recent vs baseline", ["index", "feature"], registry=_REGISTRY)
-        if _FEATURE_DRIFT_FLAG is None:
-            _FEATURE_DRIFT_FLAG = Gauge("g6_feature_drift_flag", "Binary drift flag per feature", ["index", "feature"], registry=_REGISTRY)
-    except Exception as e:
-        _LOG.debug(f"drift metrics placeholder init failed: {e}")
-
-def set_feature_drift_metrics(index: str, feature: str, psi: float, ks_pvalue: float, mean_delta: float, var_delta: float, drift_flag: int) -> None:
-    """Placeholder setter for drift metrics (remote agent will refine).
-
-    Args:
-        index: index symbol
-        feature: feature name
-        psi: population stability index
-        ks_pvalue: KS test p-value
-        mean_delta: absolute or signed mean diff
-        var_delta: variance diff
-        drift_flag: 1 if drift detected else 0
-    """
-    if not _is_enabled():
-        return
-    _init_drift_metrics()
-    try:
-        if _FEATURE_PSI is not None:
-            _FEATURE_PSI.labels(index=index, feature=feature).set(psi)
-        if _FEATURE_KS is not None:
-            _FEATURE_KS.labels(index=index, feature=feature).set(ks_pvalue)
-        if _FEATURE_MEAN_DELTA is not None:
-            _FEATURE_MEAN_DELTA.labels(index=index, feature=feature).set(mean_delta)
-        if _FEATURE_VAR_DELTA is not None:
-            _FEATURE_VAR_DELTA.labels(index=index, feature=feature).set(var_delta)
-        if _FEATURE_DRIFT_FLAG is not None:
-            _FEATURE_DRIFT_FLAG.labels(index=index, feature=feature).set(drift_flag)
-    except Exception as e:
-        _LOG.debug(f"set_feature_drift_metrics failed: {e}")
-
-__all__.append("set_feature_drift_metrics")
-
 def get_feature_drift_snapshot(index: str | None = None) -> list[dict[str, float | str]]:
-    """Return current drift metric samples per feature for optional index filter.
+    """Snapshot drift metrics from unified drift registry (if drift enabled).
 
-    Each entry includes: feature, index, psi, ks_pvalue, mean_delta, var_delta, drift_flag.
-    Missing metrics default to 0 / stable values so advisor can operate even before data accrues.
+    Delegates to drift_metrics module; does not initialize placeholder gauges locally.
     """
-    if not _is_enabled():
-        return []
-    _init_drift_metrics()
-    out: dict[str, dict[str, float | str]] = {}
-    def _ingest(gauge, key_name: str):
-        if gauge is None:
-            return
-        try:
-            fams = list(gauge.collect())
-            if not fams:
-                return
-            for s in fams[0].samples:
-                lbl_index = s.labels.get('index')
+    try:
+        from src.web.dashboard import drift_metrics  # type: ignore
+        # Ensure drift metrics initialized if enabled
+        reg = drift_metrics.get_registry()  # may be None if disabled
+        if reg is None:
+            return []
+        samples = {}
+        # Collect only known drift metric families
+        wanted = {
+            'g6_feature_psi': 'psi',
+            'g6_feature_ks_pvalue': 'ks_pvalue',
+            'g6_feature_mean_delta': 'mean_delta',
+            'g6_feature_var_delta': 'var_delta',
+            'g6_feature_drift_flag': 'drift_flag',
+        }
+        for fam in reg.collect():  # type: ignore[attr-defined]
+            name = getattr(fam, 'name', None) or getattr(fam, 'sample_name', None)
+            if name not in wanted:
+                continue
+            key = wanted[name]
+            for s in fam.samples:
                 feat = s.labels.get('feature')
+                idx = s.labels.get('index')
                 if feat is None:
                     continue
-                if index and lbl_index != index.upper():
+                if index and idx and idx.upper() != index.upper():
                     continue
-                rec = out.setdefault((lbl_index or '') + '::' + feat, {
-                    'index': lbl_index,
+                rec = samples.setdefault((idx or '') + '::' + feat, {
+                    'index': idx,
                     'feature': feat,
                     'psi': 0.0,
                     'ks_pvalue': 1.0,
@@ -514,14 +455,13 @@ def get_feature_drift_snapshot(index: str | None = None) -> list[dict[str, float
                     'var_delta': 0.0,
                     'drift_flag': 0.0,
                 })
-                rec[key_name] = float(s.value)
-        except Exception as e:  # pragma: no cover
-            _LOG.debug(f"drift snapshot ingest failed for {key_name}: {e}")
-    _ingest(_FEATURE_PSI, 'psi')
-    _ingest(_FEATURE_KS, 'ks_pvalue')
-    _ingest(_FEATURE_MEAN_DELTA, 'mean_delta')
-    _ingest(_FEATURE_VAR_DELTA, 'var_delta')
-    _ingest(_FEATURE_DRIFT_FLAG, 'drift_flag')
-    return list(out.values())
+                try:
+                    rec[key] = float(s.value)
+                except Exception:
+                    pass
+        return list(samples.values())
+    except Exception as e:
+        _LOG.debug(f"get_feature_drift_snapshot failed: {e}")
+        return []
 
-__all__.append("get_feature_drift_snapshot")
+__all__.append('get_feature_drift_snapshot')
