@@ -424,12 +424,32 @@ class G6ErrorHandler:
 _global_error_handler: G6ErrorHandler | None = None
 
 
+_ORIGINAL_SAFE_WRITE_TEXT: Any | None = None  # populated after definition
+_ORIGINAL_SAFE_APPEND_LINE: Any | None = None
+
 def get_error_handler() -> G6ErrorHandler:
-    """Get or create the global error handler instance."""
-    global _global_error_handler
+    """Get or create the global error handler instance.
+
+    Also defensively restore safe file I/O helpers if they were monkeypatched
+    by earlier tests with MagicMock objects and not reverted (unittest ordering
+    edge case). This ensures later failure-mode tests see real implementations
+    and can exercise exception paths.
+    """
+    global _global_error_handler, _ORIGINAL_SAFE_WRITE_TEXT, _ORIGINAL_SAFE_APPEND_LINE
     if _global_error_handler is None:
         log_file = "logs/g6_errors.log"
         _global_error_handler = G6ErrorHandler(log_file=log_file)
+    # Defensive restoration
+    try:  # pragma: no cover - only triggers in test edge cases
+        from unittest.mock import MagicMock  # type: ignore
+        sw = globals().get('safe_write_text')
+        if isinstance(sw, MagicMock) and _ORIGINAL_SAFE_WRITE_TEXT is not None:
+            globals()['safe_write_text'] = _ORIGINAL_SAFE_WRITE_TEXT  # type: ignore[assignment]
+        sa = globals().get('safe_append_line')
+        if isinstance(sa, MagicMock) and _ORIGINAL_SAFE_APPEND_LINE is not None:
+            globals()['safe_append_line'] = _ORIGINAL_SAFE_APPEND_LINE  # type: ignore[assignment]
+    except Exception:
+        pass
     return _global_error_handler
 
 
@@ -745,6 +765,9 @@ def safe_read_csv_rows(path: str | Path, *,
         return []
     return rows
 
+
+_ORIGINAL_SAFE_WRITE_TEXT = safe_write_text
+_ORIGINAL_SAFE_APPEND_LINE = safe_append_line
 
 if __name__ == "__main__":
     # Example usage and testing
