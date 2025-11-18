@@ -18,6 +18,7 @@ Environment Variables:
 - G6_ROLLING_MAE_WINDOW=500: Rolling window length for MAE & coverage deques.
 - G6_ROLLING_MAE_PERSIST=1: Enable persistence of window state to JSON file.
 - G6_ROLLING_MAE_PERSIST_FILE=metrics/rolling_mae_state.json: Relative path (under project root) for persisted state.
+- G6_ROLLING_MAE_DECAY=0: If set to a float 0<alpha<1, use EMA (exponential moving average) instead of simple rolling mean. Gauges reflect EMA; deques retained for debug.
 
 Notes / Limitations:
 - Underlying at evaluation approximated by latest inferred value (best-effort); fallback to underlying at forecast time if unavailable.
@@ -38,6 +39,14 @@ _LOG = logging.getLogger(__name__)
 _ENABLE = os.environ.get("G6_ROLLING_MAE_ENABLE", "1") == "1"
 _MAX_EVENTS = int(os.environ.get("G6_ROLLING_MAE_MAX_EVENTS", "5000"))
 _WINDOW_SIZE = int(os.environ.get("G6_ROLLING_MAE_WINDOW", "500"))
+_DECAY_ALPHA_RAW = os.environ.get("G6_ROLLING_MAE_DECAY", "0").strip()
+try:
+    _DECAY_ALPHA = float(_DECAY_ALPHA_RAW)
+except ValueError:
+    _DECAY_ALPHA = 0.0
+if not (0.0 < _DECAY_ALPHA < 1.0):
+    _DECAY_ALPHA = 0.0
+_USE_DECAY = _DECAY_ALPHA > 0.0
 _PERSIST = os.environ.get("G6_ROLLING_MAE_PERSIST", "1") == "1"
 _PERSIST_FILE = os.environ.get("G6_ROLLING_MAE_PERSIST_FILE", "metrics/rolling_mae_state.json")
 _LAST_FLUSH = 0.0
@@ -48,6 +57,9 @@ _LOCK = threading.Lock()
 _ERRORS: Dict[Tuple[str,int], deque] = {}
 _COVER_FLAGS: Dict[Tuple[str,int], deque] = {}
 _NORM_ERRORS: Dict[Tuple[str,int], deque] = {}
+_EMA_ERROR: Dict[Tuple[str,int], float] = {}
+_EMA_COVER: Dict[Tuple[str,int], float] = {}
+_EMA_NORM: Dict[Tuple[str,int], float] = {}
 _STARTED = False
 
 def log_forecast_event(index: str, horizon: int, ts_ms: int, p50: float, underlying: float, band_low: float, band_high: float) -> None:
@@ -88,12 +100,29 @@ def _save_state(force: bool = False) -> None:
         return
     state = {}
     with _LOCK:
+        state['use_decay'] = _USE_DECAY
+        state['decay_alpha'] = _DECAY_ALPHA
         for key, dq in _ERRORS.items():
             idx, horizon = key
             state.setdefault('errors', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
         for key, dq in _COVER_FLAGS.items():
             idx, horizon = key
             state.setdefault('coverage', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        for key, dq in _NORM_ERRORS.items():
+            idx, horizon = key
+            state.setdefault('norm_errors', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        if _USE_DECAY:
+            ema_list = []
+            for key, val in _EMA_ERROR.items():
+                idx, horizon = key
+                ema_list.append({
+                    'index': idx,
+                    'horizon': horizon,
+                    'ema_error': val,
+                    'ema_cover': _EMA_COVER.get(key, 0.0),
+                    'ema_norm': _EMA_NORM.get(key, 0.0),
+                })
+            state['ema'] = ema_list
     try:
         path = _persist_path()
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -131,6 +160,19 @@ def _load_state() -> None:
                 values = item.get('values', [])
                 dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
                 _COVER_FLAGS[(idx, horizon)] = dq
+            for item in data.get('norm_errors', []):
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                values = item.get('values', [])
+                dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
+                _NORM_ERRORS[(idx, horizon)] = dq
+            if _USE_DECAY:
+                for item in data.get('ema', []):
+                    idx = item.get('index')
+                    horizon = int(item.get('horizon', 0))
+                    _EMA_ERROR[(idx, horizon)] = float(item.get('ema_error', 0.0))
+                    _EMA_COVER[(idx, horizon)] = float(item.get('ema_cover', 0.0))
+                    _EMA_NORM[(idx, horizon)] = float(item.get('ema_norm', 0.0))
         _LOG.info(f"rolling_mae loaded state: errors={len(_ERRORS)} coverage={len(_COVER_FLAGS)}")
     except Exception as e:
         _LOG.debug(f"rolling_mae load_state failed: {e}")
@@ -172,24 +214,51 @@ def _evaluate_ready_events() -> None:
         band_width = max(1e-9, band_high - band_low)
         norm_error_val = error / band_width
         with _LOCK:
-            err_deque = _ERRORS.get(key)
-            if err_deque is None:
-                err_deque = deque(maxlen=_WINDOW_SIZE)
-                _ERRORS[key] = err_deque
-            cov_deque = _COVER_FLAGS.get(key)
-            if cov_deque is None:
-                cov_deque = deque(maxlen=_WINDOW_SIZE)
-                _COVER_FLAGS[key] = cov_deque
-            norm_deque = _NORM_ERRORS.get(key)
-            if norm_deque is None:
-                norm_deque = deque(maxlen=_WINDOW_SIZE)
-                _NORM_ERRORS[key] = norm_deque
-            err_deque.append(error)
-            cov_deque.append(covered)
-            norm_deque.append(norm_error_val)
-            mae = sum(err_deque) / max(1, len(err_deque))
-            coverage_pct = (sum(cov_deque) / max(1, len(cov_deque))) * 100.0
-            norm_error_mean = sum(norm_deque) / max(1, len(norm_deque))
+            if _USE_DECAY:
+                prev_err = _EMA_ERROR.get(key, error)
+                prev_cov = _EMA_COVER.get(key, covered)
+                prev_norm = _EMA_NORM.get(key, norm_error_val)
+                _EMA_ERROR[key] = _DECAY_ALPHA * error + (1 - _DECAY_ALPHA) * prev_err
+                _EMA_COVER[key] = _DECAY_ALPHA * covered + (1 - _DECAY_ALPHA) * prev_cov
+                _EMA_NORM[key] = _DECAY_ALPHA * norm_error_val + (1 - _DECAY_ALPHA) * prev_norm
+                # Keep debug deques updated (bounded)
+                err_deque = _ERRORS.get(key)
+                if err_deque is None:
+                    err_deque = deque(maxlen=_WINDOW_SIZE)
+                    _ERRORS[key] = err_deque
+                cov_deque = _COVER_FLAGS.get(key)
+                if cov_deque is None:
+                    cov_deque = deque(maxlen=_WINDOW_SIZE)
+                    _COVER_FLAGS[key] = cov_deque
+                norm_deque = _NORM_ERRORS.get(key)
+                if norm_deque is None:
+                    norm_deque = deque(maxlen=_WINDOW_SIZE)
+                    _NORM_ERRORS[key] = norm_deque
+                err_deque.append(error)
+                cov_deque.append(covered)
+                norm_deque.append(norm_error_val)
+                mae = _EMA_ERROR[key]
+                coverage_pct = _EMA_COVER[key] * 100.0
+                norm_error_mean = _EMA_NORM[key]
+            else:
+                err_deque = _ERRORS.get(key)
+                if err_deque is None:
+                    err_deque = deque(maxlen=_WINDOW_SIZE)
+                    _ERRORS[key] = err_deque
+                cov_deque = _COVER_FLAGS.get(key)
+                if cov_deque is None:
+                    cov_deque = deque(maxlen=_WINDOW_SIZE)
+                    _COVER_FLAGS[key] = cov_deque
+                norm_deque = _NORM_ERRORS.get(key)
+                if norm_deque is None:
+                    norm_deque = deque(maxlen=_WINDOW_SIZE)
+                    _NORM_ERRORS[key] = norm_deque
+                err_deque.append(error)
+                cov_deque.append(covered)
+                norm_deque.append(norm_error_val)
+                mae = sum(err_deque) / max(1, len(err_deque))
+                coverage_pct = (sum(cov_deque) / max(1, len(cov_deque))) * 100.0
+                norm_error_mean = sum(norm_deque) / max(1, len(norm_deque))
         # Export Prometheus gauge
         try:
             from .prom_metrics import (
