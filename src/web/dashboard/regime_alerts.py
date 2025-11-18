@@ -6,11 +6,15 @@ on a weekly cadence. Emits lightweight Prometheus gauges for alerting rules.
 
 Metrics:
 - g6_regime_last_eval_ms{index}: epoch ms of last evaluation per index
-- g6_regime_alert_count{index}: count of horizons violating thresholds
+- g6_regime_alert_count{index}: count of horizons violating base (coverage / norm error) thresholds
+- g6_regime_drift_alert_count{index}: count of horizons violating drift thresholds (ratios / coverage delta)
 
 Thresholds (env):
 - G6_REGIME_COVERAGE_MIN: minimum acceptable coverage percentage (default 75)
 - G6_REGIME_NORM_ERROR_P90_MAX: maximum acceptable p90 normalized error (default 0.2)
+- G6_REGIME_MAE_DRIFT_RATIO_WARN / G6_REGIME_MAE_DRIFT_RATIO_CRIT (default 1.5 / 2.0)
+- G6_REGIME_NORM_DRIFT_RATIO_WARN / G6_REGIME_NORM_DRIFT_RATIO_CRIT (default 1.3 / 1.7)
+- G6_REGIME_COVERAGE_DRIFT_DROP_WARN / G6_REGIME_COVERAGE_DRIFT_DROP_CRIT (percentage points, default -10 / -20)
 
 Scheduling (env):
 - G6_REGIME_ALERT_ENABLE: enable scheduler when '1'
@@ -41,6 +45,7 @@ _RUN = False
 
 _LAST_EVAL_MS: Any = None
 _ALERT_COUNT: Any = None
+_DRIFT_ALERT_COUNT: Any = None
 _LAST_SUMMARY: Dict[str, Dict[str, Any]] = {}
 
 
@@ -87,7 +92,7 @@ def _is_gate_day(now_ts: float) -> bool:
 
 
 def _init_metrics() -> bool:
-    global _METRICS_INITIALIZED, _REGISTRY, _LAST_EVAL_MS, _ALERT_COUNT
+    global _METRICS_INITIALIZED, _REGISTRY, _LAST_EVAL_MS, _ALERT_COUNT, _DRIFT_ALERT_COUNT
     if _METRICS_INITIALIZED:
         return True
     # Only initialize if prom endpoint is enabled to keep footprint minimal
@@ -109,6 +114,12 @@ def _init_metrics() -> bool:
             labelnames=["index"],
             registry=_REGISTRY,
         )
+        _DRIFT_ALERT_COUNT = Gauge(
+            "g6_regime_drift_alert_count",
+            "Count of horizons breaching drift thresholds",
+            labelnames=["index"],
+            registry=_REGISTRY,
+        )
         _METRICS_INITIALIZED = True
         return True
     except Exception as e:
@@ -126,14 +137,19 @@ def _evaluate_once() -> None:
     except Exception as e:
         _LOG.debug(f"regime evaluator missing rolling metrics: {e}")
         return
-    try:
-        coverage_min = float(os.environ.get("G6_REGIME_COVERAGE_MIN", "75"))
-    except Exception:
-        coverage_min = 75.0
-    try:
-        norm_p90_max = float(os.environ.get("G6_REGIME_NORM_ERROR_P90_MAX", "0.2"))
-    except Exception:
-        norm_p90_max = 0.2
+    def _f(env: str, default: str) -> float:
+        try:
+            return float(os.environ.get(env, default))
+        except Exception:
+            return float(default)
+    coverage_min = _f("G6_REGIME_COVERAGE_MIN", "75")
+    norm_p90_max = _f("G6_REGIME_NORM_ERROR_P90_MAX", "0.2")
+    mae_warn = _f("G6_REGIME_MAE_DRIFT_RATIO_WARN", "1.5")
+    mae_crit = _f("G6_REGIME_MAE_DRIFT_RATIO_CRIT", "2.0")
+    norm_warn = _f("G6_REGIME_NORM_DRIFT_RATIO_WARN", "1.3")
+    norm_crit = _f("G6_REGIME_NORM_DRIFT_RATIO_CRIT", "1.7")
+    cover_drop_warn = _f("G6_REGIME_COVERAGE_DRIFT_DROP_WARN", "-10")
+    cover_drop_crit = _f("G6_REGIME_COVERAGE_DRIFT_DROP_CRIT", "-20")
 
     for idx in _indices():
         try:
@@ -190,13 +206,17 @@ def _loop() -> None:
         now = time.time()
         try:
             if _is_gate_day(now):
-                _evaluate_once()
+                alerts = 0  # base alerts
+                drift_alerts = 0
             else:
                 _LOG.info("regime evaluation skipped (not gate day)")
         except Exception as e:
             _LOG.debug(f"regime loop error: {e}")
         # Sleep until next interval or stop
         for _ in range(int(iv)):
+                        mae_ratio = float(ent.get("mae_drift_ratio", 0.0))
+                        norm_ratio = float(ent.get("norm_error_drift_ratio", 0.0))
+                        cover_delta = float(ent.get("coverage_drift_delta_pct", 0.0))
             if not _RUN:
                 break
             time.sleep(1)
@@ -206,17 +226,40 @@ def _loop() -> None:
 def start_regime_scheduler() -> None:
     global _RUN, _EVAL_THREAD
     if not _enabled():
+                        drift_reasons: list[str] = []
+                        if mae_ratio >= mae_crit:
+                            drift_reasons.append(f"mae_ratio>={mae_crit}")
+                        elif mae_ratio >= mae_warn:
+                            drift_reasons.append(f"mae_ratio>={mae_warn}")
+                        if norm_ratio >= norm_crit:
+                            drift_reasons.append(f"norm_ratio>={norm_crit}")
+                        elif norm_ratio >= norm_warn:
+                            drift_reasons.append(f"norm_ratio>={norm_warn}")
+                        if cover_delta <= cover_drop_crit:
+                            drift_reasons.append(f"cover_drop<={cover_drop_crit}")
+                        elif cover_delta <= cover_drop_warn:
+                            drift_reasons.append(f"cover_drop<={cover_drop_warn}")
+                        drift_triggered = len(drift_reasons) > 0
+                        if drift_triggered:
+                            drift_alerts += 1
         _LOG.info("Regime alerts disabled (G6_REGIME_ALERT_ENABLE!=1)")
         return
     if _EVAL_THREAD is not None and _EVAL_THREAD.is_alive():
         _LOG.info("Regime alert scheduler already running")
+                            "mae_drift_ratio": mae_ratio,
+                            "norm_error_drift_ratio": norm_ratio,
+                            "coverage_drift_delta_pct": cover_delta,
         return
     _RUN = True
+                            "drift_triggered": drift_triggered,
+                            "drift_reasons": drift_reasons,
     t = threading.Thread(target=_loop, name="RegimeAlerts", daemon=True)
     _EVAL_THREAD = t
     t.start()
 
 
+                if _DRIFT_ALERT_COUNT is not None:
+                    _DRIFT_ALERT_COUNT.labels(index=idx).set(float(drift_alerts))
 def stop_regime_scheduler() -> None:
     global _RUN, _EVAL_THREAD
     if _EVAL_THREAD is None or not _EVAL_THREAD.is_alive():
@@ -224,9 +267,16 @@ def stop_regime_scheduler() -> None:
     _RUN = False
     _EVAL_THREAD.join(timeout=5.0)
     _EVAL_THREAD = None
+                    "drift_alerts": int(drift_alerts),
 
 
 __all__ = [
+                    "mae_drift_ratio_warn": mae_warn,
+                    "mae_drift_ratio_crit": mae_crit,
+                    "norm_drift_ratio_warn": norm_warn,
+                    "norm_drift_ratio_crit": norm_crit,
+                    "coverage_drift_drop_warn": cover_drop_warn,
+                    "coverage_drift_drop_crit": cover_drop_crit,
     "start_regime_scheduler",
     "stop_regime_scheduler",
 ]
