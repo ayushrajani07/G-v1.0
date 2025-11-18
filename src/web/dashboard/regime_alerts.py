@@ -41,6 +41,7 @@ _RUN = False
 
 _LAST_EVAL_MS: Any = None
 _ALERT_COUNT: Any = None
+_LAST_SUMMARY: Dict[str, Dict[str, Any]] = {}
 
 
 def _enabled() -> bool:
@@ -139,19 +140,44 @@ def _evaluate_once() -> None:
             comp = get_metric_comparison(index=idx)
             entries = comp.get("entries", []) if isinstance(comp, dict) else []
             alerts = 0
+            breaches: list[Dict[str, Any]] = []
             for ent in entries:
                 try:
                     cov = float(ent.get("coverage_window_pct", 0.0))
                     norm_pct = ent.get("norm_error_percentiles", {}) or {}
                     p90 = float(norm_pct.get("p90", ent.get("norm_error_window", 0.0)))
-                    if cov < coverage_min or p90 > norm_p90_max:
+                    h = int(ent.get("horizon", 0))
+                    reasons: list[str] = []
+                    if cov < coverage_min:
+                        reasons.append(f"coverage<{coverage_min}")
+                    if p90 > norm_p90_max:
+                        reasons.append(f"norm_p90>{norm_p90_max}")
+                    triggered = len(reasons) > 0
+                    if triggered:
                         alerts += 1
+                    breaches.append({
+                        "horizon": h,
+                        "coverage_window_pct": cov,
+                        "norm_error_p90": p90,
+                        "triggered": triggered,
+                        "reasons": reasons,
+                    })
                 except Exception:
                     continue
             if _ALERT_COUNT is not None:
                 _ALERT_COUNT.labels(index=idx).set(float(alerts))
             if _LAST_EVAL_MS is not None:
                 _LAST_EVAL_MS.labels(index=idx).set(time.time() * 1000.0)
+            # Store last summary for status endpoint
+            _LAST_SUMMARY[idx] = {
+                "index": idx,
+                "ts_ms": int(time.time() * 1000.0),
+                "alerts": int(alerts),
+                "total_horizons": len(entries),
+                "coverage_min": coverage_min,
+                "norm_error_p90_max": norm_p90_max,
+                "breaches": breaches,
+            }
             _LOG.info(f"regime evaluation idx={idx} alerts={alerts} entries={len(entries)}")
         except Exception as e:
             _LOG.debug(f"regime evaluation failed for {idx}: {e}")
@@ -204,3 +230,15 @@ __all__ = [
     "start_regime_scheduler",
     "stop_regime_scheduler",
 ]
+
+def get_regime_summary(index: Optional[str] = None) -> Dict[str, Any]:
+    """Return last computed regime summary.
+
+    If index provided, returns that index's summary or {} if absent.
+    If no index provided, returns mapping of all indices to summaries.
+    """
+    if index:
+        return _LAST_SUMMARY.get(index.upper(), {})
+    return dict(_LAST_SUMMARY)
+
+__all__.append("get_regime_summary")

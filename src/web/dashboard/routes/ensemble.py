@@ -94,6 +94,23 @@ class RetrainResponse(BaseModel):
     estimated_completion: str
     message: str
 
+
+class RegimeBreach(BaseModel):
+    horizon: int
+    coverage_window_pct: float
+    norm_error_p90: float
+    triggered: bool
+    reasons: list[str]
+
+class RegimeStatusResponse(BaseModel):
+    index: str
+    ts_ms: int
+    alerts: int
+    total_horizons: int
+    coverage_min: float
+    norm_error_p90_max: float
+    breaches: list[RegimeBreach]
+
 # --------------------------- Helpers ---------------------------
 _def_components = ['baseline', 'gbrt', 'retrieval', 'conformal']
 
@@ -886,6 +903,28 @@ async def retrain(req: RetrainRequest):
         raise HTTPException(status_code=404, detail=f"forecaster_unavailable: {idx}")
     job_id = f"retrain_{idx}_{int(time.time())}"
     return RetrainResponse(index=idx, status='scheduled', job_id=job_id, parameters={'training_days': req.days, 'validate': req.run_validation}, estimated_completion='in 2 hours', message='Retraining job scheduled successfully')
+
+
+@router.get('/regime/status', response_model=RegimeStatusResponse | Dict[str, RegimeStatusResponse])
+async def regime_status(index: Optional[str] = Query(None, description="Optional index e.g. NIFTY")):
+    """Return last computed regime evaluation summary.
+
+    - If index provided, returns a single summary object (or 404 if missing).
+    - If index omitted, returns a mapping {index -> summary} for all tracked indices.
+    """
+    try:
+        from ..regime_alerts import get_regime_summary  # type: ignore
+        data = get_regime_summary(index=index)
+        if index:
+            if not data:
+                raise HTTPException(status_code=404, detail=f"no_regime_summary: {index.upper()}")
+            return data  # type: ignore[return-value]
+        return data  # type: ignore[return-value]
+    except HTTPException:
+        raise
+    except Exception as e:
+        _LOG.warning(f"regime_status_failed: {e}")
+        raise HTTPException(status_code=500, detail="regime_status_failed")
 
 @router.post('/metrics/flush')
 async def metrics_flush():

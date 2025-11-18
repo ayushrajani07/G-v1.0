@@ -1,0 +1,65 @@
+groups:
+  - name: MLRegimeAndDrift
+    interval: 30s
+    rules:
+      - alert: MLRegimeChangeDetected
+        expr: sum by (index) (g6_regime_alert_count) > 0
+        for: 10m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Regime change signals detected for {{ $labels.index }}"
+          description: |
+            One or more horizons breached weekly regime thresholds for {{ $labels.index }}.
+            Investigate rolling coverage and normalized error.
+      - alert: MLDriftAlertsDetected
+        expr: g6_drift_alert_count > 0
+        for: 10m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Feature drift detected for {{ $labels.index }}"
+          description: |
+            Drift monitor flagged features for {{ $labels.index }}. Review drift dashboard and thresholds.
+
+  - name: MLLatencyAndQuality
+    interval: 30s
+    rules:
+      - alert: MLForecastLatencyP95High
+        expr: |
+          histogram_quantile(
+            0.95,
+            sum by (le, index, horizon) (rate(g6_forecast_latency_ms_bucket[5m]))
+          ) > 750
+        for: 10m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "High forecast latency p95 for {{ $labels.index }} h={{ $labels.horizon }}"
+          description: |
+            p95 forecast latency exceeded 750ms for 10m.
+            Check cache hit rates and backend load.
+      - alert: MLCoverageLow
+        expr: g6_forecast_coverage_pct < 70
+        for: 15m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Low coverage for {{ $labels.index }} h={{ $labels.horizon }}"
+          description: |
+            Coverage fell below 70% for 15m. Review conformal window and recent regime.
+      - alert: MLNormalizedErrorHigh
+        expr: g6_forecast_norm_error > 0.25
+        for: 15m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "High normalized error for {{ $labels.index }} h={{ $labels.horizon }}"
+          description: |
+            Rolling normalized error above 0.25 for 15m.
+            Investigate band compression and retrieval match quality.
