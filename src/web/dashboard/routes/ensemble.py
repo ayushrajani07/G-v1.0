@@ -141,6 +141,7 @@ _ADAPTIVE_TTL_W_WIN = min(1.0, max(0.0, float(os.environ.get('G6_ADAPTIVE_TTL_W_
 _CACHE_HITS = 0
 _CACHE_MISSES = 0
 _CACHE_EVICTIONS = 0
+_CACHE_START_TIME = time.time()
 
 # --------------------------- Recent Window File Cache ---------------------------
 # Cache for recent TP window loaded from CSV to reduce disk I/O and parsing
@@ -243,6 +244,32 @@ async def cache_stats():
         oldest = max((e['age_sec'] for e in entries), default=0.0)
         newest = min((e['age_sec'] for e in entries), default=0.0)
         hit_ratio = (_CACHE_HITS / (_CACHE_HITS + _CACHE_MISSES)) if (_CACHE_HITS + _CACHE_MISSES) else 0.0
+        # TTL remaining stats
+        if entries:
+            remaining_list = [max(0.0, e['ttl_sec'] - e['age_sec']) for e in entries]
+            ttl_remaining_min = min(remaining_list)
+            ttl_remaining_max = max(remaining_list)
+            ttl_remaining_avg = sum(remaining_list) / len(remaining_list)
+        else:
+            ttl_remaining_min = ttl_remaining_max = ttl_remaining_avg = 0.0
+
+        # Simple bucketed distribution of TTL remaining (seconds)
+        buckets = {'le_15': 0, 'le_30': 0, 'le_45': 0, 'le_60': 0, 'gt_60': 0}
+        for r in ([] if not entries else [max(0.0, e['ttl_sec'] - e['age_sec']) for e in entries]):
+            if r <= 15:
+                buckets['le_15'] += 1
+            elif r <= 30:
+                buckets['le_30'] += 1
+            elif r <= 45:
+                buckets['le_45'] += 1
+            elif r <= 60:
+                buckets['le_60'] += 1
+            else:
+                buckets['gt_60'] += 1
+
+        runtime_min = max(1e-6, (now - _CACHE_START_TIME) / 60.0)
+        eviction_rate_per_min = _CACHE_EVICTIONS / runtime_min
+
         forecast_cache_stats = {
             'ttl_sec_default': _CACHE_TTL_SEC,
             'adaptive': _ADAPTIVE_TTL_ENABLED,
@@ -253,9 +280,14 @@ async def cache_stats():
             'hits': _CACHE_HITS,
             'misses': _CACHE_MISSES,
             'evictions': _CACHE_EVICTIONS,
+            'eviction_rate_per_min': round(eviction_rate_per_min, 4),
             'hit_ratio': round(hit_ratio, 4),
             'oldest_age_sec': oldest,
             'newest_age_sec': newest,
+            'ttl_remaining_min_sec': round(ttl_remaining_min, 3),
+            'ttl_remaining_max_sec': round(ttl_remaining_max, 3),
+            'ttl_remaining_avg_sec': round(ttl_remaining_avg, 3),
+            'ttl_distribution': buckets,
             'entries': entries[:50],  # cap detail
         }
     
