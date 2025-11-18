@@ -18,6 +18,7 @@ Metrics exposed:
  - g6_forecast_norm_error_hist: Histogram of per-evaluation normalized error (per index,horizon)
  - g6_forecast_mae_drift_ratio: Gauge of short/long MAE ratio (per index,horizon)
  - g6_forecast_norm_error_drift_ratio: Gauge of short/long normalized error ratio (per index,horizon)
+ - g6_forecast_coverage_drift_delta_pct: Gauge of short minus long coverage percentage (per index,horizon)
 """
 from __future__ import annotations
 
@@ -46,6 +47,7 @@ _FORECAST_ERROR_HIST: Any = None
 _FORECAST_NORM_ERROR_HIST: Any = None
 _FORECAST_MAE_DRIFT: Any = None
 _FORECAST_NORM_DRIFT: Any = None
+_FORECAST_COVERAGE_DRIFT: Any = None
 
 
 def _is_enabled() -> bool:
@@ -156,6 +158,12 @@ def _init_metrics() -> bool:
         _FORECAST_NORM_DRIFT = Gauge(
             "g6_forecast_norm_error_drift_ratio",
             "Short/long window normalized error ratio (drift)",
+            labelnames=["index", "horizon"],
+            registry=_REGISTRY,
+        )
+        _FORECAST_COVERAGE_DRIFT = Gauge(
+            "g6_forecast_coverage_drift_delta_pct",
+            "Short minus long window coverage percentage delta (pct points)",
             labelnames=["index", "horizon"],
             registry=_REGISTRY,
         )
@@ -399,6 +407,17 @@ def set_forecast_drift_ratios(index: str, horizon: int, mae_ratio: float, norm_r
             _FORECAST_NORM_DRIFT.labels(index=index, horizon=str(horizon)).set(norm_ratio)
     except Exception as e:
         _LOG.debug(f"Failed to set norm drift ratio: {e}")
+
+def set_forecast_coverage_drift(index: str, horizon: int, coverage_delta_pct: float) -> None:
+    """Set coverage drift delta gauge."""
+    if not _is_enabled():
+        return
+    _init_metrics()
+    try:
+        if _FORECAST_COVERAGE_DRIFT is not None:
+            _FORECAST_COVERAGE_DRIFT.labels(index=index, horizon=str(horizon)).set(coverage_delta_pct)
+    except Exception as e:
+        _LOG.debug(f"Failed to set coverage drift delta: {e}")
 
 
 def observe_forecast_errors(index: str, horizon: int, abs_error: float, norm_error: float) -> None:

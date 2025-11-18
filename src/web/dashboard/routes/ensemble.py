@@ -1012,9 +1012,10 @@ async def metrics_compare(
             resp['drift_summary'] = get_drift_summary(index.upper(), horizon)
             # Export drift ratios to Prometheus
             try:
-                from ..prom_metrics import set_forecast_drift_ratios  # type: ignore
+                from ..prom_metrics import set_forecast_drift_ratios, set_forecast_coverage_drift  # type: ignore
                 drift = resp['drift_summary']
                 set_forecast_drift_ratios(index.upper(), horizon, float(drift.get('mae_ratio',0.0)), float(drift.get('norm_ratio',0.0)))
+                set_forecast_coverage_drift(index.upper(), horizon, float(drift.get('coverage_delta_pct',0.0)))
             except Exception:
                 pass
         return resp

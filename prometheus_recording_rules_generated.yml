@@ -416,3 +416,27 @@ groups:
     labels:
       job: g6_platform
     record: g6_sse_trace_stages_total:total_rate_5m
+  - expr: avg_over_time(g6_forecast_mae_drift_ratio[15m])
+    labels:
+      job: g6_platform
+    record: g6_forecast_mae_drift_ratio:avg_15m
+  - expr: avg_over_time(g6_forecast_norm_error_drift_ratio[15m])
+    labels:
+      job: g6_platform
+    record: g6_forecast_norm_error_drift_ratio:avg_15m
+  - expr: avg_over_time(g6_forecast_coverage_drift_delta_pct[15m])
+    labels:
+      job: g6_platform
+    record: g6_forecast_coverage_drift_delta_pct:avg_15m
+  - expr: g6_forecast_mae_drift_ratio / clamp_min(g6_forecast_mae_drift_ratio:avg_15m,0.001)
+    labels:
+      job: g6_platform
+    record: g6_forecast_mae_drift_ratio:spike_factor
+  - expr: g6_forecast_norm_error_drift_ratio / clamp_min(g6_forecast_norm_error_drift_ratio:avg_15m,0.001)
+    labels:
+      job: g6_platform
+    record: g6_forecast_norm_error_drift_ratio:spike_factor
+  - expr: (g6_forecast_coverage_drift_delta_pct - g6_forecast_coverage_drift_delta_pct:avg_15m)
+    labels:
+      job: g6_platform
+    record: g6_forecast_coverage_drift_delta_pct:deviation_15m

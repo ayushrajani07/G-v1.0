@@ -125,3 +125,25 @@ groups:
           summary: "Normalized error drift ratio critical"
           description: |
             Short/long normalized error ratio >1.7 for 5m (index=${labels.index} horizon=${labels.horizon}). Forecast bands likely stale or under-reactive. Trigger investigation.
+
+      - alert: ForecastCoverageDriftWarning
+        expr: g6_forecast_coverage_drift_delta_pct < -10
+        for: 10m
+        labels:
+          severity: warning
+          category: forecast_drift
+        annotations:
+          summary: "Coverage drop (short vs long) exceeds 10pp"
+          description: |
+            Short window coverage minus long window coverage < -10 percentage points for 10m (index=${labels.index} horizon=${labels.horizon}). Recent forecasts missing band more often.
+
+      - alert: ForecastCoverageDriftCritical
+        expr: g6_forecast_coverage_drift_delta_pct < -20
+        for: 5m
+        labels:
+          severity: critical
+          category: forecast_drift
+        annotations:
+          summary: "Coverage drop (short vs long) exceeds 20pp"
+          description: |
+            Short window coverage minus long window coverage < -20 percentage points for 5m (index=${labels.index} horizon=${labels.horizon}). Indicates severe regime shift or band calibration failure.
