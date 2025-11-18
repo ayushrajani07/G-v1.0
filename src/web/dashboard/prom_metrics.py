@@ -431,8 +431,10 @@ def get_feature_drift_snapshot(index: str | None = None) -> list[dict[str, float
             'g6_feature_psi': 'psi',
             'g6_feature_ks_pvalue': 'ks_pvalue',
             'g6_feature_mean_delta': 'mean_delta',
-            'g6_feature_var_delta': 'var_delta',
+            'g6_feature_var_delta': 'var_delta',  # legacy name (if present)
+            'g6_feature_var_ratio': 'var_ratio',  # new variance ratio gauge
             'g6_feature_drift_flag': 'drift_flag',
+            'g6_feature_drift_severity': 'severity',
         }
         for fam in reg.collect():  # type: ignore[attr-defined]
             name = getattr(fam, 'name', None) or getattr(fam, 'sample_name', None)
@@ -453,7 +455,9 @@ def get_feature_drift_snapshot(index: str | None = None) -> list[dict[str, float
                     'ks_pvalue': 1.0,
                     'mean_delta': 0.0,
                     'var_delta': 0.0,
+                    'var_ratio': 1.0,
                     'drift_flag': 0.0,
+                    'severity': 0.0,
                 })
                 try:
                     rec[key] = float(s.value)

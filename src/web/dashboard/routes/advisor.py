@@ -165,15 +165,31 @@ async def api_ml_universal_advisor_drift_advice(
     """
     # Obtain drift metric snapshot from prom_metrics (placeholder tolerant)
     try:
-        from src.web.dashboard.prom_metrics import get_feature_drift_snapshot  # type: ignore
-        snapshot = get_feature_drift_snapshot(index.upper()) or []
+            from src.web.dashboard.prom_metrics import get_feature_drift_snapshot  # type: ignore
+            snapshot = get_feature_drift_snapshot(index.upper()) or []
     except Exception:
         snapshot = []
     entries = []
     counts = {'stable':0,'watch':0,'actionable':0,'critical':0}
+    severity_map = {0:'stable',1:'watch',2:'actionable',3:'critical'}
     for rec in snapshot:
-        sev, acts = _classify(rec)
-        counts[sev] += 1
+        raw_sev = rec.get('severity')
+        sev_label: str
+        if isinstance(raw_sev,(int,float)) and raw_sev in severity_map:
+            sev_label = severity_map[int(raw_sev)]
+            # actions derived from severity directly
+            if sev_label == 'critical':
+                acts = ['raise_alert','consider_baseline_refresh','evaluate_retraining']
+            elif sev_label == 'actionable':
+                acts = ['investigate_feature_pipeline','validate_recent_data']
+            elif sev_label == 'watch':
+                acts = ['monitor_next_cycles']
+            else:
+                acts = []
+        else:
+            # fallback to classification if severity gauge missing
+            sev_label, acts = _classify(rec)
+        counts[sev_label] += 1
         if detail:
             entries.append({
                 'feature': rec.get('feature'),
@@ -181,8 +197,8 @@ async def api_ml_universal_advisor_drift_advice(
                 'ks_pvalue': rec.get('ks_pvalue'),
                 'mean_delta': rec.get('mean_delta'),
                 'var_delta': rec.get('var_delta'),
-                'drift_flag': rec.get('drift_flag'),
-                'severity': sev,
+                'var_ratio': rec.get('var_ratio'),
+                'severity': sev_label,
                 'actions': acts,
             })
     recommend_retrain = counts['critical'] >= 2 or counts['actionable'] >= 5

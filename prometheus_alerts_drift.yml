@@ -1,0 +1,96 @@
+# Prometheus Alert Rules (Severity-Based) for ML Drift Monitoring - Phase 10
+# Uses unified severity gauge g6_feature_drift_severity (0 stable,1 watch,2 actionable,3 critical)
+# Validate: promtool check rules prometheus_alerts_drift.yml
+# Include in prometheus.yml under rule_files.
+
+groups:
+  - name: ml_drift_monitoring_severity
+    interval: 60s
+    rules:
+      - alert: MLFeatureDriftCritical
+        expr: g6_feature_drift_severity==3
+        for: 0m
+        labels:
+          severity: critical
+          component: ml_drift
+        annotations:
+          summary: "Critical drift: feature {{ $labels.feature }} on {{ $labels.index }}"
+          description: |
+            Feature {{ $labels.feature }} shows critical drift severity (3).
+            Actions:
+            1. Inspect /api/ml/ensemble/drift?index={{ $labels.index }}&features={{ $labels.feature }}&full=1
+            2. Verify data integrity & pipeline
+            3. Consider baseline refresh & retraining
+
+      - alert: MLFeatureDriftActionablePersistent
+        expr: sum_over_time((g6_feature_drift_severity==2)[15m]) >= 3
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Persistent actionable drift: {{ $labels.feature }} {{ $labels.index }}"
+          description: |
+            Feature actionable severity observed in >=3 evaluations over last 15m.
+            Investigate feature pipeline and recent data quality.
+
+      - alert: MLBroadCriticalDrift
+        expr: sum(g6_feature_drift_severity==3) > 5
+        for: 15m
+        labels:
+          severity: critical
+          component: ml_drift
+        annotations:
+          summary: "Broad critical drift across features (count={{ $value }})"
+          description: |
+            More than 5 features at critical severity for same index window.
+            Possible regime shift or systemic data issue.
+            Actions: verify collection, market events, model staleness.
+
+      - alert: MLDriftSeveritySpike
+        expr: increase(sum(g6_feature_drift_severity==3)[30m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Spike in critical drift count"
+          description: |
+            Critical severity features increased by >3 in last 30m.
+            May indicate sudden market regime or data anomaly.
+
+      - alert: MLStaleDriftEvaluation
+        expr: (time() - (g6_drift_last_eval_ms/1000)) > 600
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Drift evaluator stale"
+          description: |
+            Last drift evaluation older than 10 minutes.
+            Check evaluator thread, G6_DRIFT_ENABLE, logs, resource usage.
+
+      - alert: MLAcceleratedBaselineRefresh
+        expr: g6_drift_baseline_age_days > 0 and g6_drift_critical_feature_count >= 3
+        for: 10m
+        labels:
+          severity: info
+          component: ml_drift
+        annotations:
+          summary: "Baseline nearing forced refresh condition"
+          description: |
+            Critical feature count >=3 while baseline age is positive.
+            Baseline refresh may be triggered soon; review pending changes.
+
+      - alert: MLMultiIndexCriticalDrift
+        expr: count(sum by (index) (g6_feature_drift_severity==3) > 3) >= 2
+        for: 20m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Critical drift across multiple indices"
+          description: |
+            Multiple indices have >3 critical severity features.
+            Investigate systemic issues or broad regime changes.
