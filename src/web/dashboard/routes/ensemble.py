@@ -1065,6 +1065,79 @@ async def regime_breaches(index: str = Query(..., description="Index e.g. NIFTY"
         _LOG.warning(f"regime_breaches_failed: {e}")
         raise HTTPException(status_code=500, detail="regime_breaches_failed")
 
+@router.get('/regime/dynamic_thresholds')
+async def regime_dynamic_thresholds(
+    index: str = Query(..., description="Index e.g. NIFTY"),
+    include_percentiles: int = Query(1, ge=0, le=1, description="Include raw percentile baselines (0/1)"),
+):
+    """Return dynamic drift threshold evaluation per horizon for an index.
+
+    Response schema:
+    {
+      "index": "NIFTY",
+      "generated_at": <epoch_ms>,
+      "autotune_enabled": true,
+      "horizons": [
+        {
+          "horizon": 60,
+          "static": {"mae_warn":1.5,"mae_crit":2.0,"norm_warn":1.3,"norm_crit":1.7,"coverage_drop_warn":-10,"coverage_drop_crit":-20},
+          "dynamic": {"used": true, "mae_warn":1.42, ...},
+          "percentiles": {"mae_ratio": {"p50":1.1,"p85":1.42,"p95":1.61}, ...},
+          "counts": {"mae": 48, "norm": 48, "coverage": 48},
+          "latest_metrics": {"mae_ratio":1.55,"norm_ratio":1.34,"coverage_delta":-12.0},
+          "breach": {"drift_triggered": true, "drift_reasons": ["mae_ratio>=1.5"]}
+        }, ...
+      ]
+    }
+    """
+    try:
+        from ..regime_alerts import get_regime_summary  # type: ignore
+        from ..rolling_mae import get_drift_baselines  # type: ignore
+        summary = get_regime_summary(index=index)
+        if not summary:
+            return {"index": index.upper(), "generated_at": int(time.time()*1000), "autotune_enabled": False, "horizons": []}
+        autotune_enabled = bool(summary.get("autotune_enabled", False))
+        base_percentiles = get_drift_baselines(index.upper()) if include_percentiles == 1 else {}
+        breaches = summary.get("breaches", []) or []
+        horizons_out = []
+        for b in breaches:
+            h = int(b.get("horizon", -1))
+            key = (index.upper(), h)
+            pct_entry = base_percentiles.get(key, {}) if include_percentiles == 1 else {}
+            dyn = b.get("dynamic_thresholds", {}) or {}
+            horizons_out.append({
+                "horizon": h,
+                "static": {
+                    "mae_warn": summary.get("mae_drift_ratio_warn"),
+                    "mae_crit": summary.get("mae_drift_ratio_crit"),
+                    "norm_warn": summary.get("norm_drift_ratio_warn"),
+                    "norm_crit": summary.get("norm_drift_ratio_crit"),
+                    "coverage_drop_warn": summary.get("coverage_drift_drop_warn"),
+                    "coverage_drop_crit": summary.get("coverage_drift_drop_crit"),
+                },
+                "dynamic": dyn if autotune_enabled else {"used": False},
+                "percentiles": pct_entry if include_percentiles == 1 else {},
+                "counts": pct_entry.get("counts", {}) if pct_entry else {},
+                "latest_metrics": {
+                    "mae_ratio": b.get("mae_drift_ratio"),
+                    "norm_ratio": b.get("norm_error_drift_ratio"),
+                    "coverage_delta": b.get("coverage_drift_delta_pct"),
+                },
+                "breach": {
+                    "drift_triggered": b.get("drift_triggered", False),
+                    "drift_reasons": b.get("drift_reasons", []),
+                },
+            })
+        return {
+            "index": index.upper(),
+            "generated_at": int(time.time()*1000),
+            "autotune_enabled": autotune_enabled,
+            "horizons": horizons_out,
+        }
+    except Exception as e:
+        _LOG.warning(f"regime_dynamic_thresholds_failed: {e}")
+        raise HTTPException(status_code=500, detail="regime_dynamic_thresholds_failed")
+
 @router.post('/metrics/flush')
 async def metrics_flush():
     """Force flush rolling MAE & coverage state to persistence file (Phase 10).
