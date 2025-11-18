@@ -97,6 +97,9 @@ _NORM_ERRORS: Dict[Tuple[str,int], deque] = {}  # long window normalized errors
 _NORM_ERRORS_SHORT: Dict[Tuple[str,int], deque] = {}  # short window normalized errors
 _BAND_WIDTHS: Dict[Tuple[str,int], deque] = {}  # long window band widths
 _BAND_WIDTHS_SHORT: Dict[Tuple[str,int], deque] = {}  # short window band widths
+_DRIFT_MAE_RATIOS: Dict[Tuple[str,int], deque] = {}
+_DRIFT_NORM_RATIOS: Dict[Tuple[str,int], deque] = {}
+_DRIFT_COVER_DELTAS: Dict[Tuple[str,int], deque] = {}
 _LAST_EVAL_TS: Dict[Tuple[str,int], int] = {}
 _EMA_ERROR: Dict[Tuple[str,int], float] = {}
 _EMA_COVER: Dict[Tuple[str,int], float] = {}
@@ -417,11 +420,44 @@ def _evaluate_ready_events() -> None:
                 set_forecast_coverage,
                 set_forecast_norm_error,
                 observe_forecast_errors,
+                set_forecast_drift_ratios,
+                set_forecast_coverage_drift,
             )  # type: ignore
             set_forecast_mae(idx, horizon, mae)
             set_forecast_coverage(idx, horizon, coverage_pct)
             set_forecast_norm_error(idx, horizon, norm_error_mean)
             observe_forecast_errors(idx, horizon, error, norm_error_val)
+            # Export drift metrics (ratios/delta) when short window populated
+            try:
+                err_short = _ERRORS_SHORT.get(key, [])
+                cov_short = _COVER_FLAGS_SHORT.get(key, [])
+                norm_short = _NORM_ERRORS_SHORT.get(key, [])
+                mae_short = (sum(err_short) / len(err_short)) if err_short else 0.0
+                coverage_short_pct = (sum(cov_short) / len(cov_short) * 100.0) if cov_short else 0.0
+                norm_error_short = (sum(norm_short) / len(norm_short)) if norm_short else 0.0
+                mae_ratio = (mae_short / mae) if mae > 0 else 0.0
+                norm_ratio = (norm_error_short / norm_error_mean) if norm_error_mean > 0 else 0.0
+                coverage_delta = coverage_short_pct - coverage_pct
+                set_forecast_drift_ratios(idx, horizon, mae_ratio, norm_ratio)
+                set_forecast_coverage_drift(idx, horizon, coverage_delta)
+                # Append to drift history deques
+                dr_mae = _DRIFT_MAE_RATIOS.get(key)
+                if dr_mae is None:
+                    dr_mae = deque(maxlen=_WINDOW_SIZE)
+                    _DRIFT_MAE_RATIOS[key] = dr_mae
+                dr_norm = _DRIFT_NORM_RATIOS.get(key)
+                if dr_norm is None:
+                    dr_norm = deque(maxlen=_WINDOW_SIZE)
+                    _DRIFT_NORM_RATIOS[key] = dr_norm
+                dr_cov = _DRIFT_COVER_DELTAS.get(key)
+                if dr_cov is None:
+                    dr_cov = deque(maxlen=_WINDOW_SIZE)
+                    _DRIFT_COVER_DELTAS[key] = dr_cov
+                dr_mae.append(mae_ratio)
+                dr_norm.append(norm_ratio)
+                dr_cov.append(coverage_delta)
+            except Exception:
+                pass
         except Exception:
             pass
     # After processing ready batch, attempt periodic flush
@@ -625,3 +661,41 @@ def get_drift_summary(index: str, horizon: int) -> dict:
     }
 
 __all__.append("get_drift_summary")
+
+def get_drift_baselines(index: str | None = None) -> dict:
+    """Return percentile baselines for drift ratios and coverage deltas.
+
+    Structure: { (index,horizon): { mae_ratio: {p50:..,p85:..,p95:..}, norm_ratio: {...}, coverage_delta: {...}, counts: {...} } }
+    If index provided, filter keys.
+    """
+    ps_high = [0.5, 0.85, 0.95]
+    ps_low = [0.05, 0.15, 0.5]  # for coverage delta (lower tail focus)
+    out: dict = {}
+    with _LOCK:
+        keys = set(_DRIFT_MAE_RATIOS.keys()) | set(_DRIFT_NORM_RATIOS.keys()) | set(_DRIFT_COVER_DELTAS.keys())
+        if index is not None:
+            keys = {k for k in keys if k[0] == index.upper()}
+        for key in sorted(keys):
+            mae_seq = list(_DRIFT_MAE_RATIOS.get(key, []))
+            norm_seq = list(_DRIFT_NORM_RATIOS.get(key, []))
+            cov_seq = list(_DRIFT_COVER_DELTAS.get(key, []))
+            mae_pct = _percentiles(mae_seq, ps_high) if len(mae_seq) >= 5 else {"p50":0.0,"p85":0.0,"p95":0.0}
+            norm_pct = _percentiles(norm_seq, ps_high) if len(norm_seq) >= 5 else {"p50":0.0,"p85":0.0,"p95":0.0}
+            # For coverage deltas (can be negative) reuse percentiles function; specify ps_low for lower tail severity
+            cov_pct = _percentiles(cov_seq, ps_low) if len(cov_seq) >= 5 else {"p05":0.0,"p15":0.0,"p50":0.0}
+            # Re-map keys so names reflect percentiles
+            if len(cov_seq) >= 5:
+                cov_pct = {f"p{int(p*100)}": v for p,v in ((0.05,cov_pct.get('p5',cov_pct.get('p05',0.0))), (0.15,cov_pct.get('p15',0.0)), (0.5,cov_pct.get('p50',0.0)))}
+            out[key] = {
+                "mae_ratio": mae_pct,
+                "norm_ratio": norm_pct,
+                "coverage_delta": cov_pct,
+                "counts": {
+                    "mae": len(mae_seq),
+                    "norm": len(norm_seq),
+                    "coverage": len(cov_seq),
+                }
+            }
+    return out
+
+__all__.append("get_drift_baselines")
