@@ -45,7 +45,7 @@ try:
 except Exception:  # pragma: no cover
     stats = None  # type: ignore
 
-from .feature_loader import load_feature_map, feature_names_sorted_by_importance, apply_transform
+from . import feature_loader as _fl
 
 _LOG = logging.getLogger(__name__)
 
@@ -113,9 +113,8 @@ class FeatureLoader:
         spec = fmap.get(feature)
         # If we have a FeatureSpec with potential composite transform, compute from the row via feature_loader helper
         if spec is not None:
-            from .feature_loader import _compute_from_row  # type: ignore
             for r in rows:
-                val = _compute_from_row(spec, r)
+                val = _fl._compute_from_row(spec, r)  # type: ignore[attr-defined]
                 if val is None or not math.isfinite(val):
                     continue
                 values.append(float(val))
@@ -181,7 +180,7 @@ class DriftMonitor:
         self.baseline_history_dir.mkdir(parents=True, exist_ok=True)
         self.loader = FeatureLoader(self.root / 'data' / 'g6_data')
         # Feature mapping
-        self.feature_map = load_feature_map()
+        self.feature_map = _fl.load_feature_map()
         # Smoothing config
         self.smoothing_enabled = bool(_env_int('G6_DRIFT_ENABLE_SMOOTHING', 0))
         self.smoothing_half_life = _env_float('G6_DRIFT_SMOOTHING_HALF_LIFE', 5.0)
@@ -196,7 +195,7 @@ class DriftMonitor:
         else:
             rows = self.loader.load_recent_rows(index, self.recent_rows)
         if features is None:
-            features = feature_names_sorted_by_importance(self.feature_map)
+            features = _fl.feature_names_sorted_by_importance(self.feature_map)
         data: Dict[str, Any] = {}
         for feat in features:
             vals = self.loader.aggregate_feature_values(rows, feat, self.feature_map)
