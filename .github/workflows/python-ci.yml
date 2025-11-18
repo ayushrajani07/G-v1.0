@@ -66,6 +66,32 @@ jobs:
         run: |
           "$PROMTOOL" check rules prometheus_alerts_drift.yml
 
+  promtool-generated-rules:
+    name: Generated per-index rules validation
+    runs-on: ubuntu-latest
+    env:
+      INDICES: NIFTY,BANKNIFTY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Generate per-index drift rules
+        run: |
+          python scripts/monitoring/generate_drift_alerts.py --template monitoring/templates/prometheus_alerts_drift.per_index.tmpl.yml --indices "$INDICES" --out prometheus_alerts_drift.generated.yml
+      - name: Download promtool
+        run: |
+          set -e
+          VER=2.53.0
+          curl -sSL -o prom.tar.gz https://github.com/prometheus/prometheus/releases/download/v${VER}/prometheus-${VER}.linux-amd64.tar.gz
+          tar -xzf prom.tar.gz
+          echo "PROMTOOL=$(pwd)/prometheus-${VER}.linux-amd64/promtool" >> $GITHUB_ENV
+      - name: Validate generated rules
+        run: |
+          "$PROMTOOL" check rules prometheus_alerts_drift.generated.yml
+
   feature-map-validate:
     name: Feature map JSON validation
     runs-on: ubuntu-latest
