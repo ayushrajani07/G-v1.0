@@ -1,0 +1,147 @@
+{
+  "title": "Drift Quickstart",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "tags": ["drift", "phase10"],
+  "editable": true,
+  "graphTooltip": 0,
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "index",
+        "type": "custom",
+        "query": "NIFTY,BANKNIFTY",
+        "current": { "text": "NIFTY", "value": "NIFTY", "selected": true },
+        "options": [
+          { "text": "NIFTY", "value": "NIFTY", "selected": true },
+          { "text": "BANKNIFTY", "value": "BANKNIFTY" }
+        ],
+        "label": "Index",
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "DS_INFINITY",
+        "type": "datasource",
+        "query": "yesoreyeram-infinity-datasource",
+        "label": "Infinity DS"
+      },
+      {
+        "name": "BACKEND_BASE",
+        "type": "textbox",
+        "query": "http://127.0.0.1:9500",
+        "label": "Backend Base"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Drift Eval Age (sec)",
+      "id": 1,
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "url": "${BACKEND_BASE}/api/ml/universal_advisor/drift_evaluator_health?indices=${index}",
+          "root_selector": "rows",
+          "columns": [
+            { "selector": "index", "text": "index" },
+            { "selector": "age_sec", "text": "age_sec" },
+            { "selector": "stale", "text": "stale" }
+          ]
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^age_sec$/", "values": false },
+        "orientation": "auto",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 600 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Drift Data Status",
+      "id": 2,
+      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "url": "${BACKEND_BASE}/api/ml/universal_advisor/drift_advice?index=${index}&detail=false",
+          "root_selector": ".",
+          "columns": [ { "selector": "data_insufficient", "text": "data_insufficient" } ]
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "/^data_insufficient$/", "values": false },
+        "orientation": "auto",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "colorMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "true": { "text": "No current data", "color": "orange" },
+                "false": { "text": "Data available", "color": "green" }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "table",
+      "title": "Drift Severity Summary",
+      "id": 3,
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 6 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "${DS_INFINITY}" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "url": "${BACKEND_BASE}/api/ml/universal_advisor/drift_advice?index=${index}&detail=false",
+          "root_selector": ".",
+          "columns": [
+            { "selector": "index", "text": "index" },
+            { "selector": "summary.critical", "text": "critical" },
+            { "selector": "summary.actionable", "text": "actionable" },
+            { "selector": "summary.watch", "text": "watch" }
+          ]
+        }
+      ],
+      "options": {
+        "showHeader": true
+      },
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    }
+  ]
+}
