@@ -62,8 +62,9 @@ class TestSafeFileIOFailure:
 
 class SafeFileIOFailureTests(unittest.TestCase):
     def test_safe_write_text_failure(self):
-        from src.error_handling import safe_write_text, get_error_handler, ErrorCategory
-        handler = get_error_handler()
+        import src.error_handling as eh
+        ErrorCategory = eh.ErrorCategory
+        handler = eh.get_error_handler()
         start_len = len(handler.errors)
         target = Path("_tmp_fail_write.txt")
         original = Path.write_text
@@ -71,7 +72,7 @@ class SafeFileIOFailureTests(unittest.TestCase):
             raise IOError("disk full simulated")
         Path.write_text = failing
         try:
-            ok = safe_write_text(target, "hello")
+            ok = eh.safe_write_text(target, "hello")
         finally:
             Path.write_text = original
         self.assertFalse(ok)
@@ -81,8 +82,9 @@ class SafeFileIOFailureTests(unittest.TestCase):
         self.assertIn("_tmp_fail_write.txt", (last.context.get('path') or ''))
 
     def test_safe_append_line_failure(self):
-        from src.error_handling import safe_append_line, get_error_handler, ErrorCategory
-        handler = get_error_handler()
+        import src.error_handling as eh
+        ErrorCategory = eh.ErrorCategory
+        handler = eh.get_error_handler()
         start_len = len(handler.errors)
         base = Path("_tmp_fail_append.txt")
         base.write_text("initial\n", encoding="utf-8")
@@ -93,7 +95,7 @@ class SafeFileIOFailureTests(unittest.TestCase):
             return original_open(self, mode, *args, **kwargs)
         Path.open = failing_open
         try:
-            ok = safe_append_line(base, "new line")
+            ok = eh.safe_append_line(base, "new line")
         finally:
             Path.open = original_open
         self.assertFalse(ok)

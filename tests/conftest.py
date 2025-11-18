@@ -796,16 +796,31 @@ def _start_metrics_stubs():  # type: ignore
             srv.server_close()
         except Exception:
             pass
-# Temporary diagnostic hook to understand non-zero exit status despite passing tests.
-def pytest_sessionfinish(session, exitstatus):  # type: ignore[override]
-    if not is_truthy_env('G6_DIAG_EXIT'):
-        return
+
+# ---------------------------------------------------------------------------
+# Minimal asyncio support: run async test functions without pytest-asyncio
+# ---------------------------------------------------------------------------
+def pytest_pyfunc_call(pyfuncitem):  # type: ignore
     try:
-        pm = session.config.pluginmanager
-        plugins = sorted(name for name, _ in pm.list_name_plugin())
-        print(f"[diag-exit] pytest exitstatus={exitstatus} plugins={','.join(plugins)}")
-    except Exception as e:  # pragma: no cover
-        print(f"[diag-exit] hook failed: {e}")
+        import asyncio, inspect
+        obj = pyfuncitem.obj
+        if inspect.iscoroutinefunction(obj):
+            loop = asyncio.new_event_loop()
+            try:
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(obj(**pyfuncitem.funcargs))
+            finally:
+                try:
+                    asyncio.set_event_loop(None)
+                except Exception:
+                    pass
+                loop.close()
+            return True
+    except Exception:
+        # Defer to pytest default if anything unexpected
+        return False
+    return False
+
 
 # ---------------------------------------------------------------------------
 # Optional collection tracing: set G6_COLLECT_TRACE=1 to print each test file
