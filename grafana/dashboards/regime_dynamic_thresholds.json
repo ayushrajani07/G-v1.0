@@ -1,0 +1,206 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "iteration": 1658851200000,
+  "links": [],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Regime Dynamic Drift Thresholds",
+      "type": "table",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "infinity"
+      },
+      "pluginVersion": "2.7.0",
+      "transparent": false,
+      "options": {
+        "showHeader": true,
+        "footer": {
+          "show": true,
+          "reducer": ["count"],
+          "calcs": []
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "format": "table",
+          "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${var_index}&include_percentiles=1",
+          "data": "",
+          "url_options": {"method": "GET"},
+          "json_query": "$.horizons[*]",
+          "root_selector": "$.horizons[*]",
+          "columns": [
+            {"selector": "horizon", "text": "Horizon"},
+            {"selector": "latest_metrics.mae_ratio", "text": "MAE Ratio"},
+            {"selector": "dynamic.mae_warn", "text": "MAE Warn"},
+            {"selector": "dynamic.mae_crit", "text": "MAE Crit"},
+            {"selector": "latest_metrics.norm_ratio", "text": "Norm Ratio"},
+            {"selector": "dynamic.norm_warn", "text": "Norm Warn"},
+            {"selector": "dynamic.norm_crit", "text": "Norm Crit"},
+            {"selector": "latest_metrics.coverage_delta", "text": "Coverage Δ"},
+            {"selector": "dynamic.coverage_drop_warn", "text": "Cov Warn"},
+            {"selector": "dynamic.coverage_drop_crit", "text": "Cov Crit"},
+            {"selector": "breach.drift_triggered", "text": "Triggered"},
+            {"selector": "breach.drift_reasons", "text": "Reasons"}
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": null},
+            {"color": "orange", "value": 1},
+            {"color": "red", "value": 2}
+          ]}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Triggered"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "color-text"}},
+              {"id": "mappings", "value": [
+                {"type": 1, "options": {"match": "true", "result": {"text": "YES", "color": "red"}}},
+                {"type": 1, "options": {"match": "false", "result": {"text": "NO", "color": "green"}}}
+              ]}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "MAE Ratio"},
+            "properties": [
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "green", "value": 0},
+                {"color": "orange", "value": 1.3},
+                {"color": "red", "value": 1.6}
+              ]}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Norm Ratio"},
+            "properties": [
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "green", "value": 0},
+                {"color": "orange", "value": 1.15},
+                {"color": "red", "value": 1.5}
+              ]}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Coverage Δ"},
+            "properties": [
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "red", "value": -25},
+                {"color": "orange", "value": -15},
+                {"color": "green", "value": 0}
+              ]}}
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "horizon": "Horizon (m)",
+              "latest_metrics.mae_ratio": "MAE Ratio",
+              "dynamic.mae_warn": "MAE Warn",
+              "dynamic.mae_crit": "MAE Crit",
+              "latest_metrics.norm_ratio": "Norm Ratio",
+              "dynamic.norm_warn": "Norm Warn",
+              "dynamic.norm_crit": "Norm Crit",
+              "latest_metrics.coverage_delta": "Coverage Δ",
+              "dynamic.coverage_drop_warn": "Cov Warn",
+              "dynamic.coverage_drop_crit": "Cov Crit",
+              "breach.drift_triggered": "Triggered",
+              "breach.drift_reasons": "Reasons"
+            }
+          }
+        }
+      ],
+      "gridPos": {"h": 18, "w": 24, "x": 0, "y": 0}
+    },
+    {
+      "id": 2,
+      "title": "MAE Ratio Sparkline (p50/p85/p95 Baselines)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "infinity"
+      },
+      "targets": [
+        {
+          "refId": "B",
+            "type": "json",
+            "format": "table",
+            "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${var_index}&include_percentiles=1",
+            "url_options": {"method": "GET"},
+            "json_query": "$.horizons[*]",
+            "root_selector": "$.horizons[*]",
+            "columns": [
+              {"selector": "horizon", "text": "horizon"},
+              {"selector": "latest_metrics.mae_ratio", "text": "mae_ratio"},
+              {"selector": "percentiles.mae_ratio.p50", "text": "p50"},
+              {"selector": "percentiles.mae_ratio.p85", "text": "p85"},
+              {"selector": "percentiles.mae_ratio.p95", "text": "p95"}
+            ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "barAlignment": 0,
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      },
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 18}
+    }
+  ],
+  "refresh": "1m",
+  "schemaVersion": 37,
+  "style": "dark",
+  "tags": ["regime", "drift", "dynamic-thresholds"],
+  "templating": {
+    "list": [
+      {
+        "name": "var_index",
+        "label": "Index",
+        "type": "custom",
+        "query": "NIFTY,BANKNIFTY",
+        "current": {"text": "NIFTY", "value": "NIFTY"},
+        "includeAll": false,
+        "multi": false
+      },
+      {
+        "name": "G6_API_BASE",
+        "label": "API Base",
+        "type": "textbox",
+        "query": "http://localhost:9500",
+        "current": {"text": "http://localhost:9500", "value": "http://localhost:9500"}
+      }
+    ]
+  },
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {"refresh_intervals": ["30s", "1m", "5m", "15m"]},
+  "timezone": "",
+  "title": "Regime Dynamic Thresholds",
+  "version": 1
+}
