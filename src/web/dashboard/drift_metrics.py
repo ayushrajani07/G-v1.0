@@ -1,4 +1,4 @@
-"""Drift Metrics & Evaluator Thread (Phase 10 P1 Baseline Refresh Integration)
+"""Drift Metrics & Evaluator Thread (Phase 10 P3 Optimization)
 
 Provides Prometheus gauges for drift monitoring and a background evaluator thread.
 
@@ -18,9 +18,11 @@ Gauges (per feature,index):
   g6_feature_drift_severity (0=stable,1=watch,2=actionable,3=critical)
 
 Gauges (per index):
-  g6_drift_baseline_age_days
-  g6_drift_critical_feature_count
-  g6_drift_last_eval_ms
+    g6_drift_baseline_age_days
+    g6_drift_critical_feature_count
+    g6_drift_last_eval_ms
+    g6_drift_eval_duration_ms (duration of last evaluation)
+    g6_feature_drift_excluded_total (count of excluded features due to cap)
 """
 from __future__ import annotations
 
@@ -45,6 +47,8 @@ _FEATURE_SEVERITY = None
 _BASELINE_AGE = None
 _CRITICAL_COUNT = None
 _LAST_EVAL_MS = None
+_EVAL_DURATION_MS = None
+_EXCLUDED_TOTAL = None
 
 def _env_int(name: str, default: int) -> int:
     try:
@@ -61,7 +65,7 @@ def _is_enabled() -> bool:
 def _init_metrics() -> bool:
     global _INITIALIZED, _REGISTRY
     global _FEATURE_PSI, _FEATURE_KS, _FEATURE_MEAN_DELTA, _FEATURE_VAR_RATIO, _FEATURE_SEVERITY
-    global _BASELINE_AGE, _CRITICAL_COUNT, _LAST_EVAL_MS
+    global _BASELINE_AGE, _CRITICAL_COUNT, _LAST_EVAL_MS, _EVAL_DURATION_MS, _EXCLUDED_TOTAL
     if _INITIALIZED:
         return True
     try:
@@ -84,6 +88,8 @@ def _init_metrics() -> bool:
         _BASELINE_AGE = Gauge('g6_drift_baseline_age_days', 'Baseline age days', ['index'], registry=_REGISTRY)
         _CRITICAL_COUNT = Gauge('g6_drift_critical_feature_count', 'Critical drift feature count', ['index'], registry=_REGISTRY)
         _LAST_EVAL_MS = Gauge('g6_drift_last_eval_ms', 'Last drift evaluation timestamp (ms since epoch)', ['index'], registry=_REGISTRY)
+        _EVAL_DURATION_MS = Gauge('g6_drift_eval_duration_ms', 'Duration of last drift evaluation (ms)', ['index'], registry=_REGISTRY)
+        _EXCLUDED_TOTAL = Gauge('g6_feature_drift_excluded_total', 'Number of features excluded due to cap', ['index'], registry=_REGISTRY)
         _INITIALIZED = True
         _LOG.info('Drift metrics initialized')
         return True
@@ -128,12 +134,15 @@ def _evaluator_loop():
     _LOG.info('Drift evaluator started')
     interval = _env_int('G6_DRIFT_EVAL_INTERVAL_SEC', 300)
     indices = [s.strip().upper() for s in _env_str('G6_DRIFT_INDICES','NIFTY,BANKNIFTY').split(',') if s.strip()]
+    # Persist single monitor instance + baseline cache
+    monitor = create_drift_monitor_from_env()
+    baseline_cache: Dict[str, Dict[str,Any]] = {}
     while _RUNNING:
-        t_start = time.time()
+        loop_start = time.time()
         try:
-            monitor = create_drift_monitor_from_env()
             for idx in indices:
-                baseline = monitor.get_or_create_baseline(idx)
+                t_start = time.time()
+                baseline = baseline_cache.get(idx) or monitor.get_or_create_baseline(idx)
                 recent = monitor.compute_feature_distributions(idx, 0)
                 drift = monitor.calculate_drift_metrics(baseline, recent)
                 critical_count = sum(1 for v in drift.values() if v.get('severity') == 'critical')
@@ -141,6 +150,11 @@ def _evaluator_loop():
                     _CRITICAL_COUNT.labels(index=idx).set(critical_count)
                 # Baseline refresh check
                 baseline = _maybe_refresh_baseline(monitor, idx, baseline, critical_count)
+                baseline_cache[idx] = baseline
+                # Feature cap exclusion count
+                excluded = max(0, len(baseline.get('features', {})) - len(drift))
+                if _EXCLUDED_TOTAL is not None:
+                    _EXCLUDED_TOTAL.labels(index=idx).set(excluded)
                 # Update feature gauges
                 for feat, met in drift.items():
                     sev = _SEVERITY_MAP.get(met.get('severity','stable'),0)
@@ -154,13 +168,16 @@ def _evaluator_loop():
                         _FEATURE_VAR_RATIO.labels(feature=feat,index=idx).set(met.get('var_ratio',1.0))
                     if _FEATURE_SEVERITY is not None:
                         _FEATURE_SEVERITY.labels(feature=feat,index=idx).set(sev)
-                # Last eval timestamp
+                # Eval duration and timestamp per index
+                duration_ms = (time.time() - t_start) * 1000.0
+                if _EVAL_DURATION_MS is not None:
+                    _EVAL_DURATION_MS.labels(index=idx).set(duration_ms)
                 if _LAST_EVAL_MS is not None:
                     _LAST_EVAL_MS.labels(index=idx).set(time.time()*1000.0)
-                _LOG.debug(f'drift_evaluated index={idx} features={len(drift)} critical={critical_count}')
+                _LOG.debug(f'drift_evaluated index={idx} features={len(drift)} critical={critical_count} duration_ms={duration_ms:.2f}')
         except Exception as e:
             _LOG.error(f'drift evaluation error: {e}')
-        elapsed = time.time() - t_start
+        elapsed = time.time() - loop_start
         sleep_for = max(5.0, interval - elapsed)
         time.sleep(sleep_for)
     _LOG.info('Drift evaluator stopped')

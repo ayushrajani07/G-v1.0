@@ -35,7 +35,7 @@ groups:
             Investigate feature pipeline and recent data quality.
 
       - alert: MLBroadCriticalDrift
-        expr: sum(g6_feature_drift_severity==3) > 5
+        expr: sum by (index) (g6_feature_drift_severity==3) > 5
         for: 15m
         labels:
           severity: critical
@@ -48,7 +48,7 @@ groups:
             Actions: verify collection, market events, model staleness.
 
       - alert: MLDriftSeveritySpike
-        expr: increase(sum(g6_feature_drift_severity==3)[30m]) > 3
+        expr: increase(sum by (index) (g6_feature_drift_severity==3)[30m]) > 3
         for: 0m
         labels:
           severity: warning
