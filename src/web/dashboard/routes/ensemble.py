@@ -848,3 +848,13 @@ async def metrics_decay_validate():
     except Exception as e:
         _LOG.warning(f"metrics_decay_validate_failed: {e}")
         raise HTTPException(status_code=500, detail="metrics_decay_validate_failed")
+
+# --------------------------- Drift Monitoring Placeholder ---------------------------
+@router.get('/drift')
+async def drift(index: Optional[str] = Query(None, description="Index symbol e.g. NIFTY"), features: Optional[str] = Query(None, description="Comma-separated feature filter")):
+    """Placeholder drift endpoint (Phase 10).
+
+    Will be replaced by remote agent with real implementation returning drift metrics.
+    Currently returns 501 to indicate not implemented while reserving route & query schema.
+    """
+    raise HTTPException(status_code=501, detail="drift_monitor_not_implemented_placeholder")

@@ -413,3 +413,70 @@ __all__ = [
     "observe_forecast_errors",
     "get_registry",
 ]
+
+# --------------------------- Drift Metric Placeholders (Phase 10) ---------------------------
+# These stubs reduce merge diff when the drift monitoring implementation lands.
+# Remote agent will replace/extend with real gauges:
+#   g6_feature_psi{feature,index}
+#   g6_feature_ks_pvalue{feature,index}
+#   g6_feature_mean_delta{feature,index}
+#   g6_feature_var_delta{feature,index}
+#   g6_feature_drift_flag{feature,index}
+
+_FEATURE_PSI = None
+_FEATURE_KS = None
+_FEATURE_MEAN_DELTA = None
+_FEATURE_VAR_DELTA = None
+_FEATURE_DRIFT_FLAG = None
+
+def _init_drift_metrics() -> None:  # pragma: no cover
+    if not _is_enabled():
+        return
+    _init_metrics()
+    # Real initialization will be performed by remote agent; keep placeholder.
+    try:
+        from prometheus_client import Gauge  # type: ignore
+        global _FEATURE_PSI, _FEATURE_KS, _FEATURE_MEAN_DELTA, _FEATURE_VAR_DELTA, _FEATURE_DRIFT_FLAG
+        if _FEATURE_PSI is None:
+            _FEATURE_PSI = Gauge("g6_feature_psi", "Population Stability Index per feature", ["index", "feature"], registry=_REGISTRY)
+        if _FEATURE_KS is None:
+            _FEATURE_KS = Gauge("g6_feature_ks_pvalue", "KS test p-value per feature", ["index", "feature"], registry=_REGISTRY)
+        if _FEATURE_MEAN_DELTA is None:
+            _FEATURE_MEAN_DELTA = Gauge("g6_feature_mean_delta", "Mean delta recent vs baseline", ["index", "feature"], registry=_REGISTRY)
+        if _FEATURE_VAR_DELTA is None:
+            _FEATURE_VAR_DELTA = Gauge("g6_feature_var_delta", "Variance delta recent vs baseline", ["index", "feature"], registry=_REGISTRY)
+        if _FEATURE_DRIFT_FLAG is None:
+            _FEATURE_DRIFT_FLAG = Gauge("g6_feature_drift_flag", "Binary drift flag per feature", ["index", "feature"], registry=_REGISTRY)
+    except Exception as e:
+        _LOG.debug(f"drift metrics placeholder init failed: {e}")
+
+def set_feature_drift_metrics(index: str, feature: str, psi: float, ks_pvalue: float, mean_delta: float, var_delta: float, drift_flag: int) -> None:
+    """Placeholder setter for drift metrics (remote agent will refine).
+
+    Args:
+        index: index symbol
+        feature: feature name
+        psi: population stability index
+        ks_pvalue: KS test p-value
+        mean_delta: absolute or signed mean diff
+        var_delta: variance diff
+        drift_flag: 1 if drift detected else 0
+    """
+    if not _is_enabled():
+        return
+    _init_drift_metrics()
+    try:
+        if _FEATURE_PSI is not None:
+            _FEATURE_PSI.labels(index=index, feature=feature).set(psi)
+        if _FEATURE_KS is not None:
+            _FEATURE_KS.labels(index=index, feature=feature).set(ks_pvalue)
+        if _FEATURE_MEAN_DELTA is not None:
+            _FEATURE_MEAN_DELTA.labels(index=index, feature=feature).set(mean_delta)
+        if _FEATURE_VAR_DELTA is not None:
+            _FEATURE_VAR_DELTA.labels(index=index, feature=feature).set(var_delta)
+        if _FEATURE_DRIFT_FLAG is not None:
+            _FEATURE_DRIFT_FLAG.labels(index=index, feature=feature).set(drift_flag)
+    except Exception as e:
+        _LOG.debug(f"set_feature_drift_metrics failed: {e}")
+
+__all__.append("set_feature_drift_metrics")
