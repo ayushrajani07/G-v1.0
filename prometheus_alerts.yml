@@ -76,3 +76,52 @@ groups:
           description: |
             Observed pipeline vs legacy p95 latency delta (g6_bench_delta_p95_pct) is above configured threshold (g6_bench_p95_regression_threshold_pct) for 5m.
             Investigate recent changes, provider slowness, or resource constraints.
+
+  - name: g6_forecast_drift.alerts
+    interval: 60s
+    rules:
+      - alert: ForecastMAEDriftWarning
+        expr: g6_forecast_mae_drift_ratio > 1.5
+        for: 10m
+        labels:
+          severity: warning
+          category: forecast_drift
+        annotations:
+          summary: "Forecast MAE drift ratio elevated"
+          description: |
+            Short/long MAE ratio >1.5 for 10m (index=${labels.index} horizon=${labels.horizon}). Indicates recent error growth relative to historical baseline.
+            Investigate data quality, volatility regime change, or model degradation.
+
+      - alert: ForecastMAEDriftCritical
+        expr: g6_forecast_mae_drift_ratio > 2.0
+        for: 5m
+        labels:
+          severity: critical
+          category: forecast_drift
+        annotations:
+          summary: "Forecast MAE drift ratio critical"
+          description: |
+            Short/long MAE ratio >2.0 for 5m (index=${labels.index} horizon=${labels.horizon}). Rapid degradation in forecast accuracy.
+            Consider model retrain or fallback component weighting.
+
+      - alert: ForecastNormErrorDriftWarning
+        expr: g6_forecast_norm_error_drift_ratio > 1.3
+        for: 10m
+        labels:
+          severity: warning
+          category: forecast_drift
+        annotations:
+          summary: "Normalized error drift ratio elevated"
+          description: |
+            Short/long normalized error ratio >1.3 for 10m (index=${labels.index} horizon=${labels.horizon}). Indicates widening relative error vs band width.
+
+      - alert: ForecastNormErrorDriftCritical
+        expr: g6_forecast_norm_error_drift_ratio > 1.7
+        for: 5m
+        labels:
+          severity: critical
+          category: forecast_drift
+        annotations:
+          summary: "Normalized error drift ratio critical"
+          description: |
+            Short/long normalized error ratio >1.7 for 5m (index=${labels.index} horizon=${labels.horizon}). Forecast bands likely stale or under-reactive. Trigger investigation.
