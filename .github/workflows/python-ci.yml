@@ -41,6 +41,15 @@ jobs:
         run: |
           pytest -q --disable-warnings --cov=. --cov-report=xml
 
+      - name: Validate Prometheus alert rules (drift)
+        run: |
+          set -e
+          VERSION=v2.52.0
+          curl -s -L https://github.com/prometheus/prometheus/releases/download/${VERSION}/prometheus-2.52.0.linux-amd64.tar.gz -o promtool.tgz
+          tar -xzf promtool.tgz
+          ./prometheus-2.52.0.linux-amd64/promtool check rules prometheus_alerts_drift.yml
+          echo "Prometheus alert rules validation succeeded"
+
       - name: Upload coverage xml
         uses: actions/upload-artifact@v4
         with:
