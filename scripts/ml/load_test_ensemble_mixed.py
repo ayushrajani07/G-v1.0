@@ -14,14 +14,15 @@ Outputs:
  - Optional HTML report.
 
 Usage:
-  python scripts/ml/load_test_ensemble_mixed.py \
-    --indices NIFTY,BANKNIFTY \
-    --horizons 15,30,60,120 \
-    --qps 50 --duration 120 \
-    --avg-iv-range 0.15,0.45 \
-    --quantile-sets 0.1,0.5,0.9;0.05,0.25,0.5,0.75,0.95 \
-    --base http://127.0.0.1:9500 \
-    --output reports/loadtest/mixed_adaptive_on.json
+    python scripts/ml/load_test_ensemble_mixed.py \
+        --indices NIFTY,BANKNIFTY \
+        --horizons 15,30,60,120 \
+        --horizon-weights 15:0.1,30:0.4,60:0.4,120:0.1 \
+        --qps 50 --duration 120 \
+        --avg-iv-range 0.15,0.45 \
+        --quantile-sets 0.1,0.5,0.9;0.05,0.25,0.5,0.75,0.95 \
+        --base http://127.0.0.1:9500 \
+        --output reports/loadtest/mixed_adaptive_on.json
 """
 
 from __future__ import annotations
@@ -126,11 +127,58 @@ def sample_cache_stats(base: str) -> Dict:
     return {}
 
 
+def _parse_horizon_weights(spec: str, horizons: List[int]) -> Dict[int, float]:
+    """Parse horizon weight spec e.g. "15:0.1,30:0.4,60:0.4,120:0.1".
+    Returns mapping horizon->weight ensuring all provided horizons have non-zero weight.
+    Missing horizons get uniform leftover weight distribution.
+    """
+    weights: Dict[int, float] = {}
+    if not spec:
+        return {h: 1.0 for h in horizons}
+    for part in spec.split(','):
+        part = part.strip()
+        if not part:
+            continue
+        if ':' not in part:
+            raise ValueError(f"Invalid horizon weight fragment: {part}")
+        h_str, w_str = part.split(':', 1)
+        h = int(h_str.strip())
+        w = float(w_str.strip())
+        if w < 0:
+            raise ValueError(f"Weight must be >=0 for horizon {h}")
+        weights[h] = w
+    # Fill missing horizons uniformly with min positive weight fraction
+    missing = [h for h in horizons if h not in weights]
+    if missing:
+        # Use average of existing weights or 1.0 if none
+        base = (sum(weights.values()) / len(weights)) if weights else 1.0
+        for h in missing:
+            weights[h] = base
+    # Normalize
+    total = sum(weights.values()) or 1.0
+    for h in list(weights.keys()):
+        weights[h] = weights[h] / total
+    # Ensure order consistency
+    return {h: weights[h] for h in sorted(weights.keys())}
+
+
+def _weighted_choice(rng: random.Random, weights: Dict[int, float]) -> int:
+    r = rng.random()
+    acc = 0.0
+    for h, w in weights.items():
+        acc += w
+        if r <= acc:
+            return h
+    # Fallback last
+    return next(reversed(weights.keys()))
+
+
 def main():
     ap = argparse.ArgumentParser(description="Mixed horizon & volatility load test")
     ap.add_argument("--base", default="http://127.0.0.1:9500", help="Base API URL")
     ap.add_argument("--indices", default="NIFTY,BANKNIFTY", help="Comma-separated indices")
     ap.add_argument("--horizons", default="60", help="Comma-separated horizons (minutes)")
+    ap.add_argument("--horizon-weights", default="", help="Optional horizon weights e.g. 15:0.1,30:0.4,60:0.4,120:0.1")
     ap.add_argument("--qps", type=int, default=40, help="Target queries per second")
     ap.add_argument("--duration", type=int, default=120, help="Duration in seconds")
     ap.add_argument("--avg-iv-range", default="0.15,0.45", help="Range for avg_iv randomization")
@@ -151,7 +199,9 @@ def main():
     print("Mixed Load Test Configuration:")
     print(f"  Base URL: {args.base}")
     print(f"  Indices: {indices}")
+    horizon_weights = _parse_horizon_weights(args.horizon_weights, horizons)
     print(f"  Horizons: {horizons}")
+    print(f"  Horizon Weights: {horizon_weights}")
     print(f"  QPS: {args.qps}")
     print(f"  Duration: {args.duration}s")
     print(f"  avg_iv range: {iv_lo} - {iv_hi}")
@@ -173,9 +223,12 @@ def main():
     cache_samples: List[Dict] = []
     next_cache_sample = time.time() + args.cache_sample_interval
 
+    horizon_counts: Dict[int, int] = {h: 0 for h in horizons}
+
     def build_args():
         index = rng.choice(indices)
-        horizon = rng.choice(horizons)
+        horizon = _weighted_choice(rng, horizon_weights)
+        horizon_counts[horizon] += 1
         avg_iv = rng.uniform(iv_lo, iv_hi)
         qset = rng.choice(quantile_sets)
         quantiles_param = ','.join(f"{q:.2f}" for q in qset)
@@ -247,6 +300,7 @@ def main():
             "base_url": args.base,
             "indices": indices,
             "horizons": horizons,
+            "horizon_weights": horizon_weights,
             "qps": args.qps,
             "duration": args.duration,
             "avg_iv_range": [iv_lo, iv_hi],
@@ -274,6 +328,11 @@ def main():
     print(f"Cache Hit Ratio: {hit_ratio:.2%}")
     print(f"Unique Key Fingerprints: {results['unique_key_fingerprint_count']}")
     print(f"Normalized Error P90 (mock): {results['normalized_error_p90']:.3f}")
+    print("Horizon Sample Counts:")
+    for h in sorted(horizon_counts.keys()):
+        pct = (horizon_counts[h] / total_requests * 100.0) if total_requests else 0.0
+        target = horizon_weights.get(h, 0.0) * 100.0
+        print(f"  {h:>4}m -> {horizon_counts[h]:>5} ({pct:5.1f}%) target≈{target:5.1f}%")
     if cache_samples:
         print(f"Cache Samples Collected: {len(cache_samples)}")
 
