@@ -1,0 +1,93 @@
+groups:
+- name: g6_dynamic_drift
+  interval: 30s
+  rules:
+  # ---------------- Histogram Quantiles (5m rate windows) ----------------
+  - record: g6_forecast_abs_error_p95
+    expr: |
+      histogram_quantile(0.95,
+        sum by (le,index,horizon) (rate(g6_forecast_error_hist_bucket[5m]))
+      )
+  - record: g6_forecast_abs_error_p99
+    expr: |
+      histogram_quantile(0.99,
+        sum by (le,index,horizon) (rate(g6_forecast_error_hist_bucket[5m]))
+      )
+  - record: g6_forecast_norm_error_p95
+    expr: |
+      histogram_quantile(0.95,
+        sum by (le,index,horizon) (rate(g6_forecast_norm_error_hist_bucket[5m]))
+      )
+  - record: g6_forecast_norm_error_p99
+    expr: |
+      histogram_quantile(0.99,
+        sum by (le,index,horizon) (rate(g6_forecast_norm_error_hist_bucket[5m]))
+      )
+  - record: g6_forecast_latency_ms_p95
+    expr: |
+      histogram_quantile(0.95,
+        sum by (le,index,horizon) (rate(g6_forecast_latency_ms_bucket[5m]))
+      )
+  - record: g6_forecast_latency_ms_p99
+    expr: |
+      histogram_quantile(0.99,
+        sum by (le,index,horizon) (rate(g6_forecast_latency_ms_bucket[5m]))
+      )
+
+  # ---------------- Drift Severity Classification (static thresholds) ----------------
+  # Severity scale: 0=ok,1=warn,2=crit
+  - record: g6_forecast_mae_drift_severity
+    expr: |
+      (g6_forecast_mae_drift_ratio > 1.6)*2
+      + (g6_forecast_mae_drift_ratio > 1.3)*(g6_forecast_mae_drift_ratio <= 1.6)*1
+  - record: g6_forecast_norm_drift_severity
+    expr: |
+      (g6_forecast_norm_error_drift_ratio > 1.5)*2
+      + (g6_forecast_norm_error_drift_ratio > 1.15)*(g6_forecast_norm_error_drift_ratio <= 1.5)*1
+  - record: g6_forecast_coverage_drift_severity
+    expr: |
+      (g6_forecast_coverage_drift_delta_pct < -25)*2
+      + (g6_forecast_coverage_drift_delta_pct < -15)*(g6_forecast_coverage_drift_delta_pct >= -25)*1
+
+  # ---------------- Drift Composite Indicators ----------------
+  - record: g6_forecast_drift_any_warn
+    expr: |
+      max without() (
+        (g6_forecast_mae_drift_severity == 1) or
+        (g6_forecast_norm_drift_severity == 1) or
+        (g6_forecast_coverage_drift_severity == 1)
+      )
+  - record: g6_forecast_drift_any_crit
+    expr: |
+      max without() (
+        (g6_forecast_mae_drift_severity == 2) or
+        (g6_forecast_norm_drift_severity == 2) or
+        (g6_forecast_coverage_drift_severity == 2)
+      )
+
+  # ---------------- Rolling Error vs Band Efficiency ----------------
+  - record: g6_forecast_band_efficiency
+    expr: |
+      (g6_forecast_norm_error > 0)
+      * (g6_forecast_coverage_pct / 100)
+      / g6_forecast_norm_error
+
+  # ---------------- Cache Health Ratios ----------------
+  - record: g6_forecast_cache_hit_ratio_5m
+    expr: |
+      sum(rate(g6_forecast_cache_hits_total[5m])) /
+      (sum(rate(g6_forecast_cache_hits_total[5m])) + sum(rate(g6_forecast_cache_misses_total[5m])))
+  - record: g6_recent_window_cache_hit_ratio_5m
+    expr: |
+      sum(rate(g6_recent_window_cache_hits_total[5m])) /
+      (sum(rate(g6_recent_window_cache_hits_total[5m])) + sum(rate(g6_recent_window_cache_misses_total[5m])))
+
+  # ---------------- Latency SLA Breach (binary 0/1) ----------------
+  - record: g6_forecast_latency_sla_breach
+    expr: |
+      (g6_forecast_latency_ms_p95 > 250)
+
+  # ---------------- Normalized Error Tail Risk ----------------
+  - record: g6_forecast_norm_error_tail_index
+    expr: |
+      g6_forecast_norm_error_p99 / ignoring(le) g6_forecast_norm_error_p95
