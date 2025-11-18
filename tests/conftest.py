@@ -1,4 +1,35 @@
-from __future__ import annotations
+import threading
+import time
+import socket
+
+
+def _port_open(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.2)
+        try:
+            return s.connect_ex((host, port)) == 0
+        except Exception:
+            return False
+
+
+def _start_ml_ensemble_server():
+    from src.web.api.ml_ensemble import create_app
+    app = create_app()
+    # Use a separate thread to not block pytest collection
+    th = threading.Thread(target=lambda: app.run(host='127.0.0.1', port=9210, debug=False, use_reloader=False))
+    th.daemon = True
+    th.start()
+    # Wait for port readiness
+    for _ in range(40):  # up to ~4s
+        if _port_open('127.0.0.1', 9210):
+            return th
+        time.sleep(0.1)
+    return th  # Return anyway; tests may skip if not ready
+
+
+# Auto-start server for endpoint tests expecting running service
+server_thread = _start_ml_ensemble_server()
+
 import os, socket, contextlib, time
 import pytest
 import asyncio

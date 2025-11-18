@@ -85,9 +85,9 @@ def create_app(config_dir: Path | None = None) -> Flask:
     
     @app.route('/health', methods=['GET'])
     def health() -> Response:
-        """Basic health check endpoint."""
+        """Basic health check endpoint returning test-compatible status."""
         return jsonify({
-            'status': 'ok',
+            'status': 'healthy',
             'timestamp': datetime.now(timezone.utc).isoformat(),
             'service': 'ml_ensemble_api'
         })
@@ -139,16 +139,20 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 'weights': {'gbrt': 0.7, 'retrieval': 0.3}
             }
             
-            response = ForecastResponse(
-                index=index,
-                horizon=horizon,
-                timestamp=datetime.now(timezone.utc).isoformat(),
-                forecast=forecast_data,
-                confidence=confidence,
-                metadata=metadata
-            )
-            
-            return jsonify(asdict(response))
+            # Flatten structure for test expectations (Phase test alignment)
+            flat = {
+                'index': index,
+                'horizon': horizon,
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'p10': forecast_data['p10'],
+                'p50': forecast_data['p50'],
+                'p90': forecast_data['p90'],
+                'band_low': forecast_data['band_low'],
+                'band_high': forecast_data['band_high'],
+                'confidence_score': confidence,
+                'metadata': metadata,
+            }
+            return jsonify(flat)
             
         except ValueError as e:
             _LOG.warning(f"Invalid request parameters: {e}")
