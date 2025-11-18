@@ -1,0 +1,192 @@
+# Prometheus Alert Rules for Phase 10 Performance & Reliability Monitoring
+# ML Forecast Ensemble Performance Alerts
+#
+# Environment Variable Mapping (configure thresholds via env):
+# - G6_ALERT_LATENCY_P95_MS: P95 latency threshold in ms (default: 500)
+# - G6_ALERT_NORM_ERR_P90: P90 normalized error threshold (default: 0.15)
+# - G6_ALERT_COVERAGE_MIN_PCT: Minimum coverage percentage (default: 70)
+# - G6_ALERT_CACHE_EVICTION_RATE: Max eviction rate per second (default: 2)
+# - G6_ALERT_TTL_TOO_SHORT_SEC: Min TTL threshold in seconds (default: 15)
+# - G6_ALERT_TTL_TOO_LONG_SEC: Max TTL threshold when latency high (default: 55)
+#
+# Validate: promtool check rules prometheus_alerts_performance.yml
+# Include in prometheus.yml under rule_files.
+
+groups:
+  - name: ml_forecast_performance
+    interval: 60s
+    rules:
+      - alert: MLForecastLatencyP95Degraded
+        expr: |
+          histogram_quantile(0.95, 
+            sum(rate(g6_forecast_latency_ms_bucket[5m])) by (le, index, horizon)
+          ) > 500
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_forecast
+        annotations:
+          summary: "Forecast latency P95 degraded: {{ $labels.index }} horizon={{ $labels.horizon }}"
+          description: |
+            P95 forecast latency exceeds 500ms threshold for {{ $labels.index }}/{{ $labels.horizon }}.
+            Current: {{ $value | humanizeDuration }}
+            Actions:
+            1. Check load via /api/ml/ensemble/cache/stats
+            2. Review recent window cache hit ratio
+            3. Inspect ANN build time if enabled
+            4. Adjust G6_FORECAST_CACHE_TTL or G6_FORECAST_CACHE_MAX if needed
+          promql: 'histogram_quantile(0.95, sum(rate(g6_forecast_latency_ms_bucket{index="{{ $labels.index }}",horizon="{{ $labels.horizon }}"}[5m])) by (le))'
+
+      - alert: MLForecastCacheEvictionSurge
+        expr: |
+          sum(rate(g6_forecast_cache_evictions_total[5m])) by (index) > 2
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_forecast
+        annotations:
+          summary: "High cache eviction rate: {{ $labels.index }} ({{ $value | humanize }}/sec)"
+          description: |
+            Forecast cache eviction rate exceeds 2/sec for {{ $labels.index }}.
+            Current rate: {{ $value | humanize }}/sec
+            Indicates cache capacity (G6_FORECAST_CACHE_MAX) may be insufficient.
+            Actions:
+            1. Increase G6_FORECAST_CACHE_MAX (current default: 500)
+            2. Review cache key cardinality
+            3. Verify TTL not too aggressive
+          promql: 'sum(rate(g6_forecast_cache_evictions_total{index="{{ $labels.index }}"}[5m]))'
+
+      - alert: MLForecastLowCoverage
+        expr: g6_forecast_coverage_pct < 70
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_forecast
+        annotations:
+          summary: "Low forecast coverage: {{ $labels.index }} horizon={{ $labels.horizon }} ({{ $value }}%)"
+          description: |
+            Rolling coverage percentage below 70% for {{ $labels.index }}/{{ $labels.horizon }}.
+            Current: {{ $value }}%
+            Indicates band estimates may be too narrow or regime shift.
+            Actions:
+            1. Check conformal calibration window
+            2. Review recent regime changes via drift metrics
+            3. Validate actual vs forecast via /api/ml/ensemble/metrics/compare
+          promql: 'g6_forecast_coverage_pct{index="{{ $labels.index }}",horizon="{{ $labels.horizon }}"}'
+
+      - alert: MLForecastHighNormErrorTail
+        expr: |
+          histogram_quantile(0.90, 
+            sum(rate(g6_forecast_norm_error_hist_bucket[10m])) by (le, index, horizon)
+          ) > 0.15
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_forecast
+        annotations:
+          summary: "High normalized error tail: {{ $labels.index }} horizon={{ $labels.horizon }}"
+          description: |
+            P90 normalized error exceeds 0.15 threshold for {{ $labels.index }}/{{ $labels.horizon }}.
+            Current: {{ $value }}
+            Normalized error = abs_error / band_width. High tail indicates forecast inaccuracy.
+            Actions:
+            1. Compare MAE via /api/ml/ensemble/metrics/compare
+            2. Check for regime shifts or data quality issues
+            3. Consider model retraining if persistent
+          promql: 'histogram_quantile(0.90, sum(rate(g6_forecast_norm_error_hist_bucket{index="{{ $labels.index }}",horizon="{{ $labels.horizon }}"}[10m])) by (le))'
+
+      - alert: MLAdaptiveTTLTooShortPersistent
+        expr: g6_forecast_cache_dynamic_ttl < 15
+        for: 30m
+        labels:
+          severity: info
+          component: ml_forecast
+        annotations:
+          summary: "Adaptive TTL persistently low: {{ $labels.index }} ({{ $value }}s)"
+          description: |
+            Dynamic TTL below 15s for 30m on {{ $labels.index }}.
+            Current: {{ $value }}s
+            May indicate poor cache hit ratio or high request variability.
+            Actions:
+            1. Review cache stats via /api/ml/ensemble/cache/stats
+            2. Check hit ratio and request patterns
+            3. Adjust G6_FORECAST_CACHE_TTL_MIN if needed (default: 10s)
+          promql: 'g6_forecast_cache_dynamic_ttl{index="{{ $labels.index }}"}'
+
+      - alert: MLAdaptiveTTLTooLongHighLatency
+        expr: |
+          g6_forecast_cache_dynamic_ttl > 55
+          and on(index, horizon)
+          histogram_quantile(0.95, 
+            sum(rate(g6_forecast_latency_ms_bucket[5m])) by (le, index, horizon)
+          ) > 400
+        for: 20m
+        labels:
+          severity: info
+          component: ml_forecast
+        annotations:
+          summary: "TTL too long while latency high: {{ $labels.index }}"
+          description: |
+            Dynamic TTL exceeds 55s while P95 latency remains high (>400ms).
+            TTL: {{ $value }}s
+            Suggests adaptive tuning may need adjustment.
+            Actions:
+            1. Review latency trends vs TTL adaptation
+            2. Consider lowering G6_FORECAST_CACHE_TTL_MAX (default: 60s)
+            3. Check if cache entries are stale but not invalidated
+          promql: 'g6_forecast_cache_dynamic_ttl{index="{{ $labels.index }}"}'
+
+  - name: ml_forecast_quality
+    interval: 120s
+    rules:
+      - alert: MLForecastMetricsStale
+        expr: |
+          (time() - (g6_drift_last_eval_ms / 1000)) > 900
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_metrics
+        annotations:
+          summary: "Forecast metrics evaluator stale"
+          description: |
+            Last metrics evaluation older than 15 minutes.
+            Check G6_ROLLING_MAE_ENABLE, logs, and evaluator thread health.
+          promql: 'time() - (g6_drift_last_eval_ms / 1000)'
+
+      - alert: MLForecastCoverageCollapse
+        expr: |
+          (g6_forecast_coverage_pct < 50) and (g6_forecast_coverage_pct > 0)
+        for: 20m
+        labels:
+          severity: critical
+          component: ml_forecast
+        annotations:
+          summary: "Critical coverage collapse: {{ $labels.index }} horizon={{ $labels.horizon }} ({{ $value }}%)"
+          description: |
+            Coverage below 50% for 20m. Band estimates severely inaccurate.
+            Immediate action required:
+            1. Check data pipeline integrity
+            2. Review conformal component status
+            3. Consider emergency model refresh
+          promql: 'g6_forecast_coverage_pct{index="{{ $labels.index }}",horizon="{{ $labels.horizon }}"}'
+
+      - alert: MLForecastMAESpiking
+        expr: |
+          (
+            g6_forecast_mae - (g6_forecast_mae offset 1h)
+          ) / (g6_forecast_mae offset 1h) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_forecast
+        annotations:
+          summary: "MAE spike detected: {{ $labels.index }} horizon={{ $labels.horizon }}"
+          description: |
+            Rolling MAE increased >50% vs 1h ago for {{ $labels.index }}/{{ $labels.horizon }}.
+            Current: {{ $value }}
+            Indicates sudden forecast accuracy degradation.
+            Actions:
+            1. Check for data anomalies
+            2. Review drift severity metrics
+            3. Compare with baseline via /api/ml/ensemble/metrics/compare
+          promql: 'g6_forecast_mae{index="{{ $labels.index }}",horizon="{{ $labels.horizon }}"}'
