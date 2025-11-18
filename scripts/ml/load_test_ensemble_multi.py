@@ -73,7 +73,7 @@ def fetch_forecast(
     try:
         r = session.get(url, params=params, timeout=10)
         latency_ms = (time.perf_counter() - t0) * 1000.0
-        
+
         if r.status_code == 200:
             data = r.json()
             return True, latency_ms, data, ""
@@ -95,25 +95,25 @@ def rate_limited_executor(
     end_time = time.time() + duration
     interval = 1.0 / max(1, qps)
     results = []
-    
+
     with ThreadPoolExecutor(max_workers=max_workers) as ex:
         next_at = time.time()
         i = 0
-        
+
         while time.time() < end_time:
             if i >= len(args_list):
                 i = 0  # Round-robin through indices
-            
+
             args = args_list[i]
             results.append(ex.submit(func, *args))
             i += 1
-            
+
             next_at += interval
             now = time.time()
             sleep = next_at - now
             if sleep > 0:
                 time.sleep(sleep)
-        
+
         # Drain results
         for f in as_completed(results):
             yield f
@@ -131,7 +131,7 @@ def get_cache_stats(base: str, index: str) -> Dict:
 
 def calculate_normalized_error(forecast_data: Dict) -> Optional[float]:
     """Calculate normalized error from forecast response.
-    
+
     Normalized error = |p50 - actual| / (band_high - band_low)
     For load test, we use a mock actual value (p50 + small noise)
     """
@@ -140,17 +140,17 @@ def calculate_normalized_error(forecast_data: Dict) -> Optional[float]:
         p50_val = forecast.get("p50", 0.0)
         band_low = forecast.get("band_low", 0.0)
         band_high = forecast.get("band_high", 0.0)
-        
+
         band_width = band_high - band_low
         if band_width <= 0:
             return None
-        
+
         # Mock actual value (in production, would compare with real TP)
         actual = p50_val + (band_width * 0.1)  # Simulate 10% of band width error
-        
+
         error = abs(p50_val - actual)
         normalized_error = error / band_width
-        
+
         return normalized_error
     except Exception:
         return None
@@ -179,7 +179,7 @@ def generate_html_report(results: Dict, output_path: str):
 <body>
     <h1>Multi-Index Load Test Report</h1>
     <p>Generated: {results['generated_at']}</p>
-    
+
     <div class="summary">
         <h2>Overall Summary</h2>
         <div class="metric">
@@ -199,7 +199,7 @@ def generate_html_report(results: Dict, output_path: str):
             <div class="metric-label">P95 Latency</div>
         </div>
     </div>
-    
+
     <h2>Per-Index Metrics</h2>
     <table>
         <tr>
@@ -212,7 +212,7 @@ def generate_html_report(results: Dict, output_path: str):
             <th>Norm Error P90</th>
         </tr>
 """
-    
+
     for index, metrics in results['per_index'].items():
         html += f"""
         <tr>
@@ -225,10 +225,10 @@ def generate_html_report(results: Dict, output_path: str):
             <td>{metrics['normalized_error_p90']:.3f}</td>
         </tr>
 """
-    
+
     html += """
     </table>
-    
+
     <h2>Test Configuration</h2>
     <table>
         <tr><th>Parameter</th><th>Value</th></tr>
@@ -238,7 +238,7 @@ def generate_html_report(results: Dict, output_path: str):
         <tr><td>Duration</td><td>{duration}s</td></tr>
         <tr><td>Horizon</td><td>{horizon} min</td></tr>
     </table>
-    
+
 </body>
 </html>
 """.format(
@@ -248,7 +248,7 @@ def generate_html_report(results: Dict, output_path: str):
         duration=results['config']['duration'],
         horizon=results['config']['horizon'],
     )
-    
+
     with open(output_path, 'w') as f:
         f.write(html)
 
@@ -270,34 +270,34 @@ def main():
     ap.add_argument("--output", default="", help="Write JSON summary to this path")
     ap.add_argument("--html-output", default="", help="Write HTML report to this path")
     args = ap.parse_args()
-    
+
     # Parse indices
     indices = [idx.strip().upper() for idx in args.indices.split(',') if idx.strip()]
-    
+
     if not indices:
         print("Error: No indices specified")
         return 1
-    
-    print(f"Starting multi-index load test:")
+
+    print("Starting multi-index load test:")
     print(f"  Base URL: {args.base}")
     print(f"  Indices: {', '.join(indices)}")
     print(f"  Target QPS: {args.qps}")
     print(f"  Duration: {args.duration}s")
     print(f"  Horizon: {args.horizon}m")
     print()
-    
+
     # Create session for connection pooling
     session = requests.Session()
-    
+
     # Build task arguments (round-robin across indices)
     args_list = []
     for index in indices:
         args_list.append((args.base, index, args.horizon, session))
-    
+
     # Run load test
     print("Running load test...")
     start_time = time.time()
-    
+
     # Per-index metrics
     per_index_metrics = {idx: {
         'latencies': [],
@@ -307,7 +307,7 @@ def main():
         'cache_misses': 0,
         'normalized_errors': [],
     } for idx in indices}
-    
+
     # Execute requests
     for future in rate_limited_executor(
         args.qps,
@@ -318,50 +318,50 @@ def main():
     ):
         try:
             success, latency_ms, data, error_msg = future.result()
-            
+
             # Determine which index this was for (from metadata or round-robin)
             index = data.get('index', indices[0]) if data else indices[0]
-            
+
             per_index_metrics[index]['latencies'].append(latency_ms)
-            
+
             if success:
                 per_index_metrics[index]['successes'] += 1
-                
+
                 # Check cache hit
                 metadata = data.get('metadata', {})
                 if metadata.get('cache_hit', False):
                     per_index_metrics[index]['cache_hits'] += 1
                 else:
                     per_index_metrics[index]['cache_misses'] += 1
-                
+
                 # Calculate normalized error
                 norm_error = calculate_normalized_error(data)
                 if norm_error is not None:
                     per_index_metrics[index]['normalized_errors'].append(norm_error)
             else:
                 per_index_metrics[index]['errors'] += 1
-        
+
         except Exception as e:
             print(f"Warning: Exception processing result: {e}")
-    
+
     elapsed = time.time() - start_time
-    
+
     # Calculate aggregate and per-index statistics
     all_latencies = []
     total_requests = 0
     total_errors = 0
-    
+
     per_index_results = {}
     for index, metrics in per_index_metrics.items():
         request_count = metrics['successes'] + metrics['errors']
         total_requests += request_count
         total_errors += metrics['errors']
-        
+
         all_latencies.extend(metrics['latencies'])
-        
+
         cache_total = metrics['cache_hits'] + metrics['cache_misses']
         cache_hit_ratio = metrics['cache_hits'] / cache_total if cache_total > 0 else 0.0
-        
+
         per_index_results[index] = {
             'request_count': request_count,
             'error_count': metrics['errors'],
@@ -371,7 +371,7 @@ def main():
             'cache_hit_ratio': cache_hit_ratio,
             'normalized_error_p90': p90(metrics['normalized_errors']),
         }
-    
+
     # Aggregate metrics
     aggregate_results = {
         'latency_p50_ms': p50(all_latencies),
@@ -379,7 +379,7 @@ def main():
         'error_rate_pct': 100.0 * total_errors / total_requests if total_requests > 0 else 0.0,
         'actual_qps': total_requests / elapsed if elapsed > 0 else 0.0,
     }
-    
+
     # Build final results
     results = {
         'generated_at': time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime()),
@@ -395,7 +395,7 @@ def main():
         'aggregate': aggregate_results,
         'per_index': per_index_results,
     }
-    
+
     # Print summary
     print()
     print("=" * 60)
@@ -419,27 +419,27 @@ def main():
         print(f"    Error Rate: {metrics['error_rate_pct']:.2f}%")
         print(f"    Cache Hit Ratio: {metrics['cache_hit_ratio']:.2%}")
         print(f"    Normalized Error P90: {metrics['normalized_error_p90']:.3f}")
-    
+
     # Write JSON output
     json_output = json.dumps(results, indent=2)
     print()
     print("JSON Summary:")
     print(json_output)
-    
+
     if args.output:
         output_path = Path(args.output)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w') as f:
             f.write(json_output)
         print(f"\nJSON written to: {args.output}")
-    
+
     # Generate HTML report if requested
     if args.html_output:
         html_path = Path(args.html_output)
         html_path.parent.mkdir(parents=True, exist_ok=True)
         generate_html_report(results, str(html_path))
         print(f"HTML report written to: {args.html_output}")
-    
+
     return 0
 
 
