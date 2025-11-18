@@ -1,0 +1,16 @@
+{
+  "tp": { "csv_col": "tp", "importance": 5, "transform": "identity" },
+  "ce_iv": { "csv_col": "ce_iv", "importance": 10, "transform": "identity" },
+  "pe_iv": { "csv_col": "pe_iv", "importance": 11, "transform": "identity" },
+  "ce_gamma": { "csv_col": "ce_gamma", "importance": 20, "transform": "identity" },
+  "pe_gamma": { "csv_col": "pe_gamma", "importance": 21, "transform": "identity" },
+  "ce_vega": { "csv_col": "ce_vega", "importance": 22, "transform": "identity" },
+  "pe_vega": { "csv_col": "pe_vega", "importance": 23, "transform": "identity" },
+  "ce_theta": { "csv_col": "ce_theta", "importance": 24, "transform": "identity" },
+  "pe_theta": { "csv_col": "pe_theta", "importance": 25, "transform": "identity" },
+  "ce_vol": { "csv_col": "ce_vol", "importance": 30, "transform": "identity" },
+  "pe_vol": { "csv_col": "pe_vol", "importance": 31, "transform": "identity" },
+  "ce_oi": { "csv_col": "ce_oi", "importance": 40, "transform": "identity" },
+  "pe_oi": { "csv_col": "pe_oi", "importance": 41, "transform": "identity" },
+  "tp_log": { "csv_col": "tp", "importance": 50, "transform": "log1p" }
+}

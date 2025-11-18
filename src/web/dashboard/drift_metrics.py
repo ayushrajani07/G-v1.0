@@ -152,13 +152,22 @@ def _evaluator_loop():
                     cap = 30
                 if cap and cap > 0 and len(drift) > cap:
                     scored = []
+                    fmap = getattr(monitor, 'feature_map', {}) or {}
                     for f, m in drift.items():
                         psi = float(m.get('psi', 0.0) or 0.0)
                         mean_z = float(m.get('mean_delta_zscore', m.get('mean_delta', 0.0)) or 0.0)
                         score = psi + abs(mean_z)
-                        scored.append((score, f))
-                    scored.sort(key=lambda x: x[0], reverse=True)
-                    keep = {f for _, f in scored[:cap]}
+                        imp = 1000
+                        try:
+                            spec = fmap.get(f)
+                            if spec is not None:
+                                imp = int(getattr(spec, 'importance', 1000))
+                        except Exception:
+                            pass
+                        scored.append((score, imp, f))
+                    # Sort by: high score first, then lower importance, then feature name for determinism
+                    scored.sort(key=lambda t: (-t[0], t[1], t[2]))
+                    keep = {f for _, _, f in scored[:cap]}
                     drift = {f: m for f, m in drift.items() if f in keep}
                 critical_count = sum(1 for v in drift.values() if v.get('severity') == 'critical')
                 if _CRITICAL_COUNT is not None:
