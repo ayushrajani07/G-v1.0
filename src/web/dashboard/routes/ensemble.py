@@ -815,3 +815,18 @@ async def metrics_flush():
     except Exception as e:
         _LOG.warning(f"metrics_flush_failed: {e}")
         raise HTTPException(status_code=500, detail="metrics_flush_failed")
+
+@router.get('/metrics/compare')
+async def metrics_compare():
+    """Return comparison of rolling window vs EMA metrics (Phase 10 diagnostic).
+
+    Provides per (index,horizon): window MAE, EMA MAE (if enabled), window coverage %, EMA coverage %, window normalized error, EMA normalized error.
+    Useful for tuning decay alpha and validating responsiveness.
+    """
+    try:
+        from ..rolling_mae import ensure_started, get_metric_comparison  # type: ignore
+        ensure_started()
+        return get_metric_comparison()
+    except Exception as e:
+        _LOG.warning(f"metrics_compare_failed: {e}")
+        raise HTTPException(status_code=500, detail="metrics_compare_failed")

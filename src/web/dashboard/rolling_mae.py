@@ -313,3 +313,58 @@ def force_flush_state() -> dict:
         }
 
 __all__.append("force_flush_state")
+
+def get_metric_comparison() -> dict:
+        """Return current rolling vs EMA metrics for each (index,horizon).
+
+        Structure:
+        {
+            "use_decay": bool,
+            "decay_alpha": float,
+            "entries": [
+                 {
+                     "index": str,
+                     "horizon": int,
+                     "mae_window": float,
+                     "mae_ema": float|None,
+                     "coverage_window_pct": float,
+                     "coverage_ema_pct": float|None,
+                     "norm_error_window": float,
+                     "norm_error_ema": float|None,
+                     "count_window": int
+                 }, ...
+            ]
+        }
+        """
+        out = {
+                "use_decay": _USE_DECAY,
+                "decay_alpha": _DECAY_ALPHA,
+                "entries": []
+        }
+        with _LOCK:
+                keys = set(_ERRORS.keys()) | set(_COVER_FLAGS.keys()) | set(_NORM_ERRORS.keys())
+                for key in sorted(keys):
+                        idx, horizon = key
+                        err_dq = _ERRORS.get(key, [])
+                        cov_dq = _COVER_FLAGS.get(key, [])
+                        norm_dq = _NORM_ERRORS.get(key, [])
+                        mae_window = (sum(err_dq) / len(err_dq)) if err_dq else 0.0
+                        coverage_window_pct = (sum(cov_dq) / len(cov_dq) * 100.0) if cov_dq else 0.0
+                        norm_error_window = (sum(norm_dq) / len(norm_dq)) if norm_dq else 0.0
+                        mae_ema = _EMA_ERROR.get(key) if _USE_DECAY else None
+                        coverage_ema_pct = (_EMA_COVER.get(key) * 100.0) if _USE_DECAY and key in _EMA_COVER else None
+                        norm_error_ema = _EMA_NORM.get(key) if _USE_DECAY else None
+                        out["entries"].append({
+                                "index": idx,
+                                "horizon": horizon,
+                                "mae_window": mae_window,
+                                "mae_ema": mae_ema,
+                                "coverage_window_pct": coverage_window_pct,
+                                "coverage_ema_pct": coverage_ema_pct,
+                                "norm_error_window": norm_error_window,
+                                "norm_error_ema": norm_error_ema,
+                                "count_window": len(err_dq)
+                        })
+        return out
+
+__all__.append("get_metric_comparison")
