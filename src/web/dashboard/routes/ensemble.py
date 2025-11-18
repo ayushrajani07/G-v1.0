@@ -848,3 +848,106 @@ async def metrics_decay_validate():
     except Exception as e:
         _LOG.warning(f"metrics_decay_validate_failed: {e}")
         raise HTTPException(status_code=500, detail="metrics_decay_validate_failed")
+
+@router.get('/drift')
+async def drift_metrics(
+    index: str = Query(..., description="Index name (e.g., NIFTY, BANKNIFTY)"),
+    features: Optional[str] = Query(None, description="Comma-separated feature names (empty = all)"),
+    full: int = Query(0, ge=0, le=1, description="Include full bin-level details (0=summary, 1=full)"),
+):
+    """Get drift metrics for feature distributions (Phase 10).
+    
+    Compares recent feature distributions against baseline (last 30 days).
+    Auto-creates baseline if missing.
+    
+    Returns:
+        JSON with drift metrics per feature:
+        {
+            "index": "NIFTY",
+            "baseline_days": 30,
+            "recent_rows": 300,
+            "generated_at": <epoch_ms>,
+            "features": {
+                "feature_name": {
+                    "psi": 0.18,
+                    "ks_pvalue": 0.045,
+                    "mean_delta": -0.012,
+                    "var_delta": 0.031,
+                    "alert": false,
+                    "bins": [...] (if full=1)
+                }
+            },
+            "summary": {
+                "total_features": 25,
+                "alerts": 2
+            }
+        }
+    """
+    try:
+        from src.ml.drift_monitor import create_drift_monitor_from_env
+    except ImportError:
+        _LOG.error("Failed to import drift_monitor module")
+        raise HTTPException(status_code=500, detail="drift_monitor_unavailable")
+    
+    try:
+        # Create drift monitor from environment variables
+        monitor = create_drift_monitor_from_env()
+        
+        # Parse feature list
+        feature_list = None
+        if features:
+            feature_list = [f.strip() for f in features.split(',') if f.strip()]
+        
+        # Get or create baseline
+        baseline = monitor.get_or_create_baseline(index, features=feature_list)
+        
+        # Get recent window
+        recent = monitor.compute_feature_distributions(
+            index=index,
+            lookback_days=0,  # Use recent_rows instead
+            features=feature_list,
+        )
+        
+        # Calculate drift metrics
+        drift_metrics = monitor.calculate_drift_metrics(baseline, recent)
+        
+        # Build response
+        features_response = {}
+        total_alerts = 0
+        
+        for feature_name, metrics in drift_metrics.items():
+            feature_data = {
+                "psi": metrics["psi"],
+                "ks_pvalue": metrics["ks_pvalue"],
+                "mean_delta": metrics["mean_delta"],
+                "var_delta": metrics["var_delta"],
+                "alert": metrics["alert_flag"],
+            }
+            
+            # Include bins if full detail requested
+            if full == 1:
+                feature_data["bins"] = metrics["bins"]
+                feature_data["ks_statistic"] = metrics["ks_statistic"]
+                feature_data["mean_delta_zscore"] = metrics["mean_delta_zscore"]
+                feature_data["alert_reasons"] = metrics["alert_reasons"]
+            
+            features_response[feature_name] = feature_data
+            
+            if metrics["alert_flag"]:
+                total_alerts += 1
+        
+        return {
+            "index": index,
+            "baseline_days": monitor.baseline_days,
+            "recent_rows": monitor.recent_rows,
+            "generated_at": int(time.time() * 1000),
+            "features": features_response,
+            "summary": {
+                "total_features": len(drift_metrics),
+                "alerts": total_alerts,
+            },
+        }
+    
+    except Exception as e:
+        _LOG.error(f"drift_metrics failed: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"drift_metrics_failed: {str(e)}")

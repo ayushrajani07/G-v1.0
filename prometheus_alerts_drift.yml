@@ -1,0 +1,214 @@
+# Prometheus Alert Rules for ML Drift Monitoring - Phase 10
+#
+# These rules monitor feature distribution drift and trigger alerts
+# based on sustained, broad, or critical drift patterns.
+#
+# Usage:
+#   1. Validate: promtool check rules prometheus_alerts_drift.yml
+#   2. Include in prometheus.yml:
+#      rule_files:
+#        - prometheus_alerts_drift.yml
+#   3. Reload Prometheus: curl -X POST http://localhost:9090/-/reload
+
+groups:
+  - name: ml_drift_monitoring
+    interval: 60s
+    rules:
+      # Alert: Sustained feature drift
+      # Triggers when the same feature shows drift in 3 of the last 5 evaluations
+      # This indicates a persistent distribution shift that needs investigation
+      - alert: MLFeatureDriftSustained
+        expr: |
+          (
+            sum_over_time(g6_feature_drift_flag{index="NIFTY"}[25m])
+            / count_over_time(g6_feature_drift_flag{index="NIFTY"}[25m])
+          ) >= 0.6
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Sustained drift detected in feature {{ $labels.feature }}"
+          description: |
+            Feature {{ $labels.feature }} for index {{ $labels.index }} has been in drift state
+            for 3 out of the last 5 evaluations (60% of the time in the last 25 minutes).
+            
+            Current drift flag: {{ $value }}
+            
+            This indicates a persistent distribution shift. Review:
+            - PSI value (threshold: 0.25)
+            - KS test p-value (threshold: 0.01)
+            - Mean delta Z-score (threshold: 3.0)
+            
+            Actions:
+            1. Check /api/ml/ensemble/drift?index={{ $labels.index }}&features={{ $labels.feature }}&full=1
+            2. Compare baseline vs recent distributions
+            3. Consider baseline recalibration if sustained drift is expected
+
+      # Alert: Broad drift across multiple features
+      # Triggers when more than 5 features are simultaneously in drift state
+      # This suggests a regime change or data quality issue
+      - alert: MLBroadDrift
+        expr: |
+          sum(g6_feature_drift_flag{index="NIFTY"}) > 5
+        for: 30m
+        labels:
+          severity: critical
+          component: ml_drift
+        annotations:
+          summary: "Broad drift detected across multiple features for {{ $labels.index }}"
+          description: |
+            More than 5 features are showing drift alerts for index {{ $labels.index }}.
+            Current drift count: {{ $value }}
+            
+            This may indicate:
+            - Market regime change
+            - Data quality issues
+            - Collection pipeline problems
+            - Model staleness
+            
+            Actions:
+            1. Check /api/ml/ensemble/drift?index={{ $labels.index }} for full drift report
+            2. Verify data collection pipeline health
+            3. Review recent market events or structural changes
+            4. Consider model retraining if regime change is confirmed
+            5. Check for data gaps or anomalies in recent window
+
+      # Alert: Critical drift - immediate attention required
+      # Triggers on extremely high PSI or very low KS p-value
+      # This indicates a severe distribution shift requiring immediate investigation
+      - alert: MLCriticalDrift
+        expr: |
+          (g6_feature_psi > 0.4) or (g6_feature_ks_pvalue < 0.001)
+        for: 0m
+        labels:
+          severity: critical
+          component: ml_drift
+        annotations:
+          summary: "Critical drift detected in feature {{ $labels.feature }}"
+          description: |
+            Feature {{ $labels.feature }} for index {{ $labels.index }} shows critical drift:
+            - PSI: {{ with printf "g6_feature_psi{feature='%s',index='%s'}" $labels.feature $labels.index | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+            - KS p-value: {{ with printf "g6_feature_ks_pvalue{feature='%s',index='%s'}" $labels.feature $labels.index | query }}{{ . | first | value | printf "%.4f" }}{{ end }}
+            
+            Thresholds exceeded:
+            - PSI > 0.4 (normal threshold: 0.25)
+            - KS p-value < 0.001 (normal threshold: 0.01)
+            
+            This indicates a severe distribution shift. IMMEDIATE actions:
+            1. Check /api/ml/ensemble/drift?index={{ $labels.index }}&features={{ $labels.feature }}&full=1
+            2. Verify data integrity for this feature
+            3. Check for data pipeline errors or collection issues
+            4. Assess impact on model predictions
+            5. Consider temporary feature exclusion if data quality is suspect
+            6. Investigate root cause before baseline recalibration
+
+      # Alert: High PSI warning
+      # Triggers when PSI exceeds threshold but not yet critical
+      # Early warning for distribution drift
+      - alert: MLHighPSI
+        expr: |
+          g6_feature_psi{index="NIFTY"} > 0.25 and g6_feature_psi{index="NIFTY"} <= 0.4
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "High PSI detected for feature {{ $labels.feature }}"
+          description: |
+            Feature {{ $labels.feature }} shows elevated PSI: {{ $value | humanize }}
+            Threshold: 0.25 (Critical: 0.4)
+            
+            Population Stability Index indicates distribution shift.
+            Monitor for sustained drift and consider investigation if persists.
+
+      # Alert: Low KS p-value warning
+      # Triggers when KS test indicates statistically significant distribution change
+      - alert: MLLowKSPValue
+        expr: |
+          g6_feature_ks_pvalue{index="NIFTY"} < 0.01 and g6_feature_ks_pvalue{index="NIFTY"} >= 0.001
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Low KS p-value for feature {{ $labels.feature }}"
+          description: |
+            Feature {{ $labels.feature }} shows statistically significant distribution change.
+            KS p-value: {{ $value | humanize }} (threshold: 0.01)
+            
+            The Kolmogorov-Smirnov test indicates baseline and recent distributions differ significantly.
+            Review feature behavior and consider investigation if combined with other drift signals.
+
+      # Alert: High mean delta Z-score
+      # Triggers when feature mean shifts significantly (>3 standard deviations)
+      - alert: MLHighMeanDeltaZScore
+        expr: |
+          abs(g6_feature_mean_delta{index="NIFTY"}) > 3
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "High mean delta for feature {{ $labels.feature }}"
+          description: |
+            Feature {{ $labels.feature }} shows significant mean shift.
+            Mean delta: {{ $value | humanize }} standard deviations
+            Threshold: ±3 standard deviations
+            
+            This indicates the feature's central tendency has shifted substantially from baseline.
+            Investigate cause and consider baseline update if shift is permanent.
+
+      # Alert: Multiple indices showing drift
+      # Triggers when drift is observed across multiple indices simultaneously
+      # May indicate systemic issues rather than index-specific changes
+      - alert: MLMultiIndexDrift
+        expr: |
+          count(sum by (index) (g6_feature_drift_flag) > 3) >= 2
+        for: 20m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Drift detected across multiple indices"
+          description: |
+            Multiple indices are showing drift alerts simultaneously.
+            Number of indices affected: {{ $value }}
+            
+            This may indicate:
+            - Systemic data collection issue
+            - Broad market regime change
+            - Common feature calculation problem
+            
+            Actions:
+            1. Check /api/ml/ensemble/drift for each affected index
+            2. Compare common features across indices
+            3. Investigate shared data sources or calculation logic
+            4. Review infrastructure and collection pipeline health
+
+      # Alert: Drift evaluation failing
+      # Triggers when drift metrics are not being updated (stale data)
+      - alert: MLDriftEvaluationStale
+        expr: |
+          (time() - timestamp(g6_feature_drift_flag)) > 600
+        for: 5m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Drift metrics are stale"
+          description: |
+            Drift metrics for {{ $labels.index }} have not been updated for over 10 minutes.
+            Last update: {{ $value | humanizeDuration }} ago
+            
+            This may indicate:
+            - Drift evaluator thread not running
+            - G6_DRIFT_ENABLE not set to 1
+            - Errors in drift calculation
+            - Resource constraints
+            
+            Actions:
+            1. Check drift evaluator thread status
+            2. Review application logs for drift calculation errors
+            3. Verify G6_DRIFT_ENABLE=1 environment variable
+            4. Check resource utilization (CPU, memory)
