@@ -59,4 +59,3 @@ def test_dynamic_ttl_gauge_present():
     assert ttl_val is not None, 'dynamic TTL gauge sample missing'
     assert ttl_val >= int(os.environ['G6_FORECAST_CACHE_TTL_MIN'])
     assert ttl_val <= int(os.environ['G6_FORECAST_CACHE_TTL_MAX'])
-*** End Patch
