@@ -963,6 +963,48 @@ async def health_metrics() -> JSONResponse:
         'advisor_age_minutes': advisor_age_minutes,
     })
 
+# --------------------------- System Errors: Recent API ---------------------------
+@app.get('/api/errors/recent')
+async def api_errors_recent(count: int = 50, category: str | None = None, severity: str | None = None) -> JSONResponse:
+    """Return recent errors with optional filtering.
+
+    Query params:
+    - count: max items to return (server-capped at 200)
+    - category: optional filter (e.g., FILE_IO)
+    - severity: optional filter (e.g., LOW | MEDIUM | HIGH | CRITICAL)
+    """
+    try:
+        cap = max(1, min(int(count), 200))
+    except (ValueError, TypeError):
+        cap = 50
+    try:
+        errs = get_error_handler().get_recent_errors(cap)
+        out: list[dict[str, Any]] = []
+        cat_norm = (category or '').strip().lower()
+        sev_norm = (severity or '').strip().lower()
+        for e in errs:
+            d = e.to_dict()
+            # Normalize for filtering
+            d_cat = str(d.get('category','')).lower()
+            d_sev = str(d.get('severity','')).lower()
+            if cat_norm and d_cat != cat_norm:
+                continue
+            if sev_norm and d_sev != sev_norm:
+                continue
+            out.append(d)
+        return JSONResponse({'errors': out, 'count': len(out)})
+    except Exception as ex:
+        get_error_handler().handle_error(
+            ex,
+            category=ErrorCategory.CONFIGURATION,
+            severity=ErrorSeverity.LOW,
+            component='web.dashboard.app',
+            function_name='api_errors_recent',
+            message='errors_recent_failed',
+            should_log=False,
+        )
+        return JSONResponse({'errors': [], 'count': 0}, status_code=500)
+
 # --------------------------- Ensemble & Forecast API (minimal placeholders) ---------------------------
 # Tests expect CSV-style text responses for ensemble k calibration, weights, and quarantine log.
 # Implement lightweight endpoints reading sidecar/log files under data/ml/live_predictions rooted at project_root().

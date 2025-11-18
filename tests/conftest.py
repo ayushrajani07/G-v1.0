@@ -743,6 +743,13 @@ def _make_metrics_handler(index_label: str):
                 f"g6_ml_ensemble_confidence_score{{index=\"{index_label}\"}} 0.75\n"
                 f"g6_ml_ensemble_model_age_days{{index=\"{index_label}\"}} 3.5\n"
                 f"g6_ml_ensemble_metrics_timestamp{{index=\"{index_label}\"}} {time.time()}\n"
+                # Add minimal SSE metrics family names expected by tests
+                "# HELP g6_sse_http_active_connections Active SSE HTTP connections\n"
+                "# TYPE g6_sse_http_active_connections gauge\n"
+                "g6_sse_http_active_connections 0\n"
+                "# HELP g6_sse_http_connections_total Total SSE HTTP connections\n"
+                "# TYPE g6_sse_http_connections_total counter\n"
+                "g6_sse_http_connections_total 0\n"
             )
             body_bytes = body.encode('utf-8')
             self.send_response(200)
