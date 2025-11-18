@@ -44,7 +44,8 @@ _LOG = logging.getLogger(__name__)
 
 _ENABLE = os.environ.get("G6_ROLLING_MAE_ENABLE", "1") == "1"
 _MAX_EVENTS = int(os.environ.get("G6_ROLLING_MAE_MAX_EVENTS", "5000"))
-_WINDOW_SIZE = int(os.environ.get("G6_ROLLING_MAE_WINDOW", "500"))
+_WINDOW_SIZE = int(os.environ.get("G6_ROLLING_MAE_WINDOW", "500"))  # long window
+_SHORT_WINDOW_SIZE = int(os.environ.get("G6_ROLLING_MAE_SHORT_WINDOW", "100"))  # short window for drift
 _HALF_LIFE_RAW = os.environ.get("G6_ROLLING_MAE_HALF_LIFE", "0").strip()
 _TIME_HALF_LIFE_MIN_RAW = os.environ.get("G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES", "0").strip()
 _DECAY_ALPHA_RAW = os.environ.get("G6_ROLLING_MAE_DECAY", "0").strip()
@@ -88,10 +89,14 @@ _FLUSH_INTERVAL_SEC = 120  # flush at most every 2 minutes
 
 _EVENTS: List[Tuple[str,int,int,float,float,float,float]] = []  # pending evaluation events
 _LOCK = threading.Lock()
-_ERRORS: Dict[Tuple[str,int], deque] = {}
-_COVER_FLAGS: Dict[Tuple[str,int], deque] = {}
-_NORM_ERRORS: Dict[Tuple[str,int], deque] = {}
-_BAND_WIDTHS: Dict[Tuple[str,int], deque] = {}
+_ERRORS: Dict[Tuple[str,int], deque] = {}  # long window errors
+_ERRORS_SHORT: Dict[Tuple[str,int], deque] = {}  # short window errors
+_COVER_FLAGS: Dict[Tuple[str,int], deque] = {}  # long window coverage flags
+_COVER_FLAGS_SHORT: Dict[Tuple[str,int], deque] = {}  # short window coverage flags
+_NORM_ERRORS: Dict[Tuple[str,int], deque] = {}  # long window normalized errors
+_NORM_ERRORS_SHORT: Dict[Tuple[str,int], deque] = {}  # short window normalized errors
+_BAND_WIDTHS: Dict[Tuple[str,int], deque] = {}  # long window band widths
+_BAND_WIDTHS_SHORT: Dict[Tuple[str,int], deque] = {}  # short window band widths
 _LAST_EVAL_TS: Dict[Tuple[str,int], int] = {}
 _EMA_ERROR: Dict[Tuple[str,int], float] = {}
 _EMA_COVER: Dict[Tuple[str,int], float] = {}
@@ -143,15 +148,27 @@ def _save_state(force: bool = False) -> None:
         for key, dq in _ERRORS.items():
             idx, horizon = key
             state.setdefault('errors', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        for key, dq in _ERRORS_SHORT.items():
+            idx, horizon = key
+            state.setdefault('errors_short', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
         for key, dq in _COVER_FLAGS.items():
             idx, horizon = key
             state.setdefault('coverage', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        for key, dq in _COVER_FLAGS_SHORT.items():
+            idx, horizon = key
+            state.setdefault('coverage_short', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
         for key, dq in _NORM_ERRORS.items():
             idx, horizon = key
             state.setdefault('norm_errors', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        for key, dq in _NORM_ERRORS_SHORT.items():
+            idx, horizon = key
+            state.setdefault('norm_errors_short', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
         for key, dq in _BAND_WIDTHS.items():
             idx, horizon = key
             state.setdefault('band_widths', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        for key, dq in _BAND_WIDTHS_SHORT.items():
+            idx, horizon = key
+            state.setdefault('band_widths_short', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
         # last evaluation timestamps
         ts_entries = []
         for key, ts in _LAST_EVAL_TS.items():
@@ -202,24 +219,48 @@ def _load_state() -> None:
                 values = item.get('values', [])
                 dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
                 _ERRORS[(idx, horizon)] = dq
+            for item in data.get('errors_short', []):
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                values = item.get('values', [])
+                dq = deque(values[-_SHORT_WINDOW_SIZE:], maxlen=_SHORT_WINDOW_SIZE)
+                _ERRORS_SHORT[(idx, horizon)] = dq
             for item in coverage:
                 idx = item.get('index')
                 horizon = int(item.get('horizon', 0))
                 values = item.get('values', [])
                 dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
                 _COVER_FLAGS[(idx, horizon)] = dq
+            for item in data.get('coverage_short', []):
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                values = item.get('values', [])
+                dq = deque(values[-_SHORT_WINDOW_SIZE:], maxlen=_SHORT_WINDOW_SIZE)
+                _COVER_FLAGS_SHORT[(idx, horizon)] = dq
             for item in data.get('norm_errors', []):
                 idx = item.get('index')
                 horizon = int(item.get('horizon', 0))
                 values = item.get('values', [])
                 dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
                 _NORM_ERRORS[(idx, horizon)] = dq
+            for item in data.get('norm_errors_short', []):
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                values = item.get('values', [])
+                dq = deque(values[-_SHORT_WINDOW_SIZE:], maxlen=_SHORT_WINDOW_SIZE)
+                _NORM_ERRORS_SHORT[(idx, horizon)] = dq
             for item in data.get('band_widths', []):
                 idx = item.get('index')
                 horizon = int(item.get('horizon', 0))
                 values = item.get('values', [])
                 dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
                 _BAND_WIDTHS[(idx, horizon)] = dq
+            for item in data.get('band_widths_short', []):
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                values = item.get('values', [])
+                dq = deque(values[-_SHORT_WINDOW_SIZE:], maxlen=_SHORT_WINDOW_SIZE)
+                _BAND_WIDTHS_SHORT[(idx, horizon)] = dq
             for item in data.get('last_eval', []):
                 idx = item.get('index')
                 horizon = int(item.get('horizon', 0))
@@ -285,22 +326,42 @@ def _evaluate_ready_events() -> None:
                 if err_deque is None:
                     err_deque = deque(maxlen=_WINDOW_SIZE)
                     _ERRORS[key] = err_deque
+                err_deque_short = _ERRORS_SHORT.get(key)
+                if err_deque_short is None:
+                    err_deque_short = deque(maxlen=_SHORT_WINDOW_SIZE)
+                    _ERRORS_SHORT[key] = err_deque_short
                 cov_deque = _COVER_FLAGS.get(key)
                 if cov_deque is None:
                     cov_deque = deque(maxlen=_WINDOW_SIZE)
                     _COVER_FLAGS[key] = cov_deque
+                cov_deque_short = _COVER_FLAGS_SHORT.get(key)
+                if cov_deque_short is None:
+                    cov_deque_short = deque(maxlen=_SHORT_WINDOW_SIZE)
+                    _COVER_FLAGS_SHORT[key] = cov_deque_short
                 norm_deque = _NORM_ERRORS.get(key)
                 if norm_deque is None:
                     norm_deque = deque(maxlen=_WINDOW_SIZE)
                     _NORM_ERRORS[key] = norm_deque
+                norm_deque_short = _NORM_ERRORS_SHORT.get(key)
+                if norm_deque_short is None:
+                    norm_deque_short = deque(maxlen=_SHORT_WINDOW_SIZE)
+                    _NORM_ERRORS_SHORT[key] = norm_deque_short
                 err_deque.append(error)
+                err_deque_short.append(error)
                 cov_deque.append(covered)
+                cov_deque_short.append(covered)
                 norm_deque.append(norm_error_val)
+                norm_deque_short.append(norm_error_val)
                 bw_deque = _BAND_WIDTHS.get(key)
                 if bw_deque is None:
                     bw_deque = deque(maxlen=_WINDOW_SIZE)
                     _BAND_WIDTHS[key] = bw_deque
+                bw_deque_short = _BAND_WIDTHS_SHORT.get(key)
+                if bw_deque_short is None:
+                    bw_deque_short = deque(maxlen=_SHORT_WINDOW_SIZE)
+                    _BAND_WIDTHS_SHORT[key] = bw_deque_short
                 bw_deque.append(band_width)
+                bw_deque_short.append(band_width)
                 mae = _EMA_ERROR[key]
                 coverage_pct = _EMA_COVER[key] * 100.0
                 norm_error_mean = _EMA_NORM[key]
@@ -309,22 +370,42 @@ def _evaluate_ready_events() -> None:
                 if err_deque is None:
                     err_deque = deque(maxlen=_WINDOW_SIZE)
                     _ERRORS[key] = err_deque
+                err_deque_short = _ERRORS_SHORT.get(key)
+                if err_deque_short is None:
+                    err_deque_short = deque(maxlen=_SHORT_WINDOW_SIZE)
+                    _ERRORS_SHORT[key] = err_deque_short
                 cov_deque = _COVER_FLAGS.get(key)
                 if cov_deque is None:
                     cov_deque = deque(maxlen=_WINDOW_SIZE)
                     _COVER_FLAGS[key] = cov_deque
+                cov_deque_short = _COVER_FLAGS_SHORT.get(key)
+                if cov_deque_short is None:
+                    cov_deque_short = deque(maxlen=_SHORT_WINDOW_SIZE)
+                    _COVER_FLAGS_SHORT[key] = cov_deque_short
                 norm_deque = _NORM_ERRORS.get(key)
                 if norm_deque is None:
                     norm_deque = deque(maxlen=_WINDOW_SIZE)
                     _NORM_ERRORS[key] = norm_deque
+                norm_deque_short = _NORM_ERRORS_SHORT.get(key)
+                if norm_deque_short is None:
+                    norm_deque_short = deque(maxlen=_SHORT_WINDOW_SIZE)
+                    _NORM_ERRORS_SHORT[key] = norm_deque_short
                 err_deque.append(error)
+                err_deque_short.append(error)
                 cov_deque.append(covered)
+                cov_deque_short.append(covered)
                 norm_deque.append(norm_error_val)
+                norm_deque_short.append(norm_error_val)
                 bw_deque = _BAND_WIDTHS.get(key)
                 if bw_deque is None:
                     bw_deque = deque(maxlen=_WINDOW_SIZE)
                     _BAND_WIDTHS[key] = bw_deque
+                bw_deque_short = _BAND_WIDTHS_SHORT.get(key)
+                if bw_deque_short is None:
+                    bw_deque_short = deque(maxlen=_SHORT_WINDOW_SIZE)
+                    _BAND_WIDTHS_SHORT[key] = bw_deque_short
                 bw_deque.append(band_width)
+                bw_deque_short.append(band_width)
                 mae = sum(err_deque) / max(1, len(err_deque))
                 coverage_pct = (sum(cov_deque) / max(1, len(cov_deque))) * 100.0
                 norm_error_mean = sum(norm_deque) / max(1, len(norm_deque))
@@ -413,7 +494,7 @@ def get_metric_comparison(index: str | None = None, horizon: int | None = None) 
     """
     out = {"use_decay": _USE_DECAY, "decay_alpha": _DECAY_ALPHA, "entries": []}
     with _LOCK:
-        keys = set(_ERRORS.keys()) | set(_COVER_FLAGS.keys()) | set(_NORM_ERRORS.keys()) | set(_BAND_WIDTHS.keys())
+        keys = set(_ERRORS.keys()) | set(_COVER_FLAGS.keys()) | set(_NORM_ERRORS.keys()) | set(_BAND_WIDTHS.keys()) | set(_ERRORS_SHORT.keys())
         if index is not None:
             idxu = index.upper()
             keys = {k for k in keys if k[0] == idxu}
@@ -425,9 +506,15 @@ def get_metric_comparison(index: str | None = None, horizon: int | None = None) 
             cov_dq = _COVER_FLAGS.get(key, [])
             norm_dq = _NORM_ERRORS.get(key, [])
             bw_dq = _BAND_WIDTHS.get(key, [])
-            mae_window = (sum(err_dq) / len(err_dq)) if err_dq else 0.0
+            mae_window = (sum(err_dq) / len(err_dq)) if err_dq else 0.0  # long window
+            err_short = _ERRORS_SHORT.get(key, [])
+            mae_short = (sum(err_short) / len(err_short)) if err_short else 0.0
             coverage_window_pct = (sum(cov_dq) / len(cov_dq) * 100.0) if cov_dq else 0.0
+            cov_short_dq = _COVER_FLAGS_SHORT.get(key, [])
+            coverage_short_pct = (sum(cov_short_dq) / len(cov_short_dq) * 100.0) if cov_short_dq else 0.0
             norm_error_window = (sum(norm_dq) / len(norm_dq)) if norm_dq else 0.0
+            norm_short_dq = _NORM_ERRORS_SHORT.get(key, [])
+            norm_error_short = (sum(norm_short_dq) / len(norm_short_dq)) if norm_short_dq else 0.0
             mae_ema = _EMA_ERROR.get(key) if _USE_DECAY else None
             coverage_ema_pct = (_EMA_COVER.get(key) * 100.0) if _USE_DECAY and key in _EMA_COVER else None
             norm_error_ema = _EMA_NORM.get(key) if _USE_DECAY else None
@@ -435,14 +522,24 @@ def get_metric_comparison(index: str | None = None, horizon: int | None = None) 
             norm_pct = _percentiles(list(norm_dq), [0.5, 0.9]) if len(norm_dq) >= 5 else {"p50": norm_error_window, "p90": norm_error_window}
             bw_pct = _percentiles(list(bw_dq), [0.5, 0.9]) if len(bw_dq) >= 5 else {"p50": (bw_dq[-1] if bw_dq else 0.0), "p90": (bw_dq[-1] if bw_dq else 0.0)}
             last_ts = _LAST_EVAL_TS.get(key)
+            # Drift ratios (short/long) guard against zero
+            drift_mae_ratio = (mae_short / mae_window) if mae_window > 0 else 0.0
+            drift_norm_ratio = (norm_error_short / norm_error_window) if norm_error_window > 0 else 0.0
+            drift_cover_delta = coverage_short_pct - coverage_window_pct
             out["entries"].append({
                 "index": idx,
                 "horizon": h,
                 "mae_window": mae_window,
+                "mae_short": mae_short,
+                "mae_drift_ratio": drift_mae_ratio,
                 "mae_ema": mae_ema,
                 "coverage_window_pct": coverage_window_pct,
+                "coverage_short_pct": coverage_short_pct,
+                "coverage_drift_delta_pct": drift_cover_delta,
                 "coverage_ema_pct": coverage_ema_pct,
                 "norm_error_window": norm_error_window,
+                "norm_error_short": norm_error_short,
+                "norm_error_drift_ratio": drift_norm_ratio,
                 "norm_error_ema": norm_error_ema,
                 "count_window": len(err_dq),
                 "error_percentiles": err_pct,
@@ -476,3 +573,55 @@ def validate_decay_config() -> dict:
 __all__.append("validate_decay_config")
 
 __all__.append("get_metric_comparison")
+
+# Drift summary thresholds (ratios) env config
+_DRIFT_MAE_WARN = float(os.environ.get("G6_DRIFT_MAE_RATIO_WARN", "1.5") or 1.5)
+_DRIFT_MAE_CRIT = float(os.environ.get("G6_DRIFT_MAE_RATIO_CRITICAL", "2.0") or 2.0)
+_DRIFT_NORM_WARN = float(os.environ.get("G6_DRIFT_NORM_RATIO_WARN", "1.3") or 1.3)
+_DRIFT_NORM_CRIT = float(os.environ.get("G6_DRIFT_NORM_RATIO_CRITICAL", "1.7") or 1.7)
+_DRIFT_COVER_DROP_WARN = float(os.environ.get("G6_DRIFT_COVER_DROP_WARN", "-10") or -10.0)  # percentage pts
+_DRIFT_COVER_DROP_CRIT = float(os.environ.get("G6_DRIFT_COVER_DROP_CRITICAL", "-20") or -20.0)
+
+def get_drift_summary(index: str, horizon: int) -> dict:
+    """Compute drift summary for given index,horizon using short vs long windows.
+
+    Returns dict with ratios and alert counts.
+    """
+    comp = get_metric_comparison(index=index, horizon=horizon)
+    entries = comp.get("entries", [])
+    if not entries:
+        return {"index": index.upper(), "horizon": horizon, "available": False, "alert_count": 0}
+    ent = entries[0]
+    mae_ratio = float(ent.get("mae_drift_ratio", 0.0))
+    norm_ratio = float(ent.get("norm_error_drift_ratio", 0.0))
+    cover_delta = float(ent.get("coverage_drift_delta_pct", 0.0))
+    alerts = 0
+    reasons: list[str] = []
+    # MAE ratio thresholds
+    if mae_ratio >= _DRIFT_MAE_CRIT:
+        alerts += 1; reasons.append(f"mae_ratio>={_DRIFT_MAE_CRIT}")
+    elif mae_ratio >= _DRIFT_MAE_WARN:
+        alerts += 1; reasons.append(f"mae_ratio>={_DRIFT_MAE_WARN}")
+    # Norm error ratio
+    if norm_ratio >= _DRIFT_NORM_CRIT:
+        alerts += 1; reasons.append(f"norm_ratio>={_DRIFT_NORM_CRIT}")
+    elif norm_ratio >= _DRIFT_NORM_WARN:
+        alerts += 1; reasons.append(f"norm_ratio>={_DRIFT_NORM_WARN}")
+    # Coverage drop (negative delta)
+    if cover_delta <= _DRIFT_COVER_DROP_CRIT:
+        alerts += 1; reasons.append(f"cover_drop<={_DRIFT_COVER_DROP_CRIT}")
+    elif cover_delta <= _DRIFT_COVER_DROP_WARN:
+        alerts += 1; reasons.append(f"cover_drop<={_DRIFT_COVER_DROP_WARN}")
+    return {
+        "index": index.upper(),
+        "horizon": horizon,
+        "mae_ratio": mae_ratio,
+        "norm_ratio": norm_ratio,
+        "coverage_delta_pct": cover_delta,
+        "alert_count": alerts,
+        "reasons": reasons,
+        "short_window": _SHORT_WINDOW_SIZE,
+        "long_window": _WINDOW_SIZE,
+    }
+
+__all__.append("get_drift_summary")

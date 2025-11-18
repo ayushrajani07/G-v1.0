@@ -70,12 +70,14 @@ class TestDriftInCompare:
 
         assert code == 200
         assert isinstance(data, dict)
-        # Base comparison fields
         for key in ["index", "horizon"]:
             assert key in data
-        # Optional drift summary
+        # If available, validate drift summary contents
         drift = data.get("drift_summary")
-        if drift is not None:
+        if drift:
             assert isinstance(drift, dict)
-            for k in ["index", "alert_count"]:
+            for k in ["index", "alert_count", "mae_ratio", "norm_ratio"]:
                 assert k in drift
+            # Ratios non-negative
+            assert drift.get("mae_ratio", 0) >= 0
+            assert drift.get("norm_ratio", 0) >= 0

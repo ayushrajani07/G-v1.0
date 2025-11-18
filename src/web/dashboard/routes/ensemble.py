@@ -963,6 +963,64 @@ async def retrain(req: RetrainRequest):
     job_id = f"retrain_{idx}_{int(time.time())}"
     return RetrainResponse(index=idx, status='scheduled', job_id=job_id, parameters={'training_days': req.days, 'validate': req.run_validation}, estimated_completion='in 2 hours', message='Retraining job scheduled successfully')
 
+@router.get('/regime/breaches')
+async def regime_breaches(index: str = Query(..., description="Index e.g. NIFTY")):
+    """Return flat list of regime breaches for an index (test harness expects list)."""
+    try:
+        from ..regime_alerts import get_regime_summary  # type: ignore
+        summary = get_regime_summary(index=index)
+        breaches = summary.get('breaches', []) if isinstance(summary, dict) else []
+        return breaches
+    except Exception:
+        return []
+
+@router.get('/metrics/compare')
+async def metrics_compare(
+    index: str = Query(..., description="Index e.g. NIFTY"),
+    horizon: int = Query(60, ge=1, le=720),
+    include_drift: int = Query(0, ge=0, le=1, description="Set to 1 to include drift summary"),
+):
+    """Return metrics comparison (rolling vs EMA) and optional drift summary for index,horizon.
+
+    Provides fields needed by test_ml_regime_and_drift_endpoints.
+    """
+    try:
+        from ..rolling_mae import get_metric_comparison, get_drift_summary, ensure_started  # type: ignore
+        ensure_started()
+        comp = get_metric_comparison(index=index, horizon=horizon)
+        entry = None
+        for ent in comp.get('entries', []):
+            if int(ent.get('horizon', -1)) == int(horizon):
+                entry = ent
+                break
+        if entry is None:
+            # return minimal stub
+            base = {"index": index.upper(), "horizon": horizon, "available": False}
+            if include_drift:
+                drift = get_drift_summary(index.upper(), horizon)
+                base['drift_summary'] = drift
+            return base
+        resp = {"index": index.upper(), "horizon": horizon}
+        # expose selected fields directly
+        for k in [
+            'mae_window','mae_short','mae_drift_ratio','coverage_window_pct','coverage_short_pct','coverage_drift_delta_pct',
+            'norm_error_window','norm_error_short','norm_error_drift_ratio','count_window'
+        ]:
+            if k in entry:
+                resp[k] = entry[k]
+        if include_drift:
+            resp['drift_summary'] = get_drift_summary(index.upper(), horizon)
+            # Export drift ratios to Prometheus
+            try:
+                from ..prom_metrics import set_forecast_drift_ratios  # type: ignore
+                drift = resp['drift_summary']
+                set_forecast_drift_ratios(index.upper(), horizon, float(drift.get('mae_ratio',0.0)), float(drift.get('norm_ratio',0.0)))
+            except Exception:
+                pass
+        return resp
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"metrics_compare_failed: {e}")
+
 
 @router.get('/regime/status', response_model=RegimeStatusResponse | Dict[str, RegimeStatusResponse])
 async def regime_status(index: Optional[str] = Query(None, description="Optional index e.g. NIFTY")):

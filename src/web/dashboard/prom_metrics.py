@@ -16,6 +16,8 @@ Metrics exposed:
 - g6_forecast_norm_error: Gauge of rolling normalized error (MAE divided by band width) (per index,horizon)
  - g6_forecast_error_hist: Histogram of per-evaluation absolute forecast error (per index,horizon)
  - g6_forecast_norm_error_hist: Histogram of per-evaluation normalized error (per index,horizon)
+ - g6_forecast_mae_drift_ratio: Gauge of short/long MAE ratio (per index,horizon)
+ - g6_forecast_norm_error_drift_ratio: Gauge of short/long normalized error ratio (per index,horizon)
 """
 from __future__ import annotations
 
@@ -42,6 +44,8 @@ _FORECAST_COVERAGE: Any = None
 _FORECAST_NORM_ERROR: Any = None
 _FORECAST_ERROR_HIST: Any = None
 _FORECAST_NORM_ERROR_HIST: Any = None
+_FORECAST_MAE_DRIFT: Any = None
+_FORECAST_NORM_DRIFT: Any = None
 
 
 def _is_enabled() -> bool:
@@ -140,6 +144,18 @@ def _init_metrics() -> bool:
         _FORECAST_NORM_ERROR = Gauge(
             "g6_forecast_norm_error",
             "Rolling normalized error (mean abs error divided by band width)",
+            labelnames=["index", "horizon"],
+            registry=_REGISTRY,
+        )
+        _FORECAST_MAE_DRIFT = Gauge(
+            "g6_forecast_mae_drift_ratio",
+            "Short/long window MAE ratio (drift)",
+            labelnames=["index", "horizon"],
+            registry=_REGISTRY,
+        )
+        _FORECAST_NORM_DRIFT = Gauge(
+            "g6_forecast_norm_error_drift_ratio",
+            "Short/long window normalized error ratio (drift)",
             labelnames=["index", "horizon"],
             registry=_REGISTRY,
         )
@@ -367,6 +383,22 @@ def set_forecast_norm_error(index: str, horizon: int, norm_error: float) -> None
             _FORECAST_NORM_ERROR.labels(index=index, horizon=str(horizon)).set(norm_error)
         except Exception as e:
             _LOG.debug(f"Failed to set forecast normalized error: {e}")
+
+def set_forecast_drift_ratios(index: str, horizon: int, mae_ratio: float, norm_ratio: float) -> None:
+    """Set drift ratio gauges (MAE and normalized error)."""
+    if not _is_enabled():
+        return
+    _init_metrics()
+    try:
+        if _FORECAST_MAE_DRIFT is not None:
+            _FORECAST_MAE_DRIFT.labels(index=index, horizon=str(horizon)).set(mae_ratio)
+    except Exception as e:
+        _LOG.debug(f"Failed to set MAE drift ratio: {e}")
+    try:
+        if _FORECAST_NORM_DRIFT is not None:
+            _FORECAST_NORM_DRIFT.labels(index=index, horizon=str(horizon)).set(norm_ratio)
+    except Exception as e:
+        _LOG.debug(f"Failed to set norm drift ratio: {e}")
 
 
 def observe_forecast_errors(index: str, horizon: int, abs_error: float, norm_error: float) -> None:
