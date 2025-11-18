@@ -145,6 +145,21 @@ def _evaluator_loop():
                 baseline = baseline_cache.get(idx) or monitor.get_or_create_baseline(idx)
                 recent = monitor.compute_feature_distributions(idx, 0)
                 drift = monitor.calculate_drift_metrics(baseline, recent)
+                # Apply feature cap post-scoring based on score=psi+|mean_z|
+                try:
+                    cap = monitor.max_features
+                except Exception:
+                    cap = 30
+                if cap and cap > 0 and len(drift) > cap:
+                    scored = []
+                    for f, m in drift.items():
+                        psi = float(m.get('psi', 0.0) or 0.0)
+                        mean_z = float(m.get('mean_delta_zscore', m.get('mean_delta', 0.0)) or 0.0)
+                        score = psi + abs(mean_z)
+                        scored.append((score, f))
+                    scored.sort(key=lambda x: x[0], reverse=True)
+                    keep = {f for _, f in scored[:cap]}
+                    drift = {f: m for f, m in drift.items() if f in keep}
                 critical_count = sum(1 for v in drift.values() if v.get('severity') == 'critical')
                 if _CRITICAL_COUNT is not None:
                     _CRITICAL_COUNT.labels(index=idx).set(critical_count)
