@@ -260,6 +260,7 @@ async def api_ml_drift_daily_report_trend(days: int = 7):
         items = items[-int(days):]
     series = []
     per_index_series = {}
+    per_index_severity_series = {}
     for _, d in items:
         gen_at = d.get('generated_at')
         series.append({'generated_at': gen_at, 'aggregate_counts': d.get('aggregate_counts', {})})
@@ -267,8 +268,13 @@ async def api_ml_drift_daily_report_trend(days: int = 7):
             idx = pi.get('index')
             if not idx:
                 continue
+            counts = pi.get('counts', {}) or {}
             per_index_series.setdefault(idx, []).append({
                 'generated_at': gen_at,
-                'counts': pi.get('counts', {}),
+                'counts': counts,
             })
-    return JSONResponse({'series': series, 'per_index_series': per_index_series, 'count': len(series)})
+            bucket = per_index_severity_series.setdefault(idx, {'critical': [], 'actionable': [], 'watch': []})
+            bucket['critical'].append({'generated_at': gen_at, 'value': int(counts.get('critical', 0))})
+            bucket['actionable'].append({'generated_at': gen_at, 'value': int(counts.get('actionable', 0))})
+            bucket['watch'].append({'generated_at': gen_at, 'value': int(counts.get('watch', 0))})
+    return JSONResponse({'series': series, 'per_index_series': per_index_series, 'per_index_severity_series': per_index_severity_series, 'count': len(series)})

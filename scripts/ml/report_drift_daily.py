@@ -204,6 +204,7 @@ def main():
     if args.trend_days is not None:
         series = []
         per_index_series: Dict[str, list] = {}
+        per_index_severity_series: Dict[str, Dict[str, list]] = {}
         files = sorted(glob.glob(os.path.join(drift_dir, 'daily_*.json')))
         # Use last N files by generated_at
         items = []
@@ -231,9 +232,17 @@ def main():
                     'generated_at': gen_at,
                     'counts': pi.get('counts', {}),
                 })
+                # Build per-index per-severity series arrays
+                sev_counts = pi.get('counts', {}) or {}
+                bucket = per_index_severity_series.setdefault(idx, {
+                    'critical': [], 'actionable': [], 'watch': []
+                })
+                bucket['critical'].append({'generated_at': gen_at, 'value': int(sev_counts.get('critical', 0))})
+                bucket['actionable'].append({'generated_at': gen_at, 'value': int(sev_counts.get('actionable', 0))})
+                bucket['watch'].append({'generated_at': gen_at, 'value': int(sev_counts.get('watch', 0))})
         os.makedirs(os.path.dirname(args.trend_output) or '.', exist_ok=True)
         with open(args.trend_output, 'w', encoding='utf-8') as tf:
-            json.dump({'series': series, 'per_index_series': per_index_series, 'count': len(series)}, tf, indent=2)
+            json.dump({'series': series, 'per_index_series': per_index_series, 'per_index_severity_series': per_index_severity_series, 'count': len(series)}, tf, indent=2)
         print(args.trend_output)
 
 if __name__ == '__main__':

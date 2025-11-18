@@ -21,7 +21,13 @@ def test_trend_endpoint_reads_reports(tmp_path, monkeypatch):
             except Exception: pass
     os.makedirs(base, exist_ok=True)
     def write(day, counts):
-        d = {'generated_at': f'2025-11-{day:02d}T00:00:00Z', 'aggregate_counts': counts}
+        d = {
+            'generated_at': f'2025-11-{day:02d}T00:00:00Z',
+            'aggregate_counts': counts,
+            'per_index': [
+                {'index': 'NIFTY', 'counts': {'critical': counts.get('critical',0), 'actionable': 0, 'watch': 0}}
+            ]
+        }
         (base / f'daily_2025-11-{day:02d}.json').write_text(json.dumps(d), encoding='utf-8')
     write(16, {'critical':1})
     write(17, {'critical':3})
@@ -32,6 +38,10 @@ def test_trend_endpoint_reads_reports(tmp_path, monkeypatch):
     assert data['count'] == 2
     # per-index series present and contains NIFTY
     assert 'per_index_series' in data and 'NIFTY' in data['per_index_series']
+    # per-severity series present with critical/actionable/watch arrays
+    assert 'per_index_severity_series' in data and 'NIFTY' in data['per_index_severity_series']
+    sev = data['per_index_severity_series']['NIFTY']
+    assert isinstance(sev.get('critical'), list) and isinstance(sev.get('actionable'), list) and isinstance(sev.get('watch'), list)
     # Latest two days should be 17 and 18
     assert data['series'][0]['generated_at'].startswith('2025-11-17')
     assert data['series'][1]['generated_at'].startswith('2025-11-18')
