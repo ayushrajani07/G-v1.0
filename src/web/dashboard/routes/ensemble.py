@@ -109,7 +109,18 @@ def _quantile_to_label(q: float) -> str:
 # --------------------------- Simple In-Memory Forecast Cache ---------------------------
 _CACHE: OrderedDict[Tuple[str,int,str,float,float,float,int], ForecastResponse] = OrderedDict()
 _CACHE_LOCK = threading.Lock()
-_CACHE_TTL_SEC = max(0, int(os.environ.get('G6_FORECAST_CACHE_TTL', '30')))
+_CACHE_TTL_SEC_STATIC = max(0, int(os.environ.get('G6_FORECAST_CACHE_TTL', '30')))
+_CACHE_ADAPTIVE_ENABLED = os.environ.get('G6_FORECAST_CACHE_ADAPTIVE', '0').strip() == '1'
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.environ.get(name, str(default)).strip())
+    except Exception:
+        return default
+_ADAPTIVE_MIN = _env_int('G6_FORECAST_CACHE_TTL_MIN', 10)
+_ADAPTIVE_MAX = _env_int('G6_FORECAST_CACHE_TTL_MAX', 60)
+_LAT_HIGH = _env_int('G6_FORECAST_CACHE_LATENCY_HIGH_MS', 500)
+_LAT_LOW = _env_int('G6_FORECAST_CACHE_LATENCY_LOW_MS', 150)
+_LAST_LATENCY_MS = 0.0
 _CACHE_MAX_SIZE = max(1, int(os.environ.get('G6_FORECAST_CACHE_MAX', '500')))
 _CACHE_TIME: OrderedDict[Tuple[str,int,str,float,float,float,int], float] = OrderedDict()
 _CACHE_HITS = 0
@@ -125,8 +136,35 @@ _RECENT_FILE_CACHE_MAX_SIZE = max(1, int(os.environ.get('G6_RECENT_FILE_CACHE_MA
 _RECENT_FILE_CACHE_HITS = 0
 _RECENT_FILE_CACHE_MISSES = 0
 
+def _current_cache_ttl_sec() -> int:
+    """Return current TTL (static or adaptive)."""
+    if not _CACHE_ADAPTIVE_ENABLED:
+        return _CACHE_TTL_SEC_STATIC
+    # Compute hit ratio; until enough samples, fall back to static
+    total = _CACHE_HITS + _CACHE_MISSES
+    if total < 20:  # warmup threshold
+        return _CACHE_TTL_SEC_STATIC
+    hit_ratio = (_CACHE_HITS / total) if total else 0.0
+    # Base interpolation between min and max with midpoint at 0.5
+    if hit_ratio <= 0.3:
+        ttl = _ADAPTIVE_MIN
+    elif hit_ratio >= 0.75:
+        ttl = _ADAPTIVE_MAX
+    else:
+        span = _ADAPTIVE_MAX - _ADAPTIVE_MIN
+        # Linear map of ratio 0.3..0.75 to 0..1
+        norm = (hit_ratio - 0.3) / (0.75 - 0.3)
+        ttl = int(round(_ADAPTIVE_MIN + span * norm))
+    # Latency adjustment
+    if _LAST_LATENCY_MS > _LAT_HIGH:
+        ttl = min(_ADAPTIVE_MAX, int(round(ttl * 1.2)))
+    elif _LAST_LATENCY_MS < _LAT_LOW:
+        ttl = max(_ADAPTIVE_MIN, int(round(ttl * 0.8)))
+    return max(0, ttl)
+
 def _cache_get(key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[ForecastResponse]:
-    if _CACHE_TTL_SEC == 0:
+    ttl_sec = _current_cache_ttl_sec()
+    if ttl_sec == 0:
         return None
     with _CACHE_LOCK:
         ts = _CACHE_TIME.get(key)
@@ -140,7 +178,7 @@ def _cache_get(key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[Fo
             except Exception:
                 pass
             return None
-        if (time.time() - ts) > _CACHE_TTL_SEC:
+        if (time.time() - ts) > ttl_sec:
             # expired - purge
             _CACHE.pop(key, None)
             _CACHE_TIME.pop(key, None)
@@ -166,7 +204,7 @@ def _cache_get(key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[Fo
         return _CACHE.get(key)
 
 def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: ForecastResponse) -> None:
-    if _CACHE_TTL_SEC == 0:
+    if _current_cache_ttl_sec() == 0:
         return
     global _CACHE_EVICTIONS
     with _CACHE_LOCK:
@@ -208,7 +246,8 @@ async def cache_stats():
         newest = min((e['age_sec'] for e in entries), default=0.0)
         hit_ratio = (_CACHE_HITS / (_CACHE_HITS + _CACHE_MISSES)) if (_CACHE_HITS + _CACHE_MISSES) else 0.0
         forecast_cache_stats = {
-            'ttl_sec': _CACHE_TTL_SEC,
+            'ttl_sec': _current_cache_ttl_sec(),
+            'adaptive_enabled': _CACHE_ADAPTIVE_ENABLED,
             'max_size': _CACHE_MAX_SIZE,
             'size': len(entries),
             'hits': _CACHE_HITS,
@@ -691,6 +730,9 @@ async def forecast(
         'band_high': band_high,
     }
     latency_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+    # record last latency for adaptive TTL
+    global _LAST_LATENCY_MS
+    _LAST_LATENCY_MS = latency_ms
     meta = ForecastMetadata(
         latency_ms=latency_ms,
         components_used=[c for c in _def_components if lm.get(f"{c}_enabled", True)],
