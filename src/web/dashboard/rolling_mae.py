@@ -19,6 +19,8 @@ Environment Variables:
 - G6_ROLLING_MAE_PERSIST=1: Enable persistence of window state to JSON file.
 - G6_ROLLING_MAE_PERSIST_FILE=metrics/rolling_mae_state.json: Relative path (under project root) for persisted state.
 - G6_ROLLING_MAE_DECAY=0: If set to a float 0<alpha<1, use EMA (exponential moving average) instead of simple rolling mean. Gauges reflect EMA; deques retained for debug.
+- G6_ROLLING_MAE_HALF_LIFE=0: Optional half-life (in observations) to derive EMA alpha.
+    Precedence: if HALF_LIFE > 0 it overrides DECAY. Alpha formula: alpha = 1 - exp(-ln(2)/half_life).
 
 Notes / Limitations:
 - Underlying at evaluation approximated by latest inferred value (best-effort); fallback to underlying at forecast time if unavailable.
@@ -39,11 +41,20 @@ _LOG = logging.getLogger(__name__)
 _ENABLE = os.environ.get("G6_ROLLING_MAE_ENABLE", "1") == "1"
 _MAX_EVENTS = int(os.environ.get("G6_ROLLING_MAE_MAX_EVENTS", "5000"))
 _WINDOW_SIZE = int(os.environ.get("G6_ROLLING_MAE_WINDOW", "500"))
+_HALF_LIFE_RAW = os.environ.get("G6_ROLLING_MAE_HALF_LIFE", "0").strip()
 _DECAY_ALPHA_RAW = os.environ.get("G6_ROLLING_MAE_DECAY", "0").strip()
-try:
-    _DECAY_ALPHA = float(_DECAY_ALPHA_RAW)
-except ValueError:
-    _DECAY_ALPHA = 0.0
+def _parse_float(s: str) -> float:
+    try:
+        return float(s)
+    except ValueError:
+        return 0.0
+_HALF_LIFE = _parse_float(_HALF_LIFE_RAW)
+_DECAY_ALPHA_DIRECT = _parse_float(_DECAY_ALPHA_RAW)
+if _HALF_LIFE > 0:
+    import math
+    _DECAY_ALPHA = 1.0 - math.exp(-math.log(2.0) / _HALF_LIFE)
+else:
+    _DECAY_ALPHA = _DECAY_ALPHA_DIRECT
 if not (0.0 < _DECAY_ALPHA < 1.0):
     _DECAY_ALPHA = 0.0
 _USE_DECAY = _DECAY_ALPHA > 0.0
@@ -104,6 +115,7 @@ def _save_state(force: bool = False) -> None:
     with _LOCK:
         state['use_decay'] = _USE_DECAY
         state['decay_alpha'] = _DECAY_ALPHA
+        state['half_life'] = _HALF_LIFE
         for key, dq in _ERRORS.items():
             idx, horizon = key
             state.setdefault('errors', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
