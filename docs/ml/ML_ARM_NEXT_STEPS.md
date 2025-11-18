@@ -84,6 +84,8 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 - `G6_RECENT_FILE_CACHE_TTL`, `G6_RECENT_FILE_CACHE_MAX_SIZE` (file cache)
 - `ENABLE_PATH_FORECAST_PROM_METRICS=1` (metrics enabled)
 - `PATH_FORECAST_DISABLE_WEIGHTED` (performance toggle, optional)
+- `G6_ALERT_LATENCY_P95_MS`, `G6_ALERT_NORM_ERR_P90`, `G6_ALERT_COVERAGE_MIN_PCT` (alert thresholds)
+- `G6_ALERT_CACHE_EVICTION_RATE`, `G6_ALERT_TTL_TOO_SHORT_SEC`, `G6_ALERT_TTL_TOO_LONG_SEC` (cache alert thresholds)
 
 **Phase 10 Next Local Actions (Updated):**
 1. Drift monitoring integration (feature importance + distribution shift panels).  ☐
@@ -91,7 +93,7 @@ Remote execution has started on discrete Phase 9 tasks (issue specs added under 
 3. Implement adaptive TTL prototype (volatility-driven) behind flag.  ☐
 4. Begin regime change alert pipeline (weekly cron + threshold evaluation).  ☐
 5. Extend load test to multi-index comparative mode (NIFTY vs BANKNIFTY).  ☐
-6. Add alert rules tied to new metrics (p95 latency, eviction rate, cache hit ratio thresholds).  ☐
+6. Add alert rules tied to new metrics (p95 latency, eviction rate, cache hit ratio thresholds).  ✅ (completed: prometheus_alerts_performance.yml with CI validation)
 7. Add normalized error metric & histogram distribution for tail risk tracking.  ✅
 8. Implement decay / half-life adaptive smoothing of metrics.  ✅
 9. Provide comparison endpoint with percentiles & filtering.  ✅
@@ -173,6 +175,12 @@ The following real-time performance & quality metrics have been implemented to e
 | `G6_DRIFT_CRITICAL_ALERT_REFRESH_COUNT` | Critical feature count refresh trigger | `3` |
 | `G6_DRIFT_MAX_FEATURES` | Cardinality cap for drift metrics | `30` |
 | `G6_DRIFT_ENABLE` | Enable drift evaluator thread | `0/1` |
+| `G6_ALERT_LATENCY_P95_MS` | P95 latency alert threshold | `500` ms |
+| `G6_ALERT_NORM_ERR_P90` | P90 normalized error alert threshold | `0.15` |
+| `G6_ALERT_COVERAGE_MIN_PCT` | Minimum coverage alert threshold | `70` % |
+| `G6_ALERT_CACHE_EVICTION_RATE` | Max eviction rate alert threshold | `2` /sec |
+| `G6_ALERT_TTL_TOO_SHORT_SEC` | Min TTL alert threshold | `15` sec |
+| `G6_ALERT_TTL_TOO_LONG_SEC` | Max TTL alert threshold | `55` sec |
 
 **Operational Usage Examples:**
 ```bash

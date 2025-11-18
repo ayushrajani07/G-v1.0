@@ -221,6 +221,12 @@ def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: Forecas
             _CACHE.pop(oldest_key, None)
             _CACHE_TIME.pop(oldest_key, None)
             _CACHE_EVICTIONS += 1
+            # Track Prometheus metric for evictions (per index)
+            try:
+                from ..prom_metrics import increment_forecast_cache_eviction
+                increment_forecast_cache_eviction(oldest_key[0])  # oldest_key[0] is index
+            except Exception:
+                pass
         
         # Update Prometheus gauge
         try:

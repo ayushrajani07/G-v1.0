@@ -7,10 +7,12 @@ Metrics exposed:
 - g6_forecast_latency_ms: Histogram of forecast request latency
 - g6_forecast_cache_hits_total: Counter of forecast cache hits
 - g6_forecast_cache_misses_total: Counter of forecast cache misses
+- g6_forecast_cache_evictions_total: Counter of forecast cache evictions (LRU)
 - g6_recent_window_cache_hits_total: Counter of recent window cache hits
 - g6_recent_window_cache_misses_total: Counter of recent window cache misses
 - g6_forecast_cache_size: Gauge of current forecast cache entries
 - g6_recent_window_cache_size: Gauge of current recent window cache entries
+- g6_forecast_cache_dynamic_ttl: Gauge of adaptive forecast cache TTL seconds
 - g6_forecast_mae: Gauge of rolling mean absolute error for p50 forecasts (per index,horizon)
 - g6_forecast_coverage_pct: Gauge of rolling coverage percentage for band_low/band_high (per index,horizon)
 - g6_forecast_norm_error: Gauge of rolling normalized error (MAE divided by band width) (per index,horizon)
@@ -43,6 +45,7 @@ _FORECAST_NORM_ERROR: Any = None
 _FORECAST_ERROR_HIST: Any = None
 _FORECAST_NORM_ERROR_HIST: Any = None
 _FORECAST_CACHE_DYNAMIC_TTL: Any = None
+_FORECAST_CACHE_EVICTIONS: Any = None
 
 
 def _is_enabled() -> bool:
@@ -56,7 +59,7 @@ def _init_metrics() -> bool:
     global _FORECAST_LATENCY, _FORECAST_CACHE_HITS, _FORECAST_CACHE_MISSES
     global _RECENT_WINDOW_CACHE_HITS, _RECENT_WINDOW_CACHE_MISSES
     global _FORECAST_CACHE_SIZE, _RECENT_WINDOW_CACHE_SIZE
-    global _FORECAST_CACHE_DYNAMIC_TTL
+    global _FORECAST_CACHE_DYNAMIC_TTL, _FORECAST_CACHE_EVICTIONS
 
     if _METRICS_INITIALIZED:
         return True
@@ -148,6 +151,12 @@ def _init_metrics() -> bool:
         _FORECAST_CACHE_DYNAMIC_TTL = Gauge(
             "g6_forecast_cache_dynamic_ttl",
             "Adaptive forecast cache TTL seconds (current applied value)",
+            labelnames=["index"],
+            registry=_REGISTRY,
+        )
+        _FORECAST_CACHE_EVICTIONS = Counter(
+            "g6_forecast_cache_evictions_total",
+            "Total number of forecast cache evictions (LRU)",
             labelnames=["index"],
             registry=_REGISTRY,
         )
@@ -433,6 +442,23 @@ def set_forecast_cache_dynamic_ttl(index: str, ttl_sec: float) -> None:
             _LOG.debug(f"Failed to set dynamic ttl gauge: {e}")
 
 __all__.append('set_forecast_cache_dynamic_ttl')
+
+def increment_forecast_cache_eviction(index: str) -> None:
+    """Increment forecast cache eviction counter (LRU eviction).
+
+    Args:
+        index: Index name (e.g., "NIFTY")
+    """
+    if not _is_enabled():
+        return
+    _init_metrics()
+    if _FORECAST_CACHE_EVICTIONS is not None:
+        try:
+            _FORECAST_CACHE_EVICTIONS.labels(index=index).inc()
+        except Exception as e:  # pragma: no cover
+            _LOG.debug(f"Failed to increment forecast cache eviction: {e}")
+
+__all__.append('increment_forecast_cache_eviction')
 
 def get_feature_drift_snapshot(index: str | None = None) -> list[dict[str, float | str]]:
     """Snapshot drift metrics from unified drift registry (if drift enabled).
