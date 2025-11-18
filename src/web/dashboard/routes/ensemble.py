@@ -817,16 +817,23 @@ async def metrics_flush():
         raise HTTPException(status_code=500, detail="metrics_flush_failed")
 
 @router.get('/metrics/compare')
-async def metrics_compare():
+async def metrics_compare(
+    index: Optional[str] = Query(None, description="Optional index filter e.g. NIFTY"),
+    horizon: Optional[int] = Query(None, ge=1, le=720, description="Optional horizon filter in minutes"),
+):
     """Return comparison of rolling window vs EMA metrics (Phase 10 diagnostic).
 
-    Provides per (index,horizon): window MAE, EMA MAE (if enabled), window coverage %, EMA coverage %, window normalized error, EMA normalized error.
-    Useful for tuning decay alpha and validating responsiveness.
+    Supports optional filtering by index & horizon. Includes:
+    - window & EMA MAE
+    - window & EMA coverage
+    - window & EMA normalized error
+    - p50/p90 percentiles for error, normalized error, band width (if >=5 samples)
+    - last evaluation timestamp (epoch ms)
     """
     try:
         from ..rolling_mae import ensure_started, get_metric_comparison  # type: ignore
         ensure_started()
-        return get_metric_comparison()
+        return get_metric_comparison(index=index, horizon=horizon)
     except Exception as e:
         _LOG.warning(f"metrics_compare_failed: {e}")
         raise HTTPException(status_code=500, detail="metrics_compare_failed")

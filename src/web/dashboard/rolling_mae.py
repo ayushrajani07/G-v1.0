@@ -57,6 +57,8 @@ _LOCK = threading.Lock()
 _ERRORS: Dict[Tuple[str,int], deque] = {}
 _COVER_FLAGS: Dict[Tuple[str,int], deque] = {}
 _NORM_ERRORS: Dict[Tuple[str,int], deque] = {}
+_BAND_WIDTHS: Dict[Tuple[str,int], deque] = {}
+_LAST_EVAL_TS: Dict[Tuple[str,int], int] = {}
 _EMA_ERROR: Dict[Tuple[str,int], float] = {}
 _EMA_COVER: Dict[Tuple[str,int], float] = {}
 _EMA_NORM: Dict[Tuple[str,int], float] = {}
@@ -111,6 +113,16 @@ def _save_state(force: bool = False) -> None:
         for key, dq in _NORM_ERRORS.items():
             idx, horizon = key
             state.setdefault('norm_errors', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        for key, dq in _BAND_WIDTHS.items():
+            idx, horizon = key
+            state.setdefault('band_widths', []).append({'index': idx, 'horizon': horizon, 'values': list(dq)})
+        # last evaluation timestamps
+        ts_entries = []
+        for key, ts in _LAST_EVAL_TS.items():
+            idx, horizon = key
+            ts_entries.append({'index': idx, 'horizon': horizon, 'last_eval_ts': ts})
+        if ts_entries:
+            state['last_eval'] = ts_entries
         if _USE_DECAY:
             ema_list = []
             for key, val in _EMA_ERROR.items():
@@ -166,6 +178,17 @@ def _load_state() -> None:
                 values = item.get('values', [])
                 dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
                 _NORM_ERRORS[(idx, horizon)] = dq
+            for item in data.get('band_widths', []):
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                values = item.get('values', [])
+                dq = deque(values[-_WINDOW_SIZE:], maxlen=_WINDOW_SIZE)
+                _BAND_WIDTHS[(idx, horizon)] = dq
+            for item in data.get('last_eval', []):
+                idx = item.get('index')
+                horizon = int(item.get('horizon', 0))
+                ts = int(item.get('last_eval_ts', 0))
+                _LAST_EVAL_TS[(idx, horizon)] = ts
             if _USE_DECAY:
                 for item in data.get('ema', []):
                     idx = item.get('index')
@@ -237,6 +260,11 @@ def _evaluate_ready_events() -> None:
                 err_deque.append(error)
                 cov_deque.append(covered)
                 norm_deque.append(norm_error_val)
+                bw_deque = _BAND_WIDTHS.get(key)
+                if bw_deque is None:
+                    bw_deque = deque(maxlen=_WINDOW_SIZE)
+                    _BAND_WIDTHS[key] = bw_deque
+                bw_deque.append(band_width)
                 mae = _EMA_ERROR[key]
                 coverage_pct = _EMA_COVER[key] * 100.0
                 norm_error_mean = _EMA_NORM[key]
@@ -256,9 +284,15 @@ def _evaluate_ready_events() -> None:
                 err_deque.append(error)
                 cov_deque.append(covered)
                 norm_deque.append(norm_error_val)
+                bw_deque = _BAND_WIDTHS.get(key)
+                if bw_deque is None:
+                    bw_deque = deque(maxlen=_WINDOW_SIZE)
+                    _BAND_WIDTHS[key] = bw_deque
+                bw_deque.append(band_width)
                 mae = sum(err_deque) / max(1, len(err_deque))
                 coverage_pct = (sum(cov_deque) / max(1, len(cov_deque))) * 100.0
                 norm_error_mean = sum(norm_deque) / max(1, len(norm_deque))
+            _LAST_EVAL_TS[key] = int(time.time()*1000)
         # Export Prometheus gauge
         try:
             from .prom_metrics import (
@@ -314,57 +348,70 @@ def force_flush_state() -> dict:
 
 __all__.append("force_flush_state")
 
-def get_metric_comparison() -> dict:
-        """Return current rolling vs EMA metrics for each (index,horizon).
+def _percentiles(values: List[float], ps: List[float]) -> Dict[str, float]:
+    if not values:
+        return {f"p{int(p*100)}": 0.0 for p in ps}
+    vs = sorted(values)
+    n = len(vs)
+    out: Dict[str, float] = {}
+    for p in ps:
+        if n == 1:
+            out[f"p{int(p*100)}"] = vs[0]
+            continue
+        pos = p * (n - 1)
+        lo = int(pos)
+        hi = min(lo + 1, n - 1)
+        frac = pos - lo
+        val = vs[lo] + (vs[hi] - vs[lo]) * frac
+        out[f"p{int(p*100)}"] = float(val)
+    return out
 
-        Structure:
-        {
-            "use_decay": bool,
-            "decay_alpha": float,
-            "entries": [
-                 {
-                     "index": str,
-                     "horizon": int,
-                     "mae_window": float,
-                     "mae_ema": float|None,
-                     "coverage_window_pct": float,
-                     "coverage_ema_pct": float|None,
-                     "norm_error_window": float,
-                     "norm_error_ema": float|None,
-                     "count_window": int
-                 }, ...
-            ]
-        }
-        """
-        out = {
-                "use_decay": _USE_DECAY,
-                "decay_alpha": _DECAY_ALPHA,
-                "entries": []
-        }
-        with _LOCK:
-                keys = set(_ERRORS.keys()) | set(_COVER_FLAGS.keys()) | set(_NORM_ERRORS.keys())
-                for key in sorted(keys):
-                        idx, horizon = key
-                        err_dq = _ERRORS.get(key, [])
-                        cov_dq = _COVER_FLAGS.get(key, [])
-                        norm_dq = _NORM_ERRORS.get(key, [])
-                        mae_window = (sum(err_dq) / len(err_dq)) if err_dq else 0.0
-                        coverage_window_pct = (sum(cov_dq) / len(cov_dq) * 100.0) if cov_dq else 0.0
-                        norm_error_window = (sum(norm_dq) / len(norm_dq)) if norm_dq else 0.0
-                        mae_ema = _EMA_ERROR.get(key) if _USE_DECAY else None
-                        coverage_ema_pct = (_EMA_COVER.get(key) * 100.0) if _USE_DECAY and key in _EMA_COVER else None
-                        norm_error_ema = _EMA_NORM.get(key) if _USE_DECAY else None
-                        out["entries"].append({
-                                "index": idx,
-                                "horizon": horizon,
-                                "mae_window": mae_window,
-                                "mae_ema": mae_ema,
-                                "coverage_window_pct": coverage_window_pct,
-                                "coverage_ema_pct": coverage_ema_pct,
-                                "norm_error_window": norm_error_window,
-                                "norm_error_ema": norm_error_ema,
-                                "count_window": len(err_dq)
-                        })
-        return out
+def get_metric_comparison(index: str | None = None, horizon: int | None = None) -> dict:
+    """Return rolling vs EMA metrics with optional filtering and percentiles.
+
+    Args:
+        index: optional index filter (case-insensitive)
+        horizon: optional horizon filter
+    """
+    out = {"use_decay": _USE_DECAY, "decay_alpha": _DECAY_ALPHA, "entries": []}
+    with _LOCK:
+        keys = set(_ERRORS.keys()) | set(_COVER_FLAGS.keys()) | set(_NORM_ERRORS.keys()) | set(_BAND_WIDTHS.keys())
+        if index is not None:
+            idxu = index.upper()
+            keys = {k for k in keys if k[0] == idxu}
+        if horizon is not None:
+            keys = {k for k in keys if k[1] == horizon}
+        for key in sorted(keys):
+            idx, h = key
+            err_dq = _ERRORS.get(key, [])
+            cov_dq = _COVER_FLAGS.get(key, [])
+            norm_dq = _NORM_ERRORS.get(key, [])
+            bw_dq = _BAND_WIDTHS.get(key, [])
+            mae_window = (sum(err_dq) / len(err_dq)) if err_dq else 0.0
+            coverage_window_pct = (sum(cov_dq) / len(cov_dq) * 100.0) if cov_dq else 0.0
+            norm_error_window = (sum(norm_dq) / len(norm_dq)) if norm_dq else 0.0
+            mae_ema = _EMA_ERROR.get(key) if _USE_DECAY else None
+            coverage_ema_pct = (_EMA_COVER.get(key) * 100.0) if _USE_DECAY and key in _EMA_COVER else None
+            norm_error_ema = _EMA_NORM.get(key) if _USE_DECAY else None
+            err_pct = _percentiles(list(err_dq), [0.5, 0.9]) if len(err_dq) >= 5 else {"p50": mae_window, "p90": mae_window}
+            norm_pct = _percentiles(list(norm_dq), [0.5, 0.9]) if len(norm_dq) >= 5 else {"p50": norm_error_window, "p90": norm_error_window}
+            bw_pct = _percentiles(list(bw_dq), [0.5, 0.9]) if len(bw_dq) >= 5 else {"p50": (bw_dq[-1] if bw_dq else 0.0), "p90": (bw_dq[-1] if bw_dq else 0.0)}
+            last_ts = _LAST_EVAL_TS.get(key)
+            out["entries"].append({
+                "index": idx,
+                "horizon": h,
+                "mae_window": mae_window,
+                "mae_ema": mae_ema,
+                "coverage_window_pct": coverage_window_pct,
+                "coverage_ema_pct": coverage_ema_pct,
+                "norm_error_window": norm_error_window,
+                "norm_error_ema": norm_error_ema,
+                "count_window": len(err_dq),
+                "error_percentiles": err_pct,
+                "norm_error_percentiles": norm_pct,
+                "band_width_percentiles": bw_pct,
+                "last_eval_ts": last_ts,
+            })
+    return out
 
 __all__.append("get_metric_comparison")
