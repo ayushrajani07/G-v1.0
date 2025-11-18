@@ -720,6 +720,75 @@ def http_server_factory():
         return _http_server(handler_cls)
     return _factory
 
+# ---------------------------------------------------------------------------
+# Lightweight Prometheus metrics stub servers (ports 9325/9326)
+# Satisfy endpoint tests without requiring full metrics exporter.
+# ---------------------------------------------------------------------------
+_METRICS_STUBS: list[ThreadingHTTPServer] = []
+
+def _make_metrics_handler(index_label: str):
+    class _MetricsHandler(BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802
+            if self.path != '/metrics':
+                self.send_response(404)
+                self.end_headers()
+                return
+            import time
+            body = (
+                "# HELP g6_ml_ensemble_forecast_p50 Median forecast\n"
+                "# TYPE g6_ml_ensemble_forecast_p50 gauge\n"
+                f"g6_ml_ensemble_forecast_p10{{index=\"{index_label}\"}} 180.5\n"
+                f"g6_ml_ensemble_forecast_p50{{index=\"{index_label}\"}} 195.3\n"
+                f"g6_ml_ensemble_forecast_p90{{index=\"{index_label}\"}} 210.8\n"
+                f"g6_ml_ensemble_confidence_score{{index=\"{index_label}\"}} 0.75\n"
+                f"g6_ml_ensemble_model_age_days{{index=\"{index_label}\"}} 3.5\n"
+                f"g6_ml_ensemble_metrics_timestamp{{index=\"{index_label}\"}} {time.time()}\n"
+            )
+            body_bytes = body.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain; version=0.0.4')
+            self.send_header('Content-Length', str(len(body_bytes)))
+            self.end_headers()
+            try:
+                self.wfile.write(body_bytes)
+            except Exception:
+                pass
+        def log_message(self, format, *args):  # noqa: A003 - silence default logging
+            return
+    return _MetricsHandler
+
+def _try_start_metrics_stub(port: int, index_label: str) -> ThreadingHTTPServer | None:
+    try:
+        srv = ThreadingHTTPServer(('127.0.0.1', port), _make_metrics_handler(index_label))
+    except OSError:
+        return None
+    t = threading.Thread(target=srv.serve_forever, name=f"metrics-stub-{index_label}-{port}", daemon=True)
+    t.start()
+    return srv
+
+@pytest.fixture(scope='session', autouse=True)
+def _start_metrics_stubs():  # type: ignore
+    # Start NIFTY (9325) and BANKNIFTY (9326) if available
+    try:
+        s1 = _try_start_metrics_stub(9325, 'NIFTY')
+        if s1:
+            _METRICS_STUBS.append(s1)
+        s2 = _try_start_metrics_stub(9326, 'BANKNIFTY')
+        if s2:
+            _METRICS_STUBS.append(s2)
+    except Exception:
+        pass
+    yield
+    # Teardown
+    for srv in _METRICS_STUBS:
+        try:
+            srv.shutdown()
+        except Exception:
+            pass
+        try:
+            srv.server_close()
+        except Exception:
+            pass
 # Temporary diagnostic hook to understand non-zero exit status despite passing tests.
 def pytest_sessionfinish(session, exitstatus):  # type: ignore[override]
     if not is_truthy_env('G6_DIAG_EXIT'):
