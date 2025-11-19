@@ -147,6 +147,7 @@ The following real-time performance & quality metrics have been implemented to e
     - Outputs promotion `manifest_YYYYMMDD_HHMMSS.json` and updates `metrics/drift_manifests/latest.json`.
     - Exit codes: 0 ok | 2 insufficient history | 3 unstable | 4 guard-rail reject.
     - Schedule daily via Task Scheduler. Suggested flags: `--min-horizons-to-promote 5 --max-percent-shift 0.10`.
+  - Manifest API: `GET /api/ml/ensemble/regime/threshold_manifest?include_full=1` returns latest manifest metadata and (optionally) thresholds for UI audit & diff.
 
 **Adaptive Smoothing Features:**
 - Supports direct alpha (`G6_ROLLING_MAE_DECAY`), observation half-life (`G6_ROLLING_MAE_HALF_LIFE`), or time-based half-life in minutes (`G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES`) with precedence: HALF_LIFE > TIME_HALF_LIFE_MINUTES > DECAY.

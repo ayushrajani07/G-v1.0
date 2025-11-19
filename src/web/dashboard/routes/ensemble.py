@@ -19,7 +19,7 @@ Implementation notes:
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
-import logging, os, threading
+import logging, os, threading, json
 from datetime import datetime, time as dtime, timedelta, timezone
 from collections import OrderedDict
 try:
@@ -1137,6 +1137,62 @@ async def regime_dynamic_thresholds(
     except Exception as e:
         _LOG.warning(f"regime_dynamic_thresholds_failed: {e}")
         raise HTTPException(status_code=500, detail="regime_dynamic_thresholds_failed")
+
+@router.get('/regime/threshold_manifest')
+async def regime_threshold_manifest(include_full: int = Query(1, ge=0, le=1, description="Include full manifest contents (0/1)")):
+    """Return latest promoted drift threshold manifest (governance scheduler output).
+
+    Response shape:
+    {
+      "status": "ok" | "missing",
+      "latest_signature": <sha256 or null>,
+      "manifest_file": "manifest_YYYYMMDD_HHMMSS.json",
+      "promoted": true/false,
+      "reason": "stable" | "unstable" | "guard_rails:...",
+      "thresholds": { ... }  # only if include_full=1 and manifest present
+    }
+    """
+    try:
+        base_dir = Path('metrics') / 'drift_manifests'
+        latest_ptr = base_dir / 'latest.json'
+        if not latest_ptr.is_file():
+            return {"status": "missing"}
+        try:
+            with open(latest_ptr, 'r', encoding='utf-8') as f:
+                latest_meta = json.load(f)
+        except Exception as e:
+            _LOG.warning(f"threshold_manifest_latest_read_failed: {e}")
+            raise HTTPException(status_code=500, detail="threshold_manifest_latest_read_failed")
+        manifest_file = latest_meta.get('manifest_file')
+        signature = latest_meta.get('signature')
+        out = {
+            "status": "ok",
+            "latest_signature": signature,
+            "manifest_file": manifest_file,
+        }
+        if include_full == 1 and manifest_file:
+            mf_path = base_dir / manifest_file
+            if mf_path.is_file():
+                try:
+                    with open(mf_path, 'r', encoding='utf-8') as f:
+                        manifest = json.load(f)
+                    out.update({
+                        "promoted": manifest.get("promoted"),
+                        "reason": manifest.get("reason"),
+                        "thresholds": manifest.get("thresholds", {}),
+                        "horizons_used": manifest.get("horizons_used"),
+                        "percentiles": manifest.get("percentiles"),
+                        "stability": manifest.get("stability"),
+                    })
+                except Exception as e:
+                    _LOG.warning(f"threshold_manifest_read_failed: {e}")
+                    # keep minimal data; do not fail entire endpoint
+        return out
+    except HTTPException:
+        raise
+    except Exception as e:
+        _LOG.warning(f"regime_threshold_manifest_failed: {e}")
+        raise HTTPException(status_code=500, detail="regime_threshold_manifest_failed")
 
 @router.post('/metrics/flush')
 async def metrics_flush():
