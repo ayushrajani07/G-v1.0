@@ -33,7 +33,7 @@ until real violation logs integrated.
 from __future__ import annotations
 
 import os, json, statistics
-from typing import Any, Dict, List, Sequence
+from typing import Any, Dict, List, Sequence, Tuple
 from dataclasses import dataclass
 
 DEFAULT_TARGETS = {
@@ -199,6 +199,73 @@ def _estimate_violation_rates(artifacts: List[ArtifactSnapshot], pctls: Percenti
         rates['coverage_crit_violation_rate'] = _heuristic_rate(abs(mean_covc), abs(pctls.coverage_crit_low_pctl))
     return rates
 
+def _estimate_violation_rates_by_horizon(pctls: PercentileSet) -> Dict[int, Dict[str, float]]:
+    """Compute violation rates grouped by horizon using sample logs.
+    Returns mapping: horizon -> {warn_violation_rate, crit_violation_rate, coverage_warn_violation_rate, coverage_crit_violation_rate}
+    If no sample logs, returns empty dict.
+    """
+    samples = _load_sample_logs(SAMPLE_LOG_DIR)
+    if not samples:
+        return {}
+    buckets: Dict[int, Dict[str, List[float]]] = {}
+    for row in samples:
+        h = int(row.get('horizon') or 0)
+        if h not in buckets:
+            buckets[h] = {'mae': [], 'norm': [], 'cov': []}
+        for k in ('mae_values','mae'):
+            v = row.get(k)
+            if isinstance(v, list):
+                buckets[h]['mae'].extend(float(x) for x in v if isinstance(x,(int,float)))
+        for k in ('norm_error_values','norm_errors','norm'):
+            v = row.get(k)
+            if isinstance(v, list):
+                buckets[h]['norm'].extend(float(x) for x in v if isinstance(x,(int,float)))
+        for k in ('coverage_drop_values','coverage_values'):
+            v = row.get(k)
+            if isinstance(v, list):
+                buckets[h]['cov'].extend(float(x) for x in v if isinstance(x,(int,float)))
+    out: Dict[int, Dict[str, float]] = {}
+    for h, d in buckets.items():
+        mae = d['mae']; norm = d['norm']; cov = d['cov']
+        if not (mae or norm or cov):
+            continue
+        warn = 0.0; crit = 0.0
+        if mae:
+            warn = max(warn, _fraction_exceed(mae, pctls.warn_pctl))
+            crit = max(crit, _fraction_exceed(mae, pctls.crit_pctl))
+        if norm:
+            warn = max(warn, _fraction_exceed(norm, pctls.warn_pctl))
+            crit = max(crit, _fraction_exceed(norm, pctls.crit_pctl))
+        covw = _fraction_exceed(cov, pctls.coverage_warn_low_pctl, invert=True) if cov else 0.0
+        covc = _fraction_exceed(cov, pctls.coverage_crit_low_pctl, invert=True) if cov else 0.0
+        out[h] = {
+            'warn_violation_rate': warn,
+            'crit_violation_rate': crit,
+            'coverage_warn_violation_rate': covw,
+            'coverage_crit_violation_rate': covc,
+        }
+    return out
+
+def _adaptive_step(base_step: float, rate: float | None, lo: float, hi: float) -> float:
+    """Scale step size based on distance from target band.
+    - within band: 0
+    - up to 2pp away: 1x step; 2–5pp: 2x; >5pp: 3x (pp in absolute terms)
+    """
+    if rate is None:
+        return base_step
+    if lo <= rate <= hi:
+        return 0.0
+    dist = 0.0
+    if rate < lo:
+        dist = lo - rate
+    elif rate > hi:
+        dist = rate - hi
+    if dist > 0.05:
+        return base_step * 3.0
+    if dist > 0.02:
+        return base_step * 2.0
+    return base_step
+
 def _score(rates: Dict[str,float], targets: Dict[str,float]) -> Dict[str, Any]:
     score: Dict[str, Any] = {'components': {}, 'total_penalty': 0.0}
     def _component(rate: float, lo: float, hi: float) -> float:
@@ -235,24 +302,26 @@ def auto_tune_percentiles(
         coverage_crit_low_pctl=current.coverage_crit_low_pctl,
     )
     adjustments = []
-    # Nudge warn
+    # Nudge warn with adaptive step
     w_rate = rates_before.get('warn_violation_rate')
-    if w_rate is not None:
-        if w_rate < t['warn_rate_min'] and new.warn_pctl < 0.90:
-            old = new.warn_pctl; new.warn_pctl = round(min(0.90, new.warn_pctl + step),4)
-            adjustments.append({'key':'warn_pctl','old':old,'new':new.warn_pctl,'reason':'violation_rate_low'})
-        elif w_rate > t['warn_rate_max'] and new.warn_pctl > 0.80:
-            old = new.warn_pctl; new.warn_pctl = round(max(0.80, new.warn_pctl - step),4)
-            adjustments.append({'key':'warn_pctl','old':old,'new':new.warn_pctl,'reason':'violation_rate_high'})
-    # Nudge crit
+    w_step = _adaptive_step(step, w_rate, t['warn_rate_min'], t['warn_rate_max'])
+    if w_step > 0:
+        if w_rate is not None and w_rate < t['warn_rate_min'] and new.warn_pctl < 0.90:
+            old = new.warn_pctl; new.warn_pctl = round(min(0.90, new.warn_pctl + w_step),4)
+            adjustments.append({'key':'warn_pctl','old':old,'new':new.warn_pctl,'reason':'violation_rate_low','adaptive_step':w_step})
+        elif w_rate is not None and w_rate > t['warn_rate_max'] and new.warn_pctl > 0.80:
+            old = new.warn_pctl; new.warn_pctl = round(max(0.80, new.warn_pctl - w_step),4)
+            adjustments.append({'key':'warn_pctl','old':old,'new':new.warn_pctl,'reason':'violation_rate_high','adaptive_step':w_step})
+    # Nudge crit with adaptive step
     c_rate = rates_before.get('crit_violation_rate')
-    if c_rate is not None:
-        if c_rate < t['crit_rate_min'] and new.crit_pctl < 0.97:
-            old = new.crit_pctl; new.crit_pctl = round(min(0.97, new.crit_pctl + step),4)
-            adjustments.append({'key':'crit_pctl','old':old,'new':new.crit_pctl,'reason':'violation_rate_low'})
-        elif c_rate > t['crit_rate_max'] and new.crit_pctl > 0.92:
-            old = new.crit_pctl; new.crit_pctl = round(max(0.92, new.crit_pctl - step),4)
-            adjustments.append({'key':'crit_pctl','old':old,'new':new.crit_pctl,'reason':'violation_rate_high'})
+    c_step = _adaptive_step(step, c_rate, t['crit_rate_min'], t['crit_rate_max'])
+    if c_step > 0:
+        if c_rate is not None and c_rate < t['crit_rate_min'] and new.crit_pctl < 0.97:
+            old = new.crit_pctl; new.crit_pctl = round(min(0.97, new.crit_pctl + c_step),4)
+            adjustments.append({'key':'crit_pctl','old':old,'new':new.crit_pctl,'reason':'violation_rate_low','adaptive_step':c_step})
+        elif c_rate is not None and c_rate > t['crit_rate_max'] and new.crit_pctl > 0.92:
+            old = new.crit_pctl; new.crit_pctl = round(max(0.92, new.crit_pctl - c_step),4)
+            adjustments.append({'key':'crit_pctl','old':old,'new':new.crit_pctl,'reason':'violation_rate_high','adaptive_step':c_step})
     # Coverage nudge placeholder (future real logic)
     rates_after = _estimate_violation_rates(artifacts, new)
     score_after = _score(rates_after, t)
@@ -277,12 +346,14 @@ def auto_tune_percentiles(
         can_rates = _estimate_violation_rates(artifacts, canary_set)
         can_score = _score(can_rates, t)
         can_backtest = _backtest_penalty(artifacts, canary_set)
+        ph = _estimate_violation_rates_by_horizon(canary_set)
         canary = {
             'warn_pctl': canary_set.warn_pctl,
             'crit_pctl': canary_set.crit_pctl,
             'score': can_score,
             'backtest_penalty': can_backtest,
             'rates': can_rates,
+            'per_horizon': ph,
         }
     return {
         'stable': True,
@@ -302,6 +373,7 @@ def auto_tune_percentiles(
         'epsilon': epsilon,
         'converged': converged,
         'canary': canary,
+        'per_horizon': _estimate_violation_rates_by_horizon(new),
     }
 
 if __name__ == '__main__':  # pragma: no cover

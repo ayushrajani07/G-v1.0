@@ -1269,6 +1269,32 @@ async def regime_threshold_manifest_history(limit: int = Query(50, ge=1, le=500,
         _LOG.warning(f"regime_threshold_manifest_history_failed: {e}")
         raise HTTPException(status_code=500, detail="regime_threshold_manifest_history_failed")
 
+@router.get('/regime/autotune_canary_history')
+async def regime_autotune_canary_history(limit: int = Query(100, ge=1, le=1000, description="Max number of canary entries to return")):
+    """Return recent auto-tune canary results from JSONL history (newest first)."""
+    try:
+        base_dir = Path('metrics') / 'drift_manifests'
+        hist_file = base_dir / 'canary_history.jsonl'
+        if not hist_file.is_file():
+            return []
+        lines = []
+        with open(hist_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                lines.append(line)
+        out = []
+        for s in reversed(lines[-limit:]):
+            try:
+                out.append(json.loads(s))
+            except Exception:
+                continue
+        return out
+    except Exception as e:
+        _LOG.warning(f"regime_autotune_canary_history_failed: {e}")
+        raise HTTPException(status_code=500, detail="regime_autotune_canary_history_failed")
+
 @router.post('/metrics/flush')
 async def metrics_flush():
     """Force flush rolling MAE & coverage state to persistence file (Phase 10).

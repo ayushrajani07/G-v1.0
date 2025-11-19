@@ -236,6 +236,25 @@ def main() -> int:
     with open(latest_path, "w", encoding="utf-8") as f:
         json.dump({"manifest_file": mf_name, "signature": manifest["signature"]}, f, indent=2, sort_keys=True)
 
+    # Persist canary outcome for trend if present
+    try:
+        if auto_tune_summary and auto_tune_summary.get('canary'):
+            hist_dir = args.manifest_dir
+            os.makedirs(hist_dir, exist_ok=True)
+            hist_file = os.path.join(hist_dir, 'canary_history.jsonl')
+            entry = {
+                'ts': datetime.utcnow().isoformat() + 'Z',
+                'indices': [x.strip().upper() for x in args.indices.split(',') if x.strip()],
+                'canary': auto_tune_summary.get('canary'),
+                'percentiles': manifest.get('percentiles'),
+                'horizons_used': manifest.get('horizons_used'),
+                'signature': manifest.get('signature'),
+            }
+            with open(hist_file, 'a', encoding='utf-8') as hf:
+                hf.write(json.dumps(entry, sort_keys=True) + "\n")
+    except Exception:
+        pass
+
     applied = False
     rolled_back = False
     rollback_source = None
