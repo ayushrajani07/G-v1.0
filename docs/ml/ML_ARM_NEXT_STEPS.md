@@ -277,7 +277,7 @@ recorded_dynamic_coverage_drop_crit{index="NIFTY",horizon="60"}
       * Advanced Load Pattern: Warmup (`--warmup-duration`) with half concurrency then optional ramp (`--ramp-steps --ramp-interval`) to progressively reach target QPS before measurement window.
       * Example run:
         ```powershell
-        python scripts/ml/ttl_impact_study.py --endpoint http://localhost:9500/api/ml/ensemble/forecast --indices NIFTY,BANKNIFTY --horizon 60 --qps 30 --duration 25 --static-ttls 5,15,30 --adaptive-min 10 --adaptive-max 60 --baseline 30 --warmup-duration 10 --ramp-steps 3 --ramp-interval 5 --json
+        python scripts/ml/ttl_impact_study.py --endpoint http://localhost:9500/api/ml/ensemble/forecast --indices NIFTY,BANKNIFTY,SENSEX --horizon 60 --qps 30 --duration 25 --static-ttls 5,15,30 --adaptive-min 10 --adaptive-max 60 --baseline 30 --warmup-duration 10 --ramp-steps 3 --ramp-interval 5 --json
         ```
 - Fine-tune regime thresholds and breach reasons; add per-horizon annotations in Grafana.
 - Add Infinity panel for `/metrics/compare?include_drift=1` with index/horizon selectors.
@@ -470,9 +470,10 @@ Infrastructure provisioned; production services configured; monitoring stack (Pr
 
 2. **Service Configuration**
    ```bash
-   # Configure production services
-   cp configs/ml/nifty_ensemble_config.json /etc/g6/ml/
-   cp configs/ml/banknifty_ensemble_config.json /etc/g6/ml/
+  # Configure production services
+  cp configs/ml/nifty_ensemble_config.json /etc/g6/ml/
+  cp configs/ml/banknifty_ensemble_config.json /etc/g6/ml/
+  cp configs/ml/sensex_ensemble_config.json /etc/g6/ml/
    
    # Set production environment variables
    export G6_ENV=production
@@ -523,9 +524,10 @@ Infrastructure provisioned; production services configured; monitoring stack (Pr
 
 3. **Initial Model Deployment**
    ```bash
-   # Deploy trained models to production
-   rsync -av models/nifty_gbrt_quantile/ prod:/opt/g6/models/
-   rsync -av models/banknifty_gbrt_quantile/ prod:/opt/g6/models/
+  # Deploy trained models to production
+  rsync -av models/nifty_gbrt_quantile/ prod:/opt/g6/models/
+  rsync -av models/banknifty_gbrt_quantile/ prod:/opt/g6/models/
+  rsync -av models/sensex_gbrt_quantile/ prod:/opt/g6/models/
    ```
 
 ### 8.2 Production Validation
