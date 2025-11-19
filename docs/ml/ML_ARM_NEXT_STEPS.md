@@ -75,6 +75,7 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
       - Index-level Annotations: dashboard annotations mark WARN (yellow) and CRIT (red) escalations per index using PromQL.
         - Set `PROMETHEUS_DS_UID` in annotations too. Titles show `WARN/CRIT escalation: {index}`.
       - Per-feature Heatmap: "${METRIC} Heatmap (24h)" uses `/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}`; set `METRIC` dashboard variable to `psi` or `ks` (default `psi`). Thresholds: PSI (0.25/0.5), KS (0.2/0.3).
+      - Per-feature Timeseries: "Per-Feature ${METRIC} Timeseries" renders series per feature; honors the same `METRIC` toggle.
       - Alert Rules: `prometheus_alerts_shift.yml` includes PSI/KS warning/critical thresholds. Add to Prometheus:
         ```yaml
         rule_files:

@@ -93,6 +93,17 @@
         {"id": "labelsToFields", "options": {"valueLabel": "value", "labels": ["feature"]}}
       ],
       "gridPos": {"h": 12, "w": 24, "x": 0, "y": 50}
+    },
+    {"type": "timeseries", "title": "Per-Feature ${METRIC:upper} Timeseries", "id": 7, "datasource": "${DS_INFINITY}",
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=2000", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
+      "fieldConfig": {"defaults": {"unit": "none", "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "never", "spanNulls": true}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "transformations": [
+        {"id": "filterFieldsByName", "options": {"include": ["ts", "feature", "value"]}},
+        {"id": "organize", "options": {"renameByName": {"ts": "time"}}},
+        {"id": "labelsToFields", "options": {"valueLabel": "value", "labels": ["feature"]}}
+      ],
+      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 62}
     }
   ],
   "annotations": {"list": [
