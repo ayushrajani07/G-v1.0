@@ -1,0 +1,14 @@
+groups:
+  - name: g6_manifest_chain.alerts
+    rules:
+      - alert: ManifestChainBroken
+        expr: g6_manifest_chain_valid == 0
+        for: 5m
+        labels:
+          severity: critical
+          team: ml-ops
+        annotations:
+          summary: "Drift manifest chain-of-trust invalid"
+          description: |
+            Chain-of-trust validation failed for drift manifests.
+            Investigate metrics/drift_manifests for tampering or write errors.

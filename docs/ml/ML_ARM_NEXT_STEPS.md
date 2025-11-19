@@ -156,6 +156,8 @@ The following real-time performance & quality metrics have been implemented to e
     - Now includes `relative_shifts`: array of objects `{key, relative_shift, relative_shift_pct, violation}` comparing latest calibrated value vs historical median.
       - Chain-of-trust signatures: manifest now stores `prev_signature`, `base_signature`, and final `signature = SHA256(prev_signature + base_signature + metadata)` for tamper-evident linkage.
       - Canary Percentile Trend panel added (warn/crit) to `regime_threshold_manifest.json` (panel id 10) using `autotune_canary_history`.
+        - Chain Validation: Prometheus gauges `g6_manifest_chain_valid` (1/0) and `g6_manifest_chain_length` exposed via `/metrics`. API `GET /api/ml/ensemble/regime/threshold_manifest_chain` returns chain details for Grafana panels.
+          - Alerting: see `prometheus_alerts_chain.yml` (critical if chain invalid for 5m). Add to `prometheus.yml` `rule_files`.
     - Prometheus metrics emitted by governance script: `g6_drift_threshold_relative_shift{key=..}`, `g6_drift_threshold_promotable`, `g6_drift_threshold_stability_violations`, `g6_drift_threshold_horizons_used`.
       - Rollback: Use `--rollback-on-critical --rollback-threshold 0.25` to revert to previous manifest when any relative shift ≥25%. Result JSON includes `rolled_back` and `rollback_source`.
       - History endpoint: `GET /api/ml/ensemble/regime/threshold_manifest_history?limit=100` returns array of entries `{file, promoted_at, ts_ms, promoted, reason, horizons_used, signature, thresholds}` for Grafana timelines.

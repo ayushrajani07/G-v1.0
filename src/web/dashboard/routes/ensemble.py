@@ -133,6 +133,73 @@ def _read_fi_history(path: Path | None = None) -> list[dict[str, Any]]:
         if isinstance(data, list):
             return data
         return []
+
+# --------------------------- Manifest Chain-of-Trust ---------------------------
+def _load_json(path: Path) -> dict[str, Any] | None:
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+def _sha256_json(obj: dict) -> str:
+    import hashlib
+    blob = json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
+
+def _validate_manifest_chain(manifests_dir: Path, max_depth: int = 50) -> dict[str, Any]:
+    latest_ptr = manifests_dir / 'latest.json'
+    if not latest_ptr.is_file():
+        return {"available": False}
+    ptr = _load_json(latest_ptr)
+    if not ptr:
+        return {"available": False}
+    mf = ptr.get('manifest_file')
+    if not mf:
+        return {"available": False}
+    cur = manifests_dir / mf
+    depth = 0
+    chain: list[dict[str, Any]] = []
+    while cur.is_file() and depth < max_depth:
+        m = _load_json(cur)
+        if not m:
+            break
+        # compute expected chain signature
+        expected = _sha256_json({
+            'prev_signature': m.get('prev_signature'),
+            'base_signature': m.get('base_signature'),
+            'promoted_at': m.get('promoted_at'),
+            'indices': m.get('indices'),
+        })
+        ok = (m.get('signature') == expected)
+        chain.append({
+            'file': cur.name,
+            'signature_ok': ok,
+            'promoted_at': m.get('promoted_at'),
+            'prev_signature': m.get('prev_signature'),
+            'base_signature': m.get('base_signature'),
+        })
+        if not ok:
+            break
+        prev = m.get('previous_manifest')
+        if not prev:
+            break
+        cur = manifests_dir / prev
+        depth += 1
+    valid = all(e.get('signature_ok') for e in chain) if chain else False
+    return {
+        'available': True,
+        'valid': valid,
+        'length': len(chain),
+        'chain': chain,
+    }
+
+@router.get('/regime/threshold_manifest_chain')
+async def threshold_manifest_chain():
+    """Validate chain-of-trust across drift manifests and return details."""
+    mdir = Path('metrics') / 'drift_manifests'
+    out = _validate_manifest_chain(mdir)
+    return out
     except Exception:
         return []
 

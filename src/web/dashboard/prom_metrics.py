@@ -55,6 +55,8 @@ _TTL_STUDY_ERRORS: Any = None
 _TTL_STUDY_P95_DELTA: Any = None
 _TTL_STUDY_P50_DELTA: Any = None
 _TTL_STUDY_HIT_RATIO_DELTA: Any = None
+_MANIFEST_CHAIN_VALID: Any = None
+_MANIFEST_CHAIN_LENGTH: Any = None
 
 
 def _is_enabled() -> bool:
@@ -215,6 +217,17 @@ def _init_metrics() -> bool:
             "g6_ttl_study_hit_ratio_delta",
             "TTL impact study hit ratio delta vs baseline per scenario",
             labelnames=["scenario"],
+            registry=_REGISTRY,
+        )
+        # Manifest chain-of-trust gauges
+        _MANIFEST_CHAIN_VALID = Gauge(
+            "g6_manifest_chain_valid",
+            "1 if latest drift manifest chain-of-trust validates, else 0",
+            registry=_REGISTRY,
+        )
+        _MANIFEST_CHAIN_LENGTH = Gauge(
+            "g6_manifest_chain_length",
+            "Number of manifests verified in the current chain",
             registry=_REGISTRY,
         )
         # Optional histograms for percentile analysis; buckets configurable via env vars
@@ -530,6 +543,54 @@ def get_registry() -> Optional[Any]:
                     _LOG.debug(f"Failed setting TTL study metric for {scen}: {_e}")
     except Exception as e:  # pragma: no cover
         _LOG.debug(f"TTL study metrics refresh skipped: {e}")
+    # Manifest chain-of-trust best-effort validation
+    try:  # pragma: no cover
+        import json, os
+        mdir = os.path.join("metrics", "drift_manifests")
+        latest_ptr = os.path.join(mdir, "latest.json")
+        def _load_manifest(fp: str) -> dict:
+            with open(fp, "r", encoding="utf-8") as f:
+                return json.load(f)
+        def _sha256_json(obj: dict) -> str:
+            import hashlib
+            blob = json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
+            return hashlib.sha256(blob).hexdigest()
+        chain_valid = False
+        chain_len = 0
+        if os.path.isfile(latest_ptr):
+            lp = _load_manifest(latest_ptr)
+            mf = lp.get("manifest_file")
+            if mf:
+                cur_path = os.path.join(mdir, mf)
+                prev_sig = None
+                depth = 0
+                max_depth = 50
+                while os.path.isfile(cur_path) and depth < max_depth:
+                    m = _load_manifest(cur_path)
+                    base_sig = m.get("base_signature")
+                    expected = _sha256_json({
+                        "prev_signature": m.get("prev_signature"),
+                        "base_signature": base_sig,
+                        "promoted_at": m.get("promoted_at"),
+                        "indices": m.get("indices"),
+                    })
+                    if m.get("signature") != expected:
+                        chain_valid = False
+                        chain_len = depth + 1
+                        break
+                    chain_len = depth + 1
+                    prev = m.get("previous_manifest")
+                    if not prev:
+                        chain_valid = True
+                        break
+                    cur_path = os.path.join(mdir, prev)
+                    depth += 1
+        if _MANIFEST_CHAIN_VALID is not None:
+            _MANIFEST_CHAIN_VALID.set(1 if chain_valid else 0)
+        if _MANIFEST_CHAIN_LENGTH is not None:
+            _MANIFEST_CHAIN_LENGTH.set(chain_len)
+    except Exception as e:
+        _LOG.debug(f"Manifest chain validation skipped: {e}")
     return _REGISTRY
 
 
