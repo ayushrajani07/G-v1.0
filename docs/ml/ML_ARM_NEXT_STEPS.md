@@ -152,6 +152,7 @@ The following real-time performance & quality metrics have been implemented to e
     - Prometheus metrics emitted by governance script: `g6_drift_threshold_relative_shift{key=..}`, `g6_drift_threshold_promotable`, `g6_drift_threshold_stability_violations`, `g6_drift_threshold_horizons_used`.
       - Rollback: Use `--rollback-on-critical --rollback-threshold 0.25` to revert to previous manifest when any relative shift ≥25%. Result JSON includes `rolled_back` and `rollback_source`.
       - History endpoint: `GET /api/ml/ensemble/regime/threshold_manifest_history?limit=100` returns array of entries `{file, promoted_at, ts_ms, promoted, reason, horizons_used, signature, thresholds}` for Grafana timelines.
+      - Auto-tuning (experimental): `--auto-tune-percentiles` optionally nudges `warn_pctl` (bounded [0.80,0.90]) and `crit_pctl` (bounded [0.92,0.97]) by `--auto-tune-step` (default 0.01) toward target violation ranges (warn 5–12%, crit 1–4%). Manifest embeds `auto_tune.adjustments` and before/after penalty scores. Metrics: `g6_drift_threshold_autotune_adjustments`, `g6_drift_threshold_autotune_penalty_before`, `g6_drift_threshold_autotune_penalty_after`.
     - Alert rules added (group `g6_drift_threshold.alerts`):
       * `DriftThresholdHighRelativeShift` – max relative shift >15% for 10m (critical)
       * `DriftThresholdPromotionStalled` – no promotable calibration in 2h (warning)

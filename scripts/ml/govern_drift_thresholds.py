@@ -75,6 +75,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--json", action="store_true", help="Print JSON result")
     p.add_argument("--rollback-on-critical", action="store_true", help="Rollback to previous manifest if any relative shift >= rollback-threshold")
     p.add_argument("--rollback-threshold", type=float, default=0.25, help="Relative shift fraction triggering rollback (e.g. 0.25 = 25%)")
+    p.add_argument("--auto-tune-percentiles", action="store_true", help="Enable auto-tuning of warn/crit percentiles before writing manifest")
+    p.add_argument("--auto-tune-step", type=float, default=0.01, help="Percentile adjustment step size for auto-tuning")
+    p.add_argument("--auto-tune-min-artifacts", type=int, default=5, help="Minimum artifacts required for auto-tune to run")
     return p.parse_args()
 
 
@@ -140,6 +143,31 @@ def main() -> int:
 
     status = report.get("status")
     agg = calib.get("aggregate", {})
+    # Optional auto-tuning of percentile parameters prior to promotion logic
+    auto_tune_summary = None
+    if args.auto_tune_percentiles:
+        try:
+            from scripts.ml.autotune_drift_thresholds import PercentileSet, auto_tune_percentiles  # type: ignore
+            current_pctls = PercentileSet(
+                warn_pctl=args.warn_pctl,
+                crit_pctl=args.crit_pctl,
+                coverage_warn_low_pctl=args.coverage_warn_low_pctl,
+                coverage_crit_low_pctl=args.coverage_crit_low_pctl,
+            )
+            auto_tune_summary = auto_tune_percentiles(
+                args.artifact_dir,
+                current_pctls,
+                min_artifacts=args.auto_tune_min_artifacts,
+                step=args.auto_tune_step,
+            )
+            if auto_tune_summary.get('stable'):
+                # Replace percentiles used for manifest thresholds if adjustments occurred
+                args.warn_pctl = auto_tune_summary.get('warn_pctl_new', args.warn_pctl)
+                args.crit_pctl = auto_tune_summary.get('crit_pctl_new', args.crit_pctl)
+                args.coverage_warn_low_pctl = auto_tune_summary.get('coverage_warn_low_pctl_new', args.coverage_warn_low_pctl)
+                args.coverage_crit_low_pctl = auto_tune_summary.get('coverage_crit_low_pctl_new', args.coverage_crit_low_pctl)
+        except Exception:
+            auto_tune_summary = {'stable': False, 'error': 'autotune_failed'}
     promotable = (
         status == "stable"
         and int(agg.get("horizons_used", 0)) >= int(args.min_horizons_to_promote)
@@ -192,6 +220,7 @@ def main() -> int:
         "previous_manifest": prev_latest,
         "promoted": bool(promotable),
         "reason": reason,
+        "auto_tune": auto_tune_summary,
     }
     manifest["signature"] = sha256_json(manifest)
 
@@ -298,6 +327,19 @@ def main() -> int:
                     _g_horizons_used.set(float(agg.get('horizons_used', 0) or 0))
                 except Exception:
                     _g_horizons_used.set(0)
+            # Auto-tune metrics
+            if auto_tune_summary and auto_tune_summary.get('stable'):
+                try:
+                    at_adj = auto_tune_summary.get('adjustments', [])
+                    # Export adjustments count & penalty deltas as gauges (ephemeral, recreated each run)
+                    _g_at_count = _PG('g6_drift_threshold_autotune_adjustments', 'Number of percentile adjustments this run', [])
+                    _g_at_penalty_before = _PG('g6_drift_threshold_autotune_penalty_before', 'Total penalty before auto-tune', [])
+                    _g_at_penalty_after = _PG('g6_drift_threshold_autotune_penalty_after', 'Total penalty after auto-tune', [])
+                    _g_at_count.set(len(at_adj))
+                    _g_at_penalty_before.set(float(auto_tune_summary.get('score_before', {}).get('total_penalty', 0.0)))
+                    _g_at_penalty_after.set(float(auto_tune_summary.get('score_after', {}).get('total_penalty', 0.0)))
+                except Exception:
+                    pass
         except Exception:
             pass  # silent failure; metrics are optional
 
