@@ -6,7 +6,7 @@ Simple load test harness for Ensemble Forecast API.
 - Remote agent can upgrade to asyncio+httpx as needed.
 
 Usage:
-  python scripts/ml/load_test_ensemble.py --qps 20 --duration 30 --indices NIFTY,BANKNIFTY --horizon 60 --base http://127.0.0.1:9500 --detail snapshot
+    python scripts/ml/load_test_ensemble.py --qps 20 --duration 30 --indices NIFTY,BANKNIFTY,SENSEX --horizon 60 --base http://127.0.0.1:9500 --detail snapshot
 
 Outputs JSON summary to stdout; use --out to write to file as well.
 """
@@ -88,7 +88,7 @@ def get_cache_stats(base: str) -> Dict:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:9500", help="Base URL for API")
-    ap.add_argument("--indices", default="NIFTY", help="Comma-separated indices")
+    ap.add_argument("--indices", default="NIFTY,BANKNIFTY,SENSEX", help="Comma-separated indices")
     ap.add_argument("--horizon", type=int, default=60)
     ap.add_argument("--detail", choices=["snapshot", "full"], default="snapshot")
     ap.add_argument("--recent-window-size", type=int, default=60)
