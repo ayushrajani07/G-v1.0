@@ -6,6 +6,7 @@
     {"type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.0.0"},
     {"type": "panel", "id": "table", "name": "Table"},
     {"type": "panel", "id": "timeseries", "name": "Time series"},
+    {"type": "panel", "id": "state-timeline", "name": "State timeline"},
     {"type": "datasource", "id": "yesoreyeram-infinity-datasource", "name": "Infinity", "version": "2.6.0"}
   ],
   "title": "Feature Distribution Shift (PSI / KS)",
@@ -81,6 +82,16 @@
       ]},
       "transformations": [{"id": "organize", "options": {"renameByName": {"Value": "severity"}}}],
       "gridPos": {"h": 10, "w": 24, "x": 0, "y": 40}
+    },
+    {"type": "state-timeline", "title": "PSI Heatmap (24h)", "id": 6, "datasource": "${DS_INFINITY}",
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=psi&limit=2000", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
+      "options": {"legend": {"displayMode": "hidden"}},
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.25}, {"color": "red", "value": 0.5}]}, "unit": "none"}, "overrides": []},
+      "transformations": [
+        {"id": "filterFieldsByName", "options": {"include": ["ts", "feature", "value"]}},
+        {"id": "labelsToFields", "options": {"valueLabel": "value", "labels": ["feature"]}}
+      ],
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 50}
     }
   ],
   "annotations": {"list": [

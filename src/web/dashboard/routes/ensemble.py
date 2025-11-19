@@ -1492,6 +1492,45 @@ async def feature_shift_history(limit: int = Query(100, ge=1, le=1000)):
         return []
     return out
 
+@router.get('/feature_shift/heatmap')
+async def feature_shift_heatmap(metric: str = Query("psi", pattern="^(psi|ks)$"), limit: int = Query(200, ge=1, le=2000)):
+    """Return flattened rows suitable for heatmap/state timeline: [{ts, feature, value, index}].
+
+    Uses ts_ms if available in history lines; otherwise attempts to parse generated_at; entries without time are skipped.
+    """
+    hist_file = Path('metrics') / 'feature_shift' / 'history.jsonl'
+    if not hist_file.is_file():
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        lines = hist_file.read_text(encoding='utf-8').strip().splitlines()
+        for line in lines[-limit:]:
+            try:
+                rec = json.loads(line)
+            except Exception:
+                continue
+            ts_ms = rec.get('ts_ms')
+            if not ts_ms:
+                ts_iso = rec.get('generated_at')
+                if ts_iso:
+                    try:
+                        ts_ms = int(datetime.fromisoformat(ts_iso.replace('Z','+00:00')).timestamp() * 1000)
+                    except Exception:
+                        ts_ms = None
+            if ts_ms is None:
+                continue
+            idx = rec.get('index')
+            feats = rec.get('features') or []
+            for f in feats:
+                name = f.get('feature')
+                val = f.get(metric)
+                if name is None or val is None:
+                    continue
+                rows.append({'ts': ts_ms, 'feature': name, 'value': float(val), 'index': idx})
+    except Exception:
+        return []
+    return rows
+
 @router.post('/metrics/flush')
 async def metrics_flush():
     """Force flush rolling MAE & coverage state to persistence file (Phase 10).

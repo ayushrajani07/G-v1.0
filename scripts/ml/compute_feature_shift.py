@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse, json, os, math, statistics
 from pathlib import Path
 from typing import List, Dict, Any
+from datetime import datetime, timezone
 import random
 
 import csv
@@ -146,8 +147,10 @@ def main() -> int:
             json.dump(baseline_data, bf, indent=2, sort_keys=True)
     # Write latest unified file (append or replace)
     latest_path = Path(args.output)
+    now = datetime.now(timezone.utc)
     payload = {
-        'generated_at': args.index,
+        'generated_at': now.isoformat().replace('+00:00', 'Z'),
+        'ts_ms': int(now.timestamp() * 1000),
         'index': idx,
         'features': results,
     }
