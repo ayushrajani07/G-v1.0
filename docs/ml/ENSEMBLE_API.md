@@ -166,9 +166,9 @@ curl -X POST "http://localhost:9500/api/ml/ensemble/retrain" \
 
 ---
 
-### 5. Cache Stats Endpoint
+### 5. Cache Stats Endpoint (+ Legacy Alias)
 
-**`GET /api/ml/ensemble/cache/stats`**
+**`GET /api/ml/ensemble/cache/stats`** (alias: **`/api/ml/ensemble/cache_metrics`**)
 
 Returns forecast cache statistics.
 
@@ -238,7 +238,32 @@ Returns only the `breaches` array for easy table rendering:
 
 ---
 
-### 6. Cache Clear Endpoint
+### 9. Configuration Introspection
+
+**`GET /api/ml/ensemble/config?index=<INDEX>`**
+
+Lazy-loads the ensemble forecaster for `<INDEX>` and returns:
+```json
+{
+  "index": "NIFTY",
+  "config_file": ".../configs/ml/nifty_ensemble_config.json",
+  "loaded": true,
+  "components": {"baseline": true, "gbrt": true, "retrieval": true, "conformal": true},
+  "weighting": {"confidence_threshold": 0.7, "weights_high_conf_gbrt": 0.8, ...},
+  "errors": null
+}
+```
+Use to verify new indices (e.g. SENSEX) before requesting forecasts.
+
+### 10. TTL Impact Study (Scenario Artifacts)
+
+**`GET /api/ml/ensemble/ttl_study`** – Returns latest adaptive TTL vs static scenarios JSON written by `scripts/ml/ttl_impact_study.py` (fields: best p95 delta, hit ratio delta, scenario rows). Useful for dashboard comparison panels.
+
+### 11. Threshold Manifest Chain Validation
+
+**`GET /api/ml/ensemble/regime/threshold_manifest_chain`** – Validates chain-of-trust for promoted drift threshold manifests. Response includes `valid`, `length`, and per-file signature checks.
+
+### 12. Cache Clear Endpoint
 
 **`POST /api/ml/ensemble/cache/clear`**
 
@@ -458,4 +483,4 @@ export G6_ADAPTIVE_TTL_W_IV=0.7
 export G6_ADAPTIVE_TTL_W_WIN=0.3
 ```
 
-Check current behavior at `/api/ml/ensemble/cache/stats` → `forecast_cache.adaptive=true` and per-entry `ttl_sec`.
+Check current behavior at `/api/ml/ensemble/cache/stats` → `forecast_cache.adaptive=true` and per-entry `ttl_sec`. Each forecast response also exposes a transient `metadata.adaptive_ttl_sec` attribute (not part of strict schema) when adaptive TTL is enabled.

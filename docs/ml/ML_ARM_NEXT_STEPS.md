@@ -4,7 +4,7 @@
 **Date:** 2025-11-18  
 **Status:** Post-Implementation Guidance  
 **Related Documents:**
-- `docs/ml/ML_ARM_IPLEMENTATION_ROADMAP.md` (All Phases Complete)
+- `docs/ml/ML_ARM_IMPLEMENTATION_ROADMAP.md` (All Phases Complete)
 - `docs/ml/ML_IMPROVEMENT_PLAN.md` (Performance Optimization)
 - `docs/ml/PRODUCTION_DEPLOYMENT_GUIDE.md` (Operational Guide)
 
@@ -227,6 +227,9 @@ The following real-time performance & quality metrics have been implemented to e
 | `G6_REGIME_DRIFT_AUTOTUNE` | Enable percentile-based dynamic drift thresholds | `0` |
 | `G6_REGIME_DRIFT_WARN_PCTL` / `G6_REGIME_DRIFT_CRIT_PCTL` | Upper tail percentile cutoffs for ratios | `0.85` / `0.95` |
 | `G6_REGIME_COVERAGE_DRIFT_WARN_PCTL` / `G6_REGIME_COVERAGE_DRIFT_CRIT_PCTL` | Lower tail percentiles for coverage delta | `0.15` / `0.05` |
+| `G6_FORECAST_CACHE_TTL_MIN` / `G6_FORECAST_CACHE_TTL_MAX` | Adaptive TTL bounds (seconds) | Used when `G6_FORECAST_CACHE_ADAPTIVE_TTL=1` |
+| `G6_FORECAST_CACHE_NORMALIZE_AVG_IV` | Normalize avg_iv into buckets for cache key | Reduces key cardinality |
+| `G6_RECENT_FILE_CACHE_TTL` / `G6_RECENT_FILE_CACHE_MAX_SIZE` | Recent window file cache controls | Improve CSV read performance |
 
 **Operational Usage Examples:**
 ```bash

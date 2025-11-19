@@ -349,7 +349,10 @@ def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: Forecas
 
 @router.get('/cache/stats')
 async def cache_stats():
-    """Return in-memory forecast cache statistics and recent file cache statistics."""
+    """Return in-memory forecast cache statistics and recent file cache statistics.
+
+    Stable primary cache diagnostics endpoint. Alias available at /cache_metrics for legacy scripts.
+    """
     now = time.time()
     
     # Forecast cache stats
@@ -446,6 +449,11 @@ async def cache_stats():
         'forecast_cache': forecast_cache_stats,
         'recent_file_cache': recent_file_cache_stats,
     }
+
+@router.get('/cache_metrics')
+async def cache_metrics_alias():
+    """Alias for /cache/stats (Phase 9 legacy load tester expected /cache_metrics)."""
+    return await cache_stats()
 
 @router.post('/cache/clear')
 async def cache_clear():
@@ -996,6 +1004,7 @@ async def forecast(
         recent_count=len(recent_window or []),
         cache_hit=False,
     )
+    # Adaptive TTL preview (computed below) will be attached via dynamic attribute 'adaptive_ttl_sec'
     
     # Build full detail response if requested
     time_grid_obj = None
@@ -1039,6 +1048,11 @@ async def forecast(
     )
     # Compute adaptive TTL (if enabled) and store alongside entry
     ttl_override = _compute_adaptive_ttl(idx, horizon, underlying, avg_iv, minutes_to_expiry, recent_window)
+    if ttl_override is not None:
+        try:
+            setattr(resp.metadata, 'adaptive_ttl_sec', ttl_override)
+        except Exception:
+            pass
     _cache_put(cache_key, resp, ttl_override=ttl_override)
     
     # Track Prometheus latency metric
@@ -1112,6 +1126,9 @@ async def regime_breaches(index: str = Query(..., description="Index e.g. NIFTY"
     except Exception:
         return []
 
+# NOTE: Duplicate /regime/breaches definition removed later in file; this version kept for backward compatibility with
+# existing flat-list consumers. Prefer the typed version (response_model=list[RegimeBreach]) below for new integrations.
+
 @router.get('/metrics/compare')
 async def metrics_compare(
     index: str = Query(..., description="Index e.g. NIFTY"),
@@ -1159,6 +1176,8 @@ async def metrics_compare(
         return resp
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"metrics_compare_failed: {e}")
+
+# NOTE: Duplicate /metrics/compare definition appears later with optional filters; consolidation pending.
 
 
 @router.get('/regime/status', response_model=RegimeStatusResponse | Dict[str, RegimeStatusResponse])
