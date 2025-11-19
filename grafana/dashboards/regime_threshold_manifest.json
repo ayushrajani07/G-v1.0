@@ -62,8 +62,8 @@
     {"type": "timeseries","title": "Canary Percentile Trend","id": 10,"datasource": "${DS_INFINITY}","targets": [{"datasource": "${DS_INFINITY}","type": "json","url": "/api/ml/ensemble/regime/autotune_canary_history?limit=300","parser": "backend","format": "table","transform": "json","root_selector": "$","columns": []}],"fieldConfig": {"defaults": {"unit": "percent","custom": {"drawStyle": "line","lineWidth": 2,"showPoints": "never","spanNulls": true}},"overrides": [{"matcher": {"id": "byName","options": "canary.warn_pctl"},"properties": [{"id": "displayName","value": "canary_warn"}]},{"matcher": {"id": "byName","options": "canary.crit_pctl"},"properties": [{"id": "displayName","value": "canary_crit"}]}]},"options": {"legend": {"displayMode": "table","placement": "bottom"},"tooltip": {"mode": "multi"}},"transformations": [{"id": "organize","options": {"renameByName": {"canary.warn_pctl": "canary.warn_pctl","canary.crit_pctl": "canary.crit_pctl","ts": "ts"},"indexByName": {}}},{"id": "filterFieldsByName","options": {"include": ["ts","canary.warn_pctl","canary.crit_pctl"]}}]}
   ],
   "templating": { "list": [
-    {"name": "index_pick","label": "Index","type": "textbox","query": "NIFTY","current": {"text": "NIFTY","value": "NIFTY"}},
-    {"name": "horizon_pick","label": "Horizon (min)","type": "textbox","query": "60","current": {"text": "60","value": "60"}}
+    {"name": "index_pick","label": "Index","type": "custom","query": "NIFTY,BANKNIFTY","current": {"text": "NIFTY","value": "NIFTY"}},
+    {"name": "horizon_pick","label": "Horizon (min)","type": "custom","query": "15,30,60,120,240","current": {"text": "60","value": "60"}}
   ] },
   "annotations": { "list": [] },
   "time": { "from": "now-6h", "to": "now" },
