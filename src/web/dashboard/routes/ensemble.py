@@ -20,6 +20,12 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 import logging, os, threading, json
+try:
+    # Stability helpers (best effort import; endpoint tolerates absence)
+    from scripts.ml.validate_drift_threshold_stability import load_artifacts, compute_report  # type: ignore
+except Exception:  # pragma: no cover
+    load_artifacts = None  # type: ignore
+    compute_report = None  # type: ignore
 from datetime import datetime, time as dtime, timedelta, timezone
 from collections import OrderedDict
 try:
@@ -1184,6 +1190,29 @@ async def regime_threshold_manifest(include_full: int = Query(1, ge=0, le=1, des
                         "percentiles": manifest.get("percentiles"),
                         "stability": manifest.get("stability"),
                     })
+                    # Augment with relative shift details if stability helpers available
+                    if load_artifacts and compute_report:
+                        try:
+                            artifacts = load_artifacts(str(base_dir))
+                            # Use horizons_used from manifest as min_horizons to mirror promotion constraints
+                            min_h = int(out.get("horizons_used") or 1)
+                            # max_percent_shift here unused (report already computed); pass large to avoid filtering
+                            report = compute_report(artifacts, max_pct=10.0, min_horizons=min_h)
+                            rel_keys = []
+                            for entry in report.get("keys", []):
+                                rel = entry.get("relative_shift")
+                                if rel is None:
+                                    continue
+                                rel_keys.append({
+                                    "key": entry.get("key"),
+                                    "relative_shift": rel,
+                                    "relative_shift_pct": round(rel * 100.0, 3),
+                                    "violation": bool(entry.get("violation")),
+                                })
+                            if rel_keys:
+                                out["relative_shifts"] = rel_keys
+                        except Exception as e:  # pragma: no cover
+                            _LOG.debug(f"threshold_manifest_shift_calc_failed: {e}")
                 except Exception as e:
                     _LOG.warning(f"threshold_manifest_read_failed: {e}")
                     # keep minimal data; do not fail entire endpoint
