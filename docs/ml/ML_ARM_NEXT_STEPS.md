@@ -57,6 +57,10 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
   - `scripts/ml/stop_dashboard_api.ps1` stops via diag PID and port clearance.
 - Grafana dashboards + provisioning added (Infinity and JSON API variants) for quick monitoring.
     - Added `Metrics Compare` panel (index/horizon selectors) consuming `/api/ml/ensemble/metrics/compare?include_drift=1` for side-by-side drift + decay diagnostics.
+    - Added Feature Importance Drift dashboard `grafana/dashboards/feature_importance.json`:
+      - `GET /api/ml/ensemble/feature_importance/latest?top_k=10` for latest top features table.
+      - `GET /api/ml/ensemble/feature_importance/timeseries?top_k=10&limit=200` for top-N importance time series.
+      - Backed by `reports/feature_importance_history.json` (produced by `scripts/ml/track_feature_importance.py`).
 - Load-test harness (`scripts/ml/load_test_ensemble.py`) to measure p50/p95, error rate, cache stats.
 
 **Remote agent (prepared + ready to implement):**

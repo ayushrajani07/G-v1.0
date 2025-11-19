@@ -120,6 +120,22 @@ class RegimeStatusResponse(BaseModel):
 # --------------------------- Helpers ---------------------------
 _def_components = ['baseline', 'gbrt', 'retrieval', 'conformal']
 
+# --------------------------- Feature Importance Helpers ---------------------------
+_FI_HISTORY_PATH = Path("reports") / "feature_importance_history.json"
+
+def _read_fi_history(path: Path | None = None) -> list[dict[str, Any]]:
+    p = path or _FI_HISTORY_PATH
+    try:
+        if not p.is_file():
+            return []
+        with open(p, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        if isinstance(data, list):
+            return data
+        return []
+    except Exception:
+        return []
+
 def _quantile_to_label(q: float) -> str:
     """Convert quantile float to stable label string.
     
@@ -1307,6 +1323,78 @@ async def ttl_study_latest():
     except Exception as e:
         _LOG.warning(f"ttl_study_latest_failed: {e}")
         raise HTTPException(status_code=500, detail="ttl_study_latest_failed")
+
+@router.get('/feature_importance/latest')
+async def feature_importance_latest(top_k: int = Query(15, ge=1, le=100)):
+    """Return latest feature importance top-k from history file.
+
+    Shape: { timestamp, top: [ {feature, importance}, ... ] }
+    """
+    hist = _read_fi_history()
+    if not hist:
+        return {"available": False}
+    last = hist[-1]
+    imp = last.get('importance') or {}
+    items = sorted(imp.items(), key=lambda x: x[1], reverse=True)[:top_k]
+    return {
+        "timestamp": last.get('timestamp'),
+        "top": [{"feature": k, "importance": float(v)} for k, v in items]
+    }
+
+@router.get('/feature_importance/history')
+async def feature_importance_history(limit: int = Query(200, ge=1, le=1000), top_k: int = Query(10, ge=1, le=50)):
+    """Return flattened history entries for top-k features over last N records.
+
+    Shape: [ {ts, feature, importance}, ... ] with ts in ms.
+    Top-k selected from latest record.
+    """
+    hist = _read_fi_history()
+    if not hist:
+        return []
+    window = hist[-limit:]
+    latest_imp = (hist[-1].get('importance') or {}) if hist else {}
+    top_feats = [k for k, _v in sorted(latest_imp.items(), key=lambda x: x[1], reverse=True)[:top_k]]
+    out: list[dict[str, Any]] = []
+    for rec in window:
+        ts_iso = rec.get('timestamp')
+        try:
+            ts_ms = int(datetime.fromisoformat(ts_iso.replace('Z','')).timestamp() * 1000) if ts_iso else None
+        except Exception:
+            ts_ms = None
+        imp = rec.get('importance') or {}
+        for f in top_feats:
+            out.append({
+                'ts': ts_ms,
+                'feature': f,
+                'importance': float(imp.get(f, 0.0))
+            })
+    return out
+
+@router.get('/feature_importance/timeseries')
+async def feature_importance_timeseries(limit: int = Query(200, ge=1, le=1000), top_k: int = Query(10, ge=1, le=50)):
+    """Return wide timeseries for top-k features: [{ts, f1, f2, ...}].
+
+    Feature set chosen from latest record top-k.
+    """
+    hist = _read_fi_history()
+    if not hist:
+        return []
+    window = hist[-limit:]
+    latest_imp = (hist[-1].get('importance') or {}) if hist else {}
+    top_feats = [k for k, _v in sorted(latest_imp.items(), key=lambda x: x[1], reverse=True)[:top_k]]
+    out: list[dict[str, Any]] = []
+    for rec in window:
+        ts_iso = rec.get('timestamp')
+        try:
+            ts_ms = int(datetime.fromisoformat(ts_iso.replace('Z','')).timestamp() * 1000) if ts_iso else None
+        except Exception:
+            ts_ms = None
+        row: dict[str, Any] = {'ts': ts_ms}
+        imp = rec.get('importance') or {}
+        for f in top_feats:
+            row[f] = float(imp.get(f, 0.0))
+        out.append(row)
+    return out
 
 @router.post('/metrics/flush')
 async def metrics_flush():

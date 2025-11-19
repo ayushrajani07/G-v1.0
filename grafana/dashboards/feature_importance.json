@@ -1,0 +1,53 @@
+{
+  "__inputs": [
+    {"name": "DS_INFINITY", "label": "Infinity", "type": "datasource", "pluginId": "yesoreyeram-infinity-datasource", "pluginName": "Infinity"}
+  ],
+  "__requires": [
+    {"type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.0.0"},
+    {"type": "panel", "id": "table", "name": "Table"},
+    {"type": "panel", "id": "timeseries", "name": "Time series"},
+    {"type": "datasource", "id": "yesoreyeram-infinity-datasource", "name": "Infinity", "version": "2.6.0"}
+  ],
+  "title": "Feature Importance Drift",
+  "uid": "feature-importance-drift",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "1m",
+  "timezone": "browser",
+  "templating": {"list": [
+    {"name": "G6_API_BASE", "label": "API Base", "type": "textbox", "query": "http://localhost:9500", "current": {"text": "http://localhost:9500", "value": "http://localhost:9500"}},
+    {"name": "TOPK", "label": "Top K", "type": "textbox", "query": "10", "current": {"text": "10", "value": "10"}}
+  ]},
+  "panels": [
+    {
+      "type": "table",
+      "title": "Latest Top Features",
+      "id": 1,
+      "datasource": "${DS_INFINITY}",
+      "targets": [
+        {"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_importance/latest?top_k=${TOPK}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "top", "columns": []}
+      ],
+      "options": {"showHeader": true},
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "importance"}, "properties": [{"id": "unit", "value": "none"}, {"id": "custom.cellOptions", "value": {"type": "gauge"}}]}
+      ]},
+      "transformations": [{"id": "organize", "options": {"renameByName": {"feature": "Feature", "importance": "Importance"}}}],
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 0}
+    },
+    {
+      "type": "timeseries",
+      "title": "Top-${TOPK} Feature Importance Over Time",
+      "id": 2,
+      "datasource": "${DS_INFINITY}",
+      "targets": [
+        {"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_importance/timeseries?top_k=${TOPK}&limit=200", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}
+      ],
+      "fieldConfig": {"defaults": {"unit": "none", "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "never", "spanNulls": true}}, "overrides": []},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 14, "w": 24, "x": 0, "y": 10}
+    }
+  ],
+  "annotations": {"list": []},
+  "time": {"from": "now-7d", "to": "now"},
+  "timepicker": {"refresh_intervals": ["30s", "1m", "5m", "15m", "1h"]}
+}
