@@ -1463,6 +1463,35 @@ async def feature_importance_timeseries(limit: int = Query(200, ge=1, le=1000), 
         out.append(row)
     return out
 
+@router.get('/feature_shift/latest')
+async def feature_shift_latest():
+    """Return latest feature shift (PSI/KS) payload written by compute_feature_shift script."""
+    path = Path('metrics') / 'feature_shift' / 'latest.json'
+    if not path.is_file():
+        return {"available": False}
+    try:
+        return json.loads(path.read_text(encoding='utf-8'))
+    except Exception:
+        raise HTTPException(status_code=500, detail='feature_shift_latest_read_failed')
+
+@router.get('/feature_shift/history')
+async def feature_shift_history(limit: int = Query(100, ge=1, le=1000)):
+    """Return last N historical feature shift entries from JSONL file."""
+    hist_file = Path('metrics') / 'feature_shift' / 'history.jsonl'
+    if not hist_file.is_file():
+        return []
+    out: list[dict[str, Any]] = []
+    try:
+        lines = hist_file.read_text(encoding='utf-8').strip().splitlines()
+        for line in lines[-limit:]:
+            try:
+                out.append(json.loads(line))
+            except Exception:
+                continue
+    except Exception:
+        return []
+    return out
+
 @router.post('/metrics/flush')
 async def metrics_flush():
     """Force flush rolling MAE & coverage state to persistence file (Phase 10).

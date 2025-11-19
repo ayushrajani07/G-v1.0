@@ -57,6 +57,8 @@ _TTL_STUDY_P50_DELTA: Any = None
 _TTL_STUDY_HIT_RATIO_DELTA: Any = None
 _MANIFEST_CHAIN_VALID: Any = None
 _MANIFEST_CHAIN_LENGTH: Any = None
+_FEATURE_PSI: Any = None
+_FEATURE_KS: Any = None
 
 
 def _is_enabled() -> bool:
@@ -228,6 +230,18 @@ def _init_metrics() -> bool:
         _MANIFEST_CHAIN_LENGTH = Gauge(
             "g6_manifest_chain_length",
             "Number of manifests verified in the current chain",
+            registry=_REGISTRY,
+        )
+        _FEATURE_PSI = Gauge(
+            "g6_feature_psi",
+            "Population Stability Index (PSI) for feature vs baseline",
+            labelnames=["index", "feature"],
+            registry=_REGISTRY,
+        )
+        _FEATURE_KS = Gauge(
+            "g6_feature_ks",
+            "Kolmogorov-Smirnov statistic for feature vs baseline",
+            labelnames=["index", "feature"],
             registry=_REGISTRY,
         )
         # Optional histograms for percentile analysis; buckets configurable via env vars
@@ -591,6 +605,30 @@ def get_registry() -> Optional[Any]:
             _MANIFEST_CHAIN_LENGTH.set(chain_len)
     except Exception as e:
         _LOG.debug(f"Manifest chain validation skipped: {e}")
+    # Feature shift (PSI / KS) gauges
+    try:  # pragma: no cover
+        import json, os
+        fpath = os.path.join("metrics", "feature_shift", "latest.json")
+        if os.path.isfile(fpath):
+            with open(fpath, 'r', encoding='utf-8') as ff:
+                blob = json.load(ff)
+            idx = blob.get('index') or 'UNKNOWN'
+            feats = blob.get('features') or []
+            for entry in feats:
+                feat = entry.get('feature')
+                psi = entry.get('psi')
+                ks = entry.get('ks')
+                if feat is None:
+                    continue
+                try:
+                    if _FEATURE_PSI is not None and isinstance(psi, (int, float)):
+                        _FEATURE_PSI.labels(index=idx, feature=feat).set(float(psi))
+                    if _FEATURE_KS is not None and isinstance(ks, (int, float)):
+                        _FEATURE_KS.labels(index=idx, feature=feat).set(float(ks))
+                except Exception:
+                    continue
+    except Exception as e:
+        _LOG.debug(f"Feature shift metrics skipped: {e}")
     return _REGISTRY
 
 

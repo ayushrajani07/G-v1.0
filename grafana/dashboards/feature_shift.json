@@ -1,0 +1,46 @@
+{
+  "__inputs": [
+    {"name": "DS_INFINITY", "label": "Infinity", "type": "datasource", "pluginId": "yesoreyeram-infinity-datasource", "pluginName": "Infinity"}
+  ],
+  "__requires": [
+    {"type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.0.0"},
+    {"type": "panel", "id": "table", "name": "Table"},
+    {"type": "panel", "id": "timeseries", "name": "Time series"},
+    {"type": "datasource", "id": "yesoreyeram-infinity-datasource", "name": "Infinity", "version": "2.6.0"}
+  ],
+  "title": "Feature Distribution Shift (PSI / KS)",
+  "uid": "feature-shift",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "1m",
+  "timezone": "browser",
+  "templating": {"list": [
+    {"name": "G6_API_BASE", "label": "API Base", "type": "textbox", "query": "http://localhost:9500", "current": {"text": "http://localhost:9500", "value": "http://localhost:9500"}},
+    {"name": "LIMIT", "label": "History Limit", "type": "textbox", "query": "50", "current": {"text": "50", "value": "50"}}
+  ]},
+  "panels": [
+    {"type": "table", "title": "Latest Feature Shift", "id": 1, "datasource": "${DS_INFINITY}",
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/latest", "parser": "backend", "format": "table", "transform": "json", "root_selector": "features", "columns": []}],
+      "options": {"showHeader": true},
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "psi"}, "properties": [{"id": "unit", "value": "none"}, {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "green", "value": 0.0}, {"color": "yellow", "value": 0.1}, {"color": "orange", "value": 0.25}, {"color": "red", "value": 0.5}]}}]},
+        {"matcher": {"id": "byName", "options": "ks"}, "properties": [{"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "green", "value": 0.0}, {"color": "yellow", "value": 0.1}, {"color": "orange", "value": 0.2}, {"color": "red", "value": 0.3}]}}]}
+      ]},
+      "transformations": [{"id": "organize", "options": {"renameByName": {"feature": "Feature", "psi": "PSI", "ks": "KS", "sample_size": "Samples"}}}]
+    },
+    {"type": "timeseries", "title": "PSI History (Max per run)", "id": 2, "datasource": "${DS_INFINITY}",
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/history?limit=${LIMIT}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
+      "fieldConfig": {"defaults": {"unit": "none", "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "never", "spanNulls": true}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {"features": false}}},
+        {"id": "extractFields", "options": {"sourceField": "features", "format": "json"}},
+        {"id": "organize", "options": {"renameByName": {"psi": "psi", "ks": "ks", "feature": "feature"}}}
+      ],
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 10}
+    }
+  ],
+  "annotations": {"list": []},
+  "time": {"from": "now-24h", "to": "now"},
+  "timepicker": {"refresh_intervals": ["30s", "1m", "5m", "15m", "1h"]}
+}

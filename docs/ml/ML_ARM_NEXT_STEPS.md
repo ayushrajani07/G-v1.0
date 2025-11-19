@@ -61,6 +61,12 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
       - `GET /api/ml/ensemble/feature_importance/latest?top_k=10` for latest top features table.
       - `GET /api/ml/ensemble/feature_importance/timeseries?top_k=10&limit=200` for top-N importance time series.
       - Backed by `reports/feature_importance_history.json` (produced by `scripts/ml/track_feature_importance.py`).
+    - Added Distribution Shift dashboard `grafana/dashboards/feature_shift.json`:
+      - Script: `scripts/ml/compute_feature_shift.py` computes PSI & KS vs baseline, writes `metrics/feature_shift/latest.json` and appends history JSONL.
+      - Endpoints: `GET /api/ml/ensemble/feature_shift/latest` and `/api/ml/ensemble/feature_shift/history?limit=100`.
+      - Prometheus Gauges: `g6_feature_psi{index,feature}` and `g6_feature_ks{index,feature}` auto-refreshed from latest artifact.
+      - PSI thresholds (guideline): <0.1 stable, 0.1–0.25 moderate, >0.25 significant; >0.5 critical.
+      - KS thresholds (guideline): <0.1 stable, 0.1–0.2 moderate, >0.2 significant.
 - Load-test harness (`scripts/ml/load_test_ensemble.py`) to measure p50/p95, error rate, cache stats.
 
 **Remote agent (prepared + ready to implement):**
