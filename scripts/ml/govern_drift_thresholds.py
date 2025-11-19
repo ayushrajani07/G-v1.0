@@ -78,6 +78,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--auto-tune-percentiles", action="store_true", help="Enable auto-tuning of warn/crit percentiles before writing manifest")
     p.add_argument("--auto-tune-step", type=float, default=0.01, help="Percentile adjustment step size for auto-tuning")
     p.add_argument("--auto-tune-min-artifacts", type=int, default=5, help="Minimum artifacts required for auto-tune to run")
+    p.add_argument("--auto-tune-epsilon", type=float, default=0.005, help="Minimum penalty improvement required to keep adjustments")
+    p.add_argument("--auto-tune-disable-canary", action="store_true", help="Disable generating canary percentile comparison")
     return p.parse_args()
 
 
@@ -159,6 +161,8 @@ def main() -> int:
                 current_pctls,
                 min_artifacts=args.auto_tune_min_artifacts,
                 step=args.auto_tune_step,
+                epsilon=args.auto_tune_epsilon,
+                produce_canary=not args.auto_tune_disable_canary,
             )
             if auto_tune_summary.get('stable'):
                 # Replace percentiles used for manifest thresholds if adjustments occurred
