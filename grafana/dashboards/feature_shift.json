@@ -20,7 +20,7 @@
     {"name": "G6_API_BASE", "label": "API Base", "type": "textbox", "query": "http://localhost:9500", "current": {"text": "http://localhost:9500", "value": "http://localhost:9500"}},
     {"name": "LIMIT", "label": "History Limit", "type": "custom", "query": "100,200,500,1000", "current": {"text": "500", "value": "500"}},
     {"name": "METRIC", "label": "Metric", "type": "custom", "query": "psi,ks", "current": {"text": "psi", "value": "psi"}},
-    {"name": "INDEX", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "multi": true, "includeAll": true, "current": {"text": "All", "value": ["NIFTY","BANKNIFTY"]}}
+    {"name": "INDEX", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY,SENSEX", "multi": true, "includeAll": true, "current": {"text": "All", "value": ["NIFTY","BANKNIFTY","SENSEX"]}}
   ]},
   "panels": [
     {"type": "table", "title": "Latest Feature Shift", "id": 1, "datasource": "${DS_INFINITY}",

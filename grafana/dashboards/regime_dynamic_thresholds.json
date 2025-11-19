@@ -254,7 +254,7 @@
   "tags": ["regime", "drift", "dynamic-thresholds"],
   "templating": {
     "list": [
-      {"name": "INDEX", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": {"text": "NIFTY", "value": "NIFTY"}, "includeAll": false, "multi": false},
+      {"name": "INDEX", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY,SENSEX", "current": {"text": "NIFTY", "value": "NIFTY"}, "includeAll": false, "multi": false},
       {
         "name": "G6_API_BASE",
         "label": "API Base",
