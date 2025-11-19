@@ -160,6 +160,23 @@ def kite_auth_validation(ctx) -> None:
         acquired = False
     if acquired:
         logger.info("[startup] Kite access token acquired/refreshed successfully")
+        # Rebuild provider credentials so existing provider instance uses new token.
+        try:
+            providers = getattr(ctx, 'providers', None)
+            primary = getattr(providers, 'primary_provider', None)
+            if primary and hasattr(primary, 'update_credentials'):
+                try:
+                    from src.provider.config import get_provider_config  # type: ignore
+                    snap = get_provider_config(refresh=True)
+                    if snap.is_complete():
+                        primary.update_credentials(api_key=snap.api_key, access_token=snap.access_token, rebuild=True)
+                        logger.info("[startup] Kite provider rebuilt with refreshed credentials")
+                    else:
+                        logger.debug("[startup] provider credential snapshot incomplete post-refresh")
+                except Exception as e:  # pragma: no cover - defensive
+                    logger.debug("[startup] provider credential rebuild failed: %s", e, exc_info=True)
+        except Exception:  # pragma: no cover
+            logger.debug("[startup] provider credential rebuild outer failure", exc_info=True)
     else:
         logger.warning("[startup] Automated Kite token acquisition failed or skipped (headless/manual needed)")
         logger.warning("[startup] Run: python -m src.tools.token_manager  (for guided refresh flows)")
