@@ -150,6 +150,8 @@ The following real-time performance & quality metrics have been implemented to e
   - Manifest API: `GET /api/ml/ensemble/regime/threshold_manifest?include_full=1` returns latest manifest metadata and (optionally) thresholds for UI audit & diff.
     - Now includes `relative_shifts`: array of objects `{key, relative_shift, relative_shift_pct, violation}` comparing latest calibrated value vs historical median.
     - Prometheus metrics emitted by governance script: `g6_drift_threshold_relative_shift{key=..}`, `g6_drift_threshold_promotable`, `g6_drift_threshold_stability_violations`, `g6_drift_threshold_horizons_used`.
+      - Rollback: Use `--rollback-on-critical --rollback-threshold 0.25` to revert to previous manifest when any relative shift ≥25%. Result JSON includes `rolled_back` and `rollback_source`.
+      - History endpoint: `GET /api/ml/ensemble/regime/threshold_manifest_history?limit=100` returns array of entries `{file, promoted_at, ts_ms, promoted, reason, horizons_used, signature, thresholds}` for Grafana timelines.
     - Alert rules added (group `g6_drift_threshold.alerts`):
       * `DriftThresholdHighRelativeShift` – max relative shift >15% for 10m (critical)
       * `DriftThresholdPromotionStalled` – no promotable calibration in 2h (warning)

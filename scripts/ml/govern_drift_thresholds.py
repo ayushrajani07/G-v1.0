@@ -73,6 +73,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--apply-env", action="store_true", help="Apply promoted thresholds to .env (and env) if accepted")
     p.add_argument("--dry-run", action="store_true", help="Compute and write manifest only; do not apply env")
     p.add_argument("--json", action="store_true", help="Print JSON result")
+    p.add_argument("--rollback-on-critical", action="store_true", help="Rollback to previous manifest if any relative shift >= rollback-threshold")
+    p.add_argument("--rollback-threshold", type=float, default=0.25, help="Relative shift fraction triggering rollback (e.g. 0.25 = 25%)")
     return p.parse_args()
 
 
@@ -202,7 +204,39 @@ def main() -> int:
         json.dump({"manifest_file": mf_name, "signature": manifest["signature"]}, f, indent=2, sort_keys=True)
 
     applied = False
-    if promotable and not args.dry_run and args.apply_env:
+    rolled_back = False
+    rollback_source = None
+
+    # Automatic rollback path (critical shift) BEFORE promotion apply
+    if args.rollback_on_critical and report.get('keys'):
+        try:
+            critical = any(
+                isinstance(e.get('relative_shift'), (int, float)) and e.get('relative_shift') >= args.rollback_threshold
+                for e in report['keys']
+            )
+        except Exception:
+            critical = False
+        if critical and prev_latest:
+            prev_path = os.path.join(args.manifest_dir, prev_latest)
+            try:
+                with open(prev_path, 'r', encoding='utf-8') as pf:
+                    prev_manifest = json.load(pf)
+                prev_thresholds = prev_manifest.get('thresholds', {})
+                if prev_thresholds:
+                    if not args.dry_run and args.apply_env:
+                        for k, v in prev_thresholds.items():
+                            if v is None:
+                                continue
+                            update_env_file(k, f"{float(v):.6g}")
+                    rolled_back = True
+                    rollback_source = prev_latest
+                    manifest['promoted'] = False
+                    manifest['reason'] = f"rollback_triggered(relative_shift>={args.rollback_threshold})"
+                    reason = manifest['reason']
+            except Exception:
+                pass
+
+    if not rolled_back and promotable and not args.dry_run and args.apply_env:
         for k, v in manifest["thresholds"].items():
             if v is None:
                 continue
@@ -216,6 +250,9 @@ def main() -> int:
         "manifest": mf_path,
         "artifact": artifact_path,
         "reason": reason,
+        "rolled_back": rolled_back,
+        "rollback_source": rollback_source,
+        "promoted": manifest.get("promoted", False),
     }
 
     # --- Metrics emission (best-effort) ---------------------------------

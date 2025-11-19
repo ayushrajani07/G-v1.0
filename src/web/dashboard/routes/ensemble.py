@@ -1223,6 +1223,52 @@ async def regime_threshold_manifest(include_full: int = Query(1, ge=0, le=1, des
         _LOG.warning(f"regime_threshold_manifest_failed: {e}")
         raise HTTPException(status_code=500, detail="regime_threshold_manifest_failed")
 
+@router.get('/regime/threshold_manifest_history')
+async def regime_threshold_manifest_history(limit: int = Query(50, ge=1, le=500, description="Max number of manifest entries to return")):
+    """Return a chronological list (newest first) of recent drift threshold manifests.
+
+    Each entry includes: ts_ms, promoted_at, promoted, reason, horizons_used, thresholds, signature.
+    This supports Grafana Infinity panels for horizons_used trend and audit timelines.
+    """
+    try:
+        base_dir = Path('metrics') / 'drift_manifests'
+        if not base_dir.is_dir():
+            return []
+        manifests = []
+        # Collect manifest_* files
+        for f in sorted(base_dir.glob('manifest_*.json'), reverse=True):
+            try:
+                with open(f, 'r', encoding='utf-8') as _fh:
+                    m = json.load(_fh)
+                promoted_at = m.get('promoted_at')
+                # Convert timestamp to epoch ms best-effort
+                ts_ms = None
+                if isinstance(promoted_at, str):
+                    try:
+                        from datetime import datetime
+                        dt = datetime.fromisoformat(promoted_at.replace('Z','+00:00'))
+                        ts_ms = int(dt.timestamp() * 1000)
+                    except Exception:
+                        pass
+                manifests.append({
+                    'file': f.name,
+                    'promoted_at': promoted_at,
+                    'ts_ms': ts_ms,
+                    'promoted': m.get('promoted'),
+                    'reason': m.get('reason'),
+                    'horizons_used': m.get('horizons_used'),
+                    'signature': m.get('signature'),
+                    'thresholds': m.get('thresholds'),
+                })
+                if len(manifests) >= limit:
+                    break
+            except Exception:
+                continue
+        return manifests
+    except Exception as e:
+        _LOG.warning(f"regime_threshold_manifest_history_failed: {e}")
+        raise HTTPException(status_code=500, detail="regime_threshold_manifest_history_failed")
+
 @router.post('/metrics/flush')
 async def metrics_flush():
     """Force flush rolling MAE & coverage state to persistence file (Phase 10).

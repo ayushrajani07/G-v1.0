@@ -22,6 +22,47 @@
   "timezone": "browser",
   "panels": [
     {
+      "type": "timeseries",
+      "title": "Horizons Used Trend",
+      "id": 6,
+      "datasource": "${DS_INFINITY}",
+      "targets": [
+        {
+          "datasource": "${DS_INFINITY}",
+          "type": "json",
+          "url": "/api/ml/ensemble/regime/threshold_manifest_history?limit=100",
+          "parser": "backend",
+          "format": "table",
+          "transform": "json",
+          "root_selector": "$",
+          "columns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "none" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "horizons_used" },
+            "properties": [ { "id": "unit", "value": "none" } ]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "list" },
+        "tooltip": { "mode": "single" }
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {},
+            "renameByName": { "horizons_used": "horizons_used" },
+            "excludeByName": { "thresholds": true }
+          }
+        }
+      ]
+    },
+    {
       "type": "stat",
       "title": "Promotion Status",
       "id": 1,
