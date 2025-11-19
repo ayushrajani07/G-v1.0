@@ -1,0 +1,153 @@
+apiVersion: 1
+
+# Grafana Unified Alerting provisioning file for drift threshold governance
+# Place under grafana/provisioning/alerting and ensure grafana.ini has:
+# [unified_alerting]
+# enabled = true
+# provisioning_enabled = true
+# evaluation_interval = 30s
+
+# Datasource assumptions:
+# - Prometheus datasource named 'Prometheus'
+# Adjust "datasourceUid" if different (find UID via Grafana API or UI).
+
+# Alert rules:
+# 1. High relative shift critical (>15% for 10m)
+# 2. Promotion stalled (no promotable calibration in 2h)
+# 3. Stability violations persisting (any violations for 30m)
+
+# Each rule attaches labels for routing: severity, category.
+
+contactPoints: []  # Define contact points separately (email, slack).
+
+muteTimes: []
+
+notificationPolicies: []
+
+# Groups define rule evaluation context.
+alertRules:
+  - orgId: 1
+    name: drift-thresholds
+    folder: Drift Thresholds
+    interval: 30s
+    rules:
+      - uid: high_relative_shift
+        title: High Drift Threshold Relative Shift
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: PROMETHEUS_DS_UID
+            relativeTimeRange:
+              from: 0
+              to: 1800  # 30m window for max_over_time
+            model:
+              expr: max_over_time(g6_drift_threshold_relative_shift[30m])
+              instant: true
+              range: false
+              editorMode: code
+              datasource:
+                type: prometheus
+                uid: PROMETHEUS_DS_UID
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: "High drift threshold relative shift (>15%)"
+          description: "A calibrated drift threshold moved >15% vs historical median (30m window). Investigate volatility or data quality."
+        labels:
+          severity: critical
+          category: drift_thresholds
+        conditions:
+          - evaluator:
+              type: gt
+              params:
+                - 0.15
+            operator:
+              type: and
+            reducer:
+              type: last
+            type: query
+            query:
+              params:
+                - A
+        isPaused: false
+      - uid: promotion_stalled
+        title: Drift Threshold Promotion Stalled
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: PROMETHEUS_DS_UID
+            relativeTimeRange:
+              from: 0
+              to: 7200  # 2h window
+            model:
+              expr: sum_over_time(g6_drift_threshold_promotable[60m])
+              instant: true
+              range: false
+              editorMode: code
+              datasource:
+                type: prometheus
+                uid: PROMETHEUS_DS_UID
+        noDataState: NoData
+        execErrState: Error
+        for: 0m
+        annotations:
+          summary: "No promotable drift threshold in 2h"
+          description: "Calibration runs failed stability or guard rails for 2 hours. Possible persistent volatility or mis-tuned guard rails."
+        labels:
+          severity: warning
+          category: drift_thresholds
+        conditions:
+          - evaluator:
+              type: eq
+              params:
+                - 0
+            operator:
+              type: and
+            reducer:
+              type: last
+            type: query
+            query:
+              params:
+                - A
+        isPaused: false
+      - uid: stability_violations_persist
+        title: Drift Threshold Stability Violations Persisting
+        condition: C
+        data:
+          - refId: A
+            datasourceUid: PROMETHEUS_DS_UID
+            relativeTimeRange:
+              from: 0
+              to: 1800  # 30m
+            model:
+              expr: increase(g6_drift_threshold_stability_violations[30m])
+              instant: true
+              range: false
+              editorMode: code
+              datasource:
+                type: prometheus
+                uid: PROMETHEUS_DS_UID
+        noDataState: NoData
+        execErrState: Error
+        for: 30m
+        annotations:
+          summary: "Drift threshold stability violations persisted 30m"
+          description: "One or more threshold keys exceeded allowed relative shift consistently for 30m. Consider widening thresholds or reviewing calibration window."
+        labels:
+          severity: warning
+          category: drift_thresholds
+        conditions:
+          - evaluator:
+              type: gt
+              params:
+                - 0
+            operator:
+              type: and
+            reducer:
+              type: last
+            type: query
+            query:
+              params:
+                - A
+        isPaused: false

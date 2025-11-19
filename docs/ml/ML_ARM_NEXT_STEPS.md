@@ -156,6 +156,7 @@ The following real-time performance & quality metrics have been implemented to e
       * `DriftThresholdHighRelativeShift` – max relative shift >15% for 10m (critical)
       * `DriftThresholdPromotionStalled` – no promotable calibration in 2h (warning)
       * `DriftThresholdInstabilityViolations` – stability violations persist 30m (warning)
+    - Grafana Unified Alerting provisioning (Prometheus datasource): see `grafana/provisioning/alerting/drift_thresholds.yml`. Replace `PROMETHEUS_DS_UID` with your Prometheus datasource UID (found under Datasources > Prometheus > Settings > UID). Ensure `grafana.ini` has unified alerting enabled and provisioning allowed.
 
 **Adaptive Smoothing Features:**
 - Supports direct alpha (`G6_ROLLING_MAE_DECAY`), observation half-life (`G6_ROLLING_MAE_HALF_LIFE`), or time-based half-life in minutes (`G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES`) with precedence: HALF_LIFE > TIME_HALF_LIFE_MINUTES > DECAY.
