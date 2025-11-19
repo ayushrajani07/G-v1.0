@@ -18,7 +18,8 @@
   "templating": {"list": [
     {"name": "G6_API_BASE", "label": "API Base", "type": "textbox", "query": "http://localhost:9500", "current": {"text": "http://localhost:9500", "value": "http://localhost:9500"}},
     {"name": "LIMIT", "label": "History Limit", "type": "textbox", "query": "50", "current": {"text": "50", "value": "50"}},
-    {"name": "METRIC", "label": "Metric", "type": "custom", "query": "psi,ks", "current": {"text": "psi", "value": "psi"}}
+    {"name": "METRIC", "label": "Metric", "type": "custom", "query": "psi,ks", "current": {"text": "psi", "value": "psi"}},
+    {"name": "INDEX", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "multi": true, "includeAll": true, "current": {"text": "All", "value": ["NIFTY","BANKNIFTY"]}}
   ]},
   "panels": [
     {"type": "table", "title": "Latest Feature Shift", "id": 1, "datasource": "${DS_INFINITY}",
@@ -31,7 +32,7 @@
       "transformations": [{"id": "organize", "options": {"renameByName": {"feature": "Feature", "psi": "PSI", "ks": "KS", "sample_size": "Samples"}}}]
     },
     {"type": "timeseries", "title": "PSI History (Max per run)", "id": 2, "datasource": "${DS_INFINITY}",
-      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/history?limit=${LIMIT}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/history?limit=${LIMIT}&index=${INDEX}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
       "fieldConfig": {"defaults": {"unit": "none", "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "never", "spanNulls": true}}, "overrides": []},
       "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
       "transformations": [
@@ -44,7 +45,7 @@
     {"type": "stat", "title": "Active Shift Alerts", "id": 3,
       "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
       "targets": [
-        {"expr": "sum(ALERTS{alertstate=\"firing\", alertname=~\"Feature(PSIHigh|KSHigh).+\"})", "legendFormat": "active_shift_alerts", "instant": true}
+        {"expr": "sum(ALERTS{alertstate=\"firing\", alertname=~\"Feature(PSIHigh|KSHigh).+\", index=~\"${INDEX:regex}\"})", "legendFormat": "active_shift_alerts", "instant": true}
       ],
       "options": {"reduceOptions": {"values": false, "calcs": ["last"]}, "orientation": "auto", "textMode": "value", "colorMode": "value", "graphMode": "none"},
       "fieldConfig": {"defaults": {"unit": "none", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}}, "overrides": []},
@@ -53,7 +54,7 @@
     {"type": "table", "title": "Firing Shift Alerts (PSI/KS)", "id": 4,
       "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
       "targets": [
-        {"expr": "sum(ALERTS{alertstate=\"firing\", alertname=~\"Feature(PSIHigh|KSHigh).+\"}) by (alertname,severity,index,feature)", "legendFormat": "{{alertname}}", "instant": true}
+        {"expr": "sum(ALERTS{alertstate=\"firing\", alertname=~\"Feature(PSIHigh|KSHigh).+\", index=~\"${INDEX:regex}\"}) by (alertname,severity,index,feature)", "legendFormat": "{{alertname}}", "instant": true}
       ],
       "options": {"showHeader": true},
       "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
@@ -65,7 +66,7 @@
     {"type": "table", "title": "Combined Severity by Index", "id": 5,
       "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
       "targets": [
-        {"expr": "2 * clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1) + (1 - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)) * clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1)", "legendFormat": "severity", "instant": true}
+        {"expr": "2 * clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.3) bool), 1) + (1 - clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.3) bool), 1)) * clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.25) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.2) bool), 1)", "legendFormat": "severity", "instant": true}
       ],
       "options": {"showHeader": true},
       "fieldConfig": {"defaults": {"unit": "none"}, "overrides": [
@@ -85,7 +86,7 @@
       "gridPos": {"h": 10, "w": 24, "x": 0, "y": 40}
     },
     {"type": "state-timeline", "title": "${METRIC:upper} Heatmap (24h)", "id": 6, "datasource": "${DS_INFINITY}",
-      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=2000", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=2000&index=${INDEX}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
       "options": {"legend": {"displayMode": "hidden"}},
       "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.25}, {"color": "red", "value": 0.5}]}, "unit": "none"}, "overrides": []},
       "transformations": [
@@ -95,7 +96,7 @@
       "gridPos": {"h": 12, "w": 24, "x": 0, "y": 50}
     },
     {"type": "timeseries", "title": "Per-Feature ${METRIC:upper} Timeseries", "id": 7, "datasource": "${DS_INFINITY}",
-      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=2000", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=2000&index=${INDEX}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
       "fieldConfig": {"defaults": {"unit": "none", "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "never", "spanNulls": true}}, "overrides": []},
       "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
       "transformations": [
@@ -113,7 +114,7 @@
       "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
       "enable": true,
       "iconColor": "rgba(237, 129, 40, 1)",
-      "expr": "((clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1) - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)) == 1) and on(index) (changes(clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1) - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1))[5m]) > 0)",
+      "expr": "((clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.25) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.2) bool), 1) - clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.3) bool), 1)) == 1) and on(index) (changes(clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.25) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.2) bool), 1) - clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.3) bool), 1))[5m]) > 0)",
       "titleFormat": "WARN escalation: {{index}}",
       "tagKeys": "index",
       "textFormat": "PSI/KS crossed warn threshold"
@@ -124,7 +125,7 @@
       "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
       "enable": true,
       "iconColor": "rgba(245, 54, 54, 1)",
-      "expr": "(clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1) == 1) and on(index) (changes(clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)[5m]) > 0)",
+      "expr": "(clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.3) bool), 1) == 1) and on(index) (changes(clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} > 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} > 0.3) bool), 1)[5m]) > 0)",
       "titleFormat": "CRIT escalation: {{index}}",
       "tagKeys": "index",
       "textFormat": "PSI/KS crossed critical threshold"

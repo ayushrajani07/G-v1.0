@@ -1475,17 +1475,25 @@ async def feature_shift_latest():
         raise HTTPException(status_code=500, detail='feature_shift_latest_read_failed')
 
 @router.get('/feature_shift/history')
-async def feature_shift_history(limit: int = Query(100, ge=1, le=1000)):
+async def feature_shift_history(limit: int = Query(100, ge=1, le=1000), index: Optional[str] = Query(None)):
     """Return last N historical feature shift entries from JSONL file."""
     hist_file = Path('metrics') / 'feature_shift' / 'history.jsonl'
     if not hist_file.is_file():
         return []
     out: list[dict[str, Any]] = []
+    index_set: Optional[set[str]] = None
+    if index:
+        index_set = {s.strip().upper() for s in index.split(',') if s.strip()}
     try:
         lines = hist_file.read_text(encoding='utf-8').strip().splitlines()
         for line in lines[-limit:]:
             try:
-                out.append(json.loads(line))
+                rec = json.loads(line)
+                if index_set:
+                    rec_idx = str(rec.get('index', '')).upper()
+                    if rec_idx not in index_set:
+                        continue
+                out.append(rec)
             except Exception:
                 continue
     except Exception:
@@ -1493,7 +1501,7 @@ async def feature_shift_history(limit: int = Query(100, ge=1, le=1000)):
     return out
 
 @router.get('/feature_shift/heatmap')
-async def feature_shift_heatmap(metric: str = Query("psi", pattern="^(psi|ks)$"), limit: int = Query(200, ge=1, le=2000)):
+async def feature_shift_heatmap(metric: str = Query("psi", pattern="^(psi|ks)$"), limit: int = Query(200, ge=1, le=2000), index: Optional[str] = Query(None)):
     """Return flattened rows suitable for heatmap/state timeline: [{ts, feature, value, index}].
 
     Uses ts_ms if available in history lines; otherwise attempts to parse generated_at; entries without time are skipped.
@@ -1502,6 +1510,9 @@ async def feature_shift_heatmap(metric: str = Query("psi", pattern="^(psi|ks)$")
     if not hist_file.is_file():
         return []
     rows: list[dict[str, Any]] = []
+    index_set: Optional[set[str]] = None
+    if index:
+        index_set = {s.strip().upper() for s in index.split(',') if s.strip()}
     try:
         lines = hist_file.read_text(encoding='utf-8').strip().splitlines()
         for line in lines[-limit:]:
@@ -1520,6 +1531,8 @@ async def feature_shift_heatmap(metric: str = Query("psi", pattern="^(psi|ks)$")
             if ts_ms is None:
                 continue
             idx = rec.get('index')
+            if index_set and str(idx).upper() not in index_set:
+                continue
             feats = rec.get('features') or []
             for f in feats:
                 name = f.get('feature')
