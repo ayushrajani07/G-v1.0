@@ -26,6 +26,16 @@ from typing import Any, Dict, Tuple
 
 from scripts.ml.calibrate_drift_thresholds import calibrate as run_calibration, parse_args as parse_calib_args  # type: ignore
 from scripts.ml.validate_drift_threshold_stability import load_artifacts, compute_report  # type: ignore
+try:  # Optional Prometheus client for emitting governance metrics
+    from prometheus_client import Gauge as _PG  # type: ignore
+except Exception:  # pragma: no cover
+    _PG = None  # type: ignore
+
+# Lazy metric holders (module-level singletons) – created if prometheus_client available
+_g_shift = None  # relative shift per key
+_g_promotable = None  # 1 if promotable else 0
+_g_violations = None  # count of violations latest evaluation
+_g_horizons_used = None  # horizons_used in latest aggregate
 
 try:
     from src.tools.token_manager import update_env_file  # type: ignore
@@ -207,6 +217,52 @@ def main() -> int:
         "artifact": artifact_path,
         "reason": reason,
     }
+
+    # --- Metrics emission (best-effort) ---------------------------------
+    if _PG:
+        global _g_shift, _g_promotable, _g_violations, _g_horizons_used
+        try:
+            if _g_shift is None:
+                _g_shift = _PG(
+                    'g6_drift_threshold_relative_shift',
+                    'Relative shift of latest calibrated drift threshold vs historical median',
+                    ['key']
+                )
+            if _g_promotable is None:
+                _g_promotable = _PG(
+                    'g6_drift_threshold_promotable',
+                    '1 if latest calibration passed stability & guard rails',
+                    []
+                )
+            if _g_violations is None:
+                _g_violations = _PG(
+                    'g6_drift_threshold_stability_violations',
+                    'Count of threshold keys exceeding max_percent_shift in latest evaluation',
+                    []
+                )
+            if _g_horizons_used is None:
+                _g_horizons_used = _PG(
+                    'g6_drift_threshold_horizons_used',
+                    'Horizons used count in latest aggregate calibration',
+                    []
+                )
+            # Populate
+            for entry in report.get('keys', []):
+                k = entry.get('key')
+                rs = entry.get('relative_shift')
+                if k and isinstance(rs, (int, float)) and _g_shift:
+                    _g_shift.labels(k).set(rs)
+            if _g_promotable:
+                _g_promotable.set(1 if promotable else 0)
+            if _g_violations:
+                _g_violations.set(report.get('violations', 0))
+            if _g_horizons_used:
+                try:
+                    _g_horizons_used.set(float(agg.get('horizons_used', 0) or 0))
+                except Exception:
+                    _g_horizons_used.set(0)
+        except Exception:
+            pass  # silent failure; metrics are optional
 
     if args.json:
         print(json.dumps(result, indent=2, sort_keys=True))

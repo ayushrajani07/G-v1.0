@@ -147,3 +147,36 @@ groups:
           summary: "Coverage drop (short vs long) exceeds 20pp"
           description: |
             Short window coverage minus long window coverage < -20 percentage points for 5m (index=${labels.index} horizon=${labels.horizon}). Indicates severe regime shift or band calibration failure.
+
+  - name: g6_drift_threshold.alerts
+    interval: 60s
+    rules:
+      - alert: DriftThresholdHighRelativeShift
+        expr: max_over_time(g6_drift_threshold_relative_shift[30m]) > 0.15
+        for: 10m
+        labels:
+          severity: critical
+          category: drift_thresholds
+        annotations:
+          summary: "High drift threshold relative shift (>15%)"
+          description: "A calibrated drift threshold moved >15% vs historical median (30m window). Investigate volatility or data quality."
+
+      - alert: DriftThresholdPromotionStalled
+        expr: sum_over_time(g6_drift_threshold_promotable[60m]) == 0
+        for: 2h
+        labels:
+          severity: warning
+          category: drift_thresholds
+        annotations:
+          summary: "No promotable drift threshold for 2h"
+          description: "Calibration runs for the last 2 hours failed stability or guard rails. Possible persistent volatility or mis-tuned guard rails."
+
+      - alert: DriftThresholdInstabilityViolations
+        expr: increase(g6_drift_threshold_stability_violations[30m]) > 0
+        for: 30m
+        labels:
+          severity: warning
+          category: drift_thresholds
+        annotations:
+          summary: "Drift threshold stability violations persisted 30m"
+          description: "One or more threshold keys exceeded allowed relative shift consistently for 30m. Consider widening thresholds or reviewing calibration window."

@@ -149,6 +149,11 @@ The following real-time performance & quality metrics have been implemented to e
     - Schedule daily via Task Scheduler. Suggested flags: `--min-horizons-to-promote 5 --max-percent-shift 0.10`.
   - Manifest API: `GET /api/ml/ensemble/regime/threshold_manifest?include_full=1` returns latest manifest metadata and (optionally) thresholds for UI audit & diff.
     - Now includes `relative_shifts`: array of objects `{key, relative_shift, relative_shift_pct, violation}` comparing latest calibrated value vs historical median.
+    - Prometheus metrics emitted by governance script: `g6_drift_threshold_relative_shift{key=..}`, `g6_drift_threshold_promotable`, `g6_drift_threshold_stability_violations`, `g6_drift_threshold_horizons_used`.
+    - Alert rules added (group `g6_drift_threshold.alerts`):
+      * `DriftThresholdHighRelativeShift` – max relative shift >15% for 10m (critical)
+      * `DriftThresholdPromotionStalled` – no promotable calibration in 2h (warning)
+      * `DriftThresholdInstabilityViolations` – stability violations persist 30m (warning)
 
 **Adaptive Smoothing Features:**
 - Supports direct alpha (`G6_ROLLING_MAE_DECAY`), observation half-life (`G6_ROLLING_MAE_HALF_LIFE`), or time-based half-life in minutes (`G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES`) with precedence: HALF_LIFE > TIME_HALF_LIFE_MINUTES > DECAY.
