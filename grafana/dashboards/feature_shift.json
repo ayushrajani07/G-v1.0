@@ -38,6 +38,27 @@
         {"id": "organize", "options": {"renameByName": {"psi": "psi", "ks": "ks", "feature": "feature"}}}
       ],
       "gridPos": {"h": 12, "w": 24, "x": 0, "y": 10}
+    },
+    {"type": "stat", "title": "Active Shift Alerts", "id": 3,
+      "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
+      "targets": [
+        {"expr": "sum(ALERTS{alertstate=\"firing\", alertname=~\"Feature(PSIHigh|KSHigh).+\"})", "legendFormat": "active_shift_alerts", "instant": true}
+      ],
+      "options": {"reduceOptions": {"values": false, "calcs": ["last"]}, "orientation": "auto", "textMode": "value", "colorMode": "value", "graphMode": "none"},
+      "fieldConfig": {"defaults": {"unit": "none", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}}, "overrides": []},
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 22}
+    },
+    {"type": "table", "title": "Firing Shift Alerts (PSI/KS)", "id": 4,
+      "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
+      "targets": [
+        {"expr": "sum(ALERTS{alertstate=\"firing\", alertname=~\"Feature(PSIHigh|KSHigh).+\"}) by (alertname,severity,index,feature)", "legendFormat": "{{alertname}}", "instant": true}
+      ],
+      "options": {"showHeader": true},
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []},
+      "transformations": [
+        {"id": "organize", "options": {"renameByName": {"Value": "active", "alertname": "alert", "index": "index", "feature": "feature", "severity": "severity"}}}
+      ],
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 28}
     }
   ],
   "annotations": {"list": []},
