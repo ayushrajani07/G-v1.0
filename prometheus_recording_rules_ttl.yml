@@ -1,0 +1,19 @@
+groups:
+  - name: g6_ttl_study
+    interval: 1m
+    rules:
+      # Best (largest negative) p95 latency delta vs baseline (improvement)
+      - record: g6_ttl_study_best_p95_improvement_ms
+        expr: min(g6_ttl_study_p95_delta_ms)
+      # Best (largest negative) p50 latency delta vs baseline
+      - record: g6_ttl_study_best_p50_improvement_ms
+        expr: min(g6_ttl_study_p50_delta_ms)
+      # Largest positive hit ratio delta vs baseline
+      - record: g6_ttl_study_best_hit_ratio_delta
+        expr: max(g6_ttl_study_hit_ratio_delta)
+      # Scenario count measured (cardinality diagnostic)
+      - record: g6_ttl_study_scenarios_count
+        expr: count(g6_ttl_study_latency_p95_ms)
+      # Percent of scenarios improving p95 latency
+      - record: g6_ttl_study_p95_improvement_ratio
+        expr: count(g6_ttl_study_p95_delta_ms < 0) / count(g6_ttl_study_p95_delta_ms)

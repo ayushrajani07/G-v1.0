@@ -48,6 +48,13 @@ _FORECAST_NORM_ERROR_HIST: Any = None
 _FORECAST_MAE_DRIFT: Any = None
 _FORECAST_NORM_DRIFT: Any = None
 _FORECAST_COVERAGE_DRIFT: Any = None
+_TTL_STUDY_LATENCY_P95: Any = None
+_TTL_STUDY_LATENCY_P50: Any = None
+_TTL_STUDY_HIT_RATIO: Any = None
+_TTL_STUDY_ERRORS: Any = None
+_TTL_STUDY_P95_DELTA: Any = None
+_TTL_STUDY_P50_DELTA: Any = None
+_TTL_STUDY_HIT_RATIO_DELTA: Any = None
 
 
 def _is_enabled() -> bool:
@@ -165,6 +172,49 @@ def _init_metrics() -> bool:
             "g6_forecast_coverage_drift_delta_pct",
             "Short minus long window coverage percentage delta (pct points)",
             labelnames=["index", "horizon"],
+            registry=_REGISTRY,
+        )
+        # TTL study scenario metrics (populated dynamically from JSON file if present)
+        _TTL_STUDY_LATENCY_P95 = Gauge(
+            "g6_ttl_study_latency_p95_ms",
+            "TTL impact study p95 latency (milliseconds) per scenario",
+            labelnames=["scenario"],
+            registry=_REGISTRY,
+        )
+        _TTL_STUDY_LATENCY_P50 = Gauge(
+            "g6_ttl_study_latency_p50_ms",
+            "TTL impact study p50 latency (milliseconds) per scenario",
+            labelnames=["scenario"],
+            registry=_REGISTRY,
+        )
+        _TTL_STUDY_HIT_RATIO = Gauge(
+            "g6_ttl_study_hit_ratio",
+            "TTL impact study cache hit ratio per scenario (0-1)",
+            labelnames=["scenario"],
+            registry=_REGISTRY,
+        )
+        _TTL_STUDY_ERRORS = Gauge(
+            "g6_ttl_study_errors_total",
+            "TTL impact study total request errors per scenario",
+            labelnames=["scenario"],
+            registry=_REGISTRY,
+        )
+        _TTL_STUDY_P95_DELTA = Gauge(
+            "g6_ttl_study_p95_delta_ms",
+            "TTL impact study p95 latency delta vs baseline (milliseconds) per scenario",
+            labelnames=["scenario"],
+            registry=_REGISTRY,
+        )
+        _TTL_STUDY_P50_DELTA = Gauge(
+            "g6_ttl_study_p50_delta_ms",
+            "TTL impact study p50 latency delta vs baseline (milliseconds) per scenario",
+            labelnames=["scenario"],
+            registry=_REGISTRY,
+        )
+        _TTL_STUDY_HIT_RATIO_DELTA = Gauge(
+            "g6_ttl_study_hit_ratio_delta",
+            "TTL impact study hit ratio delta vs baseline per scenario",
+            labelnames=["scenario"],
             registry=_REGISTRY,
         )
         # Optional histograms for percentile analysis; buckets configurable via env vars
@@ -447,6 +497,39 @@ def get_registry() -> Optional[Any]:
         return None
 
     _init_metrics()
+    # Attempt TTL study metrics refresh (best-effort)
+    try:  # pragma: no cover - filesystem IO
+        import json, os
+        path = os.path.join("metrics", "ttl_study", "latest.json")
+        if os.path.isfile(path):
+            with open(path, "r", encoding="utf-8") as f:
+                blob = json.load(f)
+            scenarios = blob.get("scenarios") or []
+            deltas = blob.get("deltas_vs_baseline") or {}
+            for sc in scenarios:
+                scen = sc.get("name")
+                if not scen:
+                    continue
+                try:
+                    if _TTL_STUDY_LATENCY_P95 is not None:
+                        _TTL_STUDY_LATENCY_P95.labels(scenario=scen).set(float(sc.get("latency_ms_p95", 0.0)))
+                    if _TTL_STUDY_LATENCY_P50 is not None:
+                        _TTL_STUDY_LATENCY_P50.labels(scenario=scen).set(float(sc.get("latency_ms_p50", 0.0)))
+                    if _TTL_STUDY_HIT_RATIO is not None:
+                        _TTL_STUDY_HIT_RATIO.labels(scenario=scen).set(float(sc.get("hit_ratio", 0.0)))
+                    if _TTL_STUDY_ERRORS is not None:
+                        _TTL_STUDY_ERRORS.labels(scenario=scen).set(float(sc.get("errors", 0)))
+                    d = deltas.get(sc.get("name")) or {}
+                    if _TTL_STUDY_P95_DELTA is not None and "p95_delta_ms" in d:
+                        _TTL_STUDY_P95_DELTA.labels(scenario=scen).set(float(d.get("p95_delta_ms", 0.0)))
+                    if _TTL_STUDY_P50_DELTA is not None and "p50_delta_ms" in d:
+                        _TTL_STUDY_P50_DELTA.labels(scenario=scen).set(float(d.get("p50_delta_ms", 0.0)))
+                    if _TTL_STUDY_HIT_RATIO_DELTA is not None and "hit_ratio_delta" in d:
+                        _TTL_STUDY_HIT_RATIO_DELTA.labels(scenario=scen).set(float(d.get("hit_ratio_delta", 0.0)))
+                except Exception as _e:  # pragma: no cover
+                    _LOG.debug(f"Failed setting TTL study metric for {scen}: {_e}")
+    except Exception as e:  # pragma: no cover
+        _LOG.debug(f"TTL study metrics refresh skipped: {e}")
     return _REGISTRY
 
 
@@ -463,4 +546,5 @@ __all__ = [
     "set_forecast_norm_error",
     "observe_forecast_errors",
     "get_registry",
+    # TTL study metrics are auto-refreshed; no public setter functions
 ]

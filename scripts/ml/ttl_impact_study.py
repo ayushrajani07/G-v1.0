@@ -102,18 +102,70 @@ def worker(endpoint: str, index: str, horizon: int, result: ScenarioResult, stop
             result.record_error()
 
 
-def run_scenario(name: str, endpoint: str, indices: List[str], horizon: int, qps: int, duration: int) -> ScenarioResult:
+def run_scenario(
+    name: str,
+    endpoint: str,
+    indices: List[str],
+    horizon: int,
+    qps: int,
+    duration: int,
+    warmup_duration: int = 0,
+    ramp_steps: int = 0,
+    ramp_interval: int = 0,
+) -> ScenarioResult:
+    """Run a scenario with optional warmup and concurrency ramp.
+
+    Warmup: half target concurrency; metrics discarded.
+    Ramp: spawn additional threads (equal partitions) every ramp_interval seconds until full concurrency.
+    Measurement: after ramp completes, run for 'duration' seconds.
+    """
+    # Calculate final concurrency threads per index
+    per_index_target = max(1, qps // max(1, len(indices)))
     result = ScenarioResult(name)
-    # Distribute QPS across indices
-    per_index_qps = max(1, qps // max(1, len(indices)))
-    threads: List[threading.Thread] = []
-    stop_time = time.time() + duration
-    for idx in indices:
-        for _ in range(per_index_qps):
-            t = threading.Thread(target=worker, args=(endpoint, idx, horizon, result, stop_time), daemon=True)
-            t.start()
-            threads.append(t)
-    for t in threads:
+
+    def _spawn(count: int, res_obj: ScenarioResult | None, stop: float) -> List[threading.Thread]:
+        ths: List[threading.Thread] = []
+        for idx in indices:
+            for _ in range(count):
+                t = threading.Thread(
+                    target=worker,
+                    args=(endpoint, idx, horizon, res_obj if res_obj else result, stop),
+                    daemon=True,
+                )
+                t.start()
+                ths.append(t)
+        return ths
+
+    # Warmup phase (discard metrics) ----------------------------------------
+    if warmup_duration > 0:
+        warmup_threads: List[threading.Thread] = []
+        stop_warmup = time.time() + warmup_duration
+        warmup_threads = _spawn(max(1, per_index_target // 2), None, stop_warmup)
+        for t in warmup_threads:
+            t.join()
+
+    # Ramp phase -------------------------------------------------------------
+    ramp_threads: List[threading.Thread] = []
+    if ramp_steps > 0 and ramp_interval > 0:
+        # Partition remaining threads across steps
+        remaining = per_index_target
+        per_step = max(1, remaining // ramp_steps)
+        spawned = 0
+        for step in range(ramp_steps):
+            # Determine threads to spawn this step per index
+            to_spawn = per_step if (spawned + per_step) <= remaining else (remaining - spawned)
+            if to_spawn <= 0:
+                break
+            stop_time_step = time.time() + ramp_interval
+            ramp_threads.extend(_spawn(to_spawn, result, stop_time_step))
+            for t in ramp_threads[spawned * len(indices): spawned * len(indices) + to_spawn * len(indices)]:
+                t.join()
+            spawned += to_spawn
+    # Ensure full concurrency for measurement if ramp did not consume all
+    # Already spawned threads ended after each ramp step; start full set for measurement
+    stop_measure = time.time() + duration
+    measure_threads = _spawn(per_index_target, result, stop_measure)
+    for t in measure_threads:
         t.join()
     return result
 
@@ -130,6 +182,9 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--adaptive-max", type=int, default=60)
     ap.add_argument("--baseline", default="30", help="Static TTL value to treat as baseline for deltas")
     ap.add_argument("--output", default="metrics/ttl_study/latest.json")
+    ap.add_argument("--warmup-duration", type=int, default=0, help="Warmup seconds with half concurrency (discard metrics)")
+    ap.add_argument("--ramp-steps", type=int, default=0, help="Number of concurrency ramp steps before measurement")
+    ap.add_argument("--ramp-interval", type=int, default=0, help="Seconds per ramp step")
     ap.add_argument("--json", action="store_true", help="Print JSON to stdout as well")
     return ap.parse_args()
 
@@ -143,14 +198,34 @@ def main() -> int:
     # Run static TTL scenarios (measurement only; assumes service configured accordingly per run)
     for ttl in static_ttls:
         name = f"static_ttl_{ttl}"
-        res = run_scenario(name, args.endpoint, indices, args.horizon, args.qps, args.duration)
+        res = run_scenario(
+            name,
+            args.endpoint,
+            indices,
+            args.horizon,
+            args.qps,
+            args.duration,
+            warmup_duration=args.warmup_duration,
+            ramp_steps=args.ramp_steps,
+            ramp_interval=args.ramp_interval,
+        )
         entry = res.finalize()
         entry.update({"ttl": ttl, "adaptive": False})
         scenarios.append(entry)
 
     # Adaptive scenario (service must be in adaptive mode externally)
     adaptive_name = f"adaptive_{args.adaptive_min}_{args.adaptive_max}"
-    adaptive_res = run_scenario(adaptive_name, args.endpoint, indices, args.horizon, args.qps, args.duration)
+    adaptive_res = run_scenario(
+        adaptive_name,
+        args.endpoint,
+        indices,
+        args.horizon,
+        args.qps,
+        args.duration,
+        warmup_duration=args.warmup_duration,
+        ramp_steps=args.ramp_steps,
+        ramp_interval=args.ramp_interval,
+    )
     adaptive_entry = adaptive_res.finalize()
     adaptive_entry.update({"adaptive": True, "min": args.adaptive_min, "max": args.adaptive_max})
     scenarios.append(adaptive_entry)
@@ -174,6 +249,9 @@ def main() -> int:
         "horizon": args.horizon,
         "qps": args.qps,
         "duration": args.duration,
+        "warmup_duration": args.warmup_duration,
+        "ramp_steps": args.ramp_steps,
+        "ramp_interval": args.ramp_interval,
         "scenarios": scenarios,
         "baseline": baseline_name,
         "deltas_vs_baseline": deltas,

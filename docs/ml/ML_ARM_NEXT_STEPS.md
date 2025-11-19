@@ -234,9 +234,11 @@ recorded_dynamic_coverage_drop_crit{index="NIFTY",horizon="60"}
       * Script added: `scripts/ml/ttl_impact_study.py` produces `metrics/ttl_study/latest.json` comparing static TTL set vs adaptive min/max range (reports p50/p95 latency, hit ratio, error rate, deltas vs baseline).
       * API: `GET /api/ml/ensemble/ttl_study` serves latest study output for dashboards.
       * Dashboard: `grafana/dashboards/ttl_impact.json` includes scenario summary table and p95 delta timeseries.
+      * Recording Rules: `prometheus_recording_rules_ttl.yml` defines `g6_ttl_study_best_p95_improvement_ms`, `g6_ttl_study_best_hit_ratio_delta`, etc. Add to Prometheus `rule_files`.
+      * Advanced Load Pattern: Warmup (`--warmup-duration`) with half concurrency then optional ramp (`--ramp-steps --ramp-interval`) to progressively reach target QPS before measurement window.
       * Example run:
         ```powershell
-        python scripts/ml/ttl_impact_study.py --endpoint http://localhost:9500/api/ml/ensemble/forecast --indices NIFTY,BANKNIFTY --horizon 60 --qps 30 --duration 25 --static-ttls 5,15,30 --adaptive-min 10 --adaptive-max 60 --baseline 30 --json
+        python scripts/ml/ttl_impact_study.py --endpoint http://localhost:9500/api/ml/ensemble/forecast --indices NIFTY,BANKNIFTY --horizon 60 --qps 30 --duration 25 --static-ttls 5,15,30 --adaptive-min 10 --adaptive-max 60 --baseline 30 --warmup-duration 10 --ramp-steps 3 --ramp-interval 5 --json
         ```
 - Fine-tune regime thresholds and breach reasons; add per-horizon annotations in Grafana.
 - Add Infinity panel for `/metrics/compare?include_drift=1` with index/horizon selectors.
