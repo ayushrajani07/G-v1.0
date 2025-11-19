@@ -127,7 +127,7 @@
   "templating": {
     "list": [
       {
-        "current": { "selected": false, "text": "NIFTY|BANKNIFTY", "value": "NIFTY|BANKNIFTY" },
+        "current": { "selected": false, "text": "NIFTY|BANKNIFTY|SENSEX", "value": "NIFTY|BANKNIFTY|SENSEX" },
         "hide": 0,
         "label": "Index (regex)",
         "name": "index",
