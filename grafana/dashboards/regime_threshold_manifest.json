@@ -58,6 +58,49 @@
       ]
     },
     {
+      "type": "stat",
+      "title": "Max Relative Shift (%)",
+      "id": 5,
+      "datasource": "${DS_INFINITY}",
+      "targets": [
+        {
+          "datasource": "${DS_INFINITY}",
+          "type": "json",
+          "url": "/api/ml/ensemble/regime/threshold_manifest?include_full=1",
+          "parser": "backend",
+          "format": "table",
+          "transform": "json",
+          "root_selector": "relative_shifts",
+          "columns": []
+        }
+      ],
+      "options": {
+        "reduceOptions": { "values": false, "calcs": ["max"], "fields": "relative_shift_pct" },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "orange", "value": 10 },
+              { "color": "red", "value": 15 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "transformations": [
+        { "id": "filterFieldsByName", "options": { "include": ["relative_shift_pct"] } }
+      ]
+    },
+    {
       "type": "table",
       "title": "Relative Shifts (%)",
       "id": 4,
