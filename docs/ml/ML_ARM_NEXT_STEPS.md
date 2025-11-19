@@ -69,6 +69,9 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
       - KS thresholds (guideline): <0.1 stable, 0.1–0.2 moderate, >0.2 significant.
       - Grafana Alert Panels: dashboard includes Prometheus-based panels showing active PSI/KS alerts and a table of firing alerts.
         - Set Prometheus datasource UID in the dashboard JSON (`PROMETHEUS_DS_UID`) to your Prometheus datasource UID.
+      - Combined Severity Panel: "Combined Severity by Index" computes 0=OK, 1=WARNING, 2=CRITICAL using PSI/KS thresholds (max across features per index).
+        - PromQL:
+          `2 * clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1) + (1 - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)) * clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1)`
       - Alert Rules: `prometheus_alerts_shift.yml` includes PSI/KS warning/critical thresholds. Add to Prometheus:
         ```yaml
         rule_files:

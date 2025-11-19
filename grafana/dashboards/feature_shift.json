@@ -59,6 +59,28 @@
         {"id": "organize", "options": {"renameByName": {"Value": "active", "alertname": "alert", "index": "index", "feature": "feature", "severity": "severity"}}}
       ],
       "gridPos": {"h": 12, "w": 24, "x": 0, "y": 28}
+    },
+    {"type": "table", "title": "Combined Severity by Index", "id": 5,
+      "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
+      "targets": [
+        {"expr": "2 * clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1) + (1 - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)) * clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1)", "legendFormat": "severity", "instant": true}
+      ],
+      "options": {"showHeader": true},
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Value"}, "properties": [
+          {"id": "displayName", "value": "severity"},
+          {"id": "thresholds", "value": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}, {"color": "red", "value": 2}]}}
+        ]},
+        {"matcher": {"id": "byName", "options": "severity"}, "properties": [
+          {"id": "mappings", "value": [
+            {"type": 1, "options": {"match": "0", "result": {"text": "OK", "color": "green"}}},
+            {"type": 1, "options": {"match": "1", "result": {"text": "WARN", "color": "yellow"}}},
+            {"type": 1, "options": {"match": "2", "result": {"text": "CRIT", "color": "red"}}}
+          ]}
+        ]}
+      ]},
+      "transformations": [{"id": "organize", "options": {"renameByName": {"Value": "severity"}}}],
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 40}
     }
   ],
   "annotations": {"list": []},
