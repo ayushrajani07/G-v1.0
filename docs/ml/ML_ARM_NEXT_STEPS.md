@@ -4,7 +4,7 @@
 **Date:** 2025-11-18  
 **Status:** Post-Implementation Guidance  
 **Related Documents:**
-- `docs/ml/ML_ARM_IMPLEMENTATION_ROADMAP.md` (All Phases Complete)
+- `docs/ml/ML_ARM_IPLEMENTATION_ROADMAP.md` (All Phases Complete)
 - `docs/ml/ML_IMPROVEMENT_PLAN.md` (Performance Optimization)
 - `docs/ml/PRODUCTION_DEPLOYMENT_GUIDE.md` (Operational Guide)
 
@@ -139,6 +139,14 @@ The following real-time performance & quality metrics have been implemented to e
     $env:G6_REGIME_MAE_DRIFT_RATIO_WARN="1.42"; $env:G6_REGIME_MAE_DRIFT_RATIO_CRIT="1.61"
     ```
   - Stability harness: `scripts/ml/validate_drift_threshold_stability.py` checks relative shift of latest calibrated thresholds against prior median and exits non-zero if >15% (configurable). Integrate into CI to guard against noisy autorecalibration.
+  - Governance scheduler: `scripts/ml/govern_drift_thresholds.py` runs calibrate → validate → promote, writes a signed manifest under `metrics/drift_manifests`, and can apply env overrides to `.env` automatically when stable.
+    Example (PowerShell):
+    ```powershell
+    python scripts/ml/govern_drift_thresholds.py --indices NIFTY,BANKNIFTY --apply-env --json
+    ```
+    - Outputs promotion `manifest_YYYYMMDD_HHMMSS.json` and updates `metrics/drift_manifests/latest.json`.
+    - Exit codes: 0 ok | 2 insufficient history | 3 unstable | 4 guard-rail reject.
+    - Schedule daily via Task Scheduler. Suggested flags: `--min-horizons-to-promote 5 --max-percent-shift 0.10`.
 
 **Adaptive Smoothing Features:**
 - Supports direct alpha (`G6_ROLLING_MAE_DECAY`), observation half-life (`G6_ROLLING_MAE_HALF_LIFE`), or time-based half-life in minutes (`G6_ROLLING_MAE_TIME_HALF_LIFE_MINUTES`) with precedence: HALF_LIFE > TIME_HALF_LIFE_MINUTES > DECAY.
