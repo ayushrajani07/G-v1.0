@@ -59,6 +59,62 @@
     },
     {
       "type": "table",
+      "title": "Relative Shifts (%)",
+      "id": 4,
+      "datasource": "${DS_INFINITY}",
+      "targets": [
+        {
+          "datasource": "${DS_INFINITY}",
+          "type": "json",
+          "url": "/api/ml/ensemble/regime/threshold_manifest?include_full=1",
+          "parser": "backend",
+          "format": "table",
+          "transform": "json",
+          "root_selector": "relative_shifts",
+          "columns": []
+        }
+      ],
+      "options": {
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": { "unit": "percent" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "key" },
+            "properties": [ { "id": "unit", "value": "none" } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "violation" },
+            "properties": [ { "id": "custom.cellOptions", "value": { "type": "color-text" } } ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "relative_shift_pct" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "percentage",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "yellow", "value": 5 },
+                    { "color": "orange", "value": 10 },
+                    { "color": "red", "value": 15 }
+                  ]
+                }
+              },
+              { "id": "custom.cellOptions", "value": { "type": "gauge" } }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        { "id": "organize", "options": { "indexByName": {}, "renameByName": { "key": "metric", "relative_shift_pct": "shift_%" } } }
+      ]
+    },
+    {
+      "type": "table",
       "title": "Current Thresholds",
       "id": 2,
       "datasource": "${DS_INFINITY}",
