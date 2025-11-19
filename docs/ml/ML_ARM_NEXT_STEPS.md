@@ -56,6 +56,7 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
   - `scripts/ml/start_dashboard_api.ps1` runs uvicorn in background window (`-WindowStyle` or `DASHBOARD_API_WINDOW_STYLE`).
   - `scripts/ml/stop_dashboard_api.ps1` stops via diag PID and port clearance.
 - Grafana dashboards + provisioning added (Infinity and JSON API variants) for quick monitoring.
+    - Added `Metrics Compare` panel (index/horizon selectors) consuming `/api/ml/ensemble/metrics/compare?include_drift=1` for side-by-side drift + decay diagnostics.
 - Load-test harness (`scripts/ml/load_test_ensemble.py`) to measure p50/p95, error rate, cache stats.
 
 **Remote agent (prepared + ready to implement):**
