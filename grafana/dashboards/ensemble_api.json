@@ -21,7 +21,7 @@
           "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "infinity" },
           "url": "http://localhost:9500/api/ml/ensemble/forecast",
           "method": "GET",
-          "params": [ { "key": "index", "value": "${index}" }, { "key": "horizon", "value": "${horizon}" } ],
+          "params": [ { "key": "index", "value": "${INDEX}" }, { "key": "horizon", "value": "${horizon}" } ],
           "jsonOptions": { "rootIsNotArray": true, "fields": [ { "jsonPath": "forecast.p10", "label": "p10" }, { "jsonPath": "forecast.p50", "label": "p50" }, { "jsonPath": "forecast.p90", "label": "p90" }, { "jsonPath": "forecast.band_low", "label": "band_low" }, { "jsonPath": "forecast.band_high", "label": "band_high" } ] }
         }
       ]
@@ -32,7 +32,7 @@
       "type": "stat",
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
       "options": { "reduceOptions": { "calcs": ["last"], "values": false } },
-      "targets": [ { "refId": "B", "type": "json", "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "infinity" }, "url": "http://localhost:9500/api/ml/ensemble/forecast", "method": "GET", "params": [ { "key": "index", "value": "${index}" }, { "key": "horizon", "value": "${horizon}" } ], "jsonOptions": { "rootIsNotArray": true, "fields": [ { "jsonPath": "metadata.latency_ms", "label": "latency_ms" } ] } } ],
+      "targets": [ { "refId": "B", "type": "json", "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "infinity" }, "url": "http://localhost:9500/api/ml/ensemble/forecast", "method": "GET", "params": [ { "key": "index", "value": "${INDEX}" }, { "key": "horizon", "value": "${horizon}" } ], "jsonOptions": { "rootIsNotArray": true, "fields": [ { "jsonPath": "metadata.latency_ms", "label": "latency_ms" } ] } } ],
       "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] }
     },
     {
@@ -135,7 +135,7 @@
           "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "infinity" },
           "url": "http://localhost:9500/api/ml/ensemble/forecast",
           "method": "GET",
-          "params": [ { "key": "index", "value": "${index}" }, { "key": "horizon", "value": "${horizon}" }, { "key": "detail", "value": "full" } ],
+          "params": [ { "key": "index", "value": "${INDEX}" }, { "key": "horizon", "value": "${horizon}" }, { "key": "detail", "value": "full" } ],
           "jsonOptions": { "rootIsNotArray": true, "fields": [ { "jsonPath": "quantile_paths.p10[0]", "label": "p10_t0" }, { "jsonPath": "quantile_paths.p50[0]", "label": "p50_t0" }, { "jsonPath": "quantile_paths.p90[0]", "label": "p90_t0" } ] }
         }
       ]
@@ -145,7 +145,7 @@
   "schemaVersion": 38,
   "style": "dark",
   "tags": ["g6", "ml", "ensemble"],
-  "templating": { "list": [ { "name": "index", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": { "text": "NIFTY", "value": "NIFTY" } }, { "name": "horizon", "label": "Horizon", "type": "custom", "query": "15,30,60,120,240", "current": { "text": "60", "value": "60" } }, { "name": "lat_q", "label": "Latency Percentile", "type": "custom", "query": "0.90,0.95,0.99", "current": { "text": "0.95", "value": "0.95" } } ] },
+  "templating": { "list": [ { "name": "INDEX", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": { "text": "NIFTY", "value": "NIFTY" } }, { "name": "horizon", "label": "Horizon", "type": "custom", "query": "15,30,60,120,240", "current": { "text": "60", "value": "60" } }, { "name": "lat_q", "label": "Latency Percentile", "type": "custom", "query": "0.90,0.95,0.99", "current": { "text": "0.95", "value": "0.95" } } ] },
   "time": { "from": "now-15m", "to": "now" },
   "timepicker": {},
   "timezone": "",

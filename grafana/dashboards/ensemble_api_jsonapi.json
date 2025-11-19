@@ -19,7 +19,7 @@
           "refId": "A",
           "datasource": { "type": "simpod-json-datasource", "uid": "jsonapi" },
           "urlPath": "/api/ml/ensemble/forecast",
-          "queryParams": "index=${index}&horizon=${horizon}",
+          "queryParams": "index=${INDEX}&horizon=${horizon}",
           "cacheDurationSeconds": 5
         }
       ],
@@ -48,7 +48,7 @@
           "refId": "B",
           "datasource": { "type": "simpod-json-datasource", "uid": "jsonapi" },
           "urlPath": "/api/ml/ensemble/forecast",
-          "queryParams": "index=${index}&horizon=${horizon}",
+          "queryParams": "index=${INDEX}&horizon=${horizon}",
           "cacheDurationSeconds": 5
         }
       ],
@@ -101,7 +101,7 @@
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 16 },
       "options": {"reduceOptions": {"calcs": ["last"], "values": false}},
       "targets": [
-        {"refId": "E", "datasource": {"type": "simpod-json-datasource", "uid": "jsonapi"}, "urlPath": "/api/ml/ensemble/forecast", "queryParams": "index=${index}&horizon=${horizon}&detail=full", "cacheDurationSeconds": 5 }
+        {"refId": "E", "datasource": {"type": "simpod-json-datasource", "uid": "jsonapi"}, "urlPath": "/api/ml/ensemble/forecast", "queryParams": "index=${INDEX}&horizon=${horizon}&detail=full", "cacheDurationSeconds": 5 }
       ],
       "transformations": [ { "id": "jsonata", "options": { "expression": "{coverage: metadata.conformal_coverage}" } } ],
       "fieldConfig": {"defaults": {"unit": "percentunit"}}
@@ -136,7 +136,7 @@
       "gridPos": { "h": 8, "w": 12, "x": 18, "y": 16 },
       "options": {"showHeader": true},
       "targets": [
-        {"refId": "H", "datasource": {"type": "simpod-json-datasource", "uid": "jsonapi"}, "urlPath": "/api/ml/ensemble/forecast", "queryParams": "index=${index}&horizon=${horizon}&detail=full", "cacheDurationSeconds": 5 }
+        {"refId": "H", "datasource": {"type": "simpod-json-datasource", "uid": "jsonapi"}, "urlPath": "/api/ml/ensemble/forecast", "queryParams": "index=${INDEX}&horizon=${horizon}&detail=full", "cacheDurationSeconds": 5 }
       ],
       "transformations": [ { "id": "jsonata", "options": { "expression": "{p10_t0: quantile_paths.p10[0], p50_t0: quantile_paths.p50[0], p90_t0: quantile_paths.p90[0]}" } } ]
     }
@@ -147,7 +147,7 @@
   "tags": ["g6", "ml", "ensemble", "jsonapi"],
   "templating": {
     "list": [
-      {"name": "index", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": {"text": "NIFTY", "value": "NIFTY"}},
+      {"name": "INDEX", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": {"text": "NIFTY", "value": "NIFTY"}},
       {"name": "horizon", "label": "Horizon (min)", "type": "custom", "query": "15,30,60,120,240", "current": {"text": "60", "value": "60"}}
     ]
   },

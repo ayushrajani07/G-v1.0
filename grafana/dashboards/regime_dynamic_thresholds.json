@@ -29,7 +29,7 @@
           "refId": "A",
           "type": "json",
           "format": "table",
-          "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${var_index}&include_percentiles=1",
+          "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${INDEX}&include_percentiles=1",
           "data": "",
           "url_options": {"method": "GET"},
           "json_query": "$.horizons[*]",
@@ -176,7 +176,7 @@
           "refId": "B",
             "type": "json",
             "format": "table",
-            "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${var_index}&include_percentiles=1",
+            "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${INDEX}&include_percentiles=1",
             "url_options": {"method": "GET"},
             "json_query": "$.horizons[*]",
             "root_selector": "$.horizons[*]",
@@ -220,7 +220,7 @@
           "refId": "C",
           "type": "json",
           "format": "table",
-          "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${var_index}&include_percentiles=1",
+          "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${INDEX}&include_percentiles=1",
           "url_options": {"method": "GET"},
           "json_query": "$.horizons[*]",
           "root_selector": "$.horizons[*]",
@@ -254,15 +254,7 @@
   "tags": ["regime", "drift", "dynamic-thresholds"],
   "templating": {
     "list": [
-      {
-        "name": "var_index",
-        "label": "Index",
-        "type": "custom",
-        "query": "NIFTY,BANKNIFTY",
-        "current": {"text": "NIFTY", "value": "NIFTY"},
-        "includeAll": false,
-        "multi": false
-      },
+      {"name": "INDEX", "label": "Index", "type": "custom", "query": "NIFTY,BANKNIFTY", "current": {"text": "NIFTY", "value": "NIFTY"}, "includeAll": false, "multi": false},
       {
         "name": "G6_API_BASE",
         "label": "API Base",
