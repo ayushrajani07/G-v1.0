@@ -10,6 +10,7 @@
     {"type": "datasource", "id": "yesoreyeram-infinity-datasource", "name": "Infinity", "version": "2.6.0"}
   ],
   "title": "Feature Distribution Shift (PSI / KS)",
+  "description": "LIMIT controls history depth for heatmap/timeseries; higher values increase backend load and may slow rendering.",
   "uid": "feature-shift",
   "schemaVersion": 36,
   "version": 1,
