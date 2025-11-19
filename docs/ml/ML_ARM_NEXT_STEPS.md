@@ -67,6 +67,11 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
       - Prometheus Gauges: `g6_feature_psi{index,feature}` and `g6_feature_ks{index,feature}` auto-refreshed from latest artifact.
       - PSI thresholds (guideline): <0.1 stable, 0.1–0.25 moderate, >0.25 significant; >0.5 critical.
       - KS thresholds (guideline): <0.1 stable, 0.1–0.2 moderate, >0.2 significant.
+      - Alert Rules: `prometheus_alerts_shift.yml` includes PSI/KS warning/critical thresholds. Add to Prometheus:
+        ```yaml
+        rule_files:
+          - prometheus_alerts_shift.yml
+        ```
 - Load-test harness (`scripts/ml/load_test_ensemble.py`) to measure p50/p95, error rate, cache stats.
 
 **Remote agent (prepared + ready to implement):**

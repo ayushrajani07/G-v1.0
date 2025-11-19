@@ -1,0 +1,50 @@
+groups:
+  - name: g6_feature_shift.alerts
+    rules:
+      - alert: FeaturePSIHighWarning
+        expr: g6_feature_psi > 0.25
+        for: 15m
+        labels:
+          severity: warning
+          team: ml-ops
+        annotations:
+          summary: "PSI elevated ({{ $labels.feature }})"
+          description: |
+            PSI {{ $value }} for feature {{ $labels.feature }} (index={{ $labels.index }}) exceeds 0.25.
+            Indicates moderate distribution shift vs baseline.
+
+      - alert: FeaturePSIHighCritical
+        expr: g6_feature_psi > 0.5
+        for: 10m
+        labels:
+          severity: critical
+          team: ml-ops
+        annotations:
+          summary: "PSI critical ({{ $labels.feature }})"
+          description: |
+            PSI {{ $value }} for feature {{ $labels.feature }} (index={{ $labels.index }}) exceeds 0.5.
+            Significant distribution shift; investigate data pipeline or retrain.
+
+      - alert: FeatureKSHighWarning
+        expr: g6_feature_ks > 0.2
+        for: 15m
+        labels:
+          severity: warning
+          team: ml-ops
+        annotations:
+          summary: "KS elevated ({{ $labels.feature }})"
+          description: |
+            KS {{ $value }} for feature {{ $labels.feature }} (index={{ $labels.index }}) exceeds 0.2.
+            Indicates distribution difference vs baseline.
+
+      - alert: FeatureKSHighCritical
+        expr: g6_feature_ks > 0.3
+        for: 10m
+        labels:
+          severity: critical
+          team: ml-ops
+        annotations:
+          summary: "KS critical ({{ $labels.feature }})"
+          description: |
+            KS {{ $value }} for feature {{ $labels.feature }} (index={{ $labels.index }}) exceeds 0.3.
+            Significant distribution shift; consider mitigation.
