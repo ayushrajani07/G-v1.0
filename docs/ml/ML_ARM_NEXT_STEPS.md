@@ -74,7 +74,7 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
           `2 * clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1) + (1 - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)) * clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1)`
       - Index-level Annotations: dashboard annotations mark WARN (yellow) and CRIT (red) escalations per index using PromQL.
         - Set `PROMETHEUS_DS_UID` in annotations too. Titles show `WARN/CRIT escalation: {index}`.
-      - Per-feature Heatmap: "PSI Heatmap (24h)" uses `/api/ml/ensemble/feature_shift/heatmap?metric=psi` flattened rows and renders a banded state timeline by feature across 24h with thresholds (0.25/0.5).
+      - Per-feature Heatmap: "${METRIC} Heatmap (24h)" uses `/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}`; set `METRIC` dashboard variable to `psi` or `ks` (default `psi`). Thresholds: PSI (0.25/0.5), KS (0.2/0.3).
       - Alert Rules: `prometheus_alerts_shift.yml` includes PSI/KS warning/critical thresholds. Add to Prometheus:
         ```yaml
         rule_files:
