@@ -49,15 +49,15 @@ Operational guide for identifying, confirming, and responding to regime change a
 ## Recalibration Procedure
 1. Run calibration:
    ```powershell
-   python scripts/ml/calibrate_drift_thresholds.py --indices NIFTY,BANKNIFTY --min-count 30
+   python scripts/ml/calibrate_drift_thresholds.py --indices NIFTY,BANKNIFTY,SENSEX --min-count 30
    ```
 2. Validate stability:
    ```powershell
-   python scripts/ml/validate_drift_threshold_stability.py --indices NIFTY,BANKNIFTY --max-shift-pct 0.15
+   python scripts/ml/validate_drift_threshold_stability.py --indices NIFTY,BANKNIFTY,SENSEX --max-shift-pct 0.15
    ```
 3. Govern & Promote (with auto-tune):
    ```powershell
-   python scripts/ml/govern_drift_thresholds.py --indices NIFTY,BANKNIFTY --apply-env --auto-tune-percentiles --auto-tune-epsilon 0.005 --json
+   python scripts/ml/govern_drift_thresholds.py --indices NIFTY,BANKNIFTY,SENSEX --apply-env --auto-tune-percentiles --auto-tune-epsilon 0.005 --json
    ```
 4. Confirm manifest update:
    ```powershell
@@ -77,7 +77,7 @@ Rollback if any of:
 - Auto-tune penalty regression >10% vs previous manifest.
 Command example:
 ```powershell
-python scripts/ml/govern_drift_thresholds.py --indices NIFTY,BANKNIFTY --rollback-on-critical --rollback-threshold 0.25 --json
+python scripts/ml/govern_drift_thresholds.py --indices NIFTY,BANKNIFTY,SENSEX --rollback-on-critical --rollback-threshold 0.25 --json
 ```
 
 ## TTL Study Interpretation

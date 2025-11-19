@@ -123,7 +123,7 @@ var_delta = (recent_var - baseline_var) / baseline_var
 | `G6_DRIFT_BASELINE_DAYS` | Baseline window (days) | `30` | Last N calendar days |
 | `G6_DRIFT_RECENT_ROWS` | Recent window (rows) | `300` | Intraday sample size |
 | `G6_DRIFT_EVAL_INTERVAL_SEC` | Evaluation frequency | `300` | 5 minutes |
-| `G6_DRIFT_INDICES` | Indices to monitor | `NIFTY,BANKNIFTY` | Comma-separated |
+| `G6_DRIFT_INDICES` | Indices to monitor | `NIFTY,BANKNIFTY,SENSEX` | Comma-separated |
 | `G6_DRIFT_PSI_THRESHOLD` | PSI alert threshold | `0.25` | Major shift level |
 | `G6_DRIFT_KS_PVALUE_THRESHOLD` | KS p-value threshold | `0.01` | Significance level |
 | `G6_DRIFT_MEAN_ZSCORE_THRESHOLD` | Mean delta Z-score | `3.0` | Standard deviations |
@@ -141,8 +141,8 @@ export G6_DRIFT_RECENT_ROWS=500
 # Evaluate every 10 minutes
 export G6_DRIFT_EVAL_INTERVAL_SEC=600
 
-# Monitor NIFTY and BANKNIFTY
-export G6_DRIFT_INDICES="NIFTY,BANKNIFTY"
+# Monitor NIFTY, BANKNIFTY and SENSEX
+export G6_DRIFT_INDICES="NIFTY,BANKNIFTY,SENSEX"
 
 # Use stricter thresholds
 export G6_DRIFT_PSI_THRESHOLD=0.20

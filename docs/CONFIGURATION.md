@@ -23,7 +23,7 @@ The G6 Platform has evolved to use **1,065+ environment variables** for configur
 ### Minimal Configuration
 ```bash
 export G6_CSV_BASE_DIR="data/g6_data"
-export G6_INDICES="NIFTY,BANKNIFTY"
+export G6_INDICES="NIFTY,BANKNIFTY,SENSEX"
 export KITE_API_KEY="your_key"
 export KITE_API_SECRET="your_secret"
 ```
@@ -31,7 +31,7 @@ export KITE_API_SECRET="your_secret"
 ### Recommended Production
 ```bash
 export G6_CSV_BASE_DIR="data/g6_data"
-export G6_INDICES="NIFTY,BANKNIFTY,FINNIFTY"
+export G6_INDICES="NIFTY,BANKNIFTY,SENSEX,FINNIFTY"
 export G6_COLLECTION_INTERVAL=60
 export G6_METRICS_ENABLED=1
 export G6_METRICS_PORT=9108
