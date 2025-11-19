@@ -41,7 +41,7 @@ This document captures what we delivered for the intraday path-forecasting servi
   - `GET /api/ml/path_forecast_json?index=BANKNIFTY&horizon_minutes=60&date_str=2025-11-04` returned ~60 ribbon rows `{time,q10,q50,q90}`
   - `GET /api/ml/path_forecast_meta?index=NIFTY&horizon_minutes=60` returned meta with retrieval details, calibration snapshot, and `source_status: ok`
 - Calibration batch (one-shot for 2025-11-04)
-  - Command: `scripts/ml/calibrate_bands.py --indices NIFTY,BANKNIFTY --horizons 60 --window-minutes 180 --target 0.8 --base-url http://127.0.0.1:9500 --date-str 2025-11-04`
+  - Command: `scripts/ml/calibrate_bands.py --indices NIFTY,BANKNIFTY,SENSEX --horizons 60 --window-minutes 180 --target 0.8 --base-url http://127.0.0.1:9500 --date-str 2025-11-04`
   - Results:
     - NIFTY → 200 OK; `band_scale=5.0`, `prev=5.0`, `target=0.8`, `actual=0.0`, `samples=240`
     - BANKNIFTY → 200 with `error="no comparable points"` (expected if archives/realized overlap is sparse for that day/window)
@@ -73,7 +73,7 @@ This document captures what we delivered for the intraday path-forecasting servi
 2) Verify endpoints (optional)
    - `scripts/verify_ml_endpoints.py --base-url http://127.0.0.1:9500 --index NIFTY --horizon 1 --model sk_hgb_regressor --window-minutes 60 --tail 5`
 3) Seed calibration
-   - `scripts/ml/calibrate_bands.py --indices NIFTY,BANKNIFTY --horizons 30,60 --window-minutes 180 --target 0.8 --base-url http://127.0.0.1:9500`
+  - `scripts/ml/calibrate_bands.py --indices NIFTY,BANKNIFTY,SENSEX --horizons 30,60 --window-minutes 180 --target 0.8 --base-url http://127.0.0.1:9500`
 4) Reload Grafana panels (optional)
    - VS Code task: "Grafana: Reload + Open"
 

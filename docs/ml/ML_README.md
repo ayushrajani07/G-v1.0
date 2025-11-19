@@ -107,7 +107,7 @@ Note: Commands are optional examples for Windows PowerShell. Replace ports/paths
 1) Discover and run a grid of path-forecast configurations:
 ```powershell
 # Optional example: generate evaluation runs (adjust indices/horizons/windows/k/modes)
-cmd /c "set PYTHONPATH=%CD% & %CD%\.venv\Scripts\python.exe scripts\ml\path_forecast_grid_eval.py --discover --indices NIFTY,BANKNIFTY --horizons 30,60 --windows 60,120 --k 10,15 --modes retrieval,auto,hybrid --bucket-ms 60000 --at end"
+cmd /c "set PYTHONPATH=%CD% & %CD%\.venv\Scripts\python.exe scripts\ml\path_forecast_grid_eval.py --discover --indices NIFTY,BANKNIFTY,SENSEX --horizons 30,60 --windows 60,120 --k 10,15 --modes retrieval,auto,hybrid --bucket-ms 60000 --at end"
 ```
 2) Combine results into a ranking:
 ```powershell
@@ -179,7 +179,7 @@ cmd /c "set PYTHONPATH=%CD% & %CD%\.venv\Scripts\python.exe scripts\ml\seed_ann_
 - Keep calibration fresh automatically (daemon):
 ```powershell
 # Optional example
-%CD%\.venv\Scripts\python.exe scripts\ml\auto_calibrate_daemon.py --indices NIFTY,BANKNIFTY --horizon 60 --window-minutes 180 --interval 300 --base-url http://127.0.0.1:9500
+%CD%\.venv\Scripts\python.exe scripts\ml\auto_calibrate_daemon.py --indices NIFTY,BANKNIFTY,SENSEX --horizon 60 --window-minutes 180 --interval 300 --base-url http://127.0.0.1:9500
 ```
 
 ---

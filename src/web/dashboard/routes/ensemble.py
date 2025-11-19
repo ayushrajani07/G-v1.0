@@ -117,6 +117,14 @@ class RegimeStatusResponse(BaseModel):
     norm_error_p90_max: float
     breaches: list[RegimeBreach]
 
+class EnsembleConfigResponse(BaseModel):
+    index: str = Field(..., description="Index e.g. NIFTY")
+    config_file: str | None = Field(None, description="Resolved config file path if present")
+    loaded: bool = Field(False, description="True if config parsed and forecaster initialized")
+    components: Dict[str, bool] = Field(default_factory=dict, description="Component enablement flags")
+    weighting: Dict[str, float] = Field(default_factory=dict, description="Active weighting parameters")
+    errors: str | None = Field(None, description="Initialization error, if any")
+
 # --------------------------- Helpers ---------------------------
 _def_components = ['baseline', 'gbrt', 'retrieval', 'conformal']
 
@@ -521,6 +529,47 @@ def _get_forecaster(index: str) -> Optional[EnsembleForecaster]:
         _init_errors[idx] = f"init_failed: {e}"
         _LOG.error(f"Forecaster init failed for {idx}: {e}", exc_info=True)
         return None
+
+@router.get('/config', response_model=EnsembleConfigResponse)
+async def ensemble_config(index: str = Query(..., description="Index e.g. NIFTY")):
+    """Return parsed ensemble configuration for an index.
+
+    Minimal stub endpoint to confirm config presence for newly added indices (e.g. SENSEX).
+    Always attempts lazy initialization so that forecaster/config are cached for subsequent forecasts.
+    """
+    idx = index.upper().strip()
+    cfg_path = _config_dir() / f"{idx.lower()}_ensemble_config.json"
+    fore = _get_forecaster(idx)  # triggers lazy load
+    cfg = _configs.get(idx)
+    loaded = fore is not None and cfg is not None
+    components: Dict[str, bool] = {}
+    weighting: Dict[str, float] = {}
+    if cfg:
+        try:
+            components = {
+                'baseline': cfg.baseline_enabled,
+                'gbrt': cfg.gbrt_enabled,
+                'retrieval': cfg.retrieval_enabled,
+                'conformal': cfg.conformal_enabled,
+            }
+            weighting = {
+                'confidence_threshold': cfg.confidence_threshold,
+                'weights_high_conf_gbrt': cfg.weights_high_conf_gbrt,
+                'weights_high_conf_retrieval': cfg.weights_high_conf_retrieval,
+                'weights_low_conf_gbrt': cfg.weights_low_conf_gbrt,
+                'weights_low_conf_retrieval': cfg.weights_low_conf_retrieval,
+                'min_candidates_threshold': cfg.min_candidates_threshold,
+            }
+        except Exception:
+            pass
+    return EnsembleConfigResponse(
+        index=idx,
+        config_file=str(cfg_path) if cfg_path.exists() else None,
+        loaded=loaded,
+        components=components,
+        weighting=weighting,
+        errors=_init_errors.get(idx),
+    )
 
 # --------------------------- Recent Window Loader ---------------------------
 def _load_recent_window(index: str, limit: int) -> list[list[float]]:

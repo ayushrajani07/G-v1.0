@@ -23,7 +23,7 @@ This guide explains how to run the ANN benchmarking harness and interpret the ou
 
 - Minimal example:
 
-  - Indices: `NIFTY,BANKNIFTY`
+  - Indices: `NIFTY,BANKNIFTY,SENSEX`
   - Tag: `this_week`
   - Offsets: `0`
   - Date range: `2025-10-01..2025-11-06`
@@ -33,10 +33,10 @@ This guide explains how to run the ANN benchmarking harness and interpret the ou
   Inside the repo folder:
 
   - Run via the harness directly (replace paths if needed):
-    - `scripts/ml/ann_harness_large.py --indices NIFTY,BANKNIFTY --tags this_week --offsets 0 --start 2025-10-01 --end 2025-11-06 --windows 60 --horizons 60 --k 15 --ann-max-candidates 50 --modes retrieval,auto,hybrid --out-root results/ann_large --metrics-minimal`
+    - `scripts/ml/ann_harness_large.py --indices NIFTY,BANKNIFTY,SENSEX --tags this_week --offsets 0 --start 2025-10-01 --end 2025-11-06 --windows 60 --horizons 60 --k 15 --ann-max-candidates 50 --modes retrieval,auto,hybrid --out-root results/ann_large --metrics-minimal`
 
   Or use your Python from `.venv`:
-    - `.venv/Scripts/python.exe scripts/ml/ann_harness_large.py --indices NIFTY,BANKNIFTY --tags this_week --offsets 0 --start 2025-10-01 --end 2025-11-06 --windows 60 --horizons 60 --k 15 --ann-max-candidates 50 --modes retrieval,auto,hybrid --out-root results/ann_large --metrics-minimal`
+    - `.venv/Scripts/python.exe scripts/ml/ann_harness_large.py --indices NIFTY,BANKNIFTY,SENSEX --tags this_week --offsets 0 --start 2025-10-01 --end 2025-11-06 --windows 60 --horizons 60 --k 15 --ann-max-candidates 50 --modes retrieval,auto,hybrid --out-root results/ann_large --metrics-minimal`
 
 Notes:
 - For heavier runs, drop `--metrics-minimal` to compute full metrics, but expect longer runtimes.
@@ -130,7 +130,7 @@ Example (combined features):
 
 ```
 python scripts/ml/ann_harness_large.py \
-  --indices NIFTY,BANKNIFTY --tags this_week --offsets 0 \
+  --indices NIFTY,BANKNIFTY,SENSEX --tags this_week --offsets 0 \
   --start 2025-10-01 --end 2025-11-06 \
   --windows 60 --horizons 60 --k 15 \
   --modes retrieval,auto,hybrid \

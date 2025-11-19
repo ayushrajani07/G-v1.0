@@ -91,7 +91,7 @@ cmd /c "cd /d C:\Users\Asus\Desktop\g6_reorganized && set PYTHONPATH=C:\Users\As
 - Grid evaluation (discovery, last 1 day, moderate sample):
 
 ```powershell
-cmd /c "cd /d C:\Users\Asus\Desktop\g6_reorganized && set PYTHONPATH=C:\Users\Asus\Desktop\g6_reorganized && C:\Users\Asus\Desktop\g6_reorganized\.venv\Scripts\python.exe scripts\ml\path_forecast_grid_eval.py --discover --indices NIFTY,BANKNIFTY --tags this_week --offsets 0 --horizons 30,60 --windows 0,60,120 --k 10,15 --modes auto,retrieval --bucket-ms 60000 --at end --last-days 1 --scales 1.0 --verbose"
+cmd /c "cd /d C:\Users\Asus\Desktop\g6_reorganized && set PYTHONPATH=C:\Users\Asus\Desktop\g6_reorganized && C:\Users\Asus\Desktop\g6_reorganized\.venv\Scripts\python.exe scripts\ml\path_forecast_grid_eval.py --discover --indices NIFTY,BANKNIFTY,SENSEX --tags this_week --offsets 0 --horizons 30,60 --windows 0,60,120 --k 10,15 --modes auto,retrieval --bucket-ms 60000 --at end --last-days 1 --scales 1.0 --verbose"
 ```
 
 - Panels read benchmark:

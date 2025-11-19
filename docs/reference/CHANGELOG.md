@@ -275,7 +275,7 @@ See `INEFFICIENCIES_REPORT.md` for detailed analysis and methodology.
 - `tests/test_parity_alerts_and_strike_meta.py`: Asserts structural parity (alerts + strike/field coverage aggregates + partial reasons) between legacy and pipeline collectors.
 
 ### Performance (Synthetic Smoke – Informational Only)
-- Benchmark (`scripts/bench_perf_smoke.py --indices NIFTY,BANKNIFTY --cycles 3`) on synthetic provider produced approximate mean cycle durations:
+- Benchmark (`scripts/bench_perf_smoke.py --indices NIFTY,BANKNIFTY,SENSEX --cycles 3`) on synthetic provider produced approximate mean cycle durations:
 	- legacy: ~0.02139 s
 	- pipeline_sync: ~0.000207 s (≈103× faster)
 	- pipeline_async: ~0.000159 s (≈135× faster overall; ≈1.3× over pipeline_sync)

@@ -160,7 +160,7 @@ The following real-time performance & quality metrics have been implemented to e
   - Grafana dashboard JSON added: `grafana/dashboards/regime_dynamic_thresholds.json` (Infinity datasource). Polls every 60s and colors rows by breach state.
   - Threshold auto-calibration script: `scripts/ml/calibrate_drift_thresholds.py` produces recommended env overrides from rolling baselines. Example:
     ```powershell
-    python scripts/ml/calibrate_drift_thresholds.py --indices NIFTY,BANKNIFTY --min-count 30
+    python scripts/ml/calibrate_drift_thresholds.py --indices NIFTY,BANKNIFTY,SENSEX --min-count 30
     # Export the printed lines (PowerShell):
     $env:G6_REGIME_MAE_DRIFT_RATIO_WARN="1.42"; $env:G6_REGIME_MAE_DRIFT_RATIO_CRIT="1.61"
     ```
@@ -168,7 +168,7 @@ The following real-time performance & quality metrics have been implemented to e
   - Governance scheduler: `scripts/ml/govern_drift_thresholds.py` runs calibrate → validate → promote, writes a signed manifest under `metrics/drift_manifests`, and can apply env overrides to `.env` automatically when stable.
     Example (PowerShell):
     ```powershell
-    python scripts/ml/govern_drift_thresholds.py --indices NIFTY,BANKNIFTY --apply-env --json
+    python scripts/ml/govern_drift_thresholds.py --indices NIFTY,BANKNIFTY,SENSEX --apply-env --json
     ```
     - Outputs promotion `manifest_YYYYMMDD_HHMMSS.json` and updates `metrics/drift_manifests/latest.json`.
     - Exit codes: 0 ok | 2 insufficient history | 3 unstable | 4 guard-rail reject.
@@ -563,7 +563,7 @@ Infrastructure provisioned; production services configured; monitoring stack (Pr
    # Compare predictions without affecting production
    python scripts/ml/shadow_deployment.py \
      --days 7 \
-     --indices NIFTY,BANKNIFTY \
+    --indices NIFTY,BANKNIFTY,SENSEX \
      --compare-with baseline
    ```
 
@@ -687,7 +687,7 @@ cfg = RetrievalConfig.from_modular(
 # Expected: 25-40% speedup for grid evaluation
 python scripts/ml/grid_eval_parallel.py \
   --workers 4 \
-  --indices NIFTY,BANKNIFTY
+  --indices NIFTY,BANKNIFTY,SENSEX
 ```
 
 #### Persistent Disk Cache
@@ -735,7 +735,7 @@ python scripts/ml/generate_performance_report.py \
 #### Morning Checks (9:00 AM)
 ```bash
 # Pre-market validation
-python scripts/ml/daily_health_check.py --index NIFTY,BANKNIFTY
+python scripts/ml/daily_health_check.py --index NIFTY,BANKNIFTY,SENSEX
 
 # Check model freshness
 python scripts/ml/check_model_age.py --alert-threshold 14
@@ -791,7 +791,7 @@ python scripts/ml/track_feature_importance.py \
 ```bash
 # Detect distribution shifts
 python scripts/ml/detect_model_drift.py \
-  --index NIFTY,BANKNIFTY \
+  --index NIFTY,BANKNIFTY,SENSEX \
   --baseline-period 30d \
   --test-period 7d \
   --alert-threshold 0.15

@@ -34,7 +34,7 @@ Discovery mode sweep:
 ```
 set PYTHONPATH=%CD%
 %CD%\.venv\Scripts\python.exe scripts\ml\path_forecast_grid_eval.py \
-  --discover --indices NIFTY,BANKNIFTY --tags this_week --offsets 0 \
+  --discover --indices NIFTY,BANKNIFTY,SENSEX --tags this_week --offsets 0 \
   --horizons 30,60 --windows 0,60,120,180 --k 10,15,20 --modes auto,hybrid,retrieval \
   --bucket-ms 60000 --at end \
   --use-ann --ann-space cosine --ann-max-candidates 50 --ann-compare --ann-effect-tolerance 5

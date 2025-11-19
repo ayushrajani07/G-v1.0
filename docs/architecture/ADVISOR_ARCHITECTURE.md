@@ -35,7 +35,7 @@ Add new plugin:
 
 ## API Usage
 ```
-GET /api/ml/universal_advisor?indices=NIFTY,BANKNIFTY&windows=60,120&detail=true
+GET /api/ml/universal_advisor?indices=NIFTY,BANKNIFTY,SENSEX&windows=60,120&detail=true
 ```
 - `detail=false` returns only summary + flags for lightweight polling.
 - Use `use_prometheus=true&prometheus=http://127.0.0.1:9090` to switch to Prometheus queries.
