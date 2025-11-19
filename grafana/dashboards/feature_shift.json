@@ -86,7 +86,7 @@
       "gridPos": {"h": 10, "w": 24, "x": 0, "y": 40}
     },
     {"type": "state-timeline", "title": "${METRIC:upper} Heatmap (24h)", "id": 6, "datasource": "${DS_INFINITY}",
-      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=2000&index=${INDEX}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=${LIMIT}&index=${INDEX}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
       "options": {"legend": {"displayMode": "hidden"}},
       "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.25}, {"color": "red", "value": 0.5}]}, "unit": "none"}, "overrides": []},
       "transformations": [
@@ -96,7 +96,7 @@
       "gridPos": {"h": 12, "w": 24, "x": 0, "y": 50}
     },
     {"type": "timeseries", "title": "Per-Feature ${METRIC:upper} Timeseries", "id": 7, "datasource": "${DS_INFINITY}",
-      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=2000&index=${INDEX}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
+      "targets": [{"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}&limit=${LIMIT}&index=${INDEX}", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}],
       "fieldConfig": {"defaults": {"unit": "none", "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "never", "spanNulls": true}}, "overrides": []},
       "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
       "transformations": [
