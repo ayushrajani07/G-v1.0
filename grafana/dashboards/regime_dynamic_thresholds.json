@@ -71,6 +71,42 @@
             ]
           },
           {
+            "matcher": {"id": "byName", "options": "MAE Warn"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "sparkline", "sparkline": {"show": true, "lineColor": "gray", "fillColor": "rgba(128,128,128,0.2)"}}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "MAE Crit"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "sparkline", "sparkline": {"show": true, "lineColor": "red", "fillColor": "rgba(255,0,0,0.15)"}}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Norm Warn"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "sparkline", "sparkline": {"show": true, "lineColor": "orange", "fillColor": "rgba(255,165,0,0.15)"}}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Norm Crit"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "sparkline", "sparkline": {"show": true, "lineColor": "darkred", "fillColor": "rgba(139,0,0,0.15)"}}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Cov Warn"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "sparkline", "sparkline": {"show": true, "lineColor": "teal", "fillColor": "rgba(0,128,128,0.15)"}}}
+            ]
+          },
+          {
+            "matcher": {"id": "byName", "options": "Cov Crit"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "sparkline", "sparkline": {"show": true, "lineColor": "purple", "fillColor": "rgba(128,0,128,0.15)"}}}
+            ]
+          },
+          {
             "matcher": {"id": "byName", "options": "MAE Ratio"},
             "properties": [
               {"id": "thresholds", "value": {"mode": "absolute", "steps": [
@@ -172,6 +208,44 @@
         "tooltip": {"mode": "multi"}
       },
       "gridPos": {"h": 10, "w": 24, "x": 0, "y": 18}
+    }
+    ,
+    {
+      "id": 3,
+      "title": "Per-Horizon Drift Annotations",
+      "type": "table",
+      "datasource": {"type": "yesoreyeram-infinity-datasource","uid": "infinity"},
+      "targets": [
+        {
+          "refId": "C",
+          "type": "json",
+          "format": "table",
+          "url": "${G6_API_BASE}/api/ml/ensemble/regime/dynamic_thresholds?index=${var_index}&include_percentiles=1",
+          "url_options": {"method": "GET"},
+          "json_query": "$.horizons[*]",
+          "root_selector": "$.horizons[*]",
+          "columns": [
+            {"selector": "horizon", "text": "Horizon"},
+            {"selector": "breach.drift_triggered", "text": "Triggered"},
+            {"selector": "breach.drift_reasons", "text": "Reasons"},
+            {"selector": "latest_metrics.mae_ratio", "text": "MAE Ratio"},
+            {"selector": "latest_metrics.norm_ratio", "text": "Norm Ratio"},
+            {"selector": "latest_metrics.coverage_delta", "text": "Coverage Δ"}
+          ]
+        }
+      ],
+      "options": {"showHeader": true},
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": [
+        {"matcher": {"id": "byName", "options": "Triggered"}, "properties": [
+          {"id": "mappings", "value": [
+            {"type": 1, "options": {"match": "true", "result": {"text": "YES", "color": "red"}}},
+            {"type": 1, "options": {"match": "false", "result": {"text": "NO", "color": "green"}}}
+          ]},
+          {"id": "custom.cellOptions", "value": {"type": "color-text"}}
+        ]}
+      ]},
+      "transformations": [{"id": "organize", "options": {"renameByName": {"horizon": "Horizon (m)"}}}],
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 28}
     }
   ],
   "refresh": "1m",
