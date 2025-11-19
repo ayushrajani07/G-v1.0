@@ -1295,6 +1295,19 @@ async def regime_autotune_canary_history(limit: int = Query(100, ge=1, le=1000, 
         _LOG.warning(f"regime_autotune_canary_history_failed: {e}")
         raise HTTPException(status_code=500, detail="regime_autotune_canary_history_failed")
 
+@router.get('/ttl_study')
+async def ttl_study_latest():
+    """Return latest TTL impact study JSON if present."""
+    try:
+        path = Path('metrics') / 'ttl_study' / 'latest.json'
+        if not path.is_file():
+            return {"available": False}
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except Exception as e:
+        _LOG.warning(f"ttl_study_latest_failed: {e}")
+        raise HTTPException(status_code=500, detail="ttl_study_latest_failed")
+
 @router.post('/metrics/flush')
 async def metrics_flush():
     """Force flush rolling MAE & coverage state to persistence file (Phase 10).
