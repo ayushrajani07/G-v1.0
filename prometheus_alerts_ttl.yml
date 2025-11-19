@@ -1,0 +1,38 @@
+groups:
+  - name: g6_ttl_study.alerts
+    rules:
+      - alert: TTLStudyImprovementFound
+        expr: g6_ttl_study_best_p95_improvement_ms < -10
+        for: 10m
+        labels:
+          severity: info
+          team: ml-ops
+        annotations:
+          summary: "Adaptive TTL shows p95 improvement"
+          description: |
+            Best p95 delta vs baseline is {{ $value }} ms (negative = improvement).
+            Consider rolling out adaptive TTL settings.
+
+      - alert: TTLStudyNoImprovement
+        expr: g6_ttl_study_best_p95_improvement_ms > -5
+        for: 1h
+        labels:
+          severity: warning
+          team: ml-ops
+        annotations:
+          summary: "TTL study shows no meaningful p95 improvement"
+          description: |
+            Best p95 improvement is {{ $value }} ms.
+            Tune adaptive min/max or maintain static TTL.
+
+      - alert: TTLStudyHitRatioRegression
+        expr: g6_ttl_study_best_hit_ratio_delta < 0
+        for: 10m
+        labels:
+          severity: warning
+          team: ml-ops
+        annotations:
+          summary: "Adaptive TTL reduces cache hit ratio"
+          description: |
+            Best hit ratio delta is {{ $value }} (< 0).
+            Adaptive TTL may be too low; increase adaptive-min.

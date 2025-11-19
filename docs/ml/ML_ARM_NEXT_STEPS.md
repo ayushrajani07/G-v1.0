@@ -241,6 +241,16 @@ recorded_dynamic_coverage_drop_crit{index="NIFTY",horizon="60"}
       * API: `GET /api/ml/ensemble/ttl_study` serves latest study output for dashboards.
       * Dashboard: `grafana/dashboards/ttl_impact.json` includes scenario summary table and p95 delta timeseries.
       * Recording Rules: `prometheus_recording_rules_ttl.yml` defines `g6_ttl_study_best_p95_improvement_ms`, `g6_ttl_study_best_hit_ratio_delta`, etc. Add to Prometheus `rule_files`.
+      * Alert Rules: `prometheus_alerts_ttl.yml` adds:
+        - `TTLStudyImprovementFound` (info) when best p95 delta < -10ms for 10m.
+        - `TTLStudyNoImprovement` (warning) when best p95 delta > -5ms for 1h.
+        - `TTLStudyHitRatioRegression` (warning) when best hit ratio delta < 0 for 10m.
+        Add both files to Prometheus:
+        ```yaml
+        rule_files:
+          - prometheus_recording_rules_ttl.yml
+          - prometheus_alerts_ttl.yml
+        ```
       * Advanced Load Pattern: Warmup (`--warmup-duration`) with half concurrency then optional ramp (`--ramp-steps --ramp-interval`) to progressively reach target QPS before measurement window.
       * Example run:
         ```powershell

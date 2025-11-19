@@ -45,6 +45,23 @@
       "fieldConfig": {"defaults": {"unit": "none", "custom": {"drawStyle": "line", "lineWidth": 2, "showPoints": "never", "spanNulls": true}}, "overrides": []},
       "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
       "gridPos": {"h": 14, "w": 24, "x": 0, "y": 10}
+    },
+    {
+      "type": "timeseries",
+      "title": "Stacked Area: Top-${TOPK} Importance Share",
+      "id": 3,
+      "datasource": "${DS_INFINITY}",
+      "targets": [
+        {"datasource": "${DS_INFINITY}", "type": "json", "url": "${G6_API_BASE}/api/ml/ensemble/feature_importance/timeseries?top_k=${TOPK}&limit=200", "parser": "backend", "format": "table", "transform": "json", "root_selector": "$", "columns": []}
+      ],
+      "fieldConfig": {"defaults": {"unit": "percent", "custom": {"drawStyle": "line", "lineWidth": 1, "showPoints": "never", "spanNulls": true, "stacking": {"mode": "normal"}}}, "overrides": [{"matcher": {"id": "byName", "options": "ts"}, "properties": [{"id": "unit", "value": "time:ms"}]}]},
+      "options": {"legend": {"displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi"}},
+      "transformations": [
+        {"id": "calculateField", "options": {"mode": "reduceRow", "reduce": {"reducer": "sum", "fields": "!ts"}, "alias": "total"}},
+        {"id": "organize", "options": {"excludeByName": {"total": false}}},
+        {"id": "calculateField", "options": {"mode": "binary", "binary": {"left": "__series.*", "reducer": "ratio", "right": "total"}}}
+      ],
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 24}
     }
   ],
   "annotations": {"list": []},
