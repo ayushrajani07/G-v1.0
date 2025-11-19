@@ -195,6 +195,16 @@ def main() -> int:
         except Exception:
             prev_latest = None
 
+    # Chain-of-trust: capture previous manifest signature if available
+    prev_signature = None
+    if prev_latest:
+        try:
+            with open(os.path.join(args.manifest_dir, prev_latest), 'r', encoding='utf-8') as pf:
+                _prev_mf = json.load(pf)
+            prev_signature = _prev_mf.get('signature')
+        except Exception:
+            prev_signature = None
+
     manifest = {
         "version": 1,
         "promoted_at": datetime.utcnow().isoformat() + "Z",
@@ -226,7 +236,18 @@ def main() -> int:
         "reason": reason,
         "auto_tune": auto_tune_summary,
     }
-    manifest["signature"] = sha256_json(manifest)
+    # Base signature excludes chain fields
+    base_signature = sha256_json(manifest)
+    manifest["prev_signature"] = prev_signature
+    manifest["base_signature"] = base_signature
+    # Final chain signature binds previous signature (if any) + base signature
+    chain_input = {
+        "prev_signature": prev_signature,
+        "base_signature": base_signature,
+        "promoted_at": manifest["promoted_at"],
+        "indices": manifest["indices"],
+    }
+    manifest["signature"] = sha256_json(chain_input)
 
     mf_name = f"manifest_{ts_tag}.json"
     mf_path = os.path.join(args.manifest_dir, mf_name)
