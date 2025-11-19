@@ -72,6 +72,8 @@ This document outlines a structured approach for the next 6-12 months of ML ARM 
       - Combined Severity Panel: "Combined Severity by Index" computes 0=OK, 1=WARNING, 2=CRITICAL using PSI/KS thresholds (max across features per index).
         - PromQL:
           `2 * clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1) + (1 - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)) * clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1)`
+      - Index-level Annotations: dashboard annotations mark WARN (yellow) and CRIT (red) escalations per index using PromQL.
+        - Set `PROMETHEUS_DS_UID` in annotations too. Titles show `WARN/CRIT escalation: {index}`.
       - Alert Rules: `prometheus_alerts_shift.yml` includes PSI/KS warning/critical thresholds. Add to Prometheus:
         ```yaml
         rule_files:

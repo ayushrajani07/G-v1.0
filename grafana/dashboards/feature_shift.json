@@ -83,7 +83,30 @@
       "gridPos": {"h": 10, "w": 24, "x": 0, "y": 40}
     }
   ],
-  "annotations": {"list": []},
+  "annotations": {"list": [
+    {
+      "name": "Shift Warn Escalation",
+      "type": "dashboard",
+      "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
+      "enable": true,
+      "iconColor": "rgba(237, 129, 40, 1)",
+      "expr": "((clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1) - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)) == 1) and on(index) (changes(clamp_max(max by (index) ((g6_feature_psi > 0.25) bool + (g6_feature_ks > 0.2) bool), 1) - clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1))[5m]) > 0)",
+      "titleFormat": "WARN escalation: {{index}}",
+      "tagKeys": "index",
+      "textFormat": "PSI/KS crossed warn threshold"
+    },
+    {
+      "name": "Shift Crit Escalation",
+      "type": "dashboard",
+      "datasource": {"type": "prometheus", "uid": "PROMETHEUS_DS_UID"},
+      "enable": true,
+      "iconColor": "rgba(245, 54, 54, 1)",
+      "expr": "(clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1) == 1) and on(index) (changes(clamp_max(max by (index) ((g6_feature_psi > 0.5) bool + (g6_feature_ks > 0.3) bool), 1)[5m]) > 0)",
+      "titleFormat": "CRIT escalation: {{index}}",
+      "tagKeys": "index",
+      "textFormat": "PSI/KS crossed critical threshold"
+    }
+  ]},
   "time": {"from": "now-24h", "to": "now"},
   "timepicker": {"refresh_intervals": ["30s", "1m", "5m", "15m", "1h"]}
 }
