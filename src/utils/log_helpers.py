@@ -174,10 +174,14 @@ def log_cycle_complete(logger: logging.Logger,
     duration_s = duration_ms / 1000.0
     index_parts = []
     
+    poor_indices: list[str] = []
     for index, metrics in index_metrics.items():
         success_pct = metrics.get("success_pct", 0.0)
         field_coverage_pct = metrics.get("field_coverage_pct", 0.0)
         strike_count = metrics.get("strike_count", 0)
+        missing_strike_cov = metrics.get("missing_strike_cov", 0)
+        missing_field_cov = metrics.get("missing_field_cov", 0)
+        expiries_total = metrics.get("expiries", 0)
         
         # Format with appropriate icon based on quality
         if success_pct >= THRESHOLD_SUCCESS_EXCELLENT and field_coverage_pct >= THRESHOLD_COVERAGE_EXCELLENT:
@@ -196,6 +200,10 @@ def log_cycle_complete(logger: logging.Logger,
                 icon, index, strike_count, success_colored, coverage_colored
             )
         )
+        if success_pct < THRESHOLD_SUCCESS_GOOD or field_coverage_pct < THRESHOLD_COVERAGE_GOOD:
+            poor_indices.append(
+                f"DEBUG {index}: expiries={expiries_total} miss_strike_cov={missing_strike_cov} miss_field_cov={missing_field_cov} raw_success={success_pct:.1f}% raw_field_cov={field_coverage_pct:.1f}%"
+            )
     
     # Build multi-line output with each index on its own line
     # Add IST timestamp
@@ -206,6 +214,9 @@ def log_cycle_complete(logger: logging.Logger,
     lines.append("")  # Blank line after header
     lines.extend(index_parts)
     
+    if poor_indices:
+        lines.append("")
+        lines.extend(poor_indices)
     msg = "\n".join(lines)
     
     # Log with blank line above and below for better visibility
@@ -220,6 +231,9 @@ def log_cycle_complete(logger: logging.Logger,
             **{f"{idx}_success_pct": m.get("success_pct", 0.0) for idx, m in index_metrics.items()},
             **{f"{idx}_field_coverage_pct": m.get("field_coverage_pct", 0.0) for idx, m in index_metrics.items()},
             **{f"{idx}_strike_count": m.get("strike_count", 0) for idx, m in index_metrics.items()},
+            **{f"{idx}_missing_strike_cov": m.get("missing_strike_cov", 0) for idx, m in index_metrics.items()},
+            **{f"{idx}_missing_field_cov": m.get("missing_field_cov", 0) for idx, m in index_metrics.items()},
+            **{f"{idx}_expiries": m.get("expiries", 0) for idx, m in index_metrics.items()},
         }
     )
 

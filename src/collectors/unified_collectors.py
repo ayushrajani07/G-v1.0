@@ -194,6 +194,43 @@ _G6_PROVIDER_OUTAGE_SEQ: int = 0
 # Explicit public exports (static) – replaces late mutation pattern
 __all__: list[str] = ['_EXPIRY_SERVICE_SINGLETON']
 
+# -------------------- Signal & Watchdog Setup (debug) --------------------
+import signal as _signal
+import threading as _threading
+_CYCLE_MARK_TS = time.time()
+def _mark_cycle_progress() -> None:
+    global _CYCLE_MARK_TS
+    _CYCLE_MARK_TS = time.time()
+
+try:
+    # Restore Ctrl+C unless explicitly disabled
+    if EnvConfig.get_bool('G6_COLLECTOR_STRICT_SIGNALS', True):
+        _signal.signal(_signal.SIGINT, _signal.default_int_handler)
+except Exception:
+    pass
+
+def _start_watchdog() -> None:
+    if not EnvConfig.get_bool('G6_COLLECTOR_WATCHDOG', False):
+        return
+    interval = max(1, EnvConfig.get_int('G6_COLLECTOR_WATCHDOG_INTERVAL', 5))
+    stall = max(interval + 1, EnvConfig.get_int('G6_COLLECTOR_STALL_TIMEOUT_SEC', 30))
+    def _loop():
+        global _CYCLE_MARK_TS
+        while True:
+            try:
+                if (time.time() - _CYCLE_MARK_TS) > stall:
+                    print(f"[collector-watchdog] stall>{stall}s – forcing exit", flush=True)
+                    os._exit(1)
+            except Exception:
+                pass
+            time.sleep(interval)
+    try:
+        _threading.Thread(target=_loop, daemon=True).start()
+    except Exception:
+        pass
+
+_start_watchdog()
+
 # Backward-compatibility shim: IV estimation block re-export
 # Tests import _iv_estimation_block from this module; delegate to modular implementation.
 try:  # pragma: no cover - simple adapter
@@ -1888,15 +1925,32 @@ def run_unified_collectors(
                         elif status == 'STALE':
                             field_coverage_pct = 50.0
                 
+                expiries_list = idx_entry.get('expiries', []) or []
+                missing_strike_cov = 0
+                missing_field_cov = 0
+                try:
+                    for ex in expiries_list:
+                        scv = ex.get('strike_cov') or ex.get('strike_coverage')
+                        fcv = ex.get('field_cov') or ex.get('field_coverage')
+                        if not scv:
+                            missing_strike_cov += 1
+                        if not fcv:
+                            missing_field_cov += 1
+                except Exception:
+                    pass
                 index_metrics_map[index_name] = {
                     'success_pct': success_pct,
                     'field_coverage_pct': field_coverage_pct,
                     'strike_count': option_count,
+                    'missing_strike_cov': missing_strike_cov,
+                    'missing_field_cov': missing_field_cov,
+                    'expiries': len(expiries_list),
                 }
             
             # Log cycle completion
             if index_metrics_map:
                 duration_ms = int(total_elapsed * 1000)
+                _mark_cycle_progress()  # touch watchdog timestamp
                 log_cycle_complete(logger, duration_ms, index_metrics_map)
         except Exception as e:
             logger.debug("Failed to log cycle metrics: %s", e, exc_info=True)
