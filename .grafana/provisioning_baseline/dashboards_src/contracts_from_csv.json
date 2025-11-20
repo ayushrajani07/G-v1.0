@@ -27,19 +27,25 @@
 				]},
 				{"matcher": {"id": "byName", "options": "Call OI"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "right"},
-					{"id": "unit", "value": "short"}
+					{"id": "unit", "value": "short"},
+					{"id": "custom.lineWidth", "value": 2},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Put OI"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "right"},
-					{"id": "unit", "value": "short"}
+					{"id": "unit", "value": "short"},
+					{"id": "custom.lineWidth", "value": 2},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Call Volume"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "right"},
-					{"id": "unit", "value": "short"}
+					{"id": "unit", "value": "short"},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Put Volume"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "right"},
-					{"id": "unit", "value": "short"}
+					{"id": "unit", "value": "short"},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "PCR"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "right"},
@@ -64,24 +70,47 @@
 		},
 		{
 			"type": "timeseries",
+			"title": "NIFTY PCR",
+			"gridPos": {"h": 6, "w": 24, "x": 0, "y": 12},
+			"options": {"legend": {"showLegend": false}},
+			"fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+			"targets": [
+				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
+				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+				 "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_pcr=1",
+				 "json_options": {"root_is_array": true},
+				 "columns": [
+						{"selector": "time_str", "text": "time", "type": "timestamp"},
+						{"selector": "pcr", "text": "PCR", "type": "number"}
+				 ]}
+			]
+		},
+		{
+			"type": "timeseries",
 			"title": "SENSEX | $expiry_ns | $offset – OI / VOL / PCR",
-			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 12},
+			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 18},
 			"options": {"legend": {"showLegend": true, "placement": "bottom"}},
 			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
 				{"matcher": {"id": "byName", "options": "Index Price"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "left"}
 				]},
 				{"matcher": {"id": "byName", "options": "Call OI"}, "properties": [
-					{"id": "custom.axisPlacement", "value": "right"}
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "custom.lineWidth", "value": 2},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Put OI"}, "properties": [
-					{"id": "custom.axisPlacement", "value": "right"}
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "custom.lineWidth", "value": 2},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Call Volume"}, "properties": [
-					{"id": "custom.axisPlacement", "value": "right"}
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Put Volume"}, "properties": [
-					{"id": "custom.axisPlacement", "value": "right"}
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "PCR"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "right"},
@@ -104,26 +133,32 @@
 				 ]}
 			]
 		},
-		{
+		,{
 			"type": "timeseries",
 			"title": "BANKNIFTY | $expiry_bf | $offset – OI / VOL / PCR",
-			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 24},
+			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 30},
 			"options": {"legend": {"showLegend": true, "placement": "bottom"}},
 			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
 				{"matcher": {"id": "byName", "options": "Index Price"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "left"}
 				]},
 				{"matcher": {"id": "byName", "options": "Call OI"}, "properties": [
-					{"id": "custom.axisPlacement", "value": "right"}
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "custom.lineWidth", "value": 2},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Put OI"}, "properties": [
-					{"id": "custom.axisPlacement", "value": "right"}
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "custom.lineWidth", "value": 2},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Call Volume"}, "properties": [
-					{"id": "custom.axisPlacement", "value": "right"}
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "Put Volume"}, "properties": [
-					{"id": "custom.axisPlacement", "value": "right"}
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
 				]},
 				{"matcher": {"id": "byName", "options": "PCR"}, "properties": [
 					{"id": "custom.axisPlacement", "value": "right"},
@@ -143,6 +178,40 @@
 					 {"selector": "ce_vol", "text": "Call Volume", "type": "number"},
 					 {"selector": "pe_vol", "text": "Put Volume", "type": "number"},
 					 {"selector": "pcr", "text": "PCR", "type": "number"}
+				 ]}
+			]
+		}
+		,{
+			"type": "timeseries",
+			"title": "SENSEX PCR",
+			"gridPos": {"h": 6, "w": 24, "x": 0, "y": 42},
+			"options": {"legend": {"showLegend": false}},
+			"fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+			"targets": [
+				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
+				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+				 "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_pcr=1",
+				 "json_options": {"root_is_array": true},
+				 "columns": [
+						{"selector": "time_str", "text": "time", "type": "timestamp"},
+						{"selector": "pcr", "text": "PCR", "type": "number"}
+				 ]}
+			]
+		}
+		,{
+			"type": "timeseries",
+			"title": "BANKNIFTY PCR",
+			"gridPos": {"h": 6, "w": 24, "x": 0, "y": 54},
+			"options": {"legend": {"showLegend": false}},
+			"fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+			"targets": [
+				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
+				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+				 "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_pcr=1",
+				 "json_options": {"root_is_array": true},
+				 "columns": [
+						{"selector": "time_str", "text": "time", "type": "timestamp"},
+						{"selector": "pcr", "text": "PCR", "type": "number"}
 				 ]}
 			]
 		}
