@@ -90,7 +90,9 @@ function Reload-GrafanaProvisioning {
     return $false
   }
 }
-
+      # Fallback if either blank
+      if (-not $User) { $User = 'admin' }
+      if (-not $Pass) { $Pass = 'admin' }
 Write-Host "=== G6 Observability Stack (Clean) ===" -ForegroundColor Cyan
 
 # Directories
