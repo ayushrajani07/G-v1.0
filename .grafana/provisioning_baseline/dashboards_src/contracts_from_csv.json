@@ -20,7 +20,32 @@
 			"title": "NIFTY | $expiry_ns | $offset – OI / VOL / PCR",
 			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 0},
 			"options": {"legend": {"showLegend": true, "placement": "bottom"}},
-			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
+				{"matcher": {"id": "byName", "options": "Index Price"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "left"},
+					{"id": "color", "value": {"mode": "palette-classic"}}
+				]},
+				{"matcher": {"id": "byName", "options": "Call OI"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "unit", "value": "short"}
+				]},
+				{"matcher": {"id": "byName", "options": "Put OI"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "unit", "value": "short"}
+				]},
+				{"matcher": {"id": "byName", "options": "Call Volume"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "unit", "value": "short"}
+				]},
+				{"matcher": {"id": "byName", "options": "Put Volume"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "unit", "value": "short"}
+				]},
+				{"matcher": {"id": "byName", "options": "PCR"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "unit", "value": "percent"}
+				]}
+			]},
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
@@ -42,7 +67,27 @@
 			"title": "SENSEX | $expiry_ns | $offset – OI / VOL / PCR",
 			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 12},
 			"options": {"legend": {"showLegend": true, "placement": "bottom"}},
-			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
+				{"matcher": {"id": "byName", "options": "Index Price"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "left"}
+				]},
+				{"matcher": {"id": "byName", "options": "Call OI"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"}
+				]},
+				{"matcher": {"id": "byName", "options": "Put OI"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"}
+				]},
+				{"matcher": {"id": "byName", "options": "Call Volume"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"}
+				]},
+				{"matcher": {"id": "byName", "options": "Put Volume"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"}
+				]},
+				{"matcher": {"id": "byName", "options": "PCR"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "unit", "value": "percent"}
+				]}
+			]},
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
@@ -64,7 +109,27 @@
 			"title": "BANKNIFTY | $expiry_bf | $offset – OI / VOL / PCR",
 			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 24},
 			"options": {"legend": {"showLegend": true, "placement": "bottom"}},
-			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
+				{"matcher": {"id": "byName", "options": "Index Price"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "left"}
+				]},
+				{"matcher": {"id": "byName", "options": "Call OI"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"}
+				]},
+				{"matcher": {"id": "byName", "options": "Put OI"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"}
+				]},
+				{"matcher": {"id": "byName", "options": "Call Volume"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"}
+				]},
+				{"matcher": {"id": "byName", "options": "Put Volume"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"}
+				]},
+				{"matcher": {"id": "byName", "options": "PCR"}, "properties": [
+					{"id": "custom.axisPlacement", "value": "right"},
+					{"id": "unit", "value": "percent"}
+				]}
+			]},
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
