@@ -76,8 +76,10 @@ function Find-Prometheus {
 function Reload-GrafanaProvisioning {
   param([int]$Port, [string]$User='admin', [string]$Pass='admin')
   try {
-    # Use $() to avoid parser issues with ':' after a variable name
-    $pair = "$( $User ):$( $Pass )" -replace ' '\n+    $basic = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($pair))
+    if (-not $User) { $User = 'admin' }
+    if (-not $Pass) { $Pass = 'admin' }
+    $pair = "${User}:${Pass}"
+    $basic = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($pair))
     $headers = @{ Authorization = "Basic $basic" }
     $uriDash = "http://127.0.0.1:$Port/api/admin/provisioning/dashboards/reload"
     $uriDS = "http://127.0.0.1:$Port/api/admin/provisioning/datasources/reload"
@@ -90,9 +92,6 @@ function Reload-GrafanaProvisioning {
     return $false
   }
 }
-      # Fallback if either blank
-      if (-not $User) { $User = 'admin' }
-      if (-not $Pass) { $Pass = 'admin' }
 Write-Host "=== G6 Observability Stack (Clean) ===" -ForegroundColor Cyan
 
 # Directories
