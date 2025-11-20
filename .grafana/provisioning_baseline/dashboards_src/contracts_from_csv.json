@@ -1,0 +1,86 @@
+{
+	"uid": "g6-contracts-live-csv-infinity",
+	"title": "G6 Contracts – Live from CSV (Infinity)",
+	"editable": true,
+	"schemaVersion": 39,
+	"refresh": "15s",
+	"tags": ["g6", "contracts", "infinity", "csv"],
+	"timezone": "Asia/Kolkata",
+	"templating": {
+		"list": [
+			{"name": "offset", "type": "custom", "query": "0,+100,-100,+200,-200", "current": {"text": "0", "value": "0"}, "label": "Offset"},
+			{"name": "expiry_ns", "type": "custom", "query": "this_week,next_week,this_month,next_month", "current": {"text": "this_week", "value": "this_week"}, "label": "Expiry (NIFTY/SENSEX)"},
+			{"name": "expiry_bf", "type": "custom", "query": "this_month,next_month", "current": {"text": "this_month", "value": "this_month"}, "label": "Expiry (BANK/FIN)"}
+		]
+	},
+	"time": {"from": "now-12h", "to": "now+6h"},
+	"panels": [
+		{
+			"type": "timeseries",
+			"title": "NIFTY | $expiry_ns | $offset – OI / VOL / PCR",
+			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 0},
+			"options": {"legend": {"showLegend": true, "placement": "bottom"}},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"targets": [
+				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
+				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+				 "json_options": {"root_is_array": true},
+				 "columns": [
+					 {"selector": "time_str", "text": "time", "type": "timestamp"},
+					 {"selector": "index_price", "text": "Index Price", "type": "number"},
+					 {"selector": "ce_oi", "text": "Call OI", "type": "number"},
+					 {"selector": "pe_oi", "text": "Put OI", "type": "number"},
+					 {"selector": "ce_vol", "text": "Call Volume", "type": "number"},
+					 {"selector": "pe_vol", "text": "Put Volume", "type": "number"},
+					 {"selector": "pcr", "text": "PCR", "type": "number"}
+				 ]}
+			]
+		},
+		{
+			"type": "timeseries",
+			"title": "SENSEX | $expiry_ns | $offset – OI / VOL / PCR",
+			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 12},
+			"options": {"legend": {"showLegend": true, "placement": "bottom"}},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"targets": [
+				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
+				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+				 "json_options": {"root_is_array": true},
+				 "columns": [
+					 {"selector": "time_str", "text": "time", "type": "timestamp"},
+					 {"selector": "index_price", "text": "Index Price", "type": "number"},
+					 {"selector": "ce_oi", "text": "Call OI", "type": "number"},
+					 {"selector": "pe_oi", "text": "Put OI", "type": "number"},
+					 {"selector": "ce_vol", "text": "Call Volume", "type": "number"},
+					 {"selector": "pe_vol", "text": "Put Volume", "type": "number"},
+					 {"selector": "pcr", "text": "PCR", "type": "number"}
+				 ]}
+			]
+		},
+		{
+			"type": "timeseries",
+			"title": "BANKNIFTY | $expiry_bf | $offset – OI / VOL / PCR",
+			"gridPos": {"h": 12, "w": 24, "x": 0, "y": 24},
+			"options": {"legend": {"showLegend": true, "placement": "bottom"}},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"targets": [
+				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
+				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+				 "json_options": {"root_is_array": true},
+				 "columns": [
+					 {"selector": "time_str", "text": "time", "type": "timestamp"},
+					 {"selector": "index_price", "text": "Index Price", "type": "number"},
+					 {"selector": "ce_oi", "text": "Call OI", "type": "number"},
+					 {"selector": "pe_oi", "text": "Put OI", "type": "number"},
+					 {"selector": "ce_vol", "text": "Call Volume", "type": "number"},
+					 {"selector": "pe_vol", "text": "Put Volume", "type": "number"},
+					 {"selector": "pcr", "text": "PCR", "type": "number"}
+				 ]}
+			]
+		}
+	],
+	"timepicker": {"refresh_intervals": ["15s", "30s", "1m", "2m", "5m"]}
+}

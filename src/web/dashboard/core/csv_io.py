@@ -201,6 +201,8 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
             have_pe = 'pe' in fns
             have_idx = 'index_price' in fns
             have_iv = ('ce_iv' in fns) or ('pe_iv' in fns)
+            have_oi = ('ce_oi' in fns) or ('pe_oi' in fns)
+            have_vol = ('ce_vol' in fns) or ('pe_vol' in fns)
             have_greeks = any(c in fns for c in (
                 'ce_delta','pe_delta','ce_theta','pe_theta','ce_vega','pe_vega','ce_gamma','pe_gamma','ce_rho','pe_rho'
             ))
@@ -246,6 +248,26 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
                                 obj[col] = float(str(v))
                             except (ValueError, TypeError):
                                 # Invalid numeric conversion or type error
+                                obj[col] = None
+                if have_oi:
+                    for col in ('ce_oi', 'pe_oi'):
+                        v = r.get(col)
+                        if v is None or v == '':
+                            obj[col] = None
+                        else:
+                            try:
+                                obj[col] = float(str(v))
+                            except (ValueError, TypeError):
+                                obj[col] = None
+                if have_vol:
+                    for col in ('ce_vol', 'pe_vol'):
+                        v = r.get(col)
+                        if v is None or v == '':
+                            obj[col] = None
+                        else:
+                            try:
+                                obj[col] = float(str(v))
+                            except (ValueError, TypeError):
                                 obj[col] = None
                 if have_greeks:
                     for col in (

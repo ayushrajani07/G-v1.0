@@ -62,6 +62,9 @@ async def api_live_csv(
     include_iv: str | None = None,
     include_greeks: str | None = None,
     include_analytics: str | None = None,
+    include_oi: str | None = None,
+    include_volume: str | None = None,
+    include_pcr: str | None = None,
     indices: str | None = None,
 ) -> JSONResponse:
     """Return today's live CSV as JSON rows for Infinity.
@@ -116,6 +119,9 @@ async def api_live_csv(
         inc_analytics = _parse_bool_flag(include_analytics, False)
         inc_iv = _parse_bool_flag(include_iv, inc_analytics)
         inc_greeks = _parse_bool_flag(include_greeks, inc_analytics)
+        inc_oi = _parse_bool_flag(include_oi, False)
+        inc_vol = _parse_bool_flag(include_volume, False)
+        inc_pcr = _parse_bool_flag(include_pcr, False)
 
         def _find_with_fallback(_idx: str) -> Path | None:
             p = _find_live_csv(base, _idx, expiry_tag, offset, day)
@@ -150,6 +156,10 @@ async def api_live_csv(
                 keep_keys.add("index_price")
             if inc_iv:
                 keep_keys.update({"ce_iv", "pe_iv"})
+            if inc_oi:
+                keep_keys.update({"ce_oi", "pe_oi"})
+            if inc_vol:
+                keep_keys.update({"ce_vol", "pe_vol"})
             if inc_greeks:
                 keep_keys.update(
                     {
@@ -211,6 +221,24 @@ async def api_live_csv(
                     # Value conversion, type errors, division by zero, or dict access errors
                     for r in rows_sel:
                         r["index_pct"] = None
+
+            # Derive PCR if requested
+            if inc_pcr:
+                for r in rows_sel:
+                    pcr_val = None
+                    try:
+                        co = r.get("pe_oi")
+                        ceo = r.get("ce_oi")
+                        if isinstance(co, (int, float)) and isinstance(ceo, (int, float)) and ceo != 0:
+                            pcr_val = float(co) / float(ceo)
+                        else:
+                            pv = r.get("pe_vol")
+                            cv = r.get("ce_vol")
+                            if isinstance(pv, (int, float)) and isinstance(cv, (int, float)) and cv != 0:
+                                pcr_val = float(pv) / float(cv)
+                    except Exception:
+                        pcr_val = None
+                    r["pcr"] = pcr_val
 
             # Limit after filtering (keep most recent N rows)
             if isinstance(limit, int) and limit > 0 and len(rows_sel) > limit:
