@@ -81,6 +81,48 @@
 				 ]}
 			]
 		}
+		,
+		{
+			"type": "row",
+			"title": "Aggregated Metrics",
+			"gridPos": {"h": 1, "w": 24, "x": 0, "y": 36},
+			"id": 900,
+			"collapsed": false,
+			"panels": []
+		},
+		{
+			"type": "timeseries",
+			"title": "Option Open Interest (Prom)",
+			"gridPos": {"h": 8, "w": 8, "x": 0, "y": 37},
+			"datasource": {"type": "prometheus", "uid": "PROM"},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"targets": [
+				{"expr": "g6_option_oi", "refId": "A"}
+			],
+			"options": {"legend": {"showLegend": true, "placement": "bottom"}}
+		},
+		{
+			"type": "timeseries",
+			"title": "Option Volume (Prom)",
+			"gridPos": {"h": 8, "w": 8, "x": 8, "y": 37},
+			"datasource": {"type": "prometheus", "uid": "PROM"},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"targets": [
+				{"expr": "g6_option_volume", "refId": "A"}
+			],
+			"options": {"legend": {"showLegend": true, "placement": "bottom"}}
+		},
+		{
+			"type": "timeseries",
+			"title": "Put-Call Ratio (Prom)",
+			"gridPos": {"h": 8, "w": 8, "x": 16, "y": 37},
+			"datasource": {"type": "prometheus", "uid": "PROM"},
+			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+			"targets": [
+				{"expr": "g6_put_call_ratio", "refId": "A"}
+			],
+			"options": {"legend": {"showLegend": true, "placement": "bottom"}}
+		}
 	],
 	"timepicker": {"refresh_intervals": ["15s", "30s", "1m", "2m", "5m"]}
 }
