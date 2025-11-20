@@ -315,6 +315,61 @@ async def api_live_csv(
             category=ErrorCategory.FILE_IO,
             severity=ErrorSeverity.LOW,
             component="web.dashboard.routes.live",
+
+
+@router.get("/api/live_csv_health")
+async def api_live_csv_health(
+    index: str = Query(default="NIFTY"),
+    expiry_tag: str = Query(default="this_week"),
+    offset: str = Query(default="0"),
+) -> JSONResponse:
+    """Lightweight health/status summary for live CSV.
+
+    Returns: {status, index, expiry_tag, offset, rows, last_ts, columns_present}
+    Does not perform time filtering or heavy processing; always limit=1 internally.
+    """
+    try:
+        day = _dt.datetime.now(_dt.UTC).date()
+        base = _project_root() / "data" / "g6_data"
+        path = _find_live_csv(base, index, expiry_tag, offset, day)
+        if not path:
+            return ORJSONResponse(
+                {
+                    "status": "missing",
+                    "index": index.upper(),
+                    "expiry_tag": expiry_tag,
+                    "offset": offset,
+                    "rows": 0,
+                    "last_ts": None,
+                    "columns_present": [],
+                },
+                status_code=200,
+            )
+        rows_full = _load_csv_rows_full(path)
+        last = rows_full[-1] if rows_full else {}
+        cols = list(last.keys()) if last else []
+        return ORJSONResponse(
+            {
+                "status": "ok" if rows_full else "empty",
+                "index": index.upper(),
+                "expiry_tag": expiry_tag,
+                "offset": offset,
+                "rows": len(rows_full),
+                "last_ts": last.get("ts"),
+                "columns_present": cols,
+            }
+        )
+    except Exception as e:  # noqa: BLE001
+        return ORJSONResponse(
+            {
+                "status": "error",
+                "error": str(e),
+                "index": index.upper(),
+                "expiry_tag": expiry_tag,
+                "offset": offset,
+            },
+            status_code=500,
+        )
             function_name="api_live_csv",
             message="Failed serving live CSV JSON",
             should_log=False,
