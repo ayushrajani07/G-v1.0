@@ -71,13 +71,10 @@ prometheus/
 !prometheus.yml
 !prometheus_rules.yml
 !prometheus_alerts.yml
-grafana/
-!grafana/dashboards/
-!grafana/dashboards/*.json
-!grafana/dashboards/components/
-!grafana/dashboards/components/*.json
-!grafana/provisioning/
-!grafana/provisioning/**
+# Grafana: track all dashboard JSON & provisioning (no blanket ignore to avoid silent reverts)
+# Previous pattern ignored entire grafana/ then re-allowed subsets; removing to ensure new folders (manual/, generated/, misc/) are tracked.
+# If large runtime artifacts appear, explicitly ignore them (e.g., grafana/data/).
+!grafana/**
 
 # --- Local environment snapshots (do not commit) ---
 env_snapshots/

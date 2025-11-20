@@ -1,9 +1,9 @@
 ﻿apiVersion: 1
 providers:
-  - name: G6
+  - name: G6 Stable
     type: file
-    disableDeletion: false
-    editable: true
+    disableDeletion: true  # prevent accidental UI deletes
+    editable: false        # dashboard edits should go through repo workflow
     options:
       path: 'c:/Users/Asus/Desktop/g6_reorganized/.grafana/provisioning_baseline/dashboards_src'
       foldersFromFilesStructure: true
