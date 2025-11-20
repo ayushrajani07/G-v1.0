@@ -18,6 +18,8 @@ import traceback
 from typing import Any
 
 import uvicorn
+import signal
+from types import FrameType
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
@@ -33,6 +35,29 @@ def run_server(args: argparse.Namespace) -> int:
     from src.web.dashboard.app import app  # local import; raises if missing
 
     restarts = 0
+    # Interrupt handling state (ignore first SIGINT/SIGTERM to avoid auto injected signal)
+    interrupt_count = 0
+
+    def make_handler(sig_name: str):
+        def _handler(signum: int, frame: FrameType | None) -> None:  # noqa: D401
+            nonlocal interrupt_count
+            interrupt_count += 1
+            if interrupt_count == 1:
+                print(f"[runner] received {sig_name} (count=1) - ignoring; send again to terminate.")
+            else:
+                print(f"[runner] received {sig_name} (count={interrupt_count}) - terminating.")
+                raise KeyboardInterrupt()
+        return _handler
+
+    # Install custom handlers once outside retry loop
+    try:
+        signal.signal(signal.SIGINT, make_handler('SIGINT'))
+    except (ValueError, OSError, RuntimeError):  # pragma: no cover
+        pass
+    try:
+        signal.signal(signal.SIGTERM, make_handler('SIGTERM'))
+    except (ValueError, OSError, RuntimeError):  # pragma: no cover
+        pass
     while restarts <= args.max_restarts:
         config = uvicorn.Config(
             app,
@@ -54,7 +79,11 @@ def run_server(args: argparse.Namespace) -> int:
             else:
                 print("[runner] server returned False, will retry")
         except KeyboardInterrupt:
-            print("[runner] KeyboardInterrupt received; shutting down")
+            # If only first interrupt, continue running (already ignored inside handler)
+            if interrupt_count < 2:
+                print("[runner] single interrupt ignored; continuing")
+                continue
+            print("[runner] KeyboardInterrupt threshold reached; shutting down")
             return 0
         except Exception as e:  # noqa: BLE001
             print("[runner] crash detected:")
