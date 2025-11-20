@@ -38,7 +38,7 @@ If a dashboard is intentionally reduced (panel removal), run scan and include ra
 - Forgetting to update baseline after intentional expansion -> check will fail.
 
 ## Future Enhancements
-- UID duplicate checker script.
+- UID duplicate checker script (added `scripts/grafana/uid_checker.py`).
 - Nightly export & diff against repo to detect drift.
 - Generated dashboards subfolder (if spec generation revived) kept isolated.
 
@@ -46,6 +46,7 @@ If a dashboard is intentionally reduced (panel removal), run scan and include ra
 ```bash
 python scripts/grafana/dashboard_guard.py --scan
 python scripts/grafana/dashboard_guard.py --check
+python scripts/grafana/uid_checker.py --paths .grafana/provisioning_baseline/dashboards_src grafana/dashboards/miscellaneous
 ```
 
 ## Hash File
