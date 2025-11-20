@@ -1,0 +1,76 @@
+"""Persistent Uvicorn runner for dashboard app.
+
+Usage (PowerShell):
+  python run_dashboard_server.py --port 9510 --host 0.0.0.0 --reload  # optional reload
+
+Features:
+- Lifespan disabled (avoid shutdown hooks causing early exit)
+- Automatic retry on port in use or unexpected crash
+- Graceful Ctrl+C handling
+- Optional --reload passthrough
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+import time
+import traceback
+from typing import Any
+
+import uvicorn
+
+def parse_args() -> argparse.Namespace:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--port", type=int, default=9510)
+    ap.add_argument("--host", type=str, default="127.0.0.1")
+    ap.add_argument("--reload", action="store_true", help="Enable auto-reload (dev only)")
+    ap.add_argument("--max-restarts", type=int, default=10)
+    ap.add_argument("--restart-delay", type=float, default=2.0)
+    return ap.parse_args()
+
+
+def run_server(args: argparse.Namespace) -> int:
+    from src.web.dashboard.app import app  # local import; raises if missing
+
+    restarts = 0
+    while restarts <= args.max_restarts:
+        config = uvicorn.Config(
+            app,
+            host=args.host,
+            port=args.port,
+            log_level="info",
+            reload=args.reload,
+            lifespan="off",  # disable lifespan to prevent premature shutdown
+            timeout_keep_alive=30,
+        )
+        server = uvicorn.Server(config)
+        print(f"[runner] starting uvicorn host={args.host} port={args.port} reload={args.reload} attempt={restarts+1}")
+        try:
+            rc = server.run()
+            # server.run() returns True if started successfully & wasn't stopped by error
+            if rc is True:
+                print("[runner] server stopped gracefully")
+                return 0
+            else:
+                print("[runner] server returned False, will retry")
+        except KeyboardInterrupt:
+            print("[runner] KeyboardInterrupt received; shutting down")
+            return 0
+        except Exception as e:  # noqa: BLE001
+            print("[runner] crash detected:")
+            traceback.print_exc()
+        restarts += 1
+        if restarts <= args.max_restarts:
+            print(f"[runner] sleeping {args.restart_delay}s before restart")
+            time.sleep(args.restart_delay)
+    print("[runner] exceeded max restarts; exiting with failure")
+    return 1
+
+
+def main() -> None:
+    args = parse_args()
+    code = run_server(args)
+    sys.exit(code)
+
+if __name__ == "__main__":
+    main()
