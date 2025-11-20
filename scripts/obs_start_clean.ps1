@@ -3,10 +3,11 @@
 # Defaults to REQUIRING LOGIN (admin/admin)
 param(
   [int]$GrafanaPort = 3002,
-  [int]$WebPort = 9500,
+  [int]$WebPort = 9510,
   [int]$PrometheusPort = 9091,
   [string]$GrafanaDataRoot = 'C:\GrafanaData',
-  [switch]$OpenBrowser
+  [switch]$OpenBrowser,
+  [switch]$UseRunner    # use run_dashboard_server.py instead of raw uvicorn
 )
 
 $ErrorActionPreference = 'Continue'
@@ -96,27 +97,43 @@ if (Test-Path $venvPy) {
   if (-not $py) { Write-Host "Python not found!" -ForegroundColor Red; exit 1 }
   Write-Host "  Using system Python: $py" -ForegroundColor Gray
 }
-$webLog = Join-Path $LogDir 'webapi_stdout.log'
-$webErr = Join-Path $LogDir 'webapi_stderr.log'
-Start-Process -FilePath $py -ArgumentList @('-m','uvicorn','src.web.dashboard.app:app','--host','127.0.0.1','--port',"$WebPort") -WorkingDirectory $Root -WindowStyle Minimized -RedirectStandardOutput $webLog -RedirectStandardError $webErr
+ $webLog = Join-Path $LogDir 'webapi_stdout.log'
+ $webErr = Join-Path $LogDir 'webapi_stderr.log'
+ if ($UseRunner) {
+   $runner = Join-Path $Root 'run_dashboard_server.py'
+   if (Test-Path $runner) {
+     Write-Host "  Using persistent runner script (signal-immune)" -ForegroundColor Gray
+     Start-Process -FilePath $py -ArgumentList @($runner,'--port',"$WebPort",'--host','0.0.0.0') -WorkingDirectory $Root -WindowStyle Minimized -RedirectStandardOutput $webLog -RedirectStandardError $webErr
+   } else {
+     Write-Host "  WARNING: runner script missing, falling back to raw uvicorn" -ForegroundColor Yellow
+     Start-Process -FilePath $py -ArgumentList @('-m','uvicorn','src.web.dashboard.app:app','--host','127.0.0.1','--port',"$WebPort") -WorkingDirectory $Root -WindowStyle Minimized -RedirectStandardOutput $webLog -RedirectStandardError $webErr
+   }
+ } else {
+   Start-Process -FilePath $py -ArgumentList @('-m','uvicorn','src.web.dashboard.app:app','--host','127.0.0.1','--port',"$WebPort") -WorkingDirectory $Root -WindowStyle Minimized -RedirectStandardOutput $webLog -RedirectStandardError $webErr
+ }
 Start-Sleep -Seconds 3
-if (-not (Wait-Http -Url "http://127.0.0.1:$WebPort/health" -MaxTries 20)) {
-  Write-Host "WARNING: Web API not responding on /health" -ForegroundColor Yellow
-  Write-Host "Trying /openapi.json..." -ForegroundColor Gray
-  if (-not (Wait-Http -Url "http://127.0.0.1:$WebPort/openapi.json" -MaxTries 10)) {
-    Write-Host "ERROR: Web API failed to start. Check logs:" -ForegroundColor Red
-    Write-Host "  stdout: $webLog" -ForegroundColor Gray
-    Write-Host "  stderr: $webErr" -ForegroundColor Gray
-    if (Test-Path $webErr) {
-      Write-Host "Last 10 lines of stderr:" -ForegroundColor Yellow
-      Get-Content $webErr -Tail 10 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkYellow }
-    }
-  } else {
-    Write-Host "Web API responding on /openapi.json (OK)" -ForegroundColor Green
-  }
-} else {
-  Write-Host "Web API ready!" -ForegroundColor Green
-}
+ $healthUrl = "http://127.0.0.1:$WebPort/api/live_csv_health?index=NIFTY&expiry_tag=this_week&offset=0"
+ if (-not (Wait-Http -Url $healthUrl -MaxTries 25)) {
+   Write-Host "WARNING: Health probe failed ($healthUrl). Trying /health..." -ForegroundColor Yellow
+   if (-not (Wait-Http -Url "http://127.0.0.1:$WebPort/health" -MaxTries 10)) {
+     Write-Host "Trying /openapi.json..." -ForegroundColor Gray
+     if (-not (Wait-Http -Url "http://127.0.0.1:$WebPort/openapi.json" -MaxTries 10)) {
+       Write-Host "ERROR: Web API failed to start. Check logs:" -ForegroundColor Red
+       Write-Host "  stdout: $webLog" -ForegroundColor Gray
+       Write-Host "  stderr: $webErr" -ForegroundColor Gray
+       if (Test-Path $webErr) {
+         Write-Host "Last 15 lines of stderr:" -ForegroundColor Yellow
+         Get-Content $webErr -Tail 15 | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkYellow }
+       }
+     } else {
+       Write-Host "Web API responding on /openapi.json (OK)" -ForegroundColor Green
+     }
+   } else {
+     Write-Host "Web API responding on /health (OK)" -ForegroundColor Green
+   }
+ } else {
+   Write-Host "Web API health OK (live_csv rows present)" -ForegroundColor Green
+ }
 
 # 2. Start Prometheus
 Write-Host "Starting Prometheus on :$PrometheusPort..." -ForegroundColor Green
@@ -181,10 +198,10 @@ datasources:
     isDefault: false
     jsonData:
       allowedHosts:
-        - 'http://127.0.0.1:9500'
-        - 'http://localhost:9500'
-        - '127.0.0.1:9500'
-        - 'localhost:9500'
+        - 'http://127.0.0.1:$WebPort'
+        - 'http://localhost:$WebPort'
+        - '127.0.0.1:$WebPort'
+        - 'localhost:$WebPort'
     editable: true
   - name: G6 Infinity
     type: yesoreyeram-infinity-datasource
@@ -193,10 +210,10 @@ datasources:
     isDefault: false
     jsonData:
       allowedHosts:
-        - 'http://127.0.0.1:9500'
-        - 'http://localhost:9500'
-        - '127.0.0.1:9500'
-        - 'localhost:9500'
+        - 'http://127.0.0.1:$WebPort'
+        - 'http://localhost:$WebPort'
+        - '127.0.0.1:$WebPort'
+        - 'localhost:$WebPort'
     editable: true
 "@
 
@@ -266,9 +283,10 @@ if ($prom) {
   Write-Host "Prometheus: http://127.0.0.1:$PrometheusPort"
 }
 Write-Host "Web API:    http://127.0.0.1:$WebPort"
-Write-Host "  - Live data:    /api/live_csv"
-Write-Host "  - Overlay data: /api/overlay"
-Write-Host "  - Health check: /health"
+Write-Host "  - Live data:       /api/live_csv"
+Write-Host "  - Overlay data:    /api/overlay"
+Write-Host "  - Health check:    /api/live_csv_health (preferred) or /health"
+Write-Host "  - Metrics (Prom):  /metrics" 
 Write-Host ""
 
 if ($OpenBrowser) {
