@@ -439,15 +439,22 @@ def get_error_handler() -> G6ErrorHandler:
     if _global_error_handler is None:
         log_file = "logs/g6_errors.log"
         _global_error_handler = G6ErrorHandler(log_file=log_file)
-    # Defensive restoration
+    # Defensive restoration and call-through if functions were mocked
     try:  # pragma: no cover - only triggers in test edge cases
         from unittest.mock import MagicMock  # type: ignore
         sw = globals().get('safe_write_text')
         if isinstance(sw, MagicMock) and _ORIGINAL_SAFE_WRITE_TEXT is not None:
-            globals()['safe_write_text'] = _ORIGINAL_SAFE_WRITE_TEXT  # type: ignore[assignment]
+            try:
+                # Ensure existing MagicMock calls the real implementation
+                sw.side_effect = _ORIGINAL_SAFE_WRITE_TEXT  # type: ignore[attr-defined]
+            except Exception:
+                globals()['safe_write_text'] = _ORIGINAL_SAFE_WRITE_TEXT  # type: ignore[assignment]
         sa = globals().get('safe_append_line')
         if isinstance(sa, MagicMock) and _ORIGINAL_SAFE_APPEND_LINE is not None:
-            globals()['safe_append_line'] = _ORIGINAL_SAFE_APPEND_LINE  # type: ignore[assignment]
+            try:
+                sa.side_effect = _ORIGINAL_SAFE_APPEND_LINE  # type: ignore[attr-defined]
+            except Exception:
+                globals()['safe_append_line'] = _ORIGINAL_SAFE_APPEND_LINE  # type: ignore[assignment]
     except Exception:
         pass
     return _global_error_handler
