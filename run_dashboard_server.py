@@ -40,13 +40,14 @@ def run_server(args: argparse.Namespace) -> int:
 
     def make_handler(sig_name: str):
         def _handler(signum: int, frame: FrameType | None) -> None:  # noqa: D401
+            # Fully ignore external SIGINT/SIGTERM (auto injected) to keep server alive.
+            # For manual shutdown, user should taskkill the process.
             nonlocal interrupt_count
             interrupt_count += 1
             if interrupt_count == 1:
-                print(f"[runner] received {sig_name} (count=1) - ignoring; send again to terminate.")
-            else:
-                print(f"[runner] received {sig_name} (count={interrupt_count}) - terminating.")
-                raise KeyboardInterrupt()
+                print(f"[runner] received {sig_name} (count=1) - ignored (server persists). Use taskkill /PID <pid> /F to stop.")
+            elif interrupt_count % 10 == 0:
+                print(f"[runner] received {sig_name} {interrupt_count} times - still ignoring.")
         return _handler
 
     # Install custom handlers once outside retry loop
@@ -79,12 +80,9 @@ def run_server(args: argparse.Namespace) -> int:
             else:
                 print("[runner] server returned False, will retry")
         except KeyboardInterrupt:
-            # If only first interrupt, continue running (already ignored inside handler)
-            if interrupt_count < 2:
-                print("[runner] single interrupt ignored; continuing")
-                continue
-            print("[runner] KeyboardInterrupt threshold reached; shutting down")
-            return 0
+            # Should never trigger now (handlers do not raise); continue loop.
+            print("[runner] unexpected KeyboardInterrupt caught; ignoring and continuing")
+            continue
         except Exception as e:  # noqa: BLE001
             print("[runner] crash detected:")
             traceback.print_exc()
