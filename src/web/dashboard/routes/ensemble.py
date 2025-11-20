@@ -141,6 +141,8 @@ def _read_fi_history(path: Path | None = None) -> list[dict[str, Any]]:
         if isinstance(data, list):
             return data
         return []
+    except Exception:
+        return []
 
 # --------------------------- Manifest Chain-of-Trust ---------------------------
 def _load_json(path: Path) -> dict[str, Any] | None:
@@ -205,11 +207,12 @@ def _validate_manifest_chain(manifests_dir: Path, max_depth: int = 50) -> dict[s
 @router.get('/regime/threshold_manifest_chain')
 async def threshold_manifest_chain():
     """Validate chain-of-trust across drift manifests and return details."""
-    mdir = Path('metrics') / 'drift_manifests'
-    out = _validate_manifest_chain(mdir)
-    return out
-    except Exception:
-        return []
+    try:
+        mdir = Path('metrics') / 'drift_manifests'
+        return _validate_manifest_chain(mdir)
+    except Exception as e:
+        _LOG.warning(f"threshold_manifest_chain_failed: {e}")
+        return {"available": False, "valid": False, "error": "exception"}
 
 def _quantile_to_label(q: float) -> str:
     """Convert quantile float to stable label string.

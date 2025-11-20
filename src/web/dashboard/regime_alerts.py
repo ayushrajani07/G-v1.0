@@ -350,8 +350,9 @@ __all__ = [
     "start_regime_scheduler",
     "stop_regime_scheduler",
     "get_regime_summary",
-]"""
-Weekly Regime Change Alert Pipeline (Phase 10)
+]
+
+"""Weekly Regime Change Alert Pipeline (Phase 10)
 
 Evaluates rolling forecast quality metrics to detect potential regime changes
 on a weekly cadence. Emits lightweight Prometheus gauges for alerting rules.

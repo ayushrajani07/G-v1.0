@@ -115,6 +115,9 @@ if not _logger.handlers:
         _sh.setFormatter(_JsonFormatter())
         _logger.addHandler(_sh)
 
+    # Alias for legacy code referencing _LOG
+    _LOG = _logger
+
 
 def _load_unified_source() -> UnifiedSourceProtocol | None:
     """Attempt to import unified data source, return None if unavailable.
@@ -224,6 +227,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="G6 Dashboard", version="0.1.0", lifespan=lifespan, default_response_class=ORJSONResponse)
 _DIAG_ENABLED = os.environ.get('G6_DIAG_ENABLE','1').lower() in ('1','true','yes','on')
+
+# Backward compatibility: legacy scripts expect /health
+@app.get('/health')
+async def health_root() -> PlainTextResponse:
+    return PlainTextResponse('ok')
 
 # --------------------------- Early Diagnostics (placed immediately after app construction) ---------------------------
 if _DIAG_ENABLED:
