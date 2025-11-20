@@ -30,6 +30,15 @@
            {"id": "unit", "value": "none"},
            {"id": "color", "value": {"mode": "palette-classic"}}
          ]}
+        ,{"matcher": {"id": "byRegex", "options": ".*OI$"}, "properties": [
+            {"id": "custom.axisPlacement", "value": "right"},
+            {"id": "unit", "value": "short"},
+            {"id": "custom.scaleDistribution", "value": {"type": "linear"}}
+        ]}
+        ,{"matcher": {"id": "byRegex", "options": ".*vol$"}, "properties": [
+            {"id": "custom.axisPlacement", "value": "right"},
+            {"id": "unit", "value": "short"}
+        ]}
       ]},
       "targets": [
         {"refId": "A", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
@@ -39,7 +48,7 @@
            {"key": "to_ms", "value": "${__to}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_oi=1&include_volume=1&include_index=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -53,7 +62,7 @@
            {"key": "to_ms", "value": "${__to}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_avg=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -67,11 +76,15 @@
            {"key": "to_ms", "value": "${__to}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
            {"selector": "index_price", "text": "Index Price", "type": "number"}
+          {"selector": "ce_oi", "text": "CE OI", "type": "number"},
+          {"selector": "pe_oi", "text": "PE OI", "type": "number"},
+          {"selector": "ce_vol", "text": "CE vol", "type": "number"},
+          {"selector": "pe_vol", "text": "PE vol", "type": "number"}
          ]}
       ]
     },
@@ -87,6 +100,14 @@
            {"id": "unit", "value": "none"},
            {"id": "color", "value": {"mode": "palette-classic"}}
          ]}
+        ,{"matcher": {"id": "byRegex", "options": ".*OI$"}, "properties": [
+            {"id": "custom.axisPlacement", "value": "right"},
+            {"id": "unit", "value": "short"}
+        ]}
+        ,{"matcher": {"id": "byRegex", "options": ".*vol$"}, "properties": [
+            {"id": "custom.axisPlacement", "value": "right"},
+            {"id": "unit", "value": "short"}
+        ]}
       ]},
       "targets": [
         {"refId": "A", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
@@ -96,7 +117,7 @@
            {"key": "to_ms", "value": "${__to}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_oi=1&include_volume=1&include_index=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -110,7 +131,7 @@
            {"key": "to_ms", "value": "${__to}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_avg=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -124,11 +145,15 @@
            {"key": "to_ms", "value": "${__to}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
            {"selector": "index_price", "text": "Index Price", "type": "number"}
+          {"selector": "ce_oi", "text": "CE OI", "type": "number"},
+          {"selector": "pe_oi", "text": "PE OI", "type": "number"},
+          {"selector": "ce_vol", "text": "CE vol", "type": "number"},
+          {"selector": "pe_vol", "text": "PE vol", "type": "number"}
          ]}
       ]
     },
@@ -144,6 +169,14 @@
            {"id": "unit", "value": "none"},
            {"id": "color", "value": {"mode": "palette-classic"}}
          ]}
+        ,{"matcher": {"id": "byRegex", "options": ".*OI$"}, "properties": [
+            {"id": "custom.axisPlacement", "value": "right"},
+            {"id": "unit", "value": "short"}
+        ]}
+        ,{"matcher": {"id": "byRegex", "options": ".*vol$"}, "properties": [
+            {"id": "custom.axisPlacement", "value": "right"},
+            {"id": "unit", "value": "short"}
+        ]}
       ]},
       "targets": [
         {"refId": "A", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
@@ -153,7 +186,7 @@
            {"key": "to_ms", "value": "${__to}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_oi=1&include_volume=1&include_index=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -165,7 +198,7 @@
            {"key": "include_avg", "value": "${show_avg}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_avg=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -177,11 +210,15 @@
            {"key": "include_index", "value": "1"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
            {"selector": "index_price", "text": "Index Price", "type": "number"}
+          {"selector": "ce_oi", "text": "CE OI", "type": "number"},
+          {"selector": "pe_oi", "text": "PE OI", "type": "number"},
+          {"selector": "ce_vol", "text": "CE vol", "type": "number"},
+          {"selector": "pe_vol", "text": "PE vol", "type": "number"}
          ]}
       ]
     },
@@ -197,6 +234,14 @@
            {"id": "unit", "value": "none"},
            {"id": "color", "value": {"mode": "palette-classic"}}
          ]}
+        ,{"matcher": {"id": "byRegex", "options": ".*OI$"}, "properties": [
+            {"id": "custom.axisPlacement", "value": "right"},
+            {"id": "unit", "value": "short"}
+        ]}
+        ,{"matcher": {"id": "byRegex", "options": ".*vol$"}, "properties": [
+            {"id": "custom.axisPlacement", "value": "right"},
+            {"id": "unit", "value": "short"}
+        ]}
       ]},
       "targets": [
         {"refId": "A", "queryType": "json", "type": "json", "source": "url", "format": "table", "method": "GET",
@@ -204,7 +249,7 @@
            {"key": "limit", "value": "2000"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_oi=1&include_volume=1&include_index=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -216,7 +261,7 @@
            {"key": "include_avg", "value": "${show_avg}"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_avg=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -228,11 +273,15 @@
            {"key": "include_index", "value": "1"},
            {"key": "cb", "value": "${__unixEpochMs}"}
          ]}, "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-         "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+         "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1",
          "json_options": {"root_is_array": true},
          "columns": [
            {"selector": "time_str", "text": "time", "type": "timestamp"},
            {"selector": "index_price", "text": "Index Price", "type": "number"}
+          {"selector": "ce_oi", "text": "CE OI", "type": "number"},
+          {"selector": "pe_oi", "text": "PE OI", "type": "number"},
+          {"selector": "ce_vol", "text": "CE vol", "type": "number"},
+          {"selector": "pe_vol", "text": "PE vol", "type": "number"}
          ]}
       ]
     }
