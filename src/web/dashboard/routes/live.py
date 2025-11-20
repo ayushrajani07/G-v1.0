@@ -309,12 +309,28 @@ async def api_live_csv(
     except HTTPException:
         _obs_end("live_csv", t0, ok=False)
         raise
-    except Exception as e:
-        get_error_handler().handle_error(
-            e,
-            category=ErrorCategory.FILE_IO,
-            severity=ErrorSeverity.LOW,
-            component="web.dashboard.routes.live",
+    except Exception as e:  # noqa: BLE001
+        try:
+            get_error_handler().handle_error(
+                e,
+                category=ErrorCategory.FILE_IO,
+                severity=ErrorSeverity.LOW,
+                component="web.dashboard.routes.live",
+                function_name="api_live_csv",
+                message="Failed serving live CSV JSON",
+                should_log=False,
+            )
+        except Exception:
+            pass
+        _obs_end("live_csv", t0, ok=False)
+        raise HTTPException(status_code=500, detail="live csv endpoint error") from None
+    finally:
+        if acquired:
+            try:
+                _SEM.release()
+            except RuntimeError:
+                # Semaphore release error - already released or not acquired
+                pass
 
 
 @router.get("/api/live_csv_health")
@@ -326,7 +342,6 @@ async def api_live_csv_health(
     """Lightweight health/status summary for live CSV.
 
     Returns: {status, index, expiry_tag, offset, rows, last_ts, columns_present}
-    Does not perform time filtering or heavy processing; always limit=1 internally.
     """
     try:
         day = _dt.datetime.now(_dt.UTC).date()
@@ -370,16 +385,3 @@ async def api_live_csv_health(
             },
             status_code=500,
         )
-            function_name="api_live_csv",
-            message="Failed serving live CSV JSON",
-            should_log=False,
-        )
-        _obs_end("live_csv", t0, ok=False)
-        raise HTTPException(status_code=500, detail="live csv endpoint error") from None
-    finally:
-        if acquired:
-            try:
-                _SEM.release()
-            except RuntimeError:
-                # Semaphore release error - already released or not acquired
-                pass
