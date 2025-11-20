@@ -215,11 +215,76 @@
 				 ]}
 			]
 		}
+			,{
+				"type": "timeseries",
+				"title": "FINNIFTY | $expiry_bf | $offset – OI / VOL / PCR",
+				"gridPos": {"h": 12, "w": 24, "x": 0, "y": 60},
+				"options": {"legend": {"showLegend": true, "placement": "bottom"}},
+				"fieldConfig": {"defaults": {"unit": "short"}, "overrides": [
+					{"matcher": {"id": "byName", "options": "Index Price"}, "properties": [
+						{"id": "custom.axisPlacement", "value": "left"}
+					]},
+					{"matcher": {"id": "byName", "options": "Call OI"}, "properties": [
+						{"id": "custom.axisPlacement", "value": "right"},
+						{"id": "custom.lineWidth", "value": 2},
+						{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
+					]},
+					{"matcher": {"id": "byName", "options": "Put OI"}, "properties": [
+						{"id": "custom.axisPlacement", "value": "right"},
+						{"id": "custom.lineWidth", "value": 2},
+						{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
+					]},
+					{"matcher": {"id": "byName", "options": "Call Volume"}, "properties": [
+						{"id": "custom.axisPlacement", "value": "right"},
+						{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
+					]},
+					{"matcher": {"id": "byName", "options": "Put Volume"}, "properties": [
+						{"id": "custom.axisPlacement", "value": "right"},
+						{"id": "custom.scaleDistribution", "value": {"type": "log", "log": 2}}
+					]},
+					{"matcher": {"id": "byName", "options": "PCR"}, "properties": [
+						{"id": "custom.axisPlacement", "value": "right"},
+						{"id": "unit", "value": "percent"}
+					]}
+				]},
+				"targets": [
+					{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
+					 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+					 "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+					 "json_options": {"root_is_array": true},
+					 "columns": [
+						 {"selector": "time_str", "text": "time", "type": "timestamp"},
+						 {"selector": "index_price", "text": "Index Price", "type": "number"},
+						 {"selector": "ce_oi", "text": "Call OI", "type": "number"},
+						 {"selector": "pe_oi", "text": "Put OI", "type": "number"},
+						 {"selector": "ce_vol", "text": "Call Volume", "type": "number"},
+						 {"selector": "pe_vol", "text": "Put Volume", "type": "number"},
+						 {"selector": "pcr", "text": "PCR", "type": "number"}
+					 ]}
+				]
+			}
+			,{
+				"type": "timeseries",
+				"title": "FINNIFTY PCR",
+				"gridPos": {"h": 6, "w": 24, "x": 0, "y": 72},
+				"options": {"legend": {"showLegend": false}},
+				"fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+				"targets": [
+					{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
+					 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+					 "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_pcr=1",
+					 "json_options": {"root_is_array": true},
+					 "columns": [
+						 {"selector": "time_str", "text": "time", "type": "timestamp"},
+						 {"selector": "pcr", "text": "PCR", "type": "number"}
+					 ]}
+				]
+			}
 		,
 		{
 			"type": "row",
 			"title": "Aggregated Metrics",
-			"gridPos": {"h": 1, "w": 24, "x": 0, "y": 36},
+			"gridPos": {"h": 1, "w": 24, "x": 0, "y": 78},
 			"id": 900,
 			"collapsed": false,
 			"panels": []
@@ -227,7 +292,7 @@
 		{
 			"type": "timeseries",
 			"title": "Option Open Interest (Prom)",
-			"gridPos": {"h": 8, "w": 8, "x": 0, "y": 37},
+			"gridPos": {"h": 8, "w": 8, "x": 0, "y": 79},
 			"datasource": {"type": "prometheus", "uid": "PROM"},
 			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
 			"targets": [
@@ -238,7 +303,7 @@
 		{
 			"type": "timeseries",
 			"title": "Option Volume (Prom)",
-			"gridPos": {"h": 8, "w": 8, "x": 8, "y": 37},
+			"gridPos": {"h": 8, "w": 8, "x": 8, "y": 79},
 			"datasource": {"type": "prometheus", "uid": "PROM"},
 			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
 			"targets": [
@@ -249,7 +314,7 @@
 		{
 			"type": "timeseries",
 			"title": "Put-Call Ratio (Prom)",
-			"gridPos": {"h": 8, "w": 8, "x": 16, "y": 37},
+			"gridPos": {"h": 8, "w": 8, "x": 16, "y": 79},
 			"datasource": {"type": "prometheus", "uid": "PROM"},
 			"fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
 			"targets": [

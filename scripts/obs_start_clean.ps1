@@ -73,6 +73,24 @@ function Find-Prometheus {
   return $null
 }
 
+function Reload-GrafanaProvisioning {
+  param([int]$Port, [string]$User='admin', [string]$Pass='admin')
+  try {
+    $pair = "$User:$Pass"
+    $basic = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($pair))
+    $headers = @{ Authorization = "Basic $basic" }
+    $uriDash = "http://127.0.0.1:$Port/api/admin/provisioning/dashboards/reload"
+    $uriDS = "http://127.0.0.1:$Port/api/admin/provisioning/datasources/reload"
+    Invoke-RestMethod -Method Post -Uri $uriDash -Headers $headers -TimeoutSec 5 -ErrorAction SilentlyContinue | Out-Null
+    Invoke-RestMethod -Method Post -Uri $uriDS -Headers $headers -TimeoutSec 5 -ErrorAction SilentlyContinue | Out-Null
+    Write-Host "Grafana provisioning reloaded via API" -ForegroundColor Green
+    return $true
+  } catch {
+    Write-Host "Provisioning reload API failed (will be refreshed on restart)" -ForegroundColor Yellow
+    return $false
+  }
+}
+
 Write-Host "=== G6 Observability Stack (Clean) ===" -ForegroundColor Cyan
 
 # Directories
@@ -274,6 +292,8 @@ if (-not (Wait-Http -Url "http://127.0.0.1:$GrafanaPort/api/health" -MaxTries 60
   Write-Host "WARNING: Grafana not ready" -ForegroundColor Yellow
 } else {
   Write-Host "Grafana ready!" -ForegroundColor Green
+  # Try hot reload provisioning so latest dashboards appear without restart next time
+  Reload-GrafanaProvisioning -Port $GrafanaPort | Out-Null
 }
 
 Write-Host ""
