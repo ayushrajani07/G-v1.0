@@ -1,4 +1,4 @@
-{
+﻿{
   "annotations": {
     "list": [
       {
@@ -92,7 +92,7 @@
           "refId": "HGB",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9500/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=sk_hgb_regressor",
+          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=sk_hgb_regressor",
           "url_options": {"method": "GET"}
         },
         {
@@ -102,7 +102,7 @@
           "refId": "XGB",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9500/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=xgb_regressor",
+          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=xgb_regressor",
           "url_options": {"method": "GET"}
         },
         {
@@ -112,7 +112,7 @@
           "refId": "LSTM",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9500/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=torch_lstm_regressor",
+          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=torch_lstm_regressor",
           "url_options": {"method": "GET"}
         },
         {
@@ -122,7 +122,7 @@
           "refId": "TP",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9500/api/live_csv?index=${index}&expiry_tag=this_week&offset=0&include_vol=false&include_oi=false&include_pcr=false",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=${index}&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {"method": "GET"}
         }
       ],
@@ -155,25 +155,25 @@
             "fillOpacity": 0,
             "spanNulls": true,
             "axisPlacement": "auto",
-            "axisLabel": "ΔTP (prediction − tp) [pts]"
+            "axisLabel": "Î”TP (prediction âˆ’ tp) [pts]"
           },
           "unit": "short"
         },
         "overrides": [
-          {"matcher": {"id": "byFrameRefID", "options": "HGBD"}, "properties": [{"id": "displayName", "value": "ΔTP (HGB)"}]},
-          {"matcher": {"id": "byFrameRefID", "options": "XGBD"}, "properties": [{"id": "displayName", "value": "ΔTP (XGB)"}]},
-          {"matcher": {"id": "byFrameRefID", "options": "LSTMD"}, "properties": [{"id": "displayName", "value": "ΔTP (LSTM)"}]}
+          {"matcher": {"id": "byFrameRefID", "options": "HGBD"}, "properties": [{"id": "displayName", "value": "Î”TP (HGB)"}]},
+          {"matcher": {"id": "byFrameRefID", "options": "XGBD"}, "properties": [{"id": "displayName", "value": "Î”TP (XGB)"}]},
+          {"matcher": {"id": "byFrameRefID", "options": "LSTMD"}, "properties": [{"id": "displayName", "value": "Î”TP (LSTM)"}]}
         ]
       },
       "gridPos": {"h": 10, "w": 24, "x": 0, "y": 18},
       "id": 7,
       "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "none"}},
       "targets": [
-        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "HGBD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9500/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=sk_hgb_regressor", "url_options": {"method": "GET"}},
-        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "XGBD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9500/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=xgb_regressor", "url_options": {"method": "GET"}},
-        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "LSTMD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9500/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=torch_lstm_regressor", "url_options": {"method": "GET"}}
+        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "HGBD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9510/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=sk_hgb_regressor", "url_options": {"method": "GET"}},
+        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "XGBD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9510/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=xgb_regressor", "url_options": {"method": "GET"}},
+        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "LSTMD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9510/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=torch_lstm_regressor", "url_options": {"method": "GET"}}
       ],
-      "title": "ΔTP (prediction − tp)",
+      "title": "Î”TP (prediction âˆ’ tp)",
       "transformations": [
         {"id": "convertFieldType", "options": {"conversions": [
           {"targetField": "time", "destinationType": "time"},
@@ -198,7 +198,7 @@
           "refId": "TxNoPivot",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9500/api/ml/predictions?index=${index}&tail=${tail}",
+          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&tail=${tail}",
           "url_options": {"method": "GET"}
         }
       ],
@@ -231,7 +231,7 @@
           "url_options": {"method": "GET"}
         }
       ],
-      "title": "ΔTP diagnostics (last 60m)",
+      "title": "Î”TP diagnostics (last 60m)",
       "transformations": [],
       "type": "table"
     }
@@ -255,3 +255,4 @@
   "version": 1,
   "weekStart": ""
 }
+

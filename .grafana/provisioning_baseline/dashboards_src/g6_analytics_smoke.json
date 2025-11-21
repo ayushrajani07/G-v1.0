@@ -1,5 +1,5 @@
-{
-  "title": "G6 Analytics – Infinity Smoke",
+﻿{
+  "title": "G6 Analytics â€“ Infinity Smoke",
   "uid": "g6-analytics-smoke",
   "schemaVersion": 38,
   "version": 1,
@@ -37,7 +37,7 @@
           "source": "url",
           "method": "GET",
           "format": "table",
-          "url": "http://127.0.0.1:9500/api/live_csv",
+          "url": "http://127.0.0.1:9510/api/live_csv",
           "url_options": {
             "method": "GET"
           },
@@ -132,7 +132,7 @@
           "source": "url",
           "method": "GET",
           "format": "table",
-          "url": "http://127.0.0.1:9500/api/live_csv",
+          "url": "http://127.0.0.1:9510/api/live_csv",
           "url_options": {
             "method": "GET"
           },

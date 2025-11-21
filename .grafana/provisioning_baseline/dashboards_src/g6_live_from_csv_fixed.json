@@ -1,4 +1,4 @@
-{
+﻿{
   "uid": "g6-live-csv-fixed",
   "title": "G6 Overlays (Live from CSV - Fixed)",
   "editable": true,
@@ -154,7 +154,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -207,7 +207,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -260,7 +260,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -356,7 +356,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=this_month&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=this_month&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -409,7 +409,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=this_month&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=this_month&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -462,7 +462,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=this_month&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=this_month&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -558,7 +558,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -603,7 +603,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -648,7 +648,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -736,7 +736,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -781,7 +781,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },
@@ -826,7 +826,7 @@
             "type": "yesoreyeram-infinity-datasource",
             "uid": "INFINITY"
           },
-          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "json_options": {
             "root_is_array": true
           },

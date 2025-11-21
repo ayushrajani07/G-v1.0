@@ -1,11 +1,11 @@
-{
+﻿{
   "queries": [
     {
       "refId": "A",
       "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
       "type": "json",
       "source": "url",
-      "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0",
+      "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
       "method": "GET",
       "format": "table",
       "json_options": {"root_is_array": true},
@@ -26,3 +26,4 @@
   "from": "now-6h",
   "to": "now"
 }
+

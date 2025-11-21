@@ -1,4 +1,4 @@
-{
+﻿{
   "annotations": {"list": [{"builtIn": 1, "datasource": {"type": "grafana", "uid": "-- Grafana --"}, "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard"}]},
   "editable": true,
   "fiscalYearStartMonth": 0,
@@ -57,7 +57,7 @@
           "refId": "LiveCSV",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9500/api/live_csv?index=${index}&expiry_tag=this_week&offset=0&include_vol=false&include_oi=false&include_pcr=false",
+          "url": "http://127.0.0.1:9510/api/live_csv?index=${index}&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {"method": "GET"}
         },
         {
@@ -67,7 +67,7 @@
           "refId": "Preds",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9500/api/ml/predictions?index=${index}&tail=2000",
+          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&tail=2000",
           "url_options": {"method": "GET"}
         }
       ],
@@ -121,3 +121,4 @@
   "version": 1,
   "weekStart": ""
 }
+
