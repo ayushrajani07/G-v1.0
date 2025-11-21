@@ -5,6 +5,7 @@ providers:
     orgId: 1
     type: file
     disableDeletion: true
+    allowUiUpdates: false
     updateIntervalSeconds: 30
     options:
       # Adjust this path if Grafana runs from a different working directory
