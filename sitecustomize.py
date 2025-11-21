@@ -116,15 +116,17 @@ except Exception:
     pass
 
 # ---------------------------------------------------------------------------
-# Global logging & print silencing (hard whitelist)
+# Global logging & print silencing (hard whitelist by default)
 # Allowed logger name prefixes (exact or hierarchical) only:
 #   src.collectors.unified_collectors
 #   src.orchestrator.startup_sequence
 #   src.broker.kite_provider (and its submodules if any)
 #   src.collectors.modules.market_gate
 #   src.tools.token_manager
-# All other logs and raw print() calls are suppressed.
-# NOTE: This is intentionally irreversible at runtime (no env toggles) per request.
+# All other logs and raw print() calls are suppressed unless an override env flag is set.
+# Override: set G6_DISABLE_LOG_WHITELIST=1 (or true/yes/on) BEFORE Python starts to disable
+#           both the logging filter and print() wrapper. This makes terminal emit ALL logs
+#           for deep debugging of stuck loops.
 # ---------------------------------------------------------------------------
 try:
     import logging, builtins, inspect
@@ -148,7 +150,9 @@ try:
             return False
 
     # Attach the filter to the root logger so it gates all handlers.
-    logging.getLogger().addFilter(_WhitelistFilter())
+    _DISABLE = os.getenv('G6_DISABLE_LOG_WHITELIST','').lower() in {'1','true','yes','on'}
+    if not _DISABLE:
+        logging.getLogger().addFilter(_WhitelistFilter())
 
     # Wrap print to suppress calls from non-whitelisted modules.
     _orig_print = builtins.print
@@ -201,7 +205,8 @@ try:
             except Exception:
                 return
 
-    builtins.print = _whitelist_print  # type: ignore
+    if not _DISABLE:
+        builtins.print = _whitelist_print  # type: ignore
 except Exception:
     # If anything fails here we do not want to break runtime; leave logging unmodified.
     pass
