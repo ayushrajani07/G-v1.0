@@ -8,12 +8,11 @@ apiVersion: 1
 providers:
   - name: G6 Frozen Contracts
     orgId: 1
-    folder: G6 Frozen
     type: file
     disableDeletion: true          # Prevent removal from UI
     allowUiUpdates: false          # Disallow UI edits, source of truth is Git
     updateIntervalSeconds: 600     # Slow refresh; content is static
     options:
       path: grafana/dashboards/dashboards_live
-      recursive: false
-      foldersFromFilesStructure: false
+      recursive: true
+      foldersFromFilesStructure: true
