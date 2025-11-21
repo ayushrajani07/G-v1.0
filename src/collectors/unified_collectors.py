@@ -1472,6 +1472,51 @@ def run_unified_collectors(
                 pass
             if overall_fail_total > 0 and system_status == 'GREEN':
                 system_status = 'DEGRADED'
+            # -------------------- Degraded Reason Emission (debug) --------------------
+            try:
+                if system_status == 'DEGRADED' and EnvConfig.get_bool('G6_DEBUG_DEGRADE', False):
+                    degrade_reasons: list[str] = []
+                    try:
+                        for idx_entry in indices_struct or []:
+                            st = (idx_entry.get('status') or '').upper()
+                            if st == 'STALE':
+                                degrade_reasons.append(f"index_stale:{idx_entry.get('index')}")
+                            elif st and st != 'OK':
+                                degrade_reasons.append(f"index_status:{idx_entry.get('index')}={st}")
+                            # Empty index data
+                            try:
+                                if int(idx_entry.get('option_count') or 0) == 0:
+                                    degrade_reasons.append(f"empty_options:{idx_entry.get('index')}")
+                            except (ValueError, TypeError):
+                                pass
+                    except (AttributeError, TypeError):
+                        degrade_reasons.append('indices_scan_failed')
+                    if overall_fail_total > 0:
+                        degrade_reasons.append(f"fail_total:{overall_fail_total}")
+                    if 'provider_outage' in locals() and provider_outage:
+                        degrade_reasons.append('provider_outage_detected')
+                    if stale_present:
+                        degrade_reasons.append('stale_present')
+                    # Deduplicate
+                    if degrade_reasons:
+                        seen = set()
+                        dedup = [r for r in degrade_reasons if (r not in seen and not seen.add(r))]
+                    else:
+                        dedup = ['unspecified']
+                    try:
+                        simple_index_state = [
+                            (e.get('index'), e.get('status'), e.get('option_count'))
+                            for e in (indices_struct or [])
+                        ]
+                    except Exception:
+                        simple_index_state = []
+                    logger.warning(
+                        'system_status_degraded reasons=%s fail_total=%s stale_present=%s empty_all_indices=%s provider_outage=%s indices=%s',
+                        ','.join(dedup), overall_fail_total, stale_present, '1' if empty_all_indices else '0',
+                        '1' if ('provider_outage' in locals() and provider_outage) else '0', simple_index_state
+                    )
+            except Exception:
+                logger.debug('degraded_reason_emit_failed', exc_info=True)
             # Abort logic for stale cycles when mode=abort
             # Standardized env reads via adapter
             if get_str and get_int:
