@@ -461,7 +461,7 @@ def run_cycle(ctx: RuntimeContext) -> float:
                             overview_capture: dict[str, dict[str,float]] = {}
                             base_ts: dict[str, float] = {}
                             day_width_map: dict[str, int] = {}
-                            for _idx, _params in (ctx.index_params or {}).items():
+                                for _idx, _params in (ctx.index_params or {}).items():
                                 if not isinstance(_params, dict) or not _params.get('enable', True):
                                     continue
                                 expiries = _params.get('expiries', ['this_week'])
@@ -510,7 +510,7 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                 except (ImportError, AttributeError, TypeError, ValueError):
                                     # Handle strikes module or build_strikes failures
                                     strikes = []
-                                for _rule in expiries:
+                                        for _rule in expiries:
                                     outcome = _pipeline_run_expiry(
                                         pipe, _idx, _rule, strikes, index_price, atm
                                     )
@@ -533,6 +533,9 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                             )
                                         if outcome.day_width:
                                             day_width_map[_idx] = outcome.day_width
+                                # Overview snapshot gating
+                                if os.environ.get('G6_DISABLE_OVERVIEW_SNAPSHOTS','').lower() in {'1','true','yes','on'}:
+                                    overview_capture.clear(); base_ts.clear(); day_width_map.clear()
                                 # Heartbeat after each index pipeline batch
                                 try:  # pragma: no cover
                                     _hb = getattr(_uc, '_mark_cycle_progress', None)

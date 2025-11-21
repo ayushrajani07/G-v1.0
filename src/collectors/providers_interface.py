@@ -8,6 +8,7 @@ import datetime
 import logging
 import os
 import time as _time
+import threading
 
 from src.metrics.generated import (
     m_api_calls_total_labels,
@@ -124,11 +125,45 @@ class Providers:
             # Get quote from primary provider (includes OHLC) if available
             quotes = {}
             if self.primary_provider and hasattr(self.primary_provider, 'get_quote'):
+                # Timeout wrapper: prevent indefinite blocking inside provider.get_quote
+                timeout_sec = 0
                 try:
-                    self.logger.debug("INDEX_PATH attempt=get_quote provider=%s", type(self.primary_provider).__name__)
-                    quotes = self.primary_provider.get_quote(instruments)  # type: ignore
-                except Exception as qe:
-                    self.logger.warning("get_quote failed, will fallback to LTP: %s", qe)
+                    timeout_sec = float(os.environ.get('G6_INDEX_FETCH_TIMEOUT_SEC','20') or 20)
+                except Exception:
+                    timeout_sec = 20
+                self.logger.debug("INDEX_PATH attempt=get_quote provider=%s timeout=%.1fs", type(self.primary_provider).__name__, timeout_sec)
+                quotes_holder: dict = {}
+                exc_holder: list[Exception] = []
+                def _fetch():
+                    try:
+                        quotes_local = self.primary_provider.get_quote(instruments)  # type: ignore
+                        if isinstance(quotes_local, dict):
+                            quotes_holder.update(quotes_local)
+                    except Exception as qe:
+                        exc_holder.append(qe)
+                t = threading.Thread(target=_fetch, name=f"get_quote_{index_symbol}", daemon=True)
+                start_fetch = _time.time()
+                t.start()
+                # Poll with heartbeat to avoid watchdog false stalls
+                while t.is_alive() and (_time.time() - start_fetch) < timeout_sec:
+                    _time.sleep(1.0)
+                    # Lightweight heartbeat (no direct dependency on unified collectors internals)
+                    try:
+                        import src.collectors.unified_collectors as _uc  # type: ignore
+                        _hb = getattr(_uc, '_mark_cycle_progress', None)
+                        if callable(_hb):
+                            _hb()
+                    except Exception:
+                        pass
+                if t.is_alive():
+                    self.logger.warning("get_quote timeout index=%s elapsed=%.2fs timeout=%.2fs fallback=synthetic", index_symbol, (_time.time()-start_fetch), timeout_sec)
+                    # Leave thread running (daemon) but proceed with synthetic path below (quotes empty)
+                else:
+                    elapsed_fetch = _time.time() - start_fetch
+                    self.logger.debug("INDEX_PATH get_quote_done index=%s elapsed=%.2fs", index_symbol, elapsed_fetch)
+                if exc_holder and not quotes_holder:
+                    self.logger.warning("get_quote failed, will fallback to LTP: %s", exc_holder[-1])
+                quotes = quotes_holder
             else:
                 # Avoid noisy error spam; debug is sufficient because we can fallback to LTP
                 if not self.primary_provider:

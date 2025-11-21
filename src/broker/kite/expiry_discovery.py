@@ -95,9 +95,16 @@ def get_expiry_dates(provider, index_symbol: str) -> list[_dt.date]:
         sorted_dates = sorted(expiries)
         if not sorted_dates:
             if instruments:
-                # Do not fabricate based on weekday; return empty and let upstream logic handle it.
-                # Silenced for cleaner terminal output
-                logger.debug("no_expiries_extracted_from_instruments index=%s", index_symbol)
+                # Emit detailed diagnostics (instrument universe present but filter produced zero expiries)
+                try:
+                    logger.debug(
+                        "no_expiries_extracted_from_instruments index=%s inst_count=%d atm=%s filter=segment:-OPT symbol_contains strike±500",
+                        index_symbol,
+                        len(instruments),
+                        atm,
+                    )
+                except Exception:
+                    logger.debug("no_expiries_extracted_from_instruments index=%s (diag_failed)", index_symbol)
                 sorted_dates = []
             else:
                 logger.warning("empty_instrument_universe_no_expiries index=%s", index_symbol)

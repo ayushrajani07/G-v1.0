@@ -188,6 +188,7 @@ def finalize_expiry(
             sample=sample_list,
             ce_per_strike=ce_per_strike,
             pe_per_strike=pe_per_strike,
+            synthetic=bool(expiry_rec.get('synthetic') or expiry_rec.get('is_synthetic') or False),
             strike_coverage=expiry_rec.get('strike_coverage'),
             field_coverage=expiry_rec.get('field_coverage'),
             partial_reason=_partial_reason,

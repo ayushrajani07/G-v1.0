@@ -1116,6 +1116,14 @@ class CsvSink:
         Preserves previous side effects: metrics increment, last_row_keys update, verbose logging.
         """
         try:
+            # Compact mode: optionally suppress per-offset spread writes (retain only ATM offset=0)
+            try:
+                if os.environ.get('G6_COMPACT_CSV_WRITES','').lower() in {'1','true','yes','on'} and offset != 0:
+                    if self.verbose:
+                        self.logger.debug("compact_csv_skip index=%s expiry=%s offset=%s", index, expiry_code, offset)
+                    return True  # treat as duplicate/skip
+            except Exception:
+                pass
             last_ts = self._last_row_keys.get(row_sig)
             if last_ts == row[0]:
                 if self.verbose:
