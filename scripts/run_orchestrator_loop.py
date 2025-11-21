@@ -60,6 +60,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--cycles", type=int, default=0, help="Number of cycles (0=unbounded)")
     p.add_argument("--auto-snapshots", action="store_true", help="Enable auto snapshots (sets env toggle)")
     p.add_argument("--parallel", action="store_true", help="Enable parallel per-index collection")
+    p.add_argument("--force-market-open", action="store_true", help="Bypass market hours gate (sets G6_FORCE_MARKET_OPEN=1)")
     return p.parse_args(argv)
 
 def _load_env_overlay() -> None:
@@ -147,6 +148,8 @@ def ensure_env(args: argparse.Namespace) -> None:
         os.environ.setdefault("G6_SNAPSHOT_CACHE", "1")
     if args.parallel:
         os.environ.setdefault("G6_PARALLEL_INDICES", "1")
+    if args.force_market_open:
+        os.environ.setdefault("G6_FORCE_MARKET_OPEN", "1")
     if EnvConfig.get_str("G6_SNAPSHOT_CACHE", '') == "1" or EnvConfig.get_str("G6_CATALOG_HTTP_FORCED", '') == "1":
         os.environ.setdefault("G6_CATALOG_HTTP", "1")
     if args.cycles > 0 and not EnvConfig.get_str("G6_LOOP_MAX_CYCLES", ''):
