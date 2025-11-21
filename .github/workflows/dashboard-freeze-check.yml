@@ -1,0 +1,36 @@
+name: Dashboard Freeze Check
+
+on:
+  pull_request:
+    paths:
+      - 'grafana/dashboards/dashboards_live/**/*.json'
+
+jobs:
+  freeze-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run freeze validation
+        run: |
+          set -e
+          echo 'Scanning frozen dashboards'
+          CHANGED=$(jq -r '.pull_request.changed_files' "$GITHUB_EVENT_PATH" 2>/dev/null || echo '')
+          # Fallback: list changed files via git diff
+          MODS=$(git diff --name-only origin/main...HEAD | grep 'grafana/dashboards/dashboards_live/.*json' || true)
+          if [ -z "$MODS" ]; then echo 'No frozen dashboard changes'; exit 0; fi
+          for f in $MODS; do
+            echo "Checking $f"
+            if grep -q '"g6_lock"\s*:\s*true' "$f"; then
+              TAG=$(grep -o '"version_tag"\s*:\s*"[^"]*"' "$f" | head -1 | sed 's/.*:"//;s/"$//') || true
+              if [ -z "$TAG" ]; then echo "::error file=$f::version_tag missing"; FAIL=1; continue; fi
+              # Compare with main version tag
+              if git show origin/main:$f 1>/dev/null 2>&1; then
+                OLD_TAG=$(git show origin/main:$f | grep -o '"version_tag"\s*:\s*"[^"]*"' | head -1 | sed 's/.*:"//;s/"$//') || true
+                if [ "$OLD_TAG" = "$TAG" ]; then echo "::error file=$f::version_tag not bumped (still $TAG)"; FAIL=1; fi
+              fi
+              if grep -q '"editable"\s*:\s*true' "$f"; then echo "::error file=$f::editable must be false"; FAIL=1; fi
+            fi
+          done
+          if [ "$FAIL" = "1" ]; then echo 'Freeze check failed'; exit 1; fi
+          echo 'Freeze check passed'

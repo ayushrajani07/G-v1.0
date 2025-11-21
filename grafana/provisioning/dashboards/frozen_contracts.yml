@@ -1,0 +1,19 @@
+# Frozen Contracts Dashboard Provider
+# This provider treats dashboards in dashboards_live as read-only.
+# NOTE: Grafana must run with this repo mounted so the path resolves.
+# For Windows local run, relative path works if grafana-server.exe cwd is repo root.
+
+apiVersion: 1
+
+providers:
+  - name: G6 Frozen Contracts
+    orgId: 1
+    folder: G6 Frozen
+    type: file
+    disableDeletion: true          # Prevent removal from UI
+    allowUiUpdates: false          # Disallow UI edits, source of truth is Git
+    updateIntervalSeconds: 600     # Slow refresh; content is static
+    options:
+      path: grafana/dashboards/dashboards_live
+      recursive: false
+      foldersFromFilesStructure: false
