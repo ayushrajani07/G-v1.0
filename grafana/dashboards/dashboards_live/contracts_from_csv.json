@@ -19,8 +19,8 @@
   "g6_lock": true,
   "version_tag": "freeze-2025-11-21",
   "time": {
-    "from": "now-12h",
-    "to": "now+6h"
+    "from": "now-2h",
+    "to": "now"
   },
   "timezone": "Asia/Kolkata",
   "templating": {
