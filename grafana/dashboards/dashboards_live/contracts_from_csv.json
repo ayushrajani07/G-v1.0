@@ -90,7 +90,7 @@
             "lineInterpolation": "smooth",
             "gradientMode": "hue",
             "stacking": {
-              "mode": "normal",
+              "mode": "none",
               "group": "A"
             }
           }
@@ -304,11 +304,19 @@
               },
               {
                 "id": "custom.axisPlacement",
-                "value": "hidden"
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PCR"
               },
               {
                 "id": "custom.lineWidth",
-                "value": 1
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {"mode": "fixed", "fixedColor": "yellow"}
               }
             ]
           }
@@ -434,7 +442,7 @@
             "lineInterpolation": "smooth",
             "gradientMode": "hue",
             "stacking": {
-              "mode": "normal",
+              "mode": "none",
               "group": "A"
             }
           }
@@ -648,11 +656,19 @@
               },
               {
                 "id": "custom.axisPlacement",
-                "value": "hidden"
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PCR"
               },
               {
                 "id": "custom.lineWidth",
-                "value": 1
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {"mode": "fixed", "fixedColor": "yellow"}
               }
             ]
           }
@@ -778,7 +794,7 @@
             "lineInterpolation": "smooth",
             "gradientMode": "hue",
             "stacking": {
-              "mode": "normal",
+              "mode": "none",
               "group": "A"
             }
           }
@@ -992,11 +1008,19 @@
               },
               {
                 "id": "custom.axisPlacement",
-                "value": "hidden"
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PCR"
               },
               {
                 "id": "custom.lineWidth",
-                "value": 1
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {"mode": "fixed", "fixedColor": "yellow"}
               }
             ]
           }
@@ -1122,7 +1146,7 @@
             "lineInterpolation": "smooth",
             "gradientMode": "hue",
             "stacking": {
-              "mode": "normal",
+              "mode": "none",
               "group": "A"
             }
           }
@@ -1336,11 +1360,19 @@
               },
               {
                 "id": "custom.axisPlacement",
-                "value": "hidden"
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PCR"
               },
               {
                 "id": "custom.lineWidth",
-                "value": 1
+                "value": 2
+              },
+              {
+                "id": "color",
+                "value": {"mode": "fixed", "fixedColor": "yellow"}
               }
             ]
           }
