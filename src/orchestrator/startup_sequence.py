@@ -82,17 +82,13 @@ def metrics_and_storage_health(ctx) -> None:
             port = int(m.raw.get('metrics',{}).get('port',9108))
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(0.3)
+                # Remove noisy reachability banner (external supervisor handles services).
                 if s.connect_ex((host, port)) == 0:
-                    logger.info("[startup] metrics server reachable at %s:%s", host, port)
+                    if os.getenv('G6_DEBUG_METRICS','').lower() in {'1','true','yes','on'}:
+                        logger.debug("[startup] metrics server reachable %s:%s", host, port)
                 else:
-                    logger.warning(
-                        (
-                            "[startup] metrics server not reachable yet (%s:%s) — "
-                            "may still be starting"
-                        ),
-                        host,
-                        port,
-                    )
+                    if os.getenv('G6_DEBUG_METRICS','').lower() in {'1','true','yes','on'}:
+                        logger.debug("[startup] metrics server not reachable %s:%s (suppressed)", host, port)
     except Exception:
         logger.debug("[startup] metrics reachability probe failed", exc_info=True)
     # Influx configuration sanity (do NOT attempt auth here)
