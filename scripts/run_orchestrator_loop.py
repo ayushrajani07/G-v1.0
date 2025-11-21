@@ -61,6 +61,7 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     p.add_argument("--auto-snapshots", action="store_true", help="Enable auto snapshots (sets env toggle)")
     p.add_argument("--parallel", action="store_true", help="Enable parallel per-index collection")
     p.add_argument("--force-market-open", action="store_true", help="Bypass market hours gate (sets G6_FORCE_MARKET_OPEN=1)")
+    p.add_argument("--debug-verbose", action="store_true", help="Force all loggers to DEBUG (sets G6_DEBUG_VERBOSE=1)")
     return p.parse_args(argv)
 
 def _load_env_overlay() -> None:
@@ -150,6 +151,8 @@ def ensure_env(args: argparse.Namespace) -> None:
         os.environ.setdefault("G6_PARALLEL_INDICES", "1")
     if args.force_market_open:
         os.environ.setdefault("G6_FORCE_MARKET_OPEN", "1")
+    if args.debug_verbose:
+        os.environ.setdefault("G6_DEBUG_VERBOSE", "1")
     if EnvConfig.get_str("G6_SNAPSHOT_CACHE", '') == "1" or EnvConfig.get_str("G6_CATALOG_HTTP_FORCED", '') == "1":
         os.environ.setdefault("G6_CATALOG_HTTP", "1")
     if args.cycles > 0 and not EnvConfig.get_str("G6_LOOP_MAX_CYCLES", ''):
@@ -165,6 +168,14 @@ def build_cycle_fn():
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     ensure_env(args)
+    # Elevate all logger levels if debug verbose requested
+    if os.getenv('G6_DEBUG_VERBOSE','').lower() in {'1','true','yes','on'}:
+        try:
+            logging.getLogger().setLevel(logging.DEBUG)
+            for name in list(logging.Logger.manager.loggerDict.keys()):  # type: ignore[attr-defined]
+                logging.getLogger(name).setLevel(logging.DEBUG)
+        except Exception:
+            logger.debug('debug_verbose_level_set_failed', exc_info=True)
     # Auth preflight (interactive prompt if Kite token missing)
     if not _maybe_auth_preflight():
         return 2
