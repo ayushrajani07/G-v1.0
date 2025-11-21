@@ -1,7 +1,7 @@
 {
   "uid": "g6-contracts-csv",
   "title": "G6 Contracts \u2013 Live from CSV (Infinity)",
-  "editable": true,
+  "editable": false,
   "schemaVersion": 39,
   "refresh": "15s",
   "tags": [
@@ -16,6 +16,8 @@
     ],
     "description": "Contracts view from today's CSV via Infinity (index, PCR, volumes, OI)"
   },
+  "g6_lock": true,
+  "version_tag": "freeze-2025-11-21",
   "time": {
     "from": "now-12h",
     "to": "now+6h"
