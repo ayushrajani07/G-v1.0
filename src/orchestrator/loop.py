@@ -38,6 +38,14 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
     future pluggable behaviors (e.g., adaptive interval, partial refresh).
     """
     log_info(logger, "LOOP", "Starting orchestration", interval_seconds=interval)
+    # Optional loop-level heartbeat before entering cycles
+    try:  # pragma: no cover
+        import src.collectors.unified_collectors as _uc  # type: ignore
+        _hb = getattr(_uc, '_mark_cycle_progress', None)
+        if callable(_hb):
+            _hb()
+    except Exception:
+        pass
     # Micro-cache frequently-read environment flags at loop startup to avoid
     # repeated os.getenv calls inside the loop.
     market_hours_only = is_truthy_env('G6_LOOP_MARKET_HOURS')
@@ -65,6 +73,14 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
                     logger.debug("[loop] Skipping cycle (market closed)")
                 else:
                     cycle_fn(ctx)
+                    # Heartbeat after each successful cycle invocation
+                    try:  # pragma: no cover
+                        import src.collectors.unified_collectors as _uc  # type: ignore
+                        _hb = getattr(_uc, '_mark_cycle_progress', None)
+                        if callable(_hb):
+                            _hb()
+                    except Exception:
+                        pass
                     executed_cycles += 1
                     if max_cycles is not None and executed_cycles >= max_cycles:
                         log_info(logger, "LOOP", "Reached max cycles, terminating", max_cycles=max_cycles)

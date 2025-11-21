@@ -232,6 +232,14 @@ def run_cycle(ctx: RuntimeContext) -> float:
     # NOTE: Missing cycle detection moved BEFORE provider guard so tests using a stub providers=None
     # can still exercise scheduler gap logic (test_missing_cycles_metric). We only need wall clock.
     start = time.time()
+    # Heartbeat at cycle start to satisfy watchdog even if early phases are slow
+    try:  # pragma: no cover
+        import src.collectors.unified_collectors as _uc  # type: ignore
+        _hb = getattr(_uc, '_mark_cycle_progress', None)
+        if callable(_hb):
+            _hb()
+    except Exception:
+        pass
     # Initialize per-cycle env snapshot (single reads reused below)
     cycle_interval = _env_float('G6_CYCLE_INTERVAL', 60.0, minimum=0.1)
     parallel_enabled = is_truthy_env('G6_PARALLEL_INDICES')
@@ -525,6 +533,13 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                             )
                                         if outcome.day_width:
                                             day_width_map[_idx] = outcome.day_width
+                                # Heartbeat after each index pipeline batch
+                                try:  # pragma: no cover
+                                    _hb = getattr(_uc, '_mark_cycle_progress', None)
+                                    if callable(_hb):
+                                        _hb()
+                                except Exception:
+                                    pass
                             # Persist overview snapshots (CSV + optional influx)
                             try:
                                 for _idx, _pcrs in overview_capture.items():
@@ -635,6 +650,14 @@ def run_cycle(ctx: RuntimeContext) -> float:
         cycle_failed = True
         logger.exception("Collection cycle failed")
     elapsed = time.time() - start
+    # Heartbeat at cycle end (already occurs inside unified collectors but duplicate is harmless)
+    try:  # pragma: no cover
+        import src.collectors.unified_collectors as _uc  # type: ignore
+        _hb = getattr(_uc, '_mark_cycle_progress', None)
+        if callable(_hb):
+            _hb()
+    except Exception:
+        pass
     # Record cycle time histogram if metrics registry exposes it
     try:
         mref = getattr(ctx, 'metrics', None)
