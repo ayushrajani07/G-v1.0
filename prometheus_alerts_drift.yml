@@ -310,3 +310,31 @@ groups:
             1. Inspect calibration degradation.
             2. Review interval construction vs recent volatility.
             3. Recalibrate prediction intervals if sustained.
+      
+      # Alert: Adaptive norm error drift info (exceeds 90th quantile of last 6h)
+      - alert: MLAdaptiveNormErrorDriftInfo
+        expr: g6_forecast_norm_error_drift_ratio > g6_forecast_norm_error_drift_ratio:quantile90_6h
+        for: 10m
+        labels:
+          severity: info
+          component: ml_drift
+        annotations:
+          summary: "Norm error drift early elevation (90th) {{ $labels.index }} {{ $labels.horizon }}"
+          description: |
+            Ratio above dynamic 90th percentile baseline.
+            Baseline (90th, 6h): {{ with printf "g6_forecast_norm_error_drift_ratio:quantile90_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+            Use to anticipate potential 95th breach.
+      
+      # Alert: Adaptive coverage drift delta info (exceeds 90th quantile of last 6h)
+      - alert: MLAdaptiveCoverageDriftInfo
+        expr: g6_forecast_coverage_drift_delta_pct > g6_forecast_coverage_drift_delta_pct:quantile90_6h
+        for: 10m
+        labels:
+          severity: info
+          component: ml_drift
+        annotations:
+          summary: "Coverage drift delta early elevation (90th) {{ $labels.index }} {{ $labels.horizon }}"
+          description: |
+            Coverage delta above dynamic 90th percentile baseline.
+            Baseline (90th, 6h): {{ with printf "g6_forecast_coverage_drift_delta_pct:quantile90_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+            Early signal before warning threshold (95th).

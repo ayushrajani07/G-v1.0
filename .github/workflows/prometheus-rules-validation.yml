@@ -1,0 +1,34 @@
+name: Prometheus Rules Validation
+on:
+  pull_request:
+    paths:
+      - prometheus_alerts_drift.yml
+      - prometheus_recording_rules_generated.yml
+  push:
+    branches:
+      - main
+    paths:
+      - prometheus_alerts_drift.yml
+      - prometheus_recording_rules_generated.yml
+jobs:
+  prom-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install promtool
+        run: |
+          VERSION=2.55.0
+          curl -LO https://github.com/prometheus/prometheus/releases/download/v${VERSION}/prometheus-${VERSION}.linux-amd64.tar.gz
+          tar xzf prometheus-${VERSION}.linux-amd64.tar.gz
+          sudo mv prometheus-${VERSION}.linux-amd64/promtool /usr/local/bin/promtool
+          promtool --version
+      - name: Validate alert rules
+        run: promtool check rules prometheus_alerts_drift.yml
+      - name: Validate recording rules
+        run: promtool check rules prometheus_recording_rules_generated.yml
+      - name: Show rule file diff vs main (if PR)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          git fetch origin main
+          echo 'Changed lines:'
+          git diff --unified=0 origin/main -- prometheus_alerts_drift.yml prometheus_recording_rules_generated.yml || true

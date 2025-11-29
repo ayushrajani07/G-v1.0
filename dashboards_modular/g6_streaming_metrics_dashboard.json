@@ -272,6 +272,11 @@
           "expr": "vector(1)",
           "legendFormat": "baseline 1.0",
           "refId": "B"
+        },
+        {
+          "expr": "g6_forecast_norm_error_drift_ratio:spike_factor{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "spike {{horizon}}",
+          "refId": "C"
         }
       ],
       "lines": true,
@@ -296,6 +301,11 @@
           "expr": "vector(1)",
           "legendFormat": "baseline 1.0",
           "refId": "B"
+        },
+        {
+          "expr": "(g6_forecast_coverage_drift_delta_pct:deviation_15m{index=\"$index\",horizon=\"$horizon\"} / clamp_min(g6_forecast_coverage_drift_delta_pct:horizon_avg_15m{horizon=\"$horizon\"},0.001))",
+          "legendFormat": "spike {{horizon}}",
+          "refId": "C"
         }
       ],
       "lines": true,

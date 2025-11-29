@@ -464,3 +464,11 @@ groups:
     labels:
       job: g6_platform
     record: g6_forecast_coverage_drift_delta_pct:quantile95_6h
+  - expr: quantile_over_time(0.90, g6_forecast_norm_error_drift_ratio[6h])
+    labels:
+      job: g6_platform
+    record: g6_forecast_norm_error_drift_ratio:quantile90_6h
+  - expr: quantile_over_time(0.90, g6_forecast_coverage_drift_delta_pct[6h])
+    labels:
+      job: g6_platform
+    record: g6_forecast_coverage_drift_delta_pct:quantile90_6h

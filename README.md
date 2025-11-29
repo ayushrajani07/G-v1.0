@@ -133,6 +133,9 @@ Grafana:
  - Dashboard annotations mark threshold breaches for norm error ratio and coverage drift delta (red/orange event markers).
  - Comparative ratio panels: Short vs long window (15m / 1h) for norm error drift ratio and coverage drift delta help identify transient spikes vs regime shifts.
  - Adaptive thresholds: 6h rolling 95th quantile recording rules (`g6_forecast_norm_error_drift_ratio:quantile95_6h`, `g6_forecast_coverage_drift_delta_pct:quantile95_6h`) feed new alerts `MLAdaptiveNormErrorDrift` and `MLAdaptiveCoverageDrift` (dynamic breach detection).
+ - Spike overlays: Ratio panels now overlay `spike_factor` (norm) and derived coverage deviation spike for rapid visual anomaly confirmation.
+ - Early (info) adaptive alerts: 90th percentile dynamic alerts (`MLAdaptiveNormErrorDriftInfo`, `MLAdaptiveCoverageDriftInfo`) provide pre-warning before 95th percentile warnings.
+ - CI validation: GitHub Action `prometheus-rules-validation.yml` runs `promtool check rules` on alert and recording rule files; local script `scripts/check_prometheus_rules.ps1` available for manual validation.
 
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)
