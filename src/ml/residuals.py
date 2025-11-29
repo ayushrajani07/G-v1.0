@@ -30,26 +30,41 @@ class ResidualStats:
 _LOG = logging.getLogger("ml.residuals")
 _RESIDUAL_FILE_ENV = "ML_RESIDUAL_HISTORY_FILE"
 _FLUSH_INTERVAL_SECONDS = 30
+_MAX_AGE_ENV = "ML_RESIDUAL_MAX_AGE_SECONDS"
+_DECAY_HALF_LIFE_ENV = "ML_RESIDUAL_DECAY_HALF_LIFE_SECONDS"
 
 class ResidualStore:
     def __init__(self):
         self._lock = threading.Lock()
-        # key -> list[float]; key is (index,horizon)
-        self._data: Dict[Tuple[str,int], List[float]] = {}
+        # key -> list of (ts, residual)
+        self._data: Dict[Tuple[str,int], List[Tuple[float,float]]] = {}
         self._last_flush = 0.0
 
-    def record(self, index: str, horizon: int, residual: float) -> None:
+    def _get_config(self) -> Tuple[int, float]:
+        qt = get_quality_targets()
+        try:
+            max_age = int(os.environ.get(_MAX_AGE_ENV, "3600"))
+        except Exception:
+            max_age = 3600
+        try:
+            half_life = float(os.environ.get(_DECAY_HALF_LIFE_ENV, "900"))
+        except Exception:
+            half_life = 900.0
+        return max_age, half_life if half_life > 0 else 900.0
+
+    def record(self, index: str, horizon: int, residual: float, ts: float | None = None) -> None:
+        import time
         key = (index.upper(), int(horizon))
         qt = get_quality_targets()
         depth = qt.residual_depth
+        stamp = ts if ts is not None else time.time()
         with self._lock:
             lst = self._data.setdefault(key, [])
-            lst.append(abs(float(residual)))
+            lst.append((stamp, abs(float(residual))))
             if len(lst) > depth:
                 self._data[key] = lst[-depth:]
         # Opportunistic persistence flush
         if os.environ.get(_RESIDUAL_FILE_ENV, ""):
-            import time
             now = time.time()
             if now - self._last_flush >= _FLUSH_INTERVAL_SECONDS:
                 try:
@@ -59,20 +74,36 @@ class ResidualStore:
                 self._last_flush = now
 
     def _compute_stats_for(self, index: str, horizon: int) -> ResidualStats:
+        import math, time
         key = (index.upper(), int(horizon))
         qt = get_quality_targets()
         short_window = min(30, qt.residual_depth)
+        max_age, half_life = self._get_config()
+        cutoff = time.time() - max_age
         with self._lock:
-            arr = list(self._data.get(key, []))
+            raw = list(self._data.get(key, []))
+        # Filter by age
+        arr = [(ts, v) for ts, v in raw if ts >= cutoff]
         if not arr:
             return ResidualStats(index=index.upper(), horizon=horizon, count=0, avg=0.0, p95=0.0, trend_ratio=1.0)
-        avg = sum(arr)/len(arr)
-        # p95 simple approximation using sorted list
-        s = sorted(arr)
-        p95 = s[int(0.95*(len(s)-1))]
-        short = arr[-short_window:]
-        short_avg = sum(short)/len(short)
-        trend_ratio = short_avg/avg if avg>0 else 1.0
+        # Exponential decay weight based on age
+        now = time.time()
+        def weight(ts: float) -> float:
+            age = max(now - ts, 0.0)
+            # w = 0.5 ** (age / half_life)
+            return math.pow(0.5, age / half_life)
+        values = [v for _, v in arr]
+        weights = [weight(ts) for ts, _ in arr]
+        w_sum = sum(weights)
+        avg = sum(v * w for v, w in zip(values, weights)) / (w_sum if w_sum > 0 else 1)
+        # p95 unweighted on recent window (fair representation of tail)
+        s = sorted(values)
+        p95 = s[int(0.95 * (len(s) - 1))]
+        short_vals = values[-short_window:]
+        short_weights = weights[-short_window:]
+        sw_sum = sum(short_weights)
+        short_avg = sum(v * w for v, w in zip(short_vals, short_weights)) / (sw_sum if sw_sum > 0 else 1)
+        trend_ratio = short_avg / avg if avg > 0 else 1.0
         return ResidualStats(index=index.upper(), horizon=horizon, count=len(arr), avg=avg, p95=p95, trend_ratio=trend_ratio)
 
     def stats(self, index: str, horizons: Iterable[int]) -> List[ResidualStats]:
@@ -95,8 +126,8 @@ def get_store() -> ResidualStore:
 
 # Convenience APIs used by endpoints / weighting engine
 
-def record_residual(index: str, horizon: int, residual: float) -> None:
-    get_store().record(index, horizon, residual)
+def record_residual(index: str, horizon: int, residual: float, ts: float | None = None) -> None:
+    get_store().record(index, horizon, residual, ts=ts)
 
 def get_residual_trend(index: str, horizon: int) -> float:
     return get_store().trend_ratio(index, horizon)
@@ -120,7 +151,8 @@ def flush_residual_history(path: str | None = None) -> None:
     payload: Dict[str, Any] = {}
     with store._lock:
         for (idx, hz), arr in store._data.items():
-            payload[f"{idx}|{hz}"] = arr
+            # Persist as list of [ts, value]
+            payload[f"{idx}|{hz}"] = [[ts, v] for ts, v in arr]
     os.makedirs(os.path.dirname(target), exist_ok=True)
     tmp = target + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
@@ -147,8 +179,20 @@ def load_residual_history(path: str | None = None, max_keys: int = 10000) -> Non
             if not isinstance(arr, list):
                 continue
             qt = get_quality_targets()
-            arr_tail = [abs(float(v)) for v in arr[-qt.residual_depth:]]
-            store._data[(idx.upper(), hz)] = arr_tail
+            parsed: List[Tuple[float,float]] = []
+            for entry in arr[-qt.residual_depth:]:
+                try:
+                    if isinstance(entry, list) and len(entry) == 2:
+                        ts_f = float(entry[0])
+                        v_f = abs(float(entry[1]))
+                        parsed.append((ts_f, v_f))
+                    else:  # backward compatibility plain value
+                        v_f = abs(float(entry))
+                        import time
+                        parsed.append((time.time(), v_f))
+                except Exception:
+                    continue
+            store._data[(idx.upper(), hz)] = parsed
             loaded += 1
     if loaded:
         _LOG.debug(f"Loaded residual history keys: {loaded}")
