@@ -32,6 +32,11 @@ except Exception:  # pragma: no cover
         return _DummyEngine()
 from src.ml.quality_targets import get_quality_targets
 from src.ml.drift_persist import persist_attribution
+try:
+    from src.ml.drift_parquet import persist_attribution_parquet  # type: ignore
+except Exception:  # pragma: no cover
+    def persist_attribution_parquet(attr):
+        return None
 from src.ml.drift_cause import classify_drift
 from src.ml.metrics import push_drift_cause
 
@@ -97,6 +102,11 @@ def compute_drift_components(index: str, horizon: int) -> Dict[str, Any]:
     attribution['drift_cause'] = cause
     try:
         persist_attribution(attribution)
+    except Exception:
+        pass
+    # Optional Parquet store
+    try:
+        persist_attribution_parquet(attribution)
     except Exception:
         pass
     try:
