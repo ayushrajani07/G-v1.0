@@ -420,6 +420,51 @@ except Exception:
     _CACHE_LOCK = threading.Lock()
 # Backward-compatibility alias: historical tests reference `_CACHE`
 _CACHE = _FORECAST_CACHE
+_CACHE_TIME = _FORECAST_CACHE._time  # underlying OrderedDict of timestamps
+
+# Legacy counters (maintained separately for tests)
+_CACHE_HITS = 0
+_CACHE_MISSES = 0
+_CACHE_EVICTIONS = 0
+_CACHE_TTL_SEC = _FORECAST_CACHE._ttl_sec
+_CACHE_MAX_SIZE = _FORECAST_CACHE._max_size
+
+def _cache_put(key, value):
+    """Legacy put wrapper adapting 7-element test key to 8-element cache key."""
+    global _CACHE_EVICTIONS, _CACHE_TTL_SEC
+    # Ensure underlying TTL reflects legacy override variable
+    try:
+        _FORECAST_CACHE._ttl_sec = int(_CACHE_TTL_SEC)
+    except Exception:
+        pass
+    # Adapt key shape (tests omit detail bucket)
+    if len(key) == 7:
+        key8 = (key[0], key[1], key[2], key[3], key[4], key[5], key[6], 'basic')
+    else:
+        key8 = key
+    before = _FORECAST_CACHE._evictions
+    _FORECAST_CACHE.put(key8, value)
+    after = _FORECAST_CACHE._evictions
+    if after > before:
+        _CACHE_EVICTIONS += (after - before)
+
+def _cache_get(key):
+    """Legacy get wrapper; returns None on miss and updates legacy counters."""
+    global _CACHE_HITS, _CACHE_MISSES, _CACHE_TTL_SEC
+    try:
+        _FORECAST_CACHE._ttl_sec = int(_CACHE_TTL_SEC)
+    except Exception:
+        pass
+    if len(key) == 7:
+        key8 = (key[0], key[1], key[2], key[3], key[4], key[5], key[6], 'basic')
+    else:
+        key8 = key
+    resp = _FORECAST_CACHE.get(key8)
+    if resp is None:
+        _CACHE_MISSES += 1
+    else:
+        _CACHE_HITS += 1
+    return resp
 
 # Key normalization (bucket avg_iv) optional controls
 _NORMALIZE_AVG_IV = str(os.environ.get('G6_FORECAST_CACHE_NORMALIZE_AVG_IV', '0')).lower() in ('1','true','yes','on')
