@@ -166,6 +166,30 @@ groups:
           description: |-
             Strong combined degradation signals; initiate expedited retrain workflow.
             signal={{ $value }}
+      - alert: MLTailBurnAccelerationWarning
+        expr: g6_ml_residual_tail_burn:accel > 0.04
+        for: 10m
+        labels:
+          severity: warning
+          team: ml
+          category: residuals
+        annotations:
+          summary: Tail burn acceleration elevated (>0.04)
+          description: |-
+            Acceleration of tail deterioration sustained; monitor for impending critical drift.
+            accel={{ $value }}
+      - alert: MLTailBurnAccelerationCritical
+        expr: g6_ml_residual_tail_burn:accel > 0.08
+        for: 5m
+        labels:
+          severity: critical
+          team: ml
+          category: residuals
+        annotations:
+          summary: Tail burn acceleration critical (>0.08)
+          description: |-
+            Rapid tail deterioration acceleration; triggers retrain workflow evaluation.
+            accel={{ $value }}
     for: 5m
     labels:
       severity: critical

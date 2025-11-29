@@ -32,6 +32,11 @@ groups:
     labels:
       job: g6_platform
     expr: clamp_min(g6_ml_residual_p95_decay:ratio_5m_30m - g6_ml_residual_p95_decay:ratio_30m_2h, 0)
+  # Tail burn acceleration (short_long instantaneous minus 15m average)
+  - record: g6_ml_residual_tail_burn:accel
+    labels:
+      job: g6_platform
+    expr: clamp_min(g6_ml_residual_tail_burn:short_long - avg_over_time(g6_ml_residual_tail_burn:short_long[15m]), 0)
   # Adaptive retrain signal components (boolean arithmetic)
   - record: g6_ml_retrain_signal:raw
     labels:

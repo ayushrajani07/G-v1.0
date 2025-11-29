@@ -53,3 +53,6 @@ Right Column:
 - Add forecasting error distribution sparkline.
 - Overlay moving quantiles for retrain signal decomposition.
 - Add per-horizon selector (currently aggregate index scope).
+- Add Tail Burn Acceleration panel (Phase 12) metric `g6_ml_residual_tail_burn:accel`.
+- Show config diff summary counts (added/removed/changed) sourced from `/api/ml/ensemble/config_diff`.
+- Integrate attribution CSV recent tail_ratio trend sparkline.

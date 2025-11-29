@@ -31,6 +31,7 @@ except Exception:  # pragma: no cover
     def get_weighting_engine():  # type: ignore
         return _DummyEngine()
 from src.ml.quality_targets import get_quality_targets
+from src.ml.drift_persist import persist_attribution
 
 try:
     from prometheus_client import REGISTRY  # type: ignore
@@ -86,4 +87,8 @@ def compute_drift_components(index: str, horizon: int) -> Dict[str, Any]:
         'improve_target_pct': improve_target,
         'tail_ratio_vs_target_gap': round(tail_ratio - (1 - improve_target/100), 6)
     }
+    try:
+        persist_attribution(attribution)
+    except Exception:
+        pass
     return attribution

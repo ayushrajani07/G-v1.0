@@ -27,6 +27,7 @@ from src.ml.quality_targets import get_quality_targets
 from src.ml.weighting_engine import get_weighting_engine
 from src.ml.residuals import get_residual_trend, record_residual, get_residual_stats
 from src.ml.metrics import push_forecast_metrics, push_quality_targets
+from src.ml.config_versioning import record_config, latest_diff
 from src.ml.regime import audit_regime
 from src.ml.weight_history import record_weights, get_weight_volatility
 
@@ -670,6 +671,18 @@ def create_app(config_dir: Path | None = None) -> Flask:
         except Exception as e:
             _LOG.error(f"Drift attribution error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
+    @app.route('/api/ml/ensemble/config_diff', methods=['GET'])
+    def config_diff() -> Response:
+        """Return shallow diff between last two recorded config versions for index."""
+        try:
+            index = request.args.get('index','').upper()
+            if not index:
+                return jsonify({'error': 'index parameter required'}), 400
+            diff = latest_diff(index)
+            return jsonify(diff)
+        except Exception as e:
+            _LOG.error(f"Config diff error: {e}", exc_info=True)
+            return jsonify({'error': 'Internal server error'}), 500
     
     _app = app
     return app
@@ -697,6 +710,10 @@ def _get_forecaster(index: str, config_dir: Path) -> Optional[EnsembleForecaster
         # Parse config
         config = _parse_config(config_data)
         _configs[index] = config
+        try:
+            record_config(index, data)
+        except Exception:
+            pass
         
         # Create forecaster using EnsembleConfig signature (expects a single cfg argument)
         forecaster = EnsembleForecaster(config)  # type: ignore[arg-type]
