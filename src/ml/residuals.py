@@ -12,7 +12,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Iterable, Any
 import threading
-import statistics
+import logging
+import json
+import os
 
 from src.ml.quality_targets import get_quality_targets
 
@@ -25,11 +27,16 @@ class ResidualStats:
     p95: float
     trend_ratio: float
 
+_LOG = logging.getLogger("ml.residuals")
+_RESIDUAL_FILE_ENV = "ML_RESIDUAL_HISTORY_FILE"
+_FLUSH_INTERVAL_SECONDS = 30
+
 class ResidualStore:
     def __init__(self):
         self._lock = threading.Lock()
         # key -> list[float]; key is (index,horizon)
         self._data: Dict[Tuple[str,int], List[float]] = {}
+        self._last_flush = 0.0
 
     def record(self, index: str, horizon: int, residual: float) -> None:
         key = (index.upper(), int(horizon))
@@ -39,8 +46,17 @@ class ResidualStore:
             lst = self._data.setdefault(key, [])
             lst.append(abs(float(residual)))
             if len(lst) > depth:
-                # keep tail only
                 self._data[key] = lst[-depth:]
+        # Opportunistic persistence flush
+        if os.environ.get(_RESIDUAL_FILE_ENV, ""):
+            import time
+            now = time.time()
+            if now - self._last_flush >= _FLUSH_INTERVAL_SECONDS:
+                try:
+                    flush_residual_history()
+                except Exception as e:  # pragma: no cover
+                    _LOG.debug(f"Residual flush failed: {e}")
+                self._last_flush = now
 
     def _compute_stats_for(self, index: str, horizon: int) -> ResidualStats:
         key = (index.upper(), int(horizon))
@@ -71,6 +87,10 @@ def get_store() -> ResidualStore:
     global _store
     if _store is None:
         _store = ResidualStore()
+        try:
+            load_residual_history()
+        except Exception as e:  # pragma: no cover
+            _LOG.debug(f"Residual history load skipped: {e}")
     return _store
 
 # Convenience APIs used by endpoints / weighting engine
@@ -83,3 +103,52 @@ def get_residual_trend(index: str, horizon: int) -> float:
 
 def get_residual_stats(index: str, horizons: Iterable[int]) -> List[ResidualStats]:
     return get_store().stats(index, horizons)
+
+# Persistence helpers
+
+def _resolve_path(path: str | None = None) -> str | None:
+    p = path or os.environ.get(_RESIDUAL_FILE_ENV, "")
+    if not p:
+        return None
+    return p
+
+def flush_residual_history(path: str | None = None) -> None:
+    target = _resolve_path(path)
+    if target is None:
+        return
+    store = get_store()
+    payload: Dict[str, Any] = {}
+    with store._lock:
+        for (idx, hz), arr in store._data.items():
+            payload[f"{idx}|{hz}"] = arr
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    tmp = target + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(payload, f)
+    os.replace(tmp, target)
+
+def load_residual_history(path: str | None = None, max_keys: int = 10000) -> None:
+    source = _resolve_path(path)
+    if source is None or not os.path.exists(source):
+        return
+    with open(source, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    store = get_store()
+    loaded = 0
+    with store._lock:
+        for key, arr in data.items():
+            if loaded >= max_keys:
+                break
+            try:
+                idx, hz_str = key.split("|")
+                hz = int(hz_str)
+            except Exception:
+                continue
+            if not isinstance(arr, list):
+                continue
+            qt = get_quality_targets()
+            arr_tail = [abs(float(v)) for v in arr[-qt.residual_depth:]]
+            store._data[(idx.upper(), hz)] = arr_tail
+            loaded += 1
+    if loaded:
+        _LOG.debug(f"Loaded residual history keys: {loaded}")
