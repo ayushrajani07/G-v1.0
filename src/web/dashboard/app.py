@@ -43,6 +43,7 @@ from .routes.path_forecast import router as path_forecast_router
 from .routes.ensemble import router as ensemble_router
 from .routes.ml import router as ml_router
 from .routes.drift import router as drift_router
+from .routes.stream import router as stream_router
 try:
     # Advisor router provides universal advisor endpoints
     from .routes.advisor import router as advisor_router
@@ -305,6 +306,7 @@ app.include_router(path_forecast_router)
 app.include_router(ensemble_router)
 app.include_router(ml_router)
 app.include_router(drift_router)
+app.include_router(stream_router)
 # Phase 20 (stub): minimal streaming/feedback wiring
 try:
     from typing import Dict, Any
@@ -328,6 +330,10 @@ try:
 
     _ingestor = StreamIngestor(_emit_item)
     _ingestor.start()
+    try:
+        app.state.ingestor = _ingestor
+    except Exception:
+        pass
 except Exception:
     _ingestor = None  # optional in minimal environments
 # Memory status endpoint (lightweight; avoid dedicated router for single path)
