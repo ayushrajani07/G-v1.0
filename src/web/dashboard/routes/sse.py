@@ -94,6 +94,7 @@ async def sse_live(
                         try:
                             from ..prom_metrics import set_drift_metrics
                             set_drift_metrics(
+                                index=index,
                                 mae=acc.get("mae"),
                                 mape=acc.get("mape"),
                                 status_ok=True,

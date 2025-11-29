@@ -271,16 +271,19 @@ def _init_metrics() -> bool:
         _DRIFT_MAE = Gauge(
             "g6_drift_mae",
             "Drift monitor MAE (current window)",
+            labelnames=["index"],
             registry=_REGISTRY,
         )
         _DRIFT_MAPE = Gauge(
             "g6_drift_mape",
             "Drift monitor MAPE (current window)",
+            labelnames=["index"],
             registry=_REGISTRY,
         )
         _DRIFT_STATUS = Gauge(
             "g6_drift_status",
             "Drift monitor status: 1=ok, 0=unknown/error",
+            labelnames=["index"],
             registry=_REGISTRY,
         )
         # Optional histograms for percentile analysis; buckets configurable via env vars
@@ -720,7 +723,7 @@ def inc_live_mae_alerts() -> None:
     except Exception:
         pass
 
-def set_drift_metrics(mae: float | None = None, mape: float | None = None, status_ok: bool | None = None) -> None:
+def set_drift_metrics(index: str, mae: float | None = None, mape: float | None = None, status_ok: bool | None = None) -> None:
     """Set drift summary gauges.
 
     If values are None, they will be skipped.
@@ -729,16 +732,16 @@ def set_drift_metrics(mae: float | None = None, mape: float | None = None, statu
         return
     try:
         if mae is not None and _DRIFT_MAE is not None:
-            _DRIFT_MAE.set(float(mae))
+            _DRIFT_MAE.labels(index=index).set(float(mae))
     except Exception:
         pass
     try:
         if mape is not None and _DRIFT_MAPE is not None:
-            _DRIFT_MAPE.set(float(mape))
+            _DRIFT_MAPE.labels(index=index).set(float(mape))
     except Exception:
         pass
     try:
         if status_ok is not None and _DRIFT_STATUS is not None:
-            _DRIFT_STATUS.set(1 if status_ok else 0)
+            _DRIFT_STATUS.labels(index=index).set(1 if status_ok else 0)
     except Exception:
         pass
