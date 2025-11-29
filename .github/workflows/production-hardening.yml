@@ -1,0 +1,49 @@
+name: Production Hardening Checks
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/security/**'
+      - '.github/workflows/production-hardening.yml'
+  workflow_dispatch: {}
+
+jobs:
+  hardening:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt || pip install flask pytest cyclonedx-bom pip-audit requests
+      - name: Run unit tests (security/resilience subset)
+        run: |
+          python -m pytest -k 'security_headers or circuit_breaker or backpressure_rejection' -q --tb=no
+      - name: SBOM & Audit
+        run: |
+          python scripts/security/sbom_audit.py > hardening_summary.json || true
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardening-artifacts
+          path: |
+            sbom.json
+            audit.json
+            hardening_summary.json
+      - name: Parse hardening summary
+        run: |
+          python - <<'PY'
+          import json,sys
+          data=json.load(open('hardening_summary.json'))
+          crit=data.get('critical_vulns',0)
+          print('Critical vulnerabilities:',crit)
+          if crit>0:
+              sys.exit(1)
+          PY

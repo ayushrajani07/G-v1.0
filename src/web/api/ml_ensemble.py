@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -21,6 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from flask import Flask, jsonify, request, Response
+from threading import BoundedSemaphore
 
 # Project imports
 from src.path_forecast.ensemble import EnsembleForecaster, EnsembleConfig
@@ -32,6 +34,9 @@ _LOG = logging.getLogger("web.api.ml_ensemble")
 _app: Optional[Flask] = None
 _forecasters: Dict[str, EnsembleForecaster] = {}
 _configs: Dict[str, EnsembleConfig] = {}
+# Backpressure semaphore (configurable via env FORECAST_MAX_CONCURRENCY)
+_forecast_semaphore: BoundedSemaphore | None = None
+_forecast_rejections: int = 0
 
 
 @dataclass
@@ -70,6 +75,26 @@ def create_app(config_dir: Path | None = None) -> Flask:
     
     app = Flask(__name__)
     app.config['JSON_SORT_KEYS'] = False
+
+    # Initialize backpressure semaphore
+    global _forecast_semaphore
+    if _forecast_semaphore is None:
+        max_conc = int(os.environ.get('FORECAST_MAX_CONCURRENCY', '32') or '32')
+        if max_conc < 1:
+            max_conc = 1
+        _forecast_semaphore = BoundedSemaphore(value=max_conc)
+        _LOG.info(f"Initialized forecast semaphore with max_concurrency={max_conc}")
+
+    # Security headers middleware
+    @app.after_request
+    def add_security_headers(resp: Response):  # type: ignore[override]
+        resp.headers.setdefault('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+        resp.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        resp.headers.setdefault('X-Frame-Options', 'DENY')
+        resp.headers.setdefault('Referrer-Policy', 'no-referrer')
+        # Minimal restrictive CSP; can be relaxed per endpoint
+        resp.headers.setdefault('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
+        return resp
     
     if config_dir is None:
         # Robust discovery: walk up until we find configs/ml
@@ -110,7 +135,12 @@ def create_app(config_dir: Path | None = None) -> Flask:
         Returns:
         - ForecastResponse with quantile predictions and metadata
         """
+        global _forecast_rejections, _forecast_semaphore
         try:
+            # Backpressure guard (non-blocking acquire)
+            if _forecast_semaphore and not _forecast_semaphore.acquire(blocking=False):
+                _forecast_rejections += 1
+                return jsonify({'error': 'too_many_inflight_requests', 'backpressure': True, 'rejections': _forecast_rejections}), 429
             index = request.args.get('index', '').upper()
             if not index:
                 return jsonify({'error': 'index parameter required'}), 400
@@ -172,6 +202,13 @@ def create_app(config_dir: Path | None = None) -> Flask:
         except Exception as e:
             _LOG.error(f"Forecast error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
+        finally:
+            if _forecast_semaphore:
+                try:
+                    _forecast_semaphore.release()
+                except ValueError:
+                    # Release imbalance should not crash request path
+                    pass
     
     @app.route('/api/ml/ensemble/diagnostics', methods=['GET'])
     def diagnostics() -> Response:
