@@ -26,7 +26,7 @@ from threading import BoundedSemaphore
 from src.ml.quality_targets import get_quality_targets
 from src.ml.weighting_engine import get_weighting_engine
 from src.ml.residuals import get_residual_trend, record_residual, get_residual_stats
-from src.ml.metrics import push_forecast_metrics
+from src.ml.metrics import push_forecast_metrics, push_quality_targets
 from src.ml.regime import audit_regime
 from src.ml.weight_history import record_weights, get_weight_volatility
 
@@ -202,6 +202,11 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 residual_avg = 0.0
                 residual_p95 = 0.0
                 residual_p95_decay = 0.0
+            # Push target gauges once per request (cheap) for dynamic thresholds
+            try:
+                push_quality_targets(get_quality_targets())
+            except Exception:
+                pass
             push_forecast_metrics(index=index, horizon=horizon, weights=weights, residual_trend=residual_trend, residual_avg=residual_avg, residual_p95=residual_p95, residual_p95_decay=residual_p95_decay)
             # Regime audit (using available volatility recording rules, may be absent -> default 0)
             # For now we approximate volatility/difference from weights history not yet exposed; placeholders until metrics pipeline wires in.
@@ -304,6 +309,10 @@ def create_app(config_dir: Path | None = None) -> Flask:
             
             # Build diagnostics response
             qt = get_quality_targets()
+            try:
+                push_quality_targets(qt)
+            except Exception:
+                pass
             # Neutral snapshot weights (residual_trend=1.0 baseline, stable regime)
             weights = get_weighting_engine().compute(confidence=0.75, residual_trend=1.0, regime_stability=0.8)
             response = DiagnosticsResponse(

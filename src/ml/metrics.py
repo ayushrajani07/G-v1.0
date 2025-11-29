@@ -27,12 +27,15 @@ _G_RESIDUAL_TREND = None
 _G_RESIDUAL_AVG = None
 _G_RESIDUAL_P95 = None
 _G_RESIDUAL_P95_DECAY = None
+_G_TARGET_MAE_P95_IMPROVE_PCT = None
+_G_TARGET_WEIGHT_STDDEV_MAX = None
+_G_TARGET_REGIME_ALERT_MINUTES = None
 
 _DEF_LABELS = ("index", "horizon")
 
 
 def _ensure():
-    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY
+    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY, _G_TARGET_MAE_P95_IMPROVE_PCT, _G_TARGET_WEIGHT_STDDEV_MAX, _G_TARGET_REGIME_ALERT_MINUTES
     if _ENABLED is not None:
         return _ENABLED
     if os.environ.get("ENABLE_ML_QUALITY_METRICS", "").strip() == "":
@@ -65,6 +68,21 @@ def _ensure():
             "Decay-weighted residual p95 absolute error (recent emphasis)",
             labelnames=list(_DEF_LABELS),
         )
+        _G_TARGET_MAE_P95_IMPROVE_PCT = Gauge(
+            "g6_ml_target_mae_p95_improve_pct",
+            "Target percent improvement for p95 residual vs baseline",
+            labelnames=[],
+        )
+        _G_TARGET_WEIGHT_STDDEV_MAX = Gauge(
+            "g6_ml_target_weight_stddev_max",
+            "Target maximum component weight volatility (stddev)",
+            labelnames=[],
+        )
+        _G_TARGET_REGIME_ALERT_MINUTES = Gauge(
+            "g6_ml_target_regime_alert_minutes",
+            "Target minutes threshold for regime alerting",
+            labelnames=[],
+        )
         _ENABLED = True
     except Exception as e:
         _LOG.debug(f"Prometheus client unavailable: {e}")
@@ -91,3 +109,18 @@ def push_forecast_metrics(index: str, horizon: int, weights: Dict[str, float], r
             _G_RESIDUAL_P95_DECAY.labels(index=idx, horizon=h).set(residual_p95_decay)
     except Exception as e:
         _LOG.debug(f"Failed to push ML quality metrics: {e}")
+
+
+def push_quality_targets(qt) -> None:
+    """Export current quality targets as gauges (no labels)."""
+    if not _ensure():
+        return
+    try:
+        if _G_TARGET_MAE_P95_IMPROVE_PCT is not None:
+            _G_TARGET_MAE_P95_IMPROVE_PCT.set(qt.mae_p95_improve_pct)
+        if _G_TARGET_WEIGHT_STDDEV_MAX is not None:
+            _G_TARGET_WEIGHT_STDDEV_MAX.set(qt.weight_stddev_max)
+        if _G_TARGET_REGIME_ALERT_MINUTES is not None:
+            _G_TARGET_REGIME_ALERT_MINUTES.set(qt.regime_alert_minutes)
+    except Exception as e:
+        _LOG.debug(f"Failed to push quality target gauges: {e}")
