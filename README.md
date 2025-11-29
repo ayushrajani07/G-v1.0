@@ -113,6 +113,10 @@ Implementation files:
 - `src/streaming/ingest.py` — ingestion worker
 - `src/monitoring/feedback.py` — feedback loop
 - `src/monitoring/alerts.py` — alert stub
+- `src/web/dashboard/routes/sse.py` — SSE live MAE stream
+
+Grafana:
+- Import `dashboards_modular/g6_streaming_metrics_dashboard.json` and set Prometheus datasource.
 
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)
