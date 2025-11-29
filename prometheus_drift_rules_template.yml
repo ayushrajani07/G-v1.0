@@ -1,0 +1,8 @@
+# Template for generating drift-focused recording rules
+# Generated fragment will be appended or merged into prometheus_recording_rules_generated.yml
+# Variables:
+#   metrics: list of base metric names (no braces) e.g. g6_forecast_norm_error_drift_ratio
+#   quantiles: list of quantiles (0.90,0.95,0.99)
+#   horizon_avgs: windows for horizon averages (15m,1h)
+#   long_quantile_window: base window for quantile_over_time (6h)
+# This file is not consumed directly by Prometheus.

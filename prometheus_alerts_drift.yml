@@ -338,3 +338,31 @@ groups:
             Coverage delta above dynamic 90th percentile baseline.
             Baseline (90th, 6h): {{ with printf "g6_forecast_coverage_drift_delta_pct:quantile90_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
             Early signal before warning threshold (95th).
+      
+      # Alert: Critical adaptive norm error drift (exceeds 99th quantile of last 6h)
+      - alert: MLAdaptiveNormErrorDriftCritical
+        expr: g6_forecast_norm_error_drift_ratio > g6_forecast_norm_error_drift_ratio:quantile99_6h
+        for: 5m
+        labels:
+          severity: critical
+          component: ml_drift
+        annotations:
+          summary: "Critical norm error drift (99th) {{ $labels.index }} {{ $labels.horizon }}"
+          description: |
+            Ratio exceeded dynamic 99th percentile baseline.
+            Baseline (99th, 6h): {{ with printf "g6_forecast_norm_error_drift_ratio:quantile99_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+            Immediate investigation recommended (extreme residual elevation).
+      
+      # Alert: Critical adaptive coverage drift delta (exceeds 99th quantile of last 6h)
+      - alert: MLAdaptiveCoverageDriftCritical
+        expr: g6_forecast_coverage_drift_delta_pct > g6_forecast_coverage_drift_delta_pct:quantile99_6h
+        for: 5m
+        labels:
+          severity: critical
+          component: ml_drift
+        annotations:
+          summary: "Critical coverage drift delta (99th) {{ $labels.index }} {{ $labels.horizon }}"
+          description: |
+            Coverage delta exceeded dynamic 99th percentile baseline.
+            Baseline (99th, 6h): {{ with printf "g6_forecast_coverage_drift_delta_pct:quantile99_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+            Indicates severe interval calibration degradation.
