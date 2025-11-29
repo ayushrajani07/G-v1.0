@@ -28,6 +28,7 @@ from src.ml.weighting_engine import get_weighting_engine
 from src.ml.residuals import get_residual_trend, record_residual, get_residual_stats
 from src.ml.metrics import push_forecast_metrics
 from src.ml.regime import audit_regime
+from src.ml.weight_history import record_weights, get_weight_volatility
 
 # Project imports
 from src.path_forecast.ensemble import EnsembleForecaster, EnsembleConfig
@@ -188,6 +189,9 @@ def create_app(config_dir: Path | None = None) -> Flask:
             residual_trend = get_residual_trend(index=index, horizon=horizon)
             regime_stability = 0.8  # placeholder until regime module enhancement
             weights = get_weighting_engine().compute(confidence=confidence, residual_trend=residual_trend, regime_stability=regime_stability)
+            # Record weights for volatility tracking
+            record_weights(index=index, horizon=horizon, weights=weights)
+            vol_gbrt, vol_retrieval = get_weight_volatility(index=index, horizon=horizon, window_seconds=900)
             # Residual stats for metrics export (avg & p95)
             try:
                 stats_obj = get_residual_stats(index, [horizon])[0]
@@ -199,8 +203,8 @@ def create_app(config_dir: Path | None = None) -> Flask:
             push_forecast_metrics(index=index, horizon=horizon, weights=weights, residual_trend=residual_trend, residual_avg=residual_avg, residual_p95=residual_p95)
             # Regime audit (using available volatility recording rules, may be absent -> default 0)
             # For now we approximate volatility/difference from weights history not yet exposed; placeholders until metrics pipeline wires in.
-            weight_volatility_gbrt = 0.0
-            weight_volatility_retrieval = 0.0
+            weight_volatility_gbrt = vol_gbrt
+            weight_volatility_retrieval = vol_retrieval
             divergence = abs(weights['gbrt'] - weights['retrieval'])
             regime_audit = audit_regime(index=index, horizon=horizon, residual_trend=residual_trend, weight_volatility_gbrt=weight_volatility_gbrt, weight_volatility_retrieval=weight_volatility_retrieval, divergence=divergence)
 
@@ -232,7 +236,9 @@ def create_app(config_dir: Path | None = None) -> Flask:
                     'classification': regime_audit.classification,
                     'score': round(regime_audit.score,4),
                     'residual_trend': residual_trend,
-                    'divergence': round(regime_audit.divergence,4)
+                    'divergence': round(regime_audit.divergence,4),
+                    'weight_volatility_gbrt': round(weight_volatility_gbrt,6),
+                    'weight_volatility_retrieval': round(weight_volatility_retrieval,6)
                 }
             }
             return jsonify(flat)
@@ -605,8 +611,10 @@ def create_app(config_dir: Path | None = None) -> Flask:
             residual_trend = get_residual_trend(index=index, horizon=horizon)
             # Recompute weights (placeholders for volatility)
             weights = get_weighting_engine().compute(confidence=0.75, residual_trend=residual_trend, regime_stability=0.8)
+            record_weights(index=index, horizon=horizon, weights=weights)
+            vol_gbrt, vol_retrieval = get_weight_volatility(index=index, horizon=horizon, window_seconds=900)
             divergence = abs(weights['gbrt'] - weights['retrieval'])
-            audit = audit_regime(index=index, horizon=horizon, residual_trend=residual_trend, weight_volatility_gbrt=0.0, weight_volatility_retrieval=0.0, divergence=divergence)
+            audit = audit_regime(index=index, horizon=horizon, residual_trend=residual_trend, weight_volatility_gbrt=vol_gbrt, weight_volatility_retrieval=vol_retrieval, divergence=divergence)
             return jsonify({
                 'index': index,
                 'horizon': horizon,
@@ -615,7 +623,9 @@ def create_app(config_dir: Path | None = None) -> Flask:
                     'classification': audit.classification,
                     'score': round(audit.score,4),
                     'residual_trend': residual_trend,
-                    'divergence': round(divergence,4)
+                    'divergence': round(divergence,4),
+                    'weight_volatility_gbrt': round(vol_gbrt,6),
+                    'weight_volatility_retrieval': round(vol_retrieval,6)
                 }
             })
         except Exception as e:
