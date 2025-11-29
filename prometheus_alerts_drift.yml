@@ -213,3 +213,43 @@ groups:
             2. Confirm env vars: G6_DRIFT_ENABLE=1
             3. Verify metrics endpoint exposes g6_drift_last_eval_ms
             4. Restart service if thread dead
+
+      # Alert: High coverage drift delta
+      # Threshold aligned to Grafana variable coverage_threshold (default 1.5)
+      - alert: MLHighCoverageDrift
+        expr: g6_forecast_coverage_drift_delta_pct > 1.5
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "High coverage drift delta for {{ $labels.index }} horizon {{ $labels.horizon }}"
+          description: |
+            Coverage drift delta percentage points exceeded threshold 1.5.
+            Current value: {{ $value }}
+            Keep this threshold in sync with dashboard variable 'coverage_threshold'.
+
+            Actions:
+            1. Check prediction interval calibration and recent coverage trends.
+            2. Investigate sudden volatility or data gaps.
+            3. Consider widening intervals or recalibrating if persistent.
+
+      # Alert: High normalized error drift ratio
+      # Threshold aligned to Grafana variable norm_threshold (default 1.4)
+      - alert: MLHighNormErrorDrift
+        expr: g6_forecast_norm_error_drift_ratio > 1.4
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "High normalized error drift ratio for {{ $labels.index }} horizon {{ $labels.horizon }}"
+          description: |
+            Normalized error drift ratio exceeded threshold 1.4.
+            Current value: {{ $value }}
+            Keep this threshold aligned with dashboard variable 'norm_threshold'.
+
+            Actions:
+            1. Review error distribution shift vs baseline.
+            2. Check input data integrity and recent regime indicators.
+            3. Consider retraining or baseline update if sustained.

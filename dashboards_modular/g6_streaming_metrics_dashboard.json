@@ -47,6 +47,14 @@
         "query": "1.5",
         "current": {"text": "1.5", "value": "1.5"},
         "hide": 0
+      },
+      {
+        "name": "norm_threshold",
+        "type": "constant",
+        "label": "Norm Error Drift Threshold",
+        "query": "1.4",
+        "current": {"text": "1.4", "value": "1.4"},
+        "hide": 0
       }
     ]
   },
@@ -115,6 +123,11 @@
     {
       "id": 5,
       "type": "graph",
+        },
+        {
+          "expr": "vector($norm_threshold)",
+          "legendFormat": "threshold $norm_threshold",
+          "refId": "B"
       "title": "Drift MAE (windowed)",
       "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
@@ -207,6 +220,22 @@
         { "format": "percent", "logBase": 1, "show": true },
         { "format": "short", "logBase": 1, "show": false }
       ]
+    {
+      "id": 11,
+      "type": "table",
+      "title": "Top 10 Coverage Drift (Δ pct points)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 40 },
+      "targets": [
+        {
+          "expr": "topk(10, g6_forecast_coverage_drift_delta_pct{index=~\"$index\",horizon=~\"$horizon\"})",
+          "legendFormat": "Δ {{index}} {{horizon}}",
+          "refId": "A"
+        }
+      ],
+      "options": {"showHeader": true},
+      "transformations": []
+    }
     }
   ]
 }

@@ -125,6 +125,9 @@ Grafana:
  - Added normalized error drift ratio panel (`g6_forecast_norm_error_drift_ratio`) per index × horizon for short/long window comparison.
  - Added coverage drift delta panel (`g6_forecast_coverage_drift_delta_pct`) with a constant threshold series (`vector(1.5)`) for quick visual alerting; adjust threshold as needed.
  - Coverage drift delta panel now uses dynamic threshold variable `$coverage_threshold` (default 1.5). Change via dashboard variable editor; panel renders `vector($coverage_threshold)` for a horizontal guide.
+ - Norm error drift ratio panel has dynamic threshold `$norm_threshold` (default 1.4) rendered via `vector($norm_threshold)`.
+ - Added Top 10 coverage drift table panel showing worst `g6_forecast_coverage_drift_delta_pct` across selected indices/horizons.
+ - Prometheus alerts added: `MLHighCoverageDrift` (>1.5 delta pct pts 10m) and `MLHighNormErrorDrift` (>1.4 ratio 15m). Keep rule thresholds manually in sync with dashboard variables.
 
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)
