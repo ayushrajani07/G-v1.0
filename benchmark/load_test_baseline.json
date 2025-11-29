@@ -1,0 +1,13 @@
+{
+  "timestamp": 0,
+  "config": {"base": "http://127.0.0.1:9500", "indices": "NIFTY,BANKNIFTY", "qps": 5, "duration": 10},
+  "duration_sec": 10.0,
+  "total_requests": 50,
+  "actual_qps": 5.0,
+  "error_rate_pct": 0.0,
+  "aggregate_latency": {"p50": 40.0, "p90": 70.0, "p95": 90.0, "p99": 120.0, "max": 150.0},
+  "per_index": {
+    "NIFTY": {"count": 25, "errors": 0, "error_rate_pct": 0.0, "latency_p50": 40.0, "latency_p95": 90.0, "cache_hit_pct": 0.0},
+    "BANKNIFTY": {"count": 25, "errors": 0, "error_rate_pct": 0.0, "latency_p50": 40.0, "latency_p95": 90.0, "cache_hit_pct": 0.0}
+  }
+}

@@ -25,6 +25,16 @@ jobs:
       - name: Horizon churn simulation
         run: |
           python scripts/load/horizon_churn_simulator.py --indices NIFTY,BANKNIFTY --baseline-horizons 15,30,60 --candidate-horizons 5,10,15,30,45,60,90,120 --cycles 50 --threshold-pct 15 --seed 42 --output churn_summary.json
+      - name: Start ensemble API server (background)
+        run: |
+          python src/web/api/ml_ensemble.py --port 9500 &
+          sleep 5
+      - name: Load test harness run
+        run: |
+          python scripts/ml/load_test_ensemble.py --base http://127.0.0.1:9500 --indices NIFTY,BANKNIFTY --qps 8 --duration 15 --workers 16 --output load_test_summary.json || echo "Load test failed"
+      - name: Compare load test with baseline
+        run: |
+          python scripts/load/compare_load_test_summary.py --baseline benchmark/load_test_baseline.json --current load_test_summary.json --max-p95-growth-pct 50 --output load_test_diff.json || echo "Load test diff exceeded growth threshold"
       - name: Rule latency profiler (optional)
         env:
           PROMETHEUS_URL: ${{ secrets.PROMETHEUS_URL }}
@@ -37,6 +47,8 @@ jobs:
           path: |
             churn_summary.json
             latency_summary.json
+            load_test_summary.json
+            load_test_diff.json
       - name: Validate churn threshold
         run: |
           python - <<'PY'
