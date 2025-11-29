@@ -25,6 +25,7 @@ class ResidualStats:
     count: int
     avg: float
     p95: float
+    p95_decay: float = 0.0
     trend_ratio: float
 
 _LOG = logging.getLogger("ml.residuals")
@@ -99,12 +100,27 @@ class ResidualStore:
         # p95 unweighted on recent window (fair representation of tail)
         s = sorted(values)
         p95 = s[int(0.95 * (len(s) - 1))]
+        # Decay-weighted p95 (weighted quantile)
+        w_total = sum(weights)
+        if w_total <= 0:
+            p95_decay = p95
+        else:
+            # Sort paired values by value ascending for weighted quantile on value distribution
+            paired = sorted(zip(values, weights), key=lambda x: x[0])
+            cumsum = 0.0
+            target = 0.95 * w_total
+            p95_decay = paired[-1][0]
+            for val, w in paired:
+                cumsum += w
+                if cumsum >= target:
+                    p95_decay = val
+                    break
         short_vals = values[-short_window:]
         short_weights = weights[-short_window:]
         sw_sum = sum(short_weights)
         short_avg = sum(v * w for v, w in zip(short_vals, short_weights)) / (sw_sum if sw_sum > 0 else 1)
         trend_ratio = short_avg / avg if avg > 0 else 1.0
-        return ResidualStats(index=index.upper(), horizon=horizon, count=len(arr), avg=avg, p95=p95, trend_ratio=trend_ratio)
+        return ResidualStats(index=index.upper(), horizon=horizon, count=len(arr), avg=avg, p95=p95, p95_decay=p95_decay, trend_ratio=trend_ratio)
 
     def stats(self, index: str, horizons: Iterable[int]) -> List[ResidualStats]:
         return [self._compute_stats_for(index, h) for h in horizons]
