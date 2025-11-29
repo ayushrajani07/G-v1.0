@@ -305,6 +305,31 @@ app.include_router(path_forecast_router)
 app.include_router(ensemble_router)
 app.include_router(ml_router)
 app.include_router(drift_router)
+# Phase 20 (stub): minimal streaming/feedback wiring
+try:
+    from typing import Dict, Any
+    from src.monitoring.feedback import FeedbackLoop
+    from src.monitoring.alerts import AlertEngine
+    from src.streaming.ingest import StreamIngestor
+
+    _feedback = FeedbackLoop()
+    _alerts = AlertEngine(lambda name, payload: _logger.info("alert", extra={"name": name, **payload}))
+
+    def _emit_item(item: Dict[str, Any]) -> None:
+        y_true = item.get("y_true")
+        y_pred = item.get("y_pred")
+        if y_true is not None and y_pred is not None:
+            try:
+                _feedback.observe(float(y_true), float(y_pred))
+                metrics = _feedback.get_metrics()
+                _alerts.maybe_alert("live-mae", {"live_mae": metrics["mae"]}, {"live_mae": 2.0})
+            except Exception:
+                pass
+
+    _ingestor = StreamIngestor(_emit_item)
+    _ingestor.start()
+except Exception:
+    _ingestor = None  # optional in minimal environments
 # Memory status endpoint (lightweight; avoid dedicated router for single path)
 try:
     from src.utils.memory_manager import get_memory_manager as _get_mm
