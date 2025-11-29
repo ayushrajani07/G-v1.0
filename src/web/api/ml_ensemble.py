@@ -23,6 +23,7 @@ from typing import Any, Dict, Optional
 
 from flask import Flask, jsonify, request, Response
 from threading import BoundedSemaphore
+from src.ml.quality_targets import get_quality_targets
 
 # Project imports
 from src.path_forecast.ensemble import EnsembleForecaster, EnsembleConfig
@@ -117,10 +118,19 @@ def create_app(config_dir: Path | None = None) -> Flask:
         - Otherwise return 'healthy' for production-style checks.
         """
         status_val = 'ok' if app.config.get('TESTING') else 'healthy'
+        qt = get_quality_targets()  # include active targets snapshot for quick inspection
         return jsonify({
             'status': status_val,
             'timestamp': datetime.now(timezone.utc).isoformat(),
-            'service': 'ml_ensemble_api'
+            'service': 'ml_ensemble_api',
+            'quality_targets': {
+                'mae_p95_improve_pct': qt.mae_p95_improve_pct,
+                'weight_stddev_max': qt.weight_stddev_max,
+                'regime_alert_minutes': qt.regime_alert_minutes,
+                'residual_coverage_tol_pct': qt.residual_coverage_tol_pct,
+                'horizons': qt.horizons,
+                'residual_depth': qt.residual_depth
+            }
         })
     
     @app.route('/api/ml/ensemble/forecast', methods=['GET'])
@@ -252,6 +262,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 _LOG.debug(f"Phase 9 cache stats not available: {e}")
             
             # Build diagnostics response
+            qt = get_quality_targets()
             response = DiagnosticsResponse(
                 index=index,
                 status='healthy',
@@ -270,6 +281,9 @@ def create_app(config_dir: Path | None = None) -> Flask:
                     'forecast_count_24h': 1440,
                     'avg_latency_ms': 450,
                     'error_rate_24h': 0.002,
+                    'target_mae_p95_improve_pct': qt.mae_p95_improve_pct,
+                    'target_weight_stddev_max': qt.weight_stddev_max,
+                    'target_regime_alert_minutes': qt.regime_alert_minutes,
                     **cache_info  # Phase 9: Include cache metrics
                 },
                 model_age_days=3.5

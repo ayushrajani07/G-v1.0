@@ -1,0 +1,8 @@
+{
+  "mae_p95_improve_pct": 12,
+  "weight_stddev_max": 0.12,
+  "regime_alert_minutes": 4,
+  "residual_coverage_tol_pct": 1.5,
+  "horizons": [15, 30, 60, 120],
+  "residual_depth": 480
+}
