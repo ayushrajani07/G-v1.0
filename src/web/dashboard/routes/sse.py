@@ -70,14 +70,25 @@ async def sse_live(request: Request, interval_ms: int = 1000) -> StreamingRespon
                 except Exception:
                     yield _format_sse_event("error", {"message": "metrics_unavailable"})
 
-                # Drift stubs (to be wired to real endpoints later)
+                # Drift metrics from DriftMonitor (history/accuracy)
                 try:
-                    drift = {
-                        "status": "unknown",
-                        "score": None,
-                        "window": "15m"
-                    }
-                    yield _format_sse_event("drift", drift)
+                    from . import drift as drift_routes
+                    mon = getattr(drift_routes, "_monitor", None)
+                    drift_payload = {"status": "unknown"}
+                    if mon is not None:
+                        # Use long-term accuracy as a proxy for drift score
+                        acc = mon.get_long_term_accuracy(index="NIFTY", window=30)
+                        drift_payload.update({
+                            "status": "ok",
+                            "mae": acc.get("mae", None),
+                            "mape": acc.get("mape", None),
+                            "window": 30
+                        })
+                        # Optionally include recent history sample
+                        hist = mon.load_history(index="NIFTY", limit=1)
+                        if hist:
+                            drift_payload["last"] = hist[0]
+                    yield _format_sse_event("drift", drift_payload)
                 except Exception:
                     yield _format_sse_event("error", {"message": "drift_unavailable"})
 
