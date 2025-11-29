@@ -25,6 +25,7 @@ from flask import Flask, jsonify, request, Response
 from threading import BoundedSemaphore
 from src.ml.quality_targets import get_quality_targets
 from src.ml.weighting_engine import get_weighting_engine
+from src.ml.residuals import get_residual_trend, record_residual, get_residual_stats
 
 # Project imports
 from src.path_forecast.ensemble import EnsembleForecaster, EnsembleConfig
@@ -181,8 +182,9 @@ def create_app(config_dir: Path | None = None) -> Flask:
             }
             
             confidence = 0.75
-            residual_trend = 1.05  # placeholder until residual pipeline integrated
-            regime_stability = 0.8  # placeholder stability metric
+            # Live residual trend from store (default 1.0 if insufficient data)
+            residual_trend = get_residual_trend(index=index, horizon=horizon)
+            regime_stability = 0.8  # placeholder until regime module enhancement
             weights = get_weighting_engine().compute(confidence=confidence, residual_trend=residual_trend, regime_stability=regime_stability)
 
             metadata = {
@@ -269,6 +271,8 @@ def create_app(config_dir: Path | None = None) -> Flask:
             
             # Build diagnostics response
             qt = get_quality_targets()
+            # Neutral snapshot weights (residual_trend=1.0 baseline, stable regime)
+            weights = get_weighting_engine().compute(confidence=0.75, residual_trend=1.0, regime_stability=0.8)
             response = DiagnosticsResponse(
                 index=index,
                 status='healthy',
@@ -278,8 +282,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
                     'retrieval': config.retrieval_enabled if config else True,
                     'conformal': config.conformal_enabled if config else True
                 },
-                # Neutral snapshot weights (residual_trend=1.0 baseline, stable regime)
-                weights=get_weighting_engine().compute(confidence=0.75, residual_trend=1.0, regime_stability=0.8),
+                weights=weights,
                 confidence=0.75,
                 metrics={
                     'forecast_count_24h': 1440,
@@ -504,6 +507,64 @@ def create_app(config_dir: Path | None = None) -> Flask:
             return jsonify(response)
         except Exception as e:
             _LOG.error(f"Drift baselines error: {e}", exc_info=True)
+            return jsonify({'error': 'Internal server error'}), 500
+
+    @app.route('/api/ml/ensemble/residuals', methods=['POST'])
+    def residuals_record() -> Response:
+        """Record a residual (absolute error) for index + horizon.
+
+        JSON body: {index: str, horizon: int, forecast_p50: float, actual: float}
+        residual = abs(forecast_p50 - actual)
+        Returns stats after recording.
+        """
+        try:
+            data = request.get_json(force=True) or {}
+            index = str(data.get('index', '')).upper()
+            horizon = int(data.get('horizon', 0))
+            if not index or horizon <= 0:
+                return jsonify({'error': 'index and positive horizon required'}), 400
+            forecast_p50 = float(data.get('forecast_p50'))
+            actual = float(data.get('actual'))
+            residual = abs(forecast_p50 - actual)
+            record_residual(index=index, horizon=horizon, residual=residual)
+            stats = get_residual_stats(index, [horizon])[0]
+            return jsonify({
+                'index': stats.index,
+                'horizon': stats.horizon,
+                'residual_recorded': residual,
+                'count': stats.count,
+                'avg': stats.avg,
+                'p95': stats.p95,
+                'trend_ratio': stats.trend_ratio
+            })
+        except Exception as e:
+            _LOG.error(f"Residual record error: {e}", exc_info=True)
+            return jsonify({'error': 'Internal server error'}), 500
+
+    @app.route('/api/ml/ensemble/residuals', methods=['GET'])
+    def residuals_stats() -> Response:
+        """Return residual stats for provided horizons.
+
+        Query params: index, horizons=comma list
+        """
+        try:
+            index = request.args.get('index', '').upper()
+            if not index:
+                return jsonify({'error': 'index parameter required'}), 400
+            horizons_raw = request.args.get('horizons', '')
+            if horizons_raw:
+                horizons = [int(h.strip()) for h in horizons_raw.split(',') if h.strip()]
+            else:
+                horizons = get_quality_targets().horizons
+            stats_list = get_residual_stats(index, horizons)
+            return jsonify({
+                'index': index,
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'horizons': horizons,
+                'stats': [s.__dict__ for s in stats_list]
+            })
+        except Exception as e:
+            _LOG.error(f"Residual stats error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
     
     _app = app
