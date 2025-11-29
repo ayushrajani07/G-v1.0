@@ -118,6 +118,54 @@ groups:
         tail_ratio={{ $value }}
   - alert: MLResidualTailDecayCritical
     expr: (avg_over_time(g6_ml_residual_p95_decay[5m]) / clamp_min(avg_over_time(g6_ml_residual_p95[30m]), 0.0001)) > (1 - g6_ml_target_mae_p95_improve_pct/100 + 0.12)
+      - alert: MLResidualTailBurnFastWarning
+        expr: g6_ml_residual_tail_burn:short_long > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          team: ml
+          category: residuals
+        annotations:
+          summary: Tail burn accelerating (short-long >0.05)
+          description: |-
+            Short-window tail ratio exceeds long-window by >0.05 indicating accelerating deterioration.
+            burn={{ $value }}
+      - alert: MLResidualTailBurnCritical
+        expr: g6_ml_residual_tail_burn:short_long > 0.10
+        for: 5m
+        labels:
+          severity: critical
+          team: ml
+          category: residuals
+        annotations:
+          summary: Tail burn severe (short-long >0.10)
+          description: |-
+            Tail deterioration accelerating sharply; consider throttling model usage or retrain trigger.
+            burn={{ $value }}
+      - alert: MLAdaptiveRetrainRecommended
+        expr: g6_ml_retrain_signal:smooth_5m >= 2
+        for: 15m
+        labels:
+          severity: warning
+          team: ml
+          category: retrain
+        annotations:
+          summary: Adaptive retrain recommended (signal >=2)
+          description: |-
+            Combined drift indicators met (tail ratio, trend, burn). Preparation for retraining advised.
+            signal={{ $value }}
+      - alert: MLAdaptiveRetrainCritical
+        expr: g6_ml_retrain_signal:smooth_5m >= 2.5
+        for: 10m
+        labels:
+          severity: critical
+          team: ml
+          category: retrain
+        annotations:
+          summary: Adaptive retrain critical (signal >=2.5)
+          description: |-
+            Strong combined degradation signals; initiate expedited retrain workflow.
+            signal={{ $value }}
     for: 5m
     labels:
       severity: critical

@@ -22,6 +22,26 @@ groups:
     labels:
       job: g6_platform
     expr: (avg_over_time(g6_ml_residual_p95_decay[5m]) / clamp_min(avg_over_time(g6_ml_residual_p95_decay[30m]), 0.0001))
+  # Decay-weighted residual p95 ratio 30m vs 2h
+  - record: g6_ml_residual_p95_decay:ratio_30m_2h
+    labels:
+      job: g6_platform
+    expr: (avg_over_time(g6_ml_residual_p95_decay[30m]) / clamp_min(avg_over_time(g6_ml_residual_p95_decay[2h]), 0.0001))
+  # Tail burn rate (short vs long deterioration acceleration)
+  - record: g6_ml_residual_tail_burn:short_long
+    labels:
+      job: g6_platform
+    expr: clamp_min(g6_ml_residual_p95_decay:ratio_5m_30m - g6_ml_residual_p95_decay:ratio_30m_2h, 0)
+  # Adaptive retrain signal components (boolean arithmetic)
+  - record: g6_ml_retrain_signal:raw
+    labels:
+      job: g6_platform
+    expr: 1*(g6_ml_residual_p95_decay:ratio_5m_30m > (1 - g6_ml_target_mae_p95_improve_pct/100 + 0.10)) + 1*(g6_ml_residual_trend_ratio:smooth_5m > 1.15) + 1*(g6_ml_residual_tail_burn:short_long > 0.08)
+  # Smoothed retrain signal (5m average) for stability
+  - record: g6_ml_retrain_signal:smooth_5m
+    labels:
+      job: g6_platform
+    expr: avg_over_time(g6_ml_retrain_signal:raw[5m])
   # GBRT weight smoothed (stability tracking)
   - record: g6_ml_ensemble_weight_gbrt:smooth_5m
     labels:

@@ -652,6 +652,24 @@ def create_app(config_dir: Path | None = None) -> Flask:
         except Exception as e:
             _LOG.error(f"Regime audit error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
+
+    @app.route('/api/ml/ensemble/drift_attribution', methods=['GET'])
+    def drift_attribution() -> Response:
+        """Return drift attribution components for index/horizon.
+
+        Query params: index (required), horizon (default 60)
+        """
+        try:
+            index = request.args.get('index', '').upper()
+            if not index:
+                return jsonify({'error': 'index parameter required'}), 400
+            horizon = int(request.args.get('horizon', 60))
+            from src.ml.drift_attribution import compute_drift_components
+            components = compute_drift_components(index, horizon)
+            return jsonify(components)
+        except Exception as e:
+            _LOG.error(f"Drift attribution error: {e}", exc_info=True)
+            return jsonify({'error': 'Internal server error'}), 500
     
     _app = app
     return app
