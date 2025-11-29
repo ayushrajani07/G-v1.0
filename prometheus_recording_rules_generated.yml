@@ -440,3 +440,19 @@ groups:
     labels:
       job: g6_platform
     record: g6_forecast_coverage_drift_delta_pct:deviation_15m
+  - expr: avg(avg_over_time(g6_forecast_norm_error_drift_ratio[15m])) by (horizon)
+    labels:
+      job: g6_platform
+    record: g6_forecast_norm_error_drift_ratio:horizon_avg_15m
+  - expr: avg(avg_over_time(g6_forecast_coverage_drift_delta_pct[15m])) by (horizon)
+    labels:
+      job: g6_platform
+    record: g6_forecast_coverage_drift_delta_pct:horizon_avg_15m
+  - expr: avg(avg_over_time(g6_forecast_norm_error_drift_ratio[1h])) by (horizon)
+    labels:
+      job: g6_platform
+    record: g6_forecast_norm_error_drift_ratio:horizon_avg_1h
+  - expr: avg(avg_over_time(g6_forecast_coverage_drift_delta_pct[1h])) by (horizon)
+    labels:
+      job: g6_platform
+    record: g6_forecast_coverage_drift_delta_pct:horizon_avg_1h

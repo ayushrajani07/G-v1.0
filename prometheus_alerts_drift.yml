@@ -253,3 +253,24 @@ groups:
             1. Review error distribution shift vs baseline.
             2. Check input data integrity and recent regime indicators.
             3. Consider retraining or baseline update if sustained.
+      
+      # Alert: Sustained normalized error drift (avg window breach)
+      # Uses recording rule g6_forecast_norm_error_drift_ratio:avg_15m
+      - alert: MLSustainedNormErrorDrift
+        expr: g6_forecast_norm_error_drift_ratio:avg_15m > 1.4
+        for: 20m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Sustained norm error drift (15m avg) for {{ $labels.index }} horizon {{ $labels.horizon }}"
+          description: |
+            The 15m moving average of normalized error drift ratio is above 1.4 for >=20m.
+            Avg(15m): {{ $value }} (threshold: 1.4)
+            Indicates persistent elevation, not just transient spike.
+
+            Actions:
+            1. Compare short vs long window averages (see horizon_avg_1h rule).
+            2. Inspect recent data anomalies and volatility shifts.
+            3. Evaluate model residual patterns; consider recalibration.
+            4. If concurrent coverage drift, prioritize deeper investigation.

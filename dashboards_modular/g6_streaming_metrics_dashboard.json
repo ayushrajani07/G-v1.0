@@ -58,6 +58,26 @@
       }
     ]
   },
+  "annotations": {
+    "list": [
+      {
+        "name": "Norm Drift Breach",
+        "datasource": {"type": "prometheus", "uid": "${DS_PROM}"},
+        "enable": true,
+        "expr": "g6_forecast_norm_error_drift_ratio{index=\"$index\",horizon=\"$horizon\"} > $norm_threshold",
+        "iconColor": "red",
+        "hide": false
+      },
+      {
+        "name": "Coverage Drift Breach",
+        "datasource": {"type": "prometheus", "uid": "${DS_PROM}"},
+        "enable": true,
+        "expr": "g6_forecast_coverage_drift_delta_pct{index=\"$index\",horizon=\"$horizon\"} > $coverage_threshold",
+        "iconColor": "orange",
+        "hide": false
+      }
+    ]
+  },
   "panels": [
     {
       "id": 1,

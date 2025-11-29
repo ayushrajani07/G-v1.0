@@ -128,6 +128,9 @@ Grafana:
  - Norm error drift ratio panel has dynamic threshold `$norm_threshold` (default 1.4) rendered via `vector($norm_threshold)`.
  - Added Top 10 coverage drift table panel showing worst `g6_forecast_coverage_drift_delta_pct` across selected indices/horizons.
  - Prometheus alerts added: `MLHighCoverageDrift` (>1.5 delta pct pts 10m) and `MLHighNormErrorDrift` (>1.4 ratio 15m). Keep rule thresholds manually in sync with dashboard variables.
+ - Added sustained alert `MLSustainedNormErrorDrift` (15m avg ratio > 1.4 for 20m) leveraging recording rule `g6_forecast_norm_error_drift_ratio:avg_15m`.
+ - Per-horizon recording rules added: `g6_forecast_norm_error_drift_ratio:horizon_avg_15m` / `:horizon_avg_1h` and coverage counterparts for comparative regime assessment.
+ - Dashboard annotations mark threshold breaches for norm error ratio and coverage drift delta (red/orange event markers).
 
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)
