@@ -19,6 +19,26 @@
         "name": "DS_PROM",
         "query": "prometheus",
         "current": { "text": "Prometheus", "value": "Prometheus" }
+      },
+      {
+        "name": "index",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+        "query": "label_values(g6_drift_mae, index)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {"text": "All", "value": "$__all"}
+      },
+      {
+        "name": "horizon",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+        "query": "label_values(g6_drift_mae{index=\"$index\"}, horizon)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {"text": "All", "value": "$__all"}
       }
     ]
   },
@@ -84,14 +104,16 @@
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
       "targets": [
         {
-          "expr": "g6_drift_mae",
-          "legendFormat": "Drift MAE",
+          "expr": "g6_drift_mae{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "MAE {{index}} {{horizon}}",
           "refId": "A"
         }
       ],
       "lines": true,
       "linewidth": 2,
-      "nullPointMode": "null"
+      "nullPointMode": "null",
+      "repeat": "horizon",
+      "maxPerRow": 2
     },
     {
       "id": 6,
@@ -101,14 +123,16 @@
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
       "targets": [
         {
-          "expr": "g6_drift_mape",
-          "legendFormat": "Drift MAPE",
+          "expr": "g6_drift_mape{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "MAPE {{index}} {{horizon}}",
           "refId": "A"
         }
       ],
       "lines": true,
       "linewidth": 2,
-      "nullPointMode": "null"
+      "nullPointMode": "null",
+      "repeat": "horizon",
+      "maxPerRow": 2
     },
     {
       "id": 7,
@@ -117,7 +141,9 @@
       "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
       "gridPos": { "h": 6, "w": 6, "x": 0, "y": 23 },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
-      "targets": [ { "expr": "g6_drift_status", "refId": "A" } ]
+      "targets": [ { "expr": "g6_drift_status{index=\"$index\",horizon=\"$horizon\"}", "refId": "A" } ],
+      "repeat": "horizon",
+      "maxPerRow": 3
     }
   ]
 }
