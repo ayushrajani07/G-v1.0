@@ -24,7 +24,7 @@ def build_rules(cfg):
     # Quantiles
     for m in cfg["metrics"]:
         for q in cfg["quantiles"]:
-            qs = f"{q:.2f}".rstrip('0').rstrip('.')  # 0.90 -> 0.9 for readability
+            qs = f"{q:.2f}"  # retain trailing zero to match committed rules formatting (e.g. 0.90)
             pct = int(q*100)
             rules.append({
                 "record": f"{m}:quantile{pct}_{cfg['long_quantile_window']}",
