@@ -1,402 +1,47 @@
-# ML ARM Enhancement Roadmap
-# Strategic Plan for Advanced Capabilities & Optimization
+# ML ARM Enhancement Roadmap (Condensed)
 
-**Document Version:** 2.0
-**Date:** 2025-11-28
-**Status:** Draft / Planning
+Status: Consolidated summary of completed work (Phases 16–19) with links. Future work moved to a separate document.
 
----
+## Completed Work (Phases 16–19)
 
-## 1. Executive Summary
+- Async & Performance
+	- Non-blocking forecast route via `run_in_threadpool` in `src/web/dashboard/routes/ensemble.py`.
+	- Persistent shared thread pool in forecaster.
+	- Vectorized retrieval distances in `src/path_forecast/retrieval.py`.
+	- Short-TTL filesystem list cache in retrieval.
 
-Following a comprehensive scan of the ML codebase, several key areas for optimization and modernization have been identified. The primary focus of this roadmap is to resolve **blocking I/O in async paths**, **optimize mathematical operations**, **consolidate redundant scripts**, and **refactor global state**.
+- Refactoring & Modernization
+	- Cache encapsulated into `ForecastCache` and DI in `routes/ensemble.py`.
+	- Consolidated `load_test_ensemble_*` into `scripts/ml/load_test_ensemble.py`.
+	- Granular error handling: partial component failure re-weighting.
+	- Pydantic config validation in `src/path_forecast/config_structs.py`.
+	- Forecaster decomposed into components; tests added.
 
-**Core Objectives:**
-1.  **Async Correctness:** Ensure FastAPI routes do not block the event loop.
-2.  **Computational Efficiency:** Vectorize distance calculations using NumPy.
-3.  **Code Hygiene:** Remove global state and consolidate duplicate scripts.
-4.  **Robustness:** Granular error handling and component isolation.
+- Drift Monitoring & Dashboard
+	- `DriftMonitor` implemented in `src/analytics/ml/drift.py`.
+	- Endpoints and metrics exposed in `src/web/dashboard` (see `routes/drift.py`).
+	- Grafana dashboards + Prometheus alerts added.
 
----
+- Advanced Models & Hybrid
+	- LSTM quantile residual model (`src/analytics/ml/lstm_model.py`).
+	- Training script `scripts/ml/train_lstm.py`.
+	- Meta-learner weights (`src/analytics/ml/meta_learner.py`).
+	- Hybrid evaluation `scripts/ml/evaluate_hybrid.py`.
 
-## 2. Phase 16: Async & Performance Optimization (Weeks 1-2)
+## References & Deep Dives
 
-**Goal:** Fix blocking I/O and optimize hot paths.
+- Drift Monitoring: `docs/ml/RUNBOOK_DRIFT_REGIME.md`
+- Ensemble & Retrieval: `src/path_forecast/*.py`, `src/analytics/ml/*.py`
+- Dashboards/Alerts: `grafana/dashboards/*`, `prometheus_alerts_ml_drift.yml`
+- Load Testing: `scripts/ml/load_test_ensemble.py`, `reports/loadtest/multi_test.json`
 
-| Task ID | Task Name | Description | Priority | Status |
-|---------|-----------|-------------|----------|--------|
-| **16.1** | **Non-Blocking Forecast Route** | Wrap the synchronous `EnsembleForecaster.forecast_path` call in `run_in_threadpool` within `src/web/dashboard/routes/ensemble.py`. | High | **Done** |
-| **16.2** | **Persistent ThreadPool** | Replace per-request `ThreadPoolExecutor` in `EnsembleForecaster` with a persistent, shared executor to reduce overhead. | High | **Done** |
-| **16.3** | **Vectorized Retrieval** | Refactor `src/path_forecast/retrieval.py` to use `numpy` for distance calculations (`l2`, `cosine`) instead of pure Python loops. | High | **Done** |
-| **16.4** | **File System Caching** | Cache the `_list_csv_files` result in `RetrievalPathForecaster` with a short TTL to avoid disk I/O on every request. | Medium | **Done** |
+## Future Work
 
-**Deliverables:**
-- True async throughput for the forecast endpoint.
-- Reduced CPU usage for retrieval operations.
+Moved to `docs/ml/ML_ARM_FUTURE.md` (Streaming, feedback loops, scalability, and longer-term directions).
 
----
+## Change Log
 
-## 3. Phase 17: Refactoring & Modernization (Weeks 3-4)
-
-**Goal:** Improve code maintainability and remove technical debt.
-
-| Task ID | Task Name | Description | Priority | Status |
-|---------|-----------|-------------|----------|--------|
-| **17.1** | **Global Cache Refactor** | Encapsulate global cache variables in `src/web/dashboard/routes/ensemble.py` into a `ForecastCache` class with dependency injection. | Medium | **Done** |
-| **17.2** | **Script Consolidation** | Merge `load_test_ensemble_*.py` scripts into a single, robust CLI tool `scripts/ml/load_test_ensemble.py`. | Low | **Done** |
-| **17.3** | **Granular Error Handling** | Update `EnsembleForecaster` to handle partial component failures (e.g., if Retrieval fails, re-weight GBRT to 1.0) instead of full fallback. | Medium | **Done** |
-| **17.4** | **Config Validation** | Add Pydantic models for `EnsembleConfig` validation in `src/path_forecast/config_structs.py` to prevent invalid configs at startup. | Medium | **Done** |
-| **17.5** | **Refactor `EnsembleForecaster`** | Break down the monolithic `EnsembleForecaster` class in `src/path_forecast/ensemble.py` into smaller, testable components (e.g., `BaselineComponent`, `GBRTComponent`). | High | **Done** |
-| **17.6** | **Drift Monitoring** | Implement `DriftMonitor` in `src/analytics/ml/drift.py` to track concept drift in forecast residuals and trigger alerts. | High | **Done** |
-| **17.7** | **Dashboard Integration** | Update `src/web/dashboard/app.py` to expose drift metrics and alerts via API endpoints for the frontend. | Medium | **Done** |
-| **17.8** | **Documentation** | Update `docs/ml/ML_ARM_ENHANCEMENT_ROADMAP.md` and create `docs/ml/DRIFT_MONITORING.md` to document the new features. | Low | **Done** |
-
-**Deliverables:**
-- Cleaner, testable code structure.
-- Unified tooling.
-- More resilient forecasting pipeline.
-
----
-
-## 4. Viability Assessment
-
-| Feature | Viability | Complexity | Risk | Notes |
-|---------|-----------|------------|------|-------|
-| **Async Wrapper** | High | Low | Low | Immediate win for throughput. |
-| **Vectorization** | High | Low | Low | Standard optimization. |
-| **Cache Refactor** | High | Medium | Low | Requires careful state management migration. |
-| **Partial Failure** | Medium | Medium | Medium | Logic for re-weighting on the fly needs testing. |
-
----
-
-## 5. Phase 18: Advanced Model Architectures (Weeks 5-6)
-
-**Goal:** Explore deep learning for residual forecasting and hybrid ensembles.
-
-| Task ID | Task Name | Description | Priority | Status |
-|---------|-----------|-------------|----------|--------|
-| **18.1** | **LSTM Residual Model** | Implement `LSTMQuantileRegressor` in `src/analytics/ml/lstm_model.py` using PyTorch for quantile regression. | Medium | **Done** |
-| **18.2** | **Training Script** | Create `scripts/ml/train_lstm.py` to train and save LSTM models. | Medium | **Done** |
-| **18.3** | **Ensemble Integration** | Update `EnsembleForecaster` to support pluggable residual models (GBRT or LSTM). | Medium | **Done** |
-
----
-
-## 6. Phase 19: Hybrid Ensembles & Meta-Learning (Weeks 7-8)
-
-**Goal:** Implement dynamic model selection and weighting based on regime.
-
-| Task ID | Task Name | Description | Priority | Status |
-|---------|-----------|-------------|----------|--------|
-| **19.1** | **Meta-Learner** | Implement `EnsembleWeightLearner` in `src/analytics/ml/meta_learner.py` to learn optimal weights for Baseline, GBRT, LSTM, and Retrieval. | Medium | **Done** |
-| **19.2** | **Regime-Based Switching** | Update `EnsembleForecaster` to switch between GBRT and LSTM based on recent regime (volatility/trend). | Medium | **Done** |
-| **19.3** | **Evaluation** | Create `scripts/ml/evaluate_hybrid.py` to compare Hybrid vs Pure GBRT vs Pure LSTM performance. | Low | **Done** |
-
----
-
-## 7. Phase 20: Real-Time Monitoring & Feedback (Weeks 9-10)
-
-**Goal:** Enable real-time feedback and monitoring of the forecasting pipeline.
-
-| Task ID | Task Name | Description | Priority | Status |
-|---------|-----------|-------------|----------|--------|
-| **20.1** | **Streaming Data Pipeline** | Implement a streaming data pipeline to ingest real-time data and update forecasts. | High | Pending |
-| **20.2** | **Feedback Loop** | Create a feedback loop to adjust model parameters based on real-time performance. | Medium | Pending |
-| **20.3** | **Alert System** | Implement an alert system to notify stakeholders of critical issues. | High | Pending |
-
----
-
-## 8. Phase 21: Scalability & Deployment (Weeks 11-12)
-
-**Goal:** Ensure the system can scale to handle large volumes of data and users.
-
-| Task ID | Task Name | Description | Priority | Status |
-|---------|-----------|-------------|----------|--------|
-| **21.1** | **Scalable Architecture** | Design a scalable architecture to handle large volumes of data. | High | Pending |
-| **21.2** | **Deployment Pipeline** | Create a deployment pipeline to automate the release process. | Medium | Pending |
-| **21.3** | **Load Balancing** | Implement load balancing to distribute the workload. | High | Pending |
-
----
-
-## 9. Phase 22: Future Directions
-
-- **AutoML Integration:** Explore AutoML tools for automated model selection and hyperparameter tuning.
-- **Explainable AI:** Implement explainable AI features to provide insights into model predictions.
-- **Edge Computing:** Deploy models to edge devices for real-time inference.
-
----
-
-## 10. Conclusion
-
-The ML ARM enhancement roadmap provides a clear path for improving the efficiency, reliability, and scalability of the forecasting system. By focusing on async correctness, computational efficiency, and code hygiene, we can build a robust and maintainable system that meets the needs of the business.
-
----
-
-## 11. Next Steps
-
-- Finalize the Phase 16-19 deliverables.
-- Define the scope and requirements for Phase 20-22.
-- Begin implementation of Phase 20-22 tasks.
-
----
-
-## 12. Acknowledgements
-
-- **Team:** ML ARM Development Team
-- **Stakeholders:** Data Science, Engineering, and Operations
-- **Tools:** FastAPI, PyTorch, NumPy, Redis
-
----
-
-## 13. Contact Information
-
-- **Project Lead:** [Name]
-- **Email:** [Email]
-- **Phone:** [Phone]
-
----
-
-## 14. Appendices
-
-- **Appendix A:** Detailed Task Descriptions
-- **Appendix B:** Code Examples
-- **Appendix C:** Performance Metrics
-
----
-
-## 15. Glossary
-
-- **Ensemble:** A collection of models that work together to improve prediction accuracy.
-- **Drift:** A change in the underlying data distribution that affects model performance.
-- **Residual:** The difference between the predicted and actual values.
-- **Vectorization:** Using NumPy to perform operations on arrays instead of Python loops.
-
----
-
-## 16. References
-
-- **FastAPI Documentation:** https://fastapi.openapi.utils
-- **PyTorch Documentation:** https://pytorch.org
-- **NumPy Documentation:** https://numpy.org
-- **Redis Documentation:** https://redis.io
-
----
-
-## 17. Version History
-
-- **v2.0:** Initial release.
-- **v2.1:** Added Phase 20-22.
-- **v2.2:** Added glossary and references.
-
----
-
-## 18. License
-
-This project is licensed under the MIT License.
-
----
-
-## 19. Credits
-
-- **Team:** ML ARM Development Team
-- **Stakeholders:** Data Science, Engineering, and Operations
-- **Tools:** FastAPI, PyTorch, NumPy, Redis
-
----
-
-## 20. Contact Information
-
-- **Project Lead:** [Name]
-- **Email:** [Email]
-- **Phone:** [Phone]
-
----
-
-## 21. Appendices
-
-- **Appendix A:** Detailed Task Descriptions
-- **Appendix B:** Code Examples
-- **Appendix C:** Performance Metrics
-
----
-
-## 22. Glossary
-
-- **Ensemble:** A collection of models that work together to improve prediction accuracy.
-- **Drift:** A change in the underlying data distribution that affects model performance.
-- **Residual:** The difference between the predicted and actual values.
-- **Vectorization:** Using NumPy to perform operations on arrays instead of Python loops.
-
----
-
-## 23. References
-
-- **FastAPI Documentation:** https://fastapi.openapi.utils
-- **PyTorch Documentation:** https://pytorch.org
-- **NumPy Documentation:** https://numpy.org
-- **Redis Documentation:** https://redis.io
-
----
-
-## 24. Version History
-
-- **v2.0:** Initial release.
-- **v2.1:** Added Phase 20-22.
-- **v2.2:** Added glossary and references.
-
----
-
-## 25. License
-
-This project is licensed under the MIT License.
-
----
-
-## 26. Credits
-
-- **Team:** ML ARM Development Team
-- **Stakeholders:** Data Science, Engineering, and Operations
-- **Tools:** FastAPI, PyTorch, NumPy, Redis
-
----
-
-## 27. Contact Information
-
-- **Project Lead:** [Name]
-- **Email:** [Email]
-- **Phone:** [Phone]
-
----
-
-## 28. Appendices
-
-- **Appendix A:** Detailed Task Descriptions
-- **Appendix B:** Code Examples
-- **Appendix C:** Performance Metrics
-
----
-
-## 29. Glossary
-
-- **Ensemble:** A collection of models that work together to improve prediction accuracy.
-- **Drift:** A change in the underlying data distribution that affects model performance.
-- **Residual:** The difference between the predicted and actual values.
-- **Vectorization:** Using NumPy to perform operations on arrays instead of Python loops.
-
----
-
-## 30. References
-
-- **FastAPI Documentation:** https://fastapi.openapi.utils
-- **PyTorch Documentation:** https://pytorch.org
-- **NumPy Documentation:** https://numpy.org
-- **Redis Documentation:** https://redis.io
-
----
-
-## 31. Version History
-
-- **v2.0:** Initial release.
-- **v2.1:** Added Phase 20-22.
-- **v2.2:** Added glossary and references.
-
----
-
-## 32. License
-
-This project is licensed under the MIT License.
-
----
-
-## 33. Credits
-
-- **Team:** ML ARM Development Team
-- **Stakeholders:** Data Science, Engineering, and Operations
-- **Tools:** FastAPI, PyTorch, NumPy, Redis
-
----
-
-## 34. Contact Information
-
-- **Project Lead:** [Name]
-- **Email:** [Email]
-- **Phone:** [Phone]
-
----
-
-## 35. Appendices
-
-- **Appendix A:** Detailed Task Descriptions
-- **Appendix B:** Code Examples
-- **Appendix C:** Performance Metrics
-
----
-
-## 36. Glossary
-
-- **Ensemble:** A collection of models that work together to improve prediction accuracy.
-- **Drift:** A change in the underlying data distribution that affects model performance.
-- **Residual:** The difference between the predicted and actual values.
-- **Vectorization:** Using NumPy to perform operations on arrays instead of Python loops.
-
----
-
-## 37. References
-
-- **FastAPI Documentation:** https://fastapi.openapi.utils
-- **PyTorch Documentation:** https://pytorch.org
-- **NumPy Documentation:** https://numpy.org
-- **Redis Documentation:** https://redis.io
-
----
-
-## 38. Version History
-
-- **v2.0:** Initial release.
-- **v2.1:** Added Phase 20-22.
-- **v2.2:** Added glossary and references.
-
----
-
-## 39. License
-
-This project is licensed under the MIT License.
-
----
-
-## 40. Credits
-
-- **Team:** ML ARM Development Team
-- **Stakeholders:** Data Science, Engineering, and Operations
-- **Tools:** FastAPI, PyTorch, NumPy, Redis
-
----
-
-## 41. Contact Information
-
-- **Project Lead:** [Name]
-- **Email:** [Email]
-- **Phone:** [Phone]
-
----
-
-## 42. Appendices
-
-- **Appendix A:** Detailed Task Descriptions
-- **Appendix B:** Code Examples
-- **Appendix C:** Performance Metrics
-
----
-
-## 43. Glossary
-
-- **Ensemble:** A collection of models that work together to improve prediction accuracy.
-- **Drift:** A change in the underlying data distribution that affects model performance.
-- **Residual:** The difference between the predicted and actual values.
-- **Vectorization:** Using NumPy to perform operations on arrays instead of Python loops.
-
----
-
-## 44. References
+- 2025-11-29: Condensed roadmap, extracted future work to `ML_ARM_FUTURE.md`.
 
 - **FastAPI Documentation:** https://fastapi.openapi.utils
 - **PyTorch Documentation:** https://pytorch.org
