@@ -50,6 +50,7 @@ async def sse_live(
     interval_ms: int = 1000,
     index: str = "NIFTY",
     window: int = 30,
+    horizon: int = 60,
 ) -> StreamingResponse:
     """Consolidated SSE stream: emits live_mae and drift placeholders.
 
@@ -95,6 +96,7 @@ async def sse_live(
                             from ..prom_metrics import set_drift_metrics
                             set_drift_metrics(
                                 index=index,
+                                horizon=horizon,
                                 mae=acc.get("mae"),
                                 mape=acc.get("mape"),
                                 status_ok=True,
