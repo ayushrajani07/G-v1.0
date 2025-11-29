@@ -121,6 +121,7 @@ Grafana:
 - If these metrics are not present, enable drift monitor exporters in Prom scrape config.
  - Dashboard now has template variables: `$index` and `$horizon`. Selecting multiple horizons repeats drift panels per horizon.
  - Queries use label filters: `g6_drift_mae{index="$index",horizon="$horizon"}` etc. Use All to aggregate across labels.
+ - A repeated row (`Drift (Index: $index)`) generates a matrix: each selected index gets its own row, and within each row drift panels repeat per selected horizon.
 
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)
