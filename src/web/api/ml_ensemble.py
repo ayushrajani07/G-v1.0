@@ -197,10 +197,12 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 stats_obj = get_residual_stats(index, [horizon])[0]
                 residual_avg = stats_obj.avg
                 residual_p95 = stats_obj.p95
+                residual_p95_decay = getattr(stats_obj, 'p95_decay', residual_p95)
             except Exception:
                 residual_avg = 0.0
                 residual_p95 = 0.0
-            push_forecast_metrics(index=index, horizon=horizon, weights=weights, residual_trend=residual_trend, residual_avg=residual_avg, residual_p95=residual_p95)
+                residual_p95_decay = 0.0
+            push_forecast_metrics(index=index, horizon=horizon, weights=weights, residual_trend=residual_trend, residual_avg=residual_avg, residual_p95=residual_p95, residual_p95_decay=residual_p95_decay)
             # Regime audit (using available volatility recording rules, may be absent -> default 0)
             # For now we approximate volatility/difference from weights history not yet exposed; placeholders until metrics pipeline wires in.
             weight_volatility_gbrt = vol_gbrt
@@ -232,6 +234,8 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 # Also include nested shape expected by unit tests
                 'forecast': forecast_data,
                 'confidence': confidence,
+                'residual_p95': residual_p95,
+                'residual_p95_decay': residual_p95_decay,
                 'regime': {
                     'classification': regime_audit.classification,
                     'score': round(regime_audit.score,4),
@@ -564,6 +568,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 'count': stats.count,
                 'avg': stats.avg,
                 'p95': stats.p95,
+                'p95_decay': getattr(stats, 'p95_decay', stats.p95),
                 'trend_ratio': stats.trend_ratio
             })
         except Exception as e:
@@ -614,6 +619,12 @@ def create_app(config_dir: Path | None = None) -> Flask:
             record_weights(index=index, horizon=horizon, weights=weights)
             vol_gbrt, vol_retrieval = get_weight_volatility(index=index, horizon=horizon, window_seconds=900)
             divergence = abs(weights['gbrt'] - weights['retrieval'])
+            # Include decay-weighted p95 for context
+            try:
+                stats_obj = get_residual_stats(index, [horizon])[0]
+                residual_p95_decay = getattr(stats_obj, 'p95_decay', stats_obj.p95)
+            except Exception:
+                residual_p95_decay = 0.0
             audit = audit_regime(index=index, horizon=horizon, residual_trend=residual_trend, weight_volatility_gbrt=vol_gbrt, weight_volatility_retrieval=vol_retrieval, divergence=divergence)
             return jsonify({
                 'index': index,
@@ -625,7 +636,8 @@ def create_app(config_dir: Path | None = None) -> Flask:
                     'residual_trend': residual_trend,
                     'divergence': round(divergence,4),
                     'weight_volatility_gbrt': round(vol_gbrt,6),
-                    'weight_volatility_retrieval': round(vol_retrieval,6)
+                    'weight_volatility_retrieval': round(vol_retrieval,6),
+                    'residual_p95_decay': residual_p95_decay
                 }
             })
         except Exception as e:

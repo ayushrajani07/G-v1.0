@@ -103,3 +103,28 @@ groups:
       description: |-
         30m average residual trend ratio above 1.10; indicates sustained mild degradation.
         avg_ratio_30m={{ $value }}
+  - alert: MLResidualTailDecayDegraded
+    expr: (avg_over_time(g6_ml_residual_p95_decay[5m]) / clamp_min(avg_over_time(g6_ml_residual_p95[30m]), 0.0001)) > 0.95
+    for: 10m
+    labels:
+      severity: warning
+      team: ml
+      category: residuals
+    annotations:
+      summary: Decay-weighted residual tail degradation (ratio >0.95)
+      description: |-
+        Recent decay-weighted p95 is within 95% of long-window p95 (expected improvement target ~10%).
+        Suggest investigating drift or recent anomaly concentration.
+        tail_ratio={{ $value }}
+  - alert: MLResidualTailDecayCritical
+    expr: (avg_over_time(g6_ml_residual_p95_decay[5m]) / clamp_min(avg_over_time(g6_ml_residual_p95[30m]), 0.0001)) > 1.02
+    for: 5m
+    labels:
+      severity: critical
+      team: ml
+      category: residuals
+    annotations:
+      summary: Decay-weighted residual tail worse than baseline (>1.02)
+      description: |-
+        Recent decay-weighted p95 exceeds long-window baseline by >2% indicating sharp tail deterioration.
+        tail_ratio={{ $value }}

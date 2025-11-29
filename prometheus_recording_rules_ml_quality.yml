@@ -17,6 +17,11 @@ groups:
     labels:
       job: g6_platform
     expr: (avg_over_time(g6_ml_residual_p95[5m]) / clamp_min(avg_over_time(g6_ml_residual_p95[30m]), 0.0001))
+  # Decay-weighted residual p95 short vs long ratio (recent emphasis)
+  - record: g6_ml_residual_p95_decay:ratio_5m_30m
+    labels:
+      job: g6_platform
+    expr: (avg_over_time(g6_ml_residual_p95_decay[5m]) / clamp_min(avg_over_time(g6_ml_residual_p95_decay[30m]), 0.0001))
   # GBRT weight smoothed (stability tracking)
   - record: g6_ml_ensemble_weight_gbrt:smooth_5m
     labels:

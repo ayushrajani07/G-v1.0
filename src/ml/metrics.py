@@ -6,6 +6,7 @@ Exports per (index,horizon):
 - g6_ml_residual_trend_ratio
 - g6_ml_residual_avg
 - g6_ml_residual_p95
+- g6_ml_residual_p95_decay (decay-weighted tail)
 
 Usage:
     from src.ml.metrics import push_forecast_metrics
@@ -25,12 +26,13 @@ _G_WEIGHT = None
 _G_RESIDUAL_TREND = None
 _G_RESIDUAL_AVG = None
 _G_RESIDUAL_P95 = None
+_G_RESIDUAL_P95_DECAY = None
 
 _DEF_LABELS = ("index", "horizon")
 
 
 def _ensure():
-    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95
+    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY
     if _ENABLED is not None:
         return _ENABLED
     if os.environ.get("ENABLE_ML_QUALITY_METRICS", "").strip() == "":
@@ -58,6 +60,11 @@ def _ensure():
             "Residual p95 absolute error",
             labelnames=list(_DEF_LABELS),
         )
+        _G_RESIDUAL_P95_DECAY = Gauge(
+            "g6_ml_residual_p95_decay",
+            "Decay-weighted residual p95 absolute error (recent emphasis)",
+            labelnames=list(_DEF_LABELS),
+        )
         _ENABLED = True
     except Exception as e:
         _LOG.debug(f"Prometheus client unavailable: {e}")
@@ -65,7 +72,7 @@ def _ensure():
     return _ENABLED
 
 
-def push_forecast_metrics(index: str, horizon: int, weights: Dict[str, float], residual_trend: float, residual_avg: float, residual_p95: float) -> None:
+def push_forecast_metrics(index: str, horizon: int, weights: Dict[str, float], residual_trend: float, residual_avg: float, residual_p95: float, residual_p95_decay: float | None = None) -> None:
     if not _ensure():
         return
     try:
@@ -80,5 +87,7 @@ def push_forecast_metrics(index: str, horizon: int, weights: Dict[str, float], r
             _G_RESIDUAL_AVG.labels(index=idx, horizon=h).set(residual_avg)
         if _G_RESIDUAL_P95 is not None:
             _G_RESIDUAL_P95.labels(index=idx, horizon=h).set(residual_p95)
+        if residual_p95_decay is not None and _G_RESIDUAL_P95_DECAY is not None:
+            _G_RESIDUAL_P95_DECAY.labels(index=idx, horizon=h).set(residual_p95_decay)
     except Exception as e:
         _LOG.debug(f"Failed to push ML quality metrics: {e}")
