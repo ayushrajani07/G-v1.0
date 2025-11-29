@@ -68,6 +68,52 @@ Quick links:
 - **[Configuration Guide](docs/operations/ENV_FLAGS_TABLES.md)** - Environment variables
 - **[Local Installation Paths](docs/operations/LOCAL_PATHS.md)** - Prometheus, Grafana, Python paths
 
+### Streaming + Metrics
+
+Minimal streaming ingestion and Prometheus metrics for live MAE are available in the dashboard API.
+
+- Endpoints:
+  - `POST /api/stream/ingest` — enqueue JSON payloads like `{ "y_true": 100.5, "y_pred": 98.9 }`.
+  - `GET /metrics` — exposes Prometheus metrics when enabled.
+
+- Config flags (environment variables):
+  - `ENABLE_STREAM_INGEST` (default: `True`)
+  - `LIVE_MAE_ALERT_THRESHOLD` (default: `2.0`)
+  - `ENABLE_PATH_FORECAST_PROM_METRICS` (default: disabled; set to `1` to enable)
+
+- Prometheus metrics:
+  - `g6_live_mae` — live MAE exported from the feedback loop.
+  - Additional forecast/drift metrics are defined in `src/web/dashboard/prom_metrics.py`.
+
+- Quick start (PowerShell):
+```powershell
+$env:ENABLE_STREAM_INGEST = "1"
+$env:LIVE_MAE_ALERT_THRESHOLD = "3.5"
+$env:ENABLE_PATH_FORECAST_PROM_METRICS = "1"
+```
+
+- Sample ingest:
+```powershell
+Invoke-RestMethod -Method Post -Uri "http://localhost:3002/api/stream/ingest" -ContentType 'application/json' -Body '{"y_true":100.5,"y_pred":98.9}'
+```
+
+- Prometheus scrape config (example):
+```yaml
+scrape_configs:
+  - job_name: g6-dashboard
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['localhost:3002']
+```
+
+Implementation files:
+- `src/web/dashboard/app.py` — flags and wiring
+- `src/web/dashboard/routes/stream.py` — ingest endpoint
+- `src/web/dashboard/routes/metrics.py` — metrics endpoint
+- `src/streaming/ingest.py` — ingestion worker
+- `src/monitoring/feedback.py` — feedback loop
+- `src/monitoring/alerts.py` — alert stub
+
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)
 - Archive (legacy utilities): [archive/README.md](archive/README.md)
