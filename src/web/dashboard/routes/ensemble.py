@@ -413,6 +413,11 @@ class ForecastCache:
 
 # Singleton instance
 _FORECAST_CACHE = ForecastCache()
+# Backward-compatibility for tests and legacy code expecting a module-level lock
+try:
+    _CACHE_LOCK = _FORECAST_CACHE._lock  # type: ignore[attr-defined]
+except Exception:
+    _CACHE_LOCK = threading.Lock()
 
 # Key normalization (bucket avg_iv) optional controls
 _NORMALIZE_AVG_IV = str(os.environ.get('G6_FORECAST_CACHE_NORMALIZE_AVG_IV', '0')).lower() in ('1','true','yes','on')
