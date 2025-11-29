@@ -131,6 +131,8 @@ Grafana:
  - Added sustained alert `MLSustainedNormErrorDrift` (15m avg ratio > 1.4 for 20m) leveraging recording rule `g6_forecast_norm_error_drift_ratio:avg_15m`.
  - Per-horizon recording rules added: `g6_forecast_norm_error_drift_ratio:horizon_avg_15m` / `:horizon_avg_1h` and coverage counterparts for comparative regime assessment.
  - Dashboard annotations mark threshold breaches for norm error ratio and coverage drift delta (red/orange event markers).
+ - Comparative ratio panels: Short vs long window (15m / 1h) for norm error drift ratio and coverage drift delta help identify transient spikes vs regime shifts.
+ - Adaptive thresholds: 6h rolling 95th quantile recording rules (`g6_forecast_norm_error_drift_ratio:quantile95_6h`, `g6_forecast_coverage_drift_delta_pct:quantile95_6h`) feed new alerts `MLAdaptiveNormErrorDrift` and `MLAdaptiveCoverageDrift` (dynamic breach detection).
 
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)

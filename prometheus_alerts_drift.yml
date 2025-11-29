@@ -274,3 +274,39 @@ groups:
             2. Inspect recent data anomalies and volatility shifts.
             3. Evaluate model residual patterns; consider recalibration.
             4. If concurrent coverage drift, prioritize deeper investigation.
+
+      # Alert: Adaptive norm error drift (exceeds dynamic 95th quantile of last 6h)
+      - alert: MLAdaptiveNormErrorDrift
+        expr: g6_forecast_norm_error_drift_ratio > g6_forecast_norm_error_drift_ratio:quantile95_6h
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Adaptive norm error drift breach for {{ $labels.index }} horizon {{ $labels.horizon }}"
+          description: |
+            Current ratio {{ $value }} above dynamic 95th quantile baseline.
+            Baseline (95th, 6h): {{ with printf "g6_forecast_norm_error_drift_ratio:quantile95_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+
+            Actions:
+            1. Verify spike factor metric.
+            2. Check volatility / regime indicators.
+            3. Consider model recalibration if persistent.
+
+      # Alert: Adaptive coverage drift delta (exceeds dynamic 95th quantile of last 6h)
+      - alert: MLAdaptiveCoverageDrift
+        expr: g6_forecast_coverage_drift_delta_pct > g6_forecast_coverage_drift_delta_pct:quantile95_6h
+        for: 10m
+        labels:
+          severity: warning
+          component: ml_drift
+        annotations:
+          summary: "Adaptive coverage drift delta breach for {{ $labels.index }} horizon {{ $labels.horizon }}"
+          description: |
+            Current coverage delta {{ $value }} above dynamic 95th quantile baseline.
+            Baseline (95th, 6h): {{ with printf "g6_forecast_coverage_drift_delta_pct:quantile95_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+
+            Actions:
+            1. Inspect calibration degradation.
+            2. Review interval construction vs recent volatility.
+            3. Recalibrate prediction intervals if sustained.
