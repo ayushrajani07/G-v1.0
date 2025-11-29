@@ -1,0 +1,62 @@
+name: Multi-Index Load & Rule Profiling
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * *'
+  pull_request:
+    types: [labeled]
+
+jobs:
+  load-and-profile:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'load-test')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.monitoring.txt || pip install requests pyyaml
+      - name: Horizon churn simulation
+        run: |
+          python scripts/load/horizon_churn_simulator.py --indices NIFTY,BANKNIFTY --baseline-horizons 15,30,60 --candidate-horizons 5,10,15,30,45,60,90,120 --cycles 50 --threshold-pct 15 --seed 42 --output churn_summary.json
+      - name: Rule latency profiler (optional)
+        env:
+          PROMETHEUS_URL: ${{ secrets.PROMETHEUS_URL }}
+        run: |
+          python scripts/monitor/prom_rule_latency_profiler.py --iterations 25 --threshold-p95-ms 250 --output latency_summary.json || echo "Latency profiler failed or skipped"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-testing-results
+          path: |
+            churn_summary.json
+            latency_summary.json
+      - name: Validate churn threshold
+        run: |
+          python - <<'PY'
+          import json, sys
+          data=json.load(open('churn_summary.json'))
+          assert data['max_growth_pct'] <= 15.0, f"Churn growth {data['max_growth_pct']} > 15%"
+          print('Churn threshold OK')
+          PY
+      - name: Validate latency threshold if available
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          if not os.path.exists('latency_summary.json'):
+              print('No latency summary produced; skip validation')
+              sys.exit(0)
+          data=json.load(open('latency_summary.json'))
+          if data.get('status')=='skipped':
+              print('Latency profiler skipped (no PROMETHEUS_URL).')
+              sys.exit(0)
+          p95=data['aggregate']['p95_ms']
+          assert p95 <= 250.0, f"Latency p95 {p95}ms > 250ms"
+          print('Latency threshold OK')
+          PY
