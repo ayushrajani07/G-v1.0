@@ -55,6 +55,25 @@
         "query": "1.4",
         "current": {"text": "1.4", "value": "1.4"},
         "hide": 0
+      },
+      {
+        "name": "variance_min_ratio",
+        "type": "constant",
+        "label": "Min Short/Long Ratio",
+        "query": "1.2",
+        "current": {"text": "1.2", "value": "1.2"},
+        "hide": 0
+      },
+      {
+        "name": "high_variance_horizons",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "${DS_PROM}"},
+        "label": "High Variance Horizons (ratio >= variance_min_ratio)",
+        "query": "label_values(g6_forecast_norm_error_drift_ratio:horizon_avg_15m / clamp_min(g6_forecast_norm_error_drift_ratio:horizon_avg_1h,0.001) > ${variance_min_ratio}, horizon)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {"text": "All", "value": "$__all"}
       }
     ]
   },
@@ -299,6 +318,55 @@
       "nullPointMode": "null",
       "repeat": "horizon",
       "maxPerRow": 2
+    },
+    {
+      "id": 14,
+      "type": "graph",
+      "title": "Norm Drift Distribution (rolling 15m)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "targets": [
+        { "expr": "avg_over_time(g6_forecast_norm_error_drift_ratio{index=\"$index\",horizon=\"$horizon\"}[15m])", "legendFormat": "avg {{horizon}}", "refId": "A" },
+        { "expr": "max_over_time(g6_forecast_norm_error_drift_ratio{index=\"$index\",horizon=\"$horizon\"}[15m])", "legendFormat": "max {{horizon}}", "refId": "B" },
+        { "expr": "g6_forecast_norm_error_drift_ratio:quantile90_6h{horizon=\"$horizon\"}", "legendFormat": "q90 {{horizon}}", "refId": "C" },
+        { "expr": "g6_forecast_norm_error_drift_ratio:quantile95_6h{horizon=\"$horizon\"}", "legendFormat": "q95 {{horizon}}", "refId": "D" },
+        { "expr": "g6_forecast_norm_error_drift_ratio:quantile99_6h{horizon=\"$horizon\"}", "legendFormat": "q99 {{horizon}}", "refId": "E" }
+      ],
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null",
+      "repeat": "horizon",
+      "maxPerRow": 2
+    },
+    {
+      "id": 15,
+      "type": "graph",
+      "title": "Coverage Drift Distribution (rolling 15m)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 40 },
+      "targets": [
+        { "expr": "avg_over_time(g6_forecast_coverage_drift_delta_pct{index=\"$index\",horizon=\"$horizon\"}[15m])", "legendFormat": "avg {{horizon}}", "refId": "A" },
+        { "expr": "max_over_time(g6_forecast_coverage_drift_delta_pct{index=\"$index\",horizon=\"$horizon\"}[15m])", "legendFormat": "max {{horizon}}", "refId": "B" },
+        { "expr": "g6_forecast_coverage_drift_delta_pct:quantile90_6h{horizon=\"$horizon\"}", "legendFormat": "q90 {{horizon}}", "refId": "C" },
+        { "expr": "g6_forecast_coverage_drift_delta_pct:quantile95_6h{horizon=\"$horizon\"}", "legendFormat": "q95 {{horizon}}", "refId": "D" },
+        { "expr": "g6_forecast_coverage_drift_delta_pct:quantile99_6h{horizon=\"$horizon\"}", "legendFormat": "q99 {{horizon}}", "refId": "E" }
+      ],
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null",
+      "repeat": "horizon",
+      "maxPerRow": 2
+    },
+    {
+      "id": 16,
+      "type": "stat",
+      "title": "High Variance Horizons (norm drift > q95)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 40 },
+      "targets": [
+        { "expr": "count(g6_forecast_norm_error_drift_ratio{index=\"$index\"} > on(horizon) g6_forecast_norm_error_drift_ratio:quantile95_6h)", "refId": "A" }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } }
     },
     {
       "id": 13,

@@ -1,0 +1,142 @@
+apiVersion: 1
+
+# Grafana managed alert provisioning for adaptive drift rules.
+# NOTE: Datasource UID placeholder must be replaced with the actual Prometheus datasource UID in deployment.
+# Folder will be auto-created if absent.
+
+groups:
+  - orgId: 1
+    name: ml_drift_adaptive
+    folder: Drift Monitoring
+    interval: 1m
+    rules:
+      - uid: norm_adaptive_warning
+        title: MLAdaptiveNormErrorDriftAdaptive
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PROMETHEUS_DS_UID
+            model:
+              expr: g6_forecast_norm_error_drift_ratio{index="$index",horizon="$horizon"}
+              range: true
+              instant: false
+              legendFormat: norm {{index}} {{horizon}}
+              interval: 60s
+          - refId: B
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PROMETHEUS_DS_UID
+            model:
+              expr: g6_forecast_norm_error_drift_ratio:adaptive_threshold{horizon="$horizon"}
+              range: true
+              instant: false
+              legendFormat: adaptive {{horizon}}
+              interval: 60s
+          - refId: C
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PROMETHEUS_DS_UID
+            model:
+              expr: g6_forecast_norm_error_drift_ratio{index="$index",horizon="$horizon"} > g6_forecast_norm_error_drift_ratio:adaptive_threshold{horizon="$horizon"}
+              range: true
+              instant: false
+              interval: 60s
+        noDataState: NoData
+        execErrState: Error
+        for: 15m
+        annotations:
+          summary: Adaptive norm drift ratio scaled breach
+        labels:
+          severity: warning
+          component: ml_drift
+      - uid: coverage_adaptive_warning
+        title: MLAdaptiveCoverageDriftAdaptive
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PROMETHEUS_DS_UID
+            model:
+              expr: g6_forecast_coverage_drift_delta_pct{index="$index",horizon="$horizon"}
+              range: true
+              instant: false
+              interval: 60s
+          - refId: B
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PROMETHEUS_DS_UID
+            model:
+              expr: g6_forecast_coverage_drift_delta_pct:adaptive_threshold{horizon="$horizon"}
+              range: true
+              instant: false
+              interval: 60s
+          - refId: C
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: PROMETHEUS_DS_UID
+            model:
+              expr: g6_forecast_coverage_drift_delta_pct{index="$index",horizon="$horizon"} > g6_forecast_coverage_drift_delta_pct:adaptive_threshold{horizon="$horizon"}
+              range: true
+              instant: false
+              interval: 60s
+        noDataState: NoData
+        execErrState: Error
+        for: 15m
+        annotations:
+          summary: Adaptive coverage drift delta scaled breach
+        labels:
+          severity: warning
+          component: ml_drift
+      - uid: norm_critical_99
+        title: MLAdaptiveNormErrorDriftCritical
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PROMETHEUS_DS_UID
+            model:
+              expr: g6_forecast_norm_error_drift_ratio{index="$index",horizon="$horizon"} > g6_forecast_norm_error_drift_ratio:quantile99_6h{horizon="$horizon"}
+              range: true
+              instant: false
+              interval: 60s
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Critical norm error drift (99th)
+        labels:
+          severity: critical
+          component: ml_drift
+      - uid: coverage_critical_99
+        title: MLAdaptiveCoverageDriftCritical
+        condition: A
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: PROMETHEUS_DS_UID
+            model:
+              expr: g6_forecast_coverage_drift_delta_pct{index="$index",horizon="$horizon"} > g6_forecast_coverage_drift_delta_pct:quantile99_6h{horizon="$horizon"}
+              range: true
+              instant: false
+              interval: 60s
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Critical coverage drift delta (99th)
+        labels:
+          severity: critical
+          component: ml_drift
