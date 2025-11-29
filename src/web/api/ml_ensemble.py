@@ -28,6 +28,7 @@ from src.ml.weighting_engine import get_weighting_engine
 from src.ml.residuals import get_residual_trend, record_residual, get_residual_stats
 from src.ml.metrics import push_forecast_metrics, push_quality_targets
 from src.ml.config_versioning import record_config, latest_diff
+from src.ml.config_integrity import sign_config, latest_signature
 from src.ml.regime import audit_regime
 from src.ml.weight_history import record_weights, get_weight_volatility
 
@@ -684,6 +685,22 @@ def create_app(config_dir: Path | None = None) -> Flask:
             _LOG.error(f"Config diff error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
 
+        @app.route('/api/ml/ensemble/config_integrity', methods=['GET'])
+        def config_integrity() -> Response:
+            """Return latest config signature for index (unsigned if key absent)."""
+            try:
+                index = request.args.get('index','').upper()
+                if not index:
+                    return jsonify({'error': 'index parameter required'}), 400
+                sig = latest_signature(index)
+                if sig is None:
+                    return jsonify({'index': index, 'signed': False, 'message': 'no signature recorded'}), 404
+                signed_flag = bool(os.environ.get('CONFIG_SIGNING_KEY'))
+                return jsonify({'index': index, 'signed': signed_flag, 'signature': sig})
+            except Exception as e:
+                _LOG.error(f"Config integrity error: {e}", exc_info=True)
+                return jsonify({'error': 'Internal server error'}), 500
+
     @app.route('/api/ml/ensemble/drift_stream', methods=['GET'])
     def drift_stream() -> Response:
         """Server-Sent Events stream of drift attribution for realtime sparklines.
@@ -764,7 +781,11 @@ def _get_forecaster(index: str, config_dir: Path) -> Optional[EnsembleForecaster
         config = _parse_config(config_data)
         _configs[index] = config
         try:
-            record_config(index, data)
+            record_config(index, config_data)
+        except Exception:
+            pass
+        try:
+            sign_config(index, config_data)
         except Exception:
             pass
         
