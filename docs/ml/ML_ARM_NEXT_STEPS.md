@@ -43,6 +43,8 @@ Now that the ML ARM Implementation Roadmap is complete, the focus shifts to:
 3. **Continuous Improvement** - Monitor, evaluate, and enhance model performance
 4. **Strategic Enhancements** - Add advanced capabilities based on production learnings
 
+**👉 NEW:** See **[ML_ARM_ENHANCEMENT_ROADMAP.md](ML_ARM_ENHANCEMENT_ROADMAP.md)** for the detailed Phase 11-14 plan covering Consolidation, Advanced Instrumentation, Forecast Intelligence, and Scale.
+
 This document outlines a structured approach for the next 6-12 months of ML ARM evolution.
 
 ---

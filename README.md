@@ -19,6 +19,15 @@ High‑throughput, modular options market data collection & analytics platform f
 - Aggregated per‑index overview snapshot (PCR + expiry completeness masks) every cycle
 - Extensible, group‑gated Prometheus metrics & integrity‑verified panel artifacts
 
+### Terminology
+**Important distinction:**
+- **Strike** = A unique strike price level (e.g., 24500, 24550)
+- **Option** = An option instrument at a specific strike and type (e.g., NIFTY 24500 CE, NIFTY 24500 PE)
+- For each strike, there are typically **2 options**: 1 Call (CE) + 1 Put (PE)
+- Example: Configuration with 5 ITM + 5 OTM strikes = **11 strikes** (including ATM) = **22 options** (11 CE + 11 PE)
+
+When logs show "22 options collected," this refers to option instruments, not strike price levels.
+
 ## 2. Quick Start
 ```powershell
 # (Optional) create & activate venv

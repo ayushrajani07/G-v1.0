@@ -16,7 +16,7 @@ Successfully implemented production-ready drift monitoring and multi-index load 
 **File:** `src/ml/drift_monitor.py` (17KB, 460 lines)
 
 **Features:**
-- `compute_feature_distributions(index, lookback_days)` - Computes feature distributions from historical data
+- `compute_feature_distributions(index, lookback_days)` - Computes feature distributions from historical data (CSV loading implemented)
 - `calculate_drift_metrics(baseline_window, recent_window)` - Calculates comprehensive drift metrics
 - `load_baseline(index)` / `save_baseline(index)` - Baseline persistence to `metrics/drift_baselines/<index>.json`
 - PSI calculation with 10 quantile bins
@@ -24,6 +24,7 @@ Successfully implemented production-ready drift monitoring and multi-index load 
 - Mean delta Z-score normalization
 - Variance delta ratio tracking
 - Alert flag logic with configurable thresholds
+- **Real Data Integration**: Loads CSVs from `data/g6_data/{index}/...` and uses `FeatureEngineer` for extraction
 
 **Configuration:**
 - Baseline: last 30 calendar days (configurable via `G6_DRIFT_BASELINE_DAYS`)
@@ -367,21 +368,16 @@ except Exception as e:
 
 ## Known Limitations
 
-1. **Placeholder Data Source**: `compute_feature_distributions()` uses placeholder data. Production integration requires:
-   - CSV file loading from `data/g6_data/{index}/...`
-   - Or database query integration
-   - Feature extraction pipeline hookup
-
-2. **Single-threaded Evaluator**: Evaluates indices sequentially. For >5 indices, consider:
+1. **Single-threaded Evaluator**: Evaluates indices sequentially. For >5 indices, consider:
    - Parallel evaluation with thread pool
    - Or staggered evaluation schedules
 
-3. **No Historical Drift Tracking**: Current implementation is real-time only. Future enhancements:
+2. **No Historical Drift Tracking**: Current implementation is real-time only. Future enhancements:
    - Persist drift metrics to time-series DB
    - Historical drift trend analysis
    - Drift pattern recognition
 
-4. **Manual Baseline Management**: Baseline recalibration is manual. Consider:
+3. **Manual Baseline Management**: Baseline recalibration is manual. Consider:
    - Scheduled baseline refresh (weekly/monthly)
    - Automatic baseline update after retraining
    - Baseline versioning system

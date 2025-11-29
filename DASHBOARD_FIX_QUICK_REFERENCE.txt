@@ -1,0 +1,32 @@
+﻿═
+                    DASHBOARD FIX - QUICK REFERENCE                           
+═
+                                                                               
+ ROOT CAUSE:                                                                   
+    API server was running on PORT 9510                                      
+    Grafana dashboards were querying PORT 9500                               
+    Result: Connection refused errors                                        
+                                                                               
+ FIX APPLIED:                                                                  
+    Standardized port to 9500 in obs_start_clean.ps1                        
+    Enabled auto-restart by default (50 retries, 3s delay)                  
+    Updated 40+ Grafana dashboard JSON files to use port 9500               
+                                                                               
+ VERIFY FIX:                                                                   
+   > Invoke-WebRequest -Uri http://127.0.0.1:9500/health                     
+   > Invoke-WebRequest -Uri http://127.0.0.1:9500/api/live_csv?index=NIFTY...
+                                                                               
+ SERVICES:                                                                     
+    Web API:    http://127.0.0.1:9500 (with auto-restart)                   
+    Grafana:    http://127.0.0.1:3002 (admin/admin)                         
+    Prometheus: http://127.0.0.1:9091                                        
+                                                                               
+ LOGS:                                                                         
+   C:\GrafanaData\log\webapi_stdout.log                                       
+   C:\GrafanaData\log\webapi_stderr.log                                       
+                                                                               
+ DOCUMENTATION:                                                                
+    DASHBOARD_FIX_SUMMARY.md    - This summary                               
+    docs/DASHBOARD_PORT_FIX.md  - Detailed technical doc                     
+                                                                               
+
