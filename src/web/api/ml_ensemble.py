@@ -27,6 +27,7 @@ from src.ml.quality_targets import get_quality_targets
 from src.ml.weighting_engine import get_weighting_engine
 from src.ml.residuals import get_residual_trend, record_residual, get_residual_stats
 from src.ml.metrics import push_forecast_metrics
+from src.ml.regime import audit_regime
 
 # Project imports
 from src.path_forecast.ensemble import EnsembleForecaster, EnsembleConfig
@@ -196,6 +197,12 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 residual_avg = 0.0
                 residual_p95 = 0.0
             push_forecast_metrics(index=index, horizon=horizon, weights=weights, residual_trend=residual_trend, residual_avg=residual_avg, residual_p95=residual_p95)
+            # Regime audit (using available volatility recording rules, may be absent -> default 0)
+            # For now we approximate volatility/difference from weights history not yet exposed; placeholders until metrics pipeline wires in.
+            weight_volatility_gbrt = 0.0
+            weight_volatility_retrieval = 0.0
+            divergence = abs(weights['gbrt'] - weights['retrieval'])
+            regime_audit = audit_regime(index=index, horizon=horizon, residual_trend=residual_trend, weight_volatility_gbrt=weight_volatility_gbrt, weight_volatility_retrieval=weight_volatility_retrieval, divergence=divergence)
 
             metadata = {
                 'latency_ms': round((time.time() - start_time) * 1000, 2),
@@ -221,6 +228,12 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 # Also include nested shape expected by unit tests
                 'forecast': forecast_data,
                 'confidence': confidence,
+                'regime': {
+                    'classification': regime_audit.classification,
+                    'score': round(regime_audit.score,4),
+                    'residual_trend': residual_trend,
+                    'divergence': round(regime_audit.divergence,4)
+                }
             }
             return jsonify(flat)
             
@@ -575,6 +588,38 @@ def create_app(config_dir: Path | None = None) -> Flask:
             })
         except Exception as e:
             _LOG.error(f"Residual stats error: {e}", exc_info=True)
+            return jsonify({'error': 'Internal server error'}), 500
+
+    @app.route('/api/ml/ensemble/regime_audit', methods=['GET'])
+    def regime_audit_endpoint() -> Response:
+        """Return current regime audit classification for index/horizon.
+
+        Query params: index (required), horizon (default 60)
+        Uses live residual_trend and current weights divergence; volatility placeholders until historical buffer wired.
+        """
+        try:
+            index = request.args.get('index', '').upper()
+            if not index:
+                return jsonify({'error': 'index parameter required'}), 400
+            horizon = int(request.args.get('horizon', 60))
+            residual_trend = get_residual_trend(index=index, horizon=horizon)
+            # Recompute weights (placeholders for volatility)
+            weights = get_weighting_engine().compute(confidence=0.75, residual_trend=residual_trend, regime_stability=0.8)
+            divergence = abs(weights['gbrt'] - weights['retrieval'])
+            audit = audit_regime(index=index, horizon=horizon, residual_trend=residual_trend, weight_volatility_gbrt=0.0, weight_volatility_retrieval=0.0, divergence=divergence)
+            return jsonify({
+                'index': index,
+                'horizon': horizon,
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'regime': {
+                    'classification': audit.classification,
+                    'score': round(audit.score,4),
+                    'residual_trend': residual_trend,
+                    'divergence': round(divergence,4)
+                }
+            })
+        except Exception as e:
+            _LOG.error(f"Regime audit error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
     
     _app = app
