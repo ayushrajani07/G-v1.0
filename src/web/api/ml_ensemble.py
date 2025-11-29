@@ -24,6 +24,7 @@ from typing import Any, Dict, Optional
 from flask import Flask, jsonify, request, Response
 from threading import BoundedSemaphore
 from src.ml.quality_targets import get_quality_targets
+from src.ml.weighting_engine import get_weighting_engine
 
 # Project imports
 from src.path_forecast.ensemble import EnsembleForecaster, EnsembleConfig
@@ -180,11 +181,16 @@ def create_app(config_dir: Path | None = None) -> Flask:
             }
             
             confidence = 0.75
-            
+            residual_trend = 1.05  # placeholder until residual pipeline integrated
+            regime_stability = 0.8  # placeholder stability metric
+            weights = get_weighting_engine().compute(confidence=confidence, residual_trend=residual_trend, regime_stability=regime_stability)
+
             metadata = {
                 'latency_ms': round((time.time() - start_time) * 1000, 2),
                 'components_used': ['baseline', 'gbrt', 'retrieval', 'conformal'],
-                'weights': {'gbrt': 0.7, 'retrieval': 0.3}
+                'weights': weights,
+                'residual_trend': residual_trend,
+                'regime_stability': regime_stability
             }
             
             # Compose response with both nested and flattened fields to satisfy
@@ -272,10 +278,8 @@ def create_app(config_dir: Path | None = None) -> Flask:
                     'retrieval': config.retrieval_enabled if config else True,
                     'conformal': config.conformal_enabled if config else True
                 },
-                weights={
-                    'gbrt': 0.7,
-                    'retrieval': 0.3
-                },
+                # Neutral snapshot weights (residual_trend=1.0 baseline, stable regime)
+                weights=get_weighting_engine().compute(confidence=0.75, residual_trend=1.0, regime_stability=0.8),
                 confidence=0.75,
                 metrics={
                     'forecast_count_24h': 1440,
