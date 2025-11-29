@@ -366,3 +366,31 @@ groups:
             Coverage delta exceeded dynamic 99th percentile baseline.
             Baseline (99th, 6h): {{ with printf "g6_forecast_coverage_drift_delta_pct:quantile99_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
             Indicates severe interval calibration degradation.
+      # Ladder: Adaptive norm drift threshold using adaptive threshold metric (scaled 95th)
+      - alert: MLAdaptiveNormErrorDriftAdaptive
+        expr: g6_forecast_norm_error_drift_ratio > g6_forecast_norm_error_drift_ratio:adaptive_threshold
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_drift
+          ladder: adaptive95_scaled
+        annotations:
+          summary: "Adaptive norm drift ratio scaled breach {{ $labels.index }} {{ $labels.horizon }}"
+          description: |
+            Drift ratio exceeded adaptive scaled 95th baseline (cardinality-aware).
+            Adaptive baseline: {{ with printf "g6_forecast_norm_error_drift_ratio:adaptive_threshold{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+            Raw 95th baseline: {{ with printf "g6_forecast_norm_error_drift_ratio:quantile95_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+      # Ladder: Adaptive coverage drift threshold using adaptive metric
+      - alert: MLAdaptiveCoverageDriftAdaptive
+        expr: g6_forecast_coverage_drift_delta_pct > g6_forecast_coverage_drift_delta_pct:adaptive_threshold
+        for: 15m
+        labels:
+          severity: warning
+          component: ml_drift
+          ladder: adaptive95_scaled
+        annotations:
+          summary: "Adaptive coverage drift delta scaled breach {{ $labels.index }} {{ $labels.horizon }}"
+          description: |
+            Coverage delta exceeded adaptive scaled 95th baseline (cardinality-aware).
+            Adaptive baseline: {{ with printf "g6_forecast_coverage_drift_delta_pct:adaptive_threshold{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}
+            Raw 95th baseline: {{ with printf "g6_forecast_coverage_drift_delta_pct:quantile95_6h{horizon='%s'}" $labels.horizon | query }}{{ . | first | value | printf "%.3f" }}{{ end }}

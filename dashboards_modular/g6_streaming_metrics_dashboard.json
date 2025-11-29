@@ -148,6 +148,11 @@
           "expr": "vector($norm_threshold)",
           "legendFormat": "threshold $norm_threshold",
           "refId": "B"
+        },
+        {
+          "expr": "g6_forecast_norm_error_drift_ratio:adaptive_threshold{horizon=\"$horizon\"}",
+          "legendFormat": "adaptive baseline {{horizon}}",
+          "refId": "C"
       "title": "Drift MAE (windowed)",
       "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
@@ -229,6 +234,11 @@
           "expr": "vector($coverage_threshold)",
           "legendFormat": "threshold $coverage_threshold",
           "refId": "B"
+        },
+        {
+          "expr": "g6_forecast_coverage_drift_delta_pct:adaptive_threshold{horizon=\"$horizon\"}",
+          "legendFormat": "adaptive baseline {{horizon}}",
+          "refId": "C"
         }
       ],
       "lines": true,
@@ -278,6 +288,11 @@
           "legendFormat": "spike {{horizon}}",
           "refId": "C"
         }
+        {
+          "expr": "g6_forecast_norm_error_drift_ratio:adaptive_threshold{horizon=\"$horizon\"} / clamp_min(g6_forecast_norm_error_drift_ratio:horizon_avg_1h,0.001)",
+          "legendFormat": "adaptive scaled {{horizon}}",
+          "refId": "D"
+        }
       ],
       "lines": true,
       "linewidth": 2,
@@ -307,6 +322,11 @@
           "legendFormat": "spike {{horizon}}",
           "refId": "C"
         }
+          {
+            "expr": "g6_forecast_coverage_drift_delta_pct:adaptive_threshold{horizon=\"$horizon\"} / clamp_min(g6_forecast_coverage_drift_delta_pct:horizon_avg_1h,0.001)",
+            "legendFormat": "adaptive scaled {{horizon}}",
+            "refId": "D"
+          }
       ],
       "lines": true,
       "linewidth": 2,

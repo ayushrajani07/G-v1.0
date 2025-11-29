@@ -369,6 +369,87 @@ def create_app(config_dir: Path | None = None) -> Flask:
         except Exception as e:
             _LOG.error(f"Retrain error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
+
+    @app.route('/api/ml/ensemble/drift_baselines', methods=['GET'])
+    def drift_baselines() -> Response:
+        """Drift baseline drilldown.
+
+        Query Parameters:
+        - index: str (optional) used for filtering future live metrics
+        - horizons: comma separated horizon identifiers (optional)
+        - metrics: comma separated metric base names (optional)
+
+        Returns JSON with available dynamic quantile baselines (90/95/99) and
+        short/long window average record names for the requested metrics.
+        This is a metadata endpoint; values are not evaluated (PromQL execution
+        happens in Prometheus). Clients can construct queries using the
+        provided record names.
+        """
+        try:
+            index = request.args.get('index', '').upper() or None
+            horizons_raw = request.args.get('horizons', '')
+            horizons = [h.strip() for h in horizons_raw.split(',') if h.strip()]
+            metrics_raw = request.args.get('metrics', '')
+            default_metrics = [
+                'g6_forecast_norm_error_drift_ratio',
+                'g6_forecast_coverage_drift_delta_pct'
+            ]
+            metric_bases = [m.strip() for m in metrics_raw.split(',') if m.strip()] or default_metrics
+
+            rules_path = Path('prometheus_recording_rules_generated.yml')
+            if not rules_path.exists():
+                return jsonify({'error': 'recording rules file not found', 'path': str(rules_path)}), 500
+
+            try:
+                import yaml  # available in dev/CI
+                with rules_path.open('r', encoding='utf-8') as f:
+                    data = yaml.safe_load(f) or {}
+            except Exception as e:
+                _LOG.warning(f"Failed to parse recording rules: {e}")
+                return jsonify({'error': 'failed to parse recording rules'}), 500
+
+            found_records = []
+            for group in (data.get('groups') or []):
+                for rule in group.get('rules', []):
+                    rec = rule.get('record')
+                    if not rec:
+                        continue
+                    for base in metric_bases:
+                        if rec.startswith(base + ':'):
+                            found_records.append(rec)
+                            break
+
+            # Organize
+            def classify(rec: str) -> Dict[str, str]:
+                parts = rec.split(':')
+                if len(parts) < 2:
+                    return {'record': rec, 'kind': 'other'}
+                suffix = parts[1]
+                if suffix.startswith('quantile90_'):
+                    return {'record': rec, 'kind': 'quantile', 'percentile': '90'}
+                if suffix.startswith('quantile95_'):
+                    return {'record': rec, 'kind': 'quantile', 'percentile': '95'}
+                if suffix.startswith('quantile99_'):
+                    return {'record': rec, 'kind': 'quantile', 'percentile': '99'}
+                if suffix.startswith('horizon_avg_'):
+                    win = suffix.removeprefix('horizon_avg_')
+                    return {'record': rec, 'kind': 'horizon_avg', 'window': win}
+                return {'record': rec, 'kind': 'other'}
+
+            classified = [classify(r) for r in sorted(set(found_records))]
+
+            response = {
+                'timestamp': datetime.now(timezone.utc).isoformat(),
+                'index': index,
+                'horizons': horizons,
+                'metrics': metric_bases,
+                'records': classified,
+                'count': len(classified)
+            }
+            return jsonify(response)
+        except Exception as e:
+            _LOG.error(f"Drift baselines error: {e}", exc_info=True)
+            return jsonify({'error': 'Internal server error'}), 500
     
     _app = app
     return app

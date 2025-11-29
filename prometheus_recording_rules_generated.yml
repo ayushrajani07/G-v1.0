@@ -480,3 +480,19 @@ groups:
     labels:
       job: g6_platform
     record: g6_forecast_coverage_drift_delta_pct:quantile99_6h
+  - expr: count(count by (index,horizon) (g6_forecast_norm_error_drift_ratio))
+    labels:
+      job: g6_platform
+    record: g6_forecast_norm_error_drift_ratio:cardinality
+  - expr: count(count by (index,horizon) (g6_forecast_coverage_drift_delta_pct))
+    labels:
+      job: g6_platform
+    record: g6_forecast_coverage_drift_delta_pct:cardinality
+  - expr: (g6_forecast_norm_error_drift_ratio:quantile95_6h * (1 - clamp_min((g6_forecast_norm_error_drift_ratio:cardinality - 200)/1000,0)))
+    labels:
+      job: g6_platform
+    record: g6_forecast_norm_error_drift_ratio:adaptive_threshold
+  - expr: (g6_forecast_coverage_drift_delta_pct:quantile95_6h * (1 - clamp_min((g6_forecast_coverage_drift_delta_pct:cardinality - 200)/1000,0)))
+    labels:
+      job: g6_platform
+    record: g6_forecast_coverage_drift_delta_pct:adaptive_threshold
