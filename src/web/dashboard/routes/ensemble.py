@@ -419,7 +419,50 @@ try:
 except Exception:
     _CACHE_LOCK = threading.Lock()
 # Backward-compatibility alias: historical tests reference `_CACHE`
-_CACHE = _FORECAST_CACHE
+_CACHE = _FORECAST_CACHE._cache  # OrderedDict backing store
+_CACHE_TIME = _FORECAST_CACHE._time
+_CACHE_HITS = 0
+_CACHE_MISSES = 0
+_CACHE_EVICTIONS = 0
+_CACHE_TTL_SEC = getattr(_FORECAST_CACHE, "_ttl_sec", 30)
+_CACHE_MAX_SIZE = getattr(_FORECAST_CACHE, "_max_size", 500)
+
+def _legacy_key(key: tuple) -> tuple:
+    """Adapt legacy 7-tuple key to internal 8-tuple by adding detail.
+
+    Expected legacy: (index, horizon, quantiles, underlying, avg_iv, minutes_to_expiry, recent_window_size)
+    Internal:        (..., detail)
+    """
+    if len(key) == 7:
+        return (key[0], key[1], key[2], key[3], key[4], key[5], key[6], "detail")
+    return key
+
+def _sync_counters_from_internal() -> None:
+    global _CACHE_HITS, _CACHE_MISSES, _CACHE_EVICTIONS
+    try:
+        _CACHE_HITS = getattr(_FORECAST_CACHE, "_hits", _CACHE_HITS)
+        _CACHE_MISSES = getattr(_FORECAST_CACHE, "_misses", _CACHE_MISSES)
+        _CACHE_EVICTIONS = getattr(_FORECAST_CACHE, "_evictions", _CACHE_EVICTIONS)
+    except Exception:
+        pass
+
+def _cache_put(key: tuple, value) -> None:
+    """Legacy wrapper: insert into cache and mirror counters/stats."""
+    k = _legacy_key(key)
+    try:
+        # Use module-level TTL override if set
+        ttl = float(_CACHE_TTL_SEC) if _CACHE_TTL_SEC else None
+        _FORECAST_CACHE.put(k, value, ttl_override=ttl)
+    finally:
+        _sync_counters_from_internal()
+
+def _cache_get(key: tuple):
+    """Legacy wrapper: get from cache and mirror counters/stats."""
+    k = _legacy_key(key)
+    try:
+        return _FORECAST_CACHE.get(k)
+    finally:
+        _sync_counters_from_internal()
 _CACHE_TIME = _FORECAST_CACHE._time  # underlying OrderedDict of timestamps
 
 # Legacy counters (maintained separately for tests)
