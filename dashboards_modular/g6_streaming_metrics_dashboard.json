@@ -75,5 +75,49 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
       "targets": [ { "expr": "g6_live_mae_alerts_total", "refId": "A" } ]
     }
+    ,
+    {
+      "id": 5,
+      "type": "graph",
+      "title": "Drift MAE (windowed)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 15 },
+      "targets": [
+        {
+          "expr": "g6_drift_mae",
+          "legendFormat": "Drift MAE",
+          "refId": "A"
+        }
+      ],
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null"
+    },
+    {
+      "id": 6,
+      "type": "graph",
+      "title": "Drift MAPE (windowed)",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 15 },
+      "targets": [
+        {
+          "expr": "g6_drift_mape",
+          "legendFormat": "Drift MAPE",
+          "refId": "A"
+        }
+      ],
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null"
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Drift Last Status",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 23 },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
+      "targets": [ { "expr": "g6_drift_status", "refId": "A" } ]
+    }
   ]
 }

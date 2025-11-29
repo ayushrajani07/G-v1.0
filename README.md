@@ -117,6 +117,8 @@ Implementation files:
 
 Grafana:
 - Import `dashboards_modular/g6_streaming_metrics_dashboard.json` and set Prometheus datasource.
+- Drift row includes panels for `g6_drift_mae`, `g6_drift_mape`, and `g6_drift_status`.
+- If these metrics are not present, enable drift monitor exporters in Prom scrape config.
 
 ## Module README index
 - Scripts: [scripts/README.md](scripts/README.md)
