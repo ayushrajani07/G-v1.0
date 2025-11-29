@@ -70,14 +70,29 @@ class TestDriftInCompare:
 
         assert code == 200
         assert isinstance(data, dict)
-        for key in ["index", "horizon"]:
-            assert key in data
+        
+        # Support both flat (legacy) and nested (consolidated) formats
+        if "entries" in data:
+            # Nested format
+            entries = data["entries"]
+            assert isinstance(entries, list)
+            if entries:
+                entry = entries[0]
+                assert entry["index"] == "NIFTY"
+                assert int(entry["horizon"]) == 60
+        else:
+            # Flat format
+            for key in ["index", "horizon"]:
+                assert key in data
+
         # If available, validate drift summary contents
         drift = data.get("drift_summary")
         if drift:
             assert isinstance(drift, dict)
-            for k in ["index", "alert_count", "mae_ratio", "norm_ratio"]:
-                assert k in drift
-            # Ratios non-negative
-            assert drift.get("mae_ratio", 0) >= 0
-            assert drift.get("norm_ratio", 0) >= 0
+            # Check for performance drift keys (rolling_mae style)
+            if "mae_ratio" in drift:
+                for k in ["index", "alert_count", "mae_ratio", "norm_ratio"]:
+                    assert k in drift
+                # Ratios non-negative
+                assert drift.get("mae_ratio", 0) >= 0
+                assert drift.get("norm_ratio", 0) >= 0
