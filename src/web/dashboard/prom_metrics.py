@@ -63,6 +63,9 @@ _FEATURE_PSI: Any = None
 _FEATURE_KS: Any = None
 _LIVE_MAE: Any = None
 _LIVE_MAE_ALERTS: Any = None
+_DRIFT_MAE: Any = None
+_DRIFT_MAPE: Any = None
+_DRIFT_STATUS: Any = None
 
 
 def _is_enabled() -> bool:
@@ -262,6 +265,22 @@ def _init_metrics() -> bool:
         _LIVE_MAE_ALERTS = Counter(
             "g6_live_mae_alerts_total",
             "Total number of live MAE alerts triggered",
+            registry=_REGISTRY,
+        )
+        # Drift summary gauges (global; latest values)
+        _DRIFT_MAE = Gauge(
+            "g6_drift_mae",
+            "Drift monitor MAE (current window)",
+            registry=_REGISTRY,
+        )
+        _DRIFT_MAPE = Gauge(
+            "g6_drift_mape",
+            "Drift monitor MAPE (current window)",
+            registry=_REGISTRY,
+        )
+        _DRIFT_STATUS = Gauge(
+            "g6_drift_status",
+            "Drift monitor status: 1=ok, 0=unknown/error",
             registry=_REGISTRY,
         )
         # Optional histograms for percentile analysis; buckets configurable via env vars
@@ -671,6 +690,7 @@ __all__ = [
     "collect_metrics",
     "set_live_mae",
     "inc_live_mae_alerts",
+    "set_drift_metrics",
 ]
 
 def set_forecast_adaptive_ttl(index: str, horizon: int, ttl_sec: float) -> None:
@@ -697,5 +717,28 @@ def inc_live_mae_alerts() -> None:
         return
     try:
         _LIVE_MAE_ALERTS.inc()
+    except Exception:
+        pass
+
+def set_drift_metrics(mae: float | None = None, mape: float | None = None, status_ok: bool | None = None) -> None:
+    """Set drift summary gauges.
+
+    If values are None, they will be skipped.
+    """
+    if not _init_metrics():
+        return
+    try:
+        if mae is not None and _DRIFT_MAE is not None:
+            _DRIFT_MAE.set(float(mae))
+    except Exception:
+        pass
+    try:
+        if mape is not None and _DRIFT_MAPE is not None:
+            _DRIFT_MAPE.set(float(mape))
+    except Exception:
+        pass
+    try:
+        if status_ok is not None and _DRIFT_STATUS is not None:
+            _DRIFT_STATUS.set(1 if status_ok else 0)
     except Exception:
         pass

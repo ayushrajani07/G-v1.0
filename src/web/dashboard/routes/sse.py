@@ -90,6 +90,16 @@ async def sse_live(
                             "window": window,
                             "index": index,
                         })
+                        # Export to Prometheus
+                        try:
+                            from ..prom_metrics import set_drift_metrics
+                            set_drift_metrics(
+                                mae=acc.get("mae"),
+                                mape=acc.get("mape"),
+                                status_ok=True,
+                            )
+                        except Exception:
+                            pass
                         # Optionally include recent history sample
                         hist = mon.load_history(index=index, limit=1)
                         if hist:
