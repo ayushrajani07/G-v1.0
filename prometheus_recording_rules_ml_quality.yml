@@ -1,0 +1,54 @@
+groups:
+- interval: 30s
+  name: g6_ml_quality.rules
+  rules:
+  # Smoothed residual trend (short/long ratio) using 5m window
+  - record: g6_ml_residual_trend_ratio:smooth_5m
+    labels:
+      job: g6_platform
+    expr: avg_over_time(g6_ml_residual_trend_ratio[5m])
+  # Worsening component above baseline (>1)
+  - record: g6_ml_residual_trend_ratio:worsening_5m
+    labels:
+      job: g6_platform
+    expr: clamp_min(g6_ml_residual_trend_ratio:smooth_5m - 1, 0)
+  # Residual p95 short vs long ratio (re-derive if needed)
+  - record: g6_ml_residual_p95:ratio_5m_30m
+    labels:
+      job: g6_platform
+    expr: (avg_over_time(g6_ml_residual_p95[5m]) / clamp_min(avg_over_time(g6_ml_residual_p95[30m]), 0.0001))
+  # GBRT weight smoothed (stability tracking)
+  - record: g6_ml_ensemble_weight_gbrt:smooth_5m
+    labels:
+      job: g6_platform
+    expr: avg_over_time(g6_ml_ensemble_weight{component="gbrt"}[5m])
+  # Retrieval weight smoothed
+  - record: g6_ml_ensemble_weight_retrieval:smooth_5m
+    labels:
+      job: g6_platform
+    expr: avg_over_time(g6_ml_ensemble_weight{component="retrieval"}[5m])
+  # GBRT weight volatility (stddev over 15m)
+  - record: g6_ml_ensemble_weight_gbrt:volatility_15m
+    labels:
+      job: g6_platform
+    expr: stddev_over_time(g6_ml_ensemble_weight{component="gbrt"}[15m])
+  # Retrieval weight volatility (stddev over 15m)
+  - record: g6_ml_ensemble_weight_retrieval:volatility_15m
+    labels:
+      job: g6_platform
+    expr: stddev_over_time(g6_ml_ensemble_weight{component="retrieval"}[15m])
+  # Weight divergence absolute difference
+  - record: g6_ml_ensemble_weight:divergence
+    labels:
+      job: g6_platform
+    expr: abs(g6_ml_ensemble_weight{component="gbrt"} - g6_ml_ensemble_weight{component="retrieval"})
+  # Residual deterioration rate (slope of trend ratio)
+  - record: g6_ml_residual_trend_ratio:rate_5m
+    labels:
+      job: g6_platform
+    expr: rate(g6_ml_residual_trend_ratio[5m])
+  # Health classification (1 good, 2 watch, 3 bad) using boolean arithmetic
+  - record: g6_ml_residual_health:class
+    labels:
+      job: g6_platform
+    expr: 1*((g6_ml_residual_trend_ratio:smooth_5m <= 1)) + 2*((g6_ml_residual_trend_ratio:smooth_5m > 1) and (g6_ml_residual_trend_ratio:smooth_5m <= 1.15)) + 3*(g6_ml_residual_trend_ratio:smooth_5m > 1.15)
