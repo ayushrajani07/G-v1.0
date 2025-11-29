@@ -1,0 +1,105 @@
+groups:
+- name: g6_ml_quality.alerts
+  interval: 30s
+  rules:
+  - alert: MLResidualTrendWorseningFast
+    expr: (g6_ml_residual_trend_ratio:smooth_5m > 1.10) * (g6_ml_residual_trend_ratio:rate_5m > 0.01)
+    for: 10m
+    labels:
+      severity: warning
+      team: ml
+      category: residuals
+    annotations:
+      summary: Residual trend worsening rapidly (ratio >1.10 with positive slope)
+      description: |-
+        Short/long residual ratio has exceeded 1.10 and is increasing (>1% per 5m).
+        Investigate recent data quality or model drift.
+        ratio={{ $value }}
+  - alert: MLResidualTrendCritical
+    expr: g6_ml_residual_trend_ratio:smooth_5m > 1.25
+    for: 5m
+    labels:
+      severity: critical
+      team: ml
+      category: residuals
+    annotations:
+      summary: Residual trend critical (ratio >1.25)
+      description: |-
+        Residual trend ratio sustained above 1.25 for 5m indicating strong degradation.
+        Immediate action recommended (model retrain, data check).
+        ratio={{ $value }}
+  - alert: MLResidualHealthDegraded
+    expr: g6_ml_residual_health:class == 2
+    for: 15m
+    labels:
+      severity: warning
+      team: ml
+      category: residuals
+    annotations:
+      summary: Residual health degraded (watch state)
+      description: |-
+        Health classification moved to watch state (class=2).
+        ratio_smooth_5m between 1.0 and 1.15.
+        class={{ $value }}
+  - alert: MLResidualHealthBad
+    expr: g6_ml_residual_health:class == 3
+    for: 5m
+    labels:
+      severity: high
+      team: ml
+      category: residuals
+    annotations:
+      summary: Residual health bad (class=3)
+      description: |-
+        Residual health classification = 3 (ratio_smooth_5m > 1.15).
+        Consider immediate mitigation.
+        class={{ $value }}
+  - alert: MLWeightVolatilityHighGBRT
+    expr: g6_ml_ensemble_weight_gbrt:volatility_15m > 0.18
+    for: 15m
+    labels:
+      severity: warning
+      team: ml
+      category: weights
+    annotations:
+      summary: GBRT weight volatility high
+      description: |-
+        15m stddev of GBRT weight exceeded 0.18 (target stability threshold 0.15).
+        stddev={{ $value }}
+  - alert: MLWeightVolatilityHighRetrieval
+    expr: g6_ml_ensemble_weight_retrieval:volatility_15m > 0.18
+    for: 15m
+    labels:
+      severity: warning
+      team: ml
+      category: weights
+    annotations:
+      summary: Retrieval weight volatility high
+      description: |-
+        15m stddev of retrieval weight exceeded 0.18 (target stability threshold 0.15).
+        stddev={{ $value }}
+  - alert: MLWeightConvergenceRisk
+    expr: (g6_ml_ensemble_weight:divergence < 0.08) * (g6_ml_residual_trend_ratio:smooth_5m > 1.12)
+    for: 10m
+    labels:
+      severity: warning
+      team: ml
+      category: weights
+    annotations:
+      summary: Ensemble weight convergence risk with rising residuals
+      description: |-
+        Component weights nearly converged (<0.08 difference) while residual trend is elevated (>1.12).
+        Could indicate under-differentiated strategy response to drift.
+        divergence={{ $value }}
+  - alert: MLResidualTrendPersistentWorsening
+    expr: avg_over_time(g6_ml_residual_trend_ratio:smooth_5m[30m]) > 1.10
+    for: 0m
+    labels:
+      severity: info
+      team: ml
+      category: residuals
+    annotations:
+      summary: Persistent residual trend worsening over 30m
+      description: |-
+        30m average residual trend ratio above 1.10; indicates sustained mild degradation.
+        avg_ratio_30m={{ $value }}
