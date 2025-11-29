@@ -20,6 +20,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
+import pandas as pd
+
+try:
+    from src.analytics.ml.feature_engineering import FeatureEngineer
+    _FEATURE_ENGINEER_AVAILABLE = True
+except ImportError:
+    _FEATURE_ENGINEER_AVAILABLE = False
+
 try:  # Graceful fallback if SciPy not installed in minimal env
     from scipy import stats  # type: ignore
     _SCIPY_AVAILABLE = True
@@ -99,6 +107,109 @@ class DriftMonitor:
         # Fallback
         return Path(__file__).resolve().parents[2]
     
+    def _load_data(self, index: str, lookback_days: int) -> pd.DataFrame:
+        """Load and preprocess data from CSV files."""
+        if not _FEATURE_ENGINEER_AVAILABLE:
+            _LOG.warning("FeatureEngineer not available, cannot load real data")
+            return pd.DataFrame()
+
+        # Locate data directory: data/g6_data/{index}/this_week/0
+        # We assume 'this_week' and offset '0' for simplicity as per current structure
+        data_dir = self.project_root / "data" / "g6_data" / index / "this_week" / "0"
+        
+        if not data_dir.exists():
+            _LOG.warning(f"Data directory not found: {data_dir}")
+            return pd.DataFrame()
+
+        # List all CSV files
+        csv_files = sorted(list(data_dir.glob("*.csv")))
+        if not csv_files:
+            _LOG.warning(f"No CSV files found in {data_dir}")
+            return pd.DataFrame()
+
+        # Filter files based on lookback
+        now = datetime.now()
+        cutoff_date = now - timedelta(days=lookback_days if lookback_days > 0 else 1)
+        
+        selected_files = []
+        for f in csv_files:
+            try:
+                file_date = datetime.strptime(f.stem, "%Y-%m-%d")
+                if lookback_days > 0:
+                    # For baseline: include files from cutoff up to yesterday (or today)
+                    if file_date >= cutoff_date:
+                        selected_files.append(f)
+                else:
+                    # For recent: just the latest file(s)
+                    # If lookback_days=0, we typically want the most recent data
+                    # We'll take the last file
+                    pass
+            except ValueError:
+                continue
+        
+        if lookback_days == 0:
+            # Just take the last file for recent data
+            selected_files = [csv_files[-1]]
+        
+        if not selected_files:
+            _LOG.warning(f"No files selected for lookback_days={lookback_days}")
+            return pd.DataFrame()
+
+        # Read and concatenate
+        dfs = []
+        for f in selected_files:
+            try:
+                # Use on_bad_lines='skip' to handle malformed rows
+                df = pd.read_csv(f, on_bad_lines='skip')
+                # Ensure timestamp column exists
+                if 'timestamp' in df.columns:
+                    dfs.append(df)
+                else:
+                    _LOG.warning(f"Skipping {f}: missing timestamp column")
+            except Exception as e:
+                _LOG.error(f"Failed to read {f}: {e}")
+        
+        if not dfs:
+            return pd.DataFrame()
+            
+        full_df = pd.concat(dfs, ignore_index=True)
+        
+        # Preprocessing for FeatureEngineer
+        # 1. Timestamp
+        # Handle parsing errors by coercing to NaT
+        full_df['timestamp'] = pd.to_datetime(full_df['timestamp'], dayfirst=True, errors='coerce')
+        full_df = full_df.dropna(subset=['timestamp'])
+        
+        if full_df.empty:
+            return pd.DataFrame()
+        
+        # 2. Avg IV (if not present)
+        if 'avg_iv' not in full_df.columns and 'ce_iv' in full_df.columns and 'pe_iv' in full_df.columns:
+            full_df['avg_iv'] = (full_df['ce_iv'] + full_df['pe_iv']) / 2.0
+            
+        # 3. Minutes to expiry
+        # Expiry is at 15:30 on expiry_date
+        if 'minutes_to_expiry' not in full_df.columns and 'expiry_date' in full_df.columns:
+            full_df['expiry_dt'] = pd.to_datetime(full_df['expiry_date']) + timedelta(hours=15, minutes=30)
+            full_df['minutes_to_expiry'] = (full_df['expiry_dt'] - full_df['timestamp']).dt.total_seconds() / 60.0
+            
+        # Run Feature Engineering
+        fe = FeatureEngineer()
+        try:
+            features_df = fe.extract_features(
+                full_df,
+                tp_col="tp",
+                tp_baseline_col="avg_tp",
+                index_price_col="index_price",
+                iv_col="avg_iv",
+                minutes_to_expiry_col="minutes_to_expiry",
+                timestamp_col="timestamp"
+            )
+            return features_df
+        except Exception as e:
+            _LOG.error(f"Feature extraction failed: {e}")
+            return pd.DataFrame()
+
     def compute_feature_distributions(
         self,
         index: str,
@@ -106,9 +217,6 @@ class DriftMonitor:
         features: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Compute feature distributions from historical data.
-        
-        This is a placeholder that should be integrated with actual data loading.
-        In production, this would load from CSV files or database.
         
         Args:
             index: Index name (e.g., "NIFTY", "BANKNIFTY")
@@ -134,31 +242,90 @@ class DriftMonitor:
                 }
             }
         """
-        # Placeholder implementation
-        # In production, replace with actual data loading from CSV/database
-        _LOG.warning(
-            f"compute_feature_distributions called with index={index}, "
-            f"lookback_days={lookback_days}. Using placeholder data."
-        )
-        
         now = datetime.now(timezone.utc)
         window_end = now
         window_start = now - timedelta(days=lookback_days)
         
-        # Default feature list (Phase 1 + Phase 7 features)
+        # Load real data
+        df = self._load_data(index, lookback_days)
+        
+        if df.empty:
+            _LOG.warning(f"No data loaded for {index}, falling back to placeholder")
+            # Fallback to placeholder if no data (to avoid crashing)
+            return self._compute_placeholder_distributions(index, lookback_days, features)
+
+        # Filter for recent rows if lookback_days == 0
+        if lookback_days == 0:
+            df = df.tail(self.recent_rows)
+
+        # Default feature list if None
+        if features is None:
+            # Use all numeric columns that are not metadata
+            exclude = ['timestamp', 'expiry_date', 'expiry_tag', 'index', 'offset', 'expiry_dt']
+            features = [c for c in df.columns if c not in exclude and pd.api.types.is_numeric_dtype(df[c])]
+            # Filter to likely relevant features if too many?
+            # For now, let's stick to the ones defined in FeatureEngineer + raw ones if needed
+            # Or just use the ones from the placeholder list as a priority
+            priority_features = [
+                "residual_lag_1", "residual_lag_2", "residual_lag_5",
+                "index_return_1m", "index_return_5m", "avg_iv",
+                "iv_percentile", "index_vol_percentile", "volume_ratio",
+            ]
+            # Intersect with available columns
+            features = [f for f in priority_features if f in df.columns]
+            if not features:
+                 features = [c for c in df.columns if c not in exclude and pd.api.types.is_numeric_dtype(df[c])]
+
+        feature_data = {}
+        for feature_name in features:
+            if feature_name not in df.columns:
+                continue
+                
+            values = df[feature_name].dropna().tolist()
+            if not values:
+                continue
+                
+            # Convert to float to ensure JSON serializability
+            values = [float(v) for v in values]
+            
+            feature_data[feature_name] = {
+                "values": values,
+                "mean": float(np.mean(values)),
+                "std": float(np.std(values)),
+                "min": float(np.min(values)),
+                "max": float(np.max(values)),
+                "quantiles": [float(q) for q in np.quantile(values, np.linspace(0, 1, self.num_bins + 1))],
+            }
+        
+        return {
+            "index": index,
+            "lookback_days": lookback_days,
+            "window_start": window_start.isoformat(),
+            "window_end": window_end.isoformat(),
+            "features": feature_data,
+        }
+
+    def _compute_placeholder_distributions(
+        self,
+        index: str,
+        lookback_days: int,
+        features: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Placeholder implementation for fallback."""
+        now = datetime.now(timezone.utc)
+        window_end = now
+        window_start = now - timedelta(days=lookback_days)
+        
         if features is None:
             features = [
-                "tp_residual_lag1", "tp_residual_lag2", "tp_residual_lag5",
-                "index_return_1min", "index_return_5min", "avg_iv_level",
+                "residual_lag_1", "residual_lag_2", "residual_lag_5",
+                "index_return_1m", "index_return_5m", "avg_iv",
                 "iv_percentile", "index_vol_percentile", "volume_ratio",
             ]
         
         feature_data = {}
         for feature_name in features:
-            # Generate placeholder normal distribution
-            # In production, load from actual data
             values = list(np.random.randn(1000) * 10 + 100)
-            
             feature_data[feature_name] = {
                 "values": values,
                 "mean": float(np.mean(values)),

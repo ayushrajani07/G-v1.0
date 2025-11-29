@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Sequence, Tuple
 import os
 import logging
+import numpy as np
 
 from .interfaces import PathForecaster
 from .query_builder import build_query_parts as _build_query_parts
@@ -60,66 +61,59 @@ def _warn(meta: Dict[str, Any], msg: str, exc: BaseException | None = None) -> N
 def _quantile(values: List[float], q: float) -> float:
     if not values:
         return float('nan')
-    vs = sorted(values)
-    n = len(vs)
-    if n == 1:
-        return vs[0]
-    # Simple nearest-rank like interpolation
-    pos = q * (n - 1)
-    i = int(pos)
-    f = pos - i
-    if i >= n - 1:
-        return vs[-1]
-    return vs[i] * (1.0 - f) + vs[i + 1] * f
+    return float(np.quantile(values, q))
 
 
 def _l2_distance(a: Sequence[float], b: Sequence[float]) -> float:
-    n = min(len(a), len(b))
+    # Phase 16: Vectorized L2
+    va = np.asarray(a, dtype=float)
+    vb = np.asarray(b, dtype=float)
+    n = min(va.size, vb.size)
     if n == 0:
         return float('inf')
-    s = 0.0
-    for i in range(n):
-        d = float(a[i]) - float(b[i])
-        s += d * d
-    return s ** 0.5
+    return float(np.linalg.norm(va[:n] - vb[:n]))
 
 
 def _cosine_distance(a: Sequence[float], b: Sequence[float]) -> float:
-    n = min(len(a), len(b))
+    # Phase 16: Vectorized Cosine
+    va = np.asarray(a, dtype=float)
+    vb = np.asarray(b, dtype=float)
+    n = min(va.size, vb.size)
     if n == 0:
         return 1.0
-    dot = 0.0
-    na = 0.0
-    nb = 0.0
-    for i in range(n):
-        av = float(a[i])
-        bv = float(b[i])
-        dot += av * bv
-        na += av * av
-        nb += bv * bv
-    if na <= 0 or nb <= 0:
+    
+    va = va[:n]
+    vb = vb[:n]
+    
+    dot = np.dot(va, vb)
+    norm_a = np.linalg.norm(va)
+    norm_b = np.linalg.norm(vb)
+    
+    if norm_a <= 0 or norm_b <= 0:
         return 1.0
-    sim = dot / ((na ** 0.5) * (nb ** 0.5))
-    # numerical guard
-    if sim > 1:
-        sim = 1.0
-    elif sim < -1:
-        sim = -1.0
-    return 1.0 - sim
+        
+    sim = dot / (norm_a * norm_b)
+    return float(1.0 - np.clip(sim, -1.0, 1.0))
 
 
 def _recent_l2_distance(a: Sequence[float], b: Sequence[float], gamma: float = 0.9) -> float:
-    # Heavier weight on recent points (end of window)
-    n = min(len(a), len(b))
+    # Phase 16: Vectorized Weighted L2
+    va = np.asarray(a, dtype=float)
+    vb = np.asarray(b, dtype=float)
+    n = min(va.size, vb.size)
     if n == 0:
         return float('inf')
-    s = 0.0
-    # weights: w[i] = gamma^(n-1-i), so i=n-1 (most recent) has weight 1
-    for i in range(n):
-        w = gamma ** (n - 1 - i)
-        d = float(a[i]) - float(b[i])
-        s += w * d * d
-    return s ** 0.5
+    
+    va = va[:n]
+    vb = vb[:n]
+    
+    # Weights: gamma^(n-1-i)
+    exponents = np.arange(n - 1, -1, -1)
+    weights = np.power(gamma, exponents)
+    
+    diff = va - vb
+    weighted_sq_diff = weights * (diff ** 2)
+    return float(np.sqrt(np.sum(weighted_sq_diff)))
 
 
 def _weighted_quantile(values: List[float], weights: List[float], q: float) -> float:
@@ -175,23 +169,23 @@ def _weighted_quantile(values: List[float], weights: List[float], q: float) -> f
 
 
 def _mean_std(x: Sequence[float]) -> tuple[float, float]:
-    n = len(x)
-    if n == 0:
+    vx = np.asarray(x, dtype=float)
+    if vx.size == 0:
         return 0.0, 1.0
-    m = sum(float(v) for v in x) / n
-    var = sum((float(v) - m) ** 2 for v in x) / max(1, n - 1)
-    sd = var ** 0.5 if var > 0 else 1.0
-    return m, sd
+    return float(np.mean(vx)), float(np.std(vx, ddof=1)) if vx.size > 1 else 1.0
 
 
 def _zscore(seq: Sequence[float]) -> List[float]:
-    m, sd = _mean_std(seq)
+    vx = np.asarray(seq, dtype=float)
+    if vx.size == 0:
+        return []
+    m = np.mean(vx)
+    sd = np.std(vx, ddof=1) if vx.size > 1 else 0.0
     if sd == 0:
-        return [0.0 for _ in seq]
-    return [(float(v) - m) / sd for v in seq]
+        return [0.0] * vx.size
+    return ((vx - m) / sd).tolist()
 
 
-@dataclass
 class RetrievalConfig(ModularRetrievalConfig):
     """Legacy-compatible RetrievalConfig that now subclasses modular config structure.
 
@@ -216,8 +210,17 @@ class RetrievalPathForecaster(PathForecaster):
             raise TypeError("cfg must be RetrievalConfig modular instance")
         self.cfg = cfg
         self.last_meta: Dict[str, Any] = {}
+        # Phase 16: File list cache (index -> (timestamp, files))
+        self._file_cache: Dict[str, Tuple[float, List[Path]]] = {}
 
     def _list_day_files(self, index: str) -> List[Path]:
+        # Phase 16: Check cache (TTL 60s)
+        now = time.time()
+        if index in self._file_cache:
+            ts, cached_files = self._file_cache[index]
+            if now - ts < 60:
+                return cached_files
+
         base = self.cfg.root / index / self.cfg.expiry_tag / self.cfg.offset
         if not base.exists():
             # Try without + prefix if present
@@ -231,6 +234,9 @@ class RetrievalPathForecaster(PathForecaster):
         max_scan = _safe_int(getattr(self.cfg, 'max_days_scan', 0), 0, min_=0, max_=10000)
         if max_scan > 0 and len(files) > max_scan:
             files = files[-max_scan:]
+            
+        # Update cache
+        self._file_cache[index] = (now, files)
         return files
 
     def forecast_path(
@@ -266,6 +272,9 @@ class RetrievalPathForecaster(PathForecaster):
         today_tp, query, query_z, q_mean, q_sd, n_today, warns = _build_query_parts(recent_window, live_rows, W)
         for w in (warns or []):
             _warn(self.last_meta, w)
+
+        # Update W to effective window length (in case of partial window)
+        W = len(query)
 
         # Additional numeric knobs
         min_hist_rows_s = _p_min_hist_rows(getattr(self.cfg, 'min_hist_rows', 0))

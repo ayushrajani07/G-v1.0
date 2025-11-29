@@ -18,6 +18,7 @@ Features:
 import logging
 import math
 import time
+import concurrent.futures
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -25,77 +26,20 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 import numpy as np
 
 from .interfaces import PathForecaster
-from .retrieval import RetrievalPathForecaster, RetrievalConfig
+from .config_structs import EnsembleConfig
+from .components import (
+    BaselineComponent,
+    GBRTComponent,
+    ResidualComponent,
+    RetrievalComponent,
+    ConformalComponent
+)
 from .params import (
     sanitize_horizon as _p_horizon,
     sanitize_bucket_ms as _p_bucket,
 )
-from ..analytics.ml.baseline import baseline_tp
-from ..analytics.ml.quantile import QuantileRegressor
-from ..analytics.ml.conformal import ConformalBand
-from ..analytics.ml.feature_engineering import FeatureEngineer
 
 _LOG = logging.getLogger("path_forecast.ensemble")
-
-
-@dataclass
-class EnsembleConfig:
-    """Configuration for ensemble forecaster.
-    
-    Component configs:
-    - baseline: Structural TP formula
-    - gbrt: GBRT quantile regression on residuals
-    - retrieval: K-NN historical retrieval
-    - conformal: Conformal prediction bands
-    """
-    # Component enable/disable flags
-    baseline_enabled: bool = True
-    gbrt_enabled: bool = True
-    retrieval_enabled: bool = True
-    conformal_enabled: bool = True
-    
-    # Baseline configuration
-    baseline_k: float = 1.0
-    
-    # GBRT configuration
-    gbrt_model_path: Optional[Path] = None
-    gbrt_feature_config: Optional[Dict[str, Any]] = None
-    
-    # Retrieval configuration (passed to RetrievalPathForecaster)
-    retrieval_root: Optional[Path] = None
-    retrieval_expiry_tag: str = "this_week"
-    retrieval_offset: str = "0"
-    retrieval_window: int = 60
-    retrieval_k: int = 20
-    retrieval_min_days: int = 3
-    retrieval_distance_metric: str = "l2"
-    retrieval_weight_mode: Optional[str] = None
-    retrieval_use_ann: bool = False
-    
-    # Conformal configuration
-    conformal_target_coverage: float = 0.8
-    conformal_window: int = 600
-    conformal_min_radius: float = 0.0
-    
-    # Weighting strategy
-    weighting_strategy: str = "confidence_adaptive"  # confidence_adaptive | static | dynamic
-    
-    # Weights for high confidence (>= threshold)
-    weights_high_conf_gbrt: float = 0.8
-    weights_high_conf_retrieval: float = 0.2
-    
-    # Weights for low confidence (< threshold)
-    weights_low_conf_gbrt: float = 0.5
-    weights_low_conf_retrieval: float = 0.5
-    
-    # Confidence threshold for weight transition
-    confidence_threshold: float = 0.7
-    
-    # Fallback settings
-    min_candidates_threshold: int = 5
-    
-    # Diagnostics
-    enable_profiling: bool = False
 
 
 class EnsembleForecaster(PathForecaster):
@@ -116,60 +60,41 @@ class EnsembleForecaster(PathForecaster):
         self.last_meta: Dict[str, Any] = {}
         
         # Initialize components
-        self._gbrt_model: Optional[QuantileRegressor] = None
-        self._feature_engineer: Optional[FeatureEngineer] = None
-        self._retrieval_forecaster: Optional[RetrievalPathForecaster] = None
-        self._conformal_band: Optional[ConformalBand] = None
+        self._baseline = BaselineComponent(
+            enabled=self.cfg.baseline_enabled,
+            k=self.cfg.baseline_k
+        )
         
-        # Load GBRT model if enabled and path provided
-        if self.cfg.gbrt_enabled and self.cfg.gbrt_model_path:
-            self._load_gbrt_model()
+        # Phase 18: Support pluggable residual models (GBRT or LSTM)
+        # Phase 19: Hybrid Ensemble - Initialize both if needed, or switch based on config
+        # For now, we initialize GBRT as primary, but we can add LSTM as secondary
         
-        # Initialize retrieval forecaster if enabled
-        if self.cfg.retrieval_enabled and self.cfg.retrieval_root:
-            self._init_retrieval()
+        self._gbrt = GBRTComponent(
+            enabled=self.cfg.gbrt_enabled,
+            model_path=self.cfg.gbrt_model_path,
+            feature_config=self.cfg.gbrt_feature_config
+        )
         
-        # Initialize conformal band if enabled
-        if self.cfg.conformal_enabled:
-            self._conformal_band = ConformalBand(
-                target_coverage=self.cfg.conformal_target_coverage,
-                window=self.cfg.conformal_window,
-                min_radius=self.cfg.conformal_min_radius,
-            )
-    
-    def _load_gbrt_model(self) -> None:
-        """Load GBRT quantile regressor from disk."""
-        try:
-            model_path = self.cfg.gbrt_model_path
-            if model_path and model_path.exists():
-                self._gbrt_model = QuantileRegressor.load(str(model_path))
-                self._feature_engineer = FeatureEngineer()
-                _LOG.info(f"Loaded GBRT model from {model_path}")
-            else:
-                _LOG.warning(f"GBRT model path not found: {model_path}")
-        except Exception as e:
-            _LOG.error(f"Failed to load GBRT model: {e}", exc_info=True)
-            self._gbrt_model = None
-    
-    def _init_retrieval(self) -> None:
-        """Initialize retrieval forecaster."""
-        try:
-            retrieval_cfg = RetrievalConfig(
-                root=self.cfg.retrieval_root,
-                expiry_tag=self.cfg.retrieval_expiry_tag,
-                offset=self.cfg.retrieval_offset,
-                window=self.cfg.retrieval_window,
-                k=self.cfg.retrieval_k,
-                min_days=self.cfg.retrieval_min_days,
-                distance_metric=self.cfg.retrieval_distance_metric,
-                weight_mode=self.cfg.retrieval_weight_mode,
-                use_ann=self.cfg.retrieval_use_ann,
-            )
-            self._retrieval_forecaster = RetrievalPathForecaster(retrieval_cfg)
-            _LOG.info("Initialized retrieval forecaster")
-        except Exception as e:
-            _LOG.error(f"Failed to initialize retrieval: {e}", exc_info=True)
-            self._retrieval_forecaster = None
+        # Optional LSTM component (can be enabled via config in future)
+        # self._lstm = ResidualComponent(enabled=..., model_path=..., model_type="lstm")
+        
+        # Phase 19: Meta-Learner (placeholder for now, to be integrated)
+        # self._meta_learner = EnsembleWeightLearner(components=["baseline", "gbrt", "retrieval"])
+        
+        self._retrieval = RetrievalComponent(
+            enabled=self.cfg.retrieval_enabled,
+            config=self.cfg
+        )
+        
+        self._conformal = ConformalComponent(
+            enabled=self.cfg.conformal_enabled,
+            target_coverage=self.cfg.conformal_target_coverage,
+            window=self.cfg.conformal_window,
+            min_radius=self.cfg.conformal_min_radius
+        )
+            
+        # Phase 16: Persistent ThreadPool
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="EnsembleWorker")
     
     def forecast_path(
         self,
@@ -231,22 +156,64 @@ class EnsembleForecaster(PathForecaster):
         
         try:
             # Step 1: Compute baseline TP
-            baseline_value = self._compute_baseline(underlying, avg_iv, minutes_to_expiry)
+            baseline_value = self._baseline.compute(underlying, avg_iv, minutes_to_expiry)
             self.last_meta["baseline_tp"] = baseline_value
             
-            # Step 2: Get GBRT residual forecast
-            gbrt_residuals = self._forecast_gbrt_residuals(
-                recent_window, context, qlist, H
+            # Step 2 & 3: Parallel execution of GBRT and Retrieval
+            # Phase 14: Speculative Execution
+            # Phase 16: Use persistent executor
+            # Phase 17.3: Granular Error Handling
+            future_gbrt = self._executor.submit(
+                self._gbrt.forecast_residuals, recent_window, context, qlist, H, self._baseline
+            )
+            future_retrieval = self._executor.submit(
+                self._retrieval.forecast, recent_window, context, qlist, H, _bucket
             )
             
-            # Step 3: Get retrieval forecast
-            retrieval_forecast = self._forecast_retrieval(
-                recent_window, context, qlist, H, _bucket, times
-            )
+            # Handle component failures gracefully
+            # Initialize with safe defaults
+            gbrt_residuals = {q: [0.0] * H for q in qlist}
+            # Retrieval default should be baseline (0 residual)
+            retrieval_forecast = {q: [baseline_value] * H for q in qlist}
+            
+            try:
+                gbrt_residuals = future_gbrt.result()
+                self.last_meta["gbrt_status"] = "ok"
+                self.last_meta["gbrt_available"] = True
+            except Exception as e:
+                _LOG.warning(f"GBRT component failed: {e}")
+                self.last_meta["gbrt_status"] = "failed"
+                self.last_meta["gbrt_error"] = str(e)
+                self.last_meta["gbrt_available"] = False
+                
+            try:
+                retrieval_forecast, retr_meta = future_retrieval.result()
+                self.last_meta["retrieval_status"] = "ok"
+                self.last_meta["retrieval_available"] = True
+                self.last_meta["retrieval_candidates"] = retr_meta.get("candidates_total", 0)
+                self.last_meta["retrieval_k"] = retr_meta.get("k_used", self.cfg.retrieval_k)
+            except Exception as e:
+                _LOG.warning(f"Retrieval component failed: {e}")
+                self.last_meta["retrieval_status"] = "failed"
+                self.last_meta["retrieval_error"] = str(e)
+                self.last_meta["retrieval_available"] = False
             
             # Step 4: Compute confidence and adaptive weights
             confidence = self._compute_confidence(context)
-            weights = self._compute_weights(confidence)
+            weights = self._compute_weights(confidence, context)
+            
+            # Adjust weights based on component health
+            if self.last_meta.get("gbrt_status") == "failed":
+                weights["gbrt"] = 0.0
+                weights["retrieval"] = 1.0
+            if self.last_meta.get("retrieval_status") == "failed":
+                weights["retrieval"] = 0.0
+                weights["gbrt"] = 1.0
+            
+            # If both failed, weights will be effectively ignored as residuals are 0
+            # but we should probably flag it
+            if weights["gbrt"] == 0.0 and weights["retrieval"] == 0.0:
+                self.last_meta["fallback_active"] = True
             
             self.last_meta["confidence"] = confidence
             self.last_meta["weight_gbrt"] = weights["gbrt"]
@@ -259,7 +226,7 @@ class EnsembleForecaster(PathForecaster):
             )
             
             # Step 6: Apply conformal calibration
-            final_forecast = self._apply_conformal(combined_forecast, qlist, H)
+            final_forecast = self._conformal.apply(combined_forecast, qlist, H)
             
             # Record timing
             if self.cfg.enable_profiling:
@@ -273,94 +240,6 @@ class EnsembleForecaster(PathForecaster):
             # Return fallback flat forecast
             return self._fallback_forecast(recent_window, context, qlist, H, times)
     
-    def _compute_baseline(
-        self, underlying: float, avg_iv: float, minutes_to_expiry: float
-    ) -> float:
-        """Compute baseline TP using structural formula."""
-        if not self.cfg.baseline_enabled:
-            return 0.0
-        
-        try:
-            baseline = baseline_tp(
-                underlying=underlying,
-                iv_proxy=avg_iv,
-                minutes_to_expiry=minutes_to_expiry,
-                k=self.cfg.baseline_k,
-            )
-            return float(baseline)
-        except Exception as e:
-            _LOG.warning(f"Baseline computation failed: {e}")
-            return 0.0
-    
-    def _forecast_gbrt_residuals(
-        self,
-        recent_window: Sequence[Sequence[float]],
-        context: Dict[str, Any],
-        quantiles: List[float],
-        horizon: int,
-    ) -> Dict[float, List[float]]:
-        """Forecast residuals using GBRT quantile regressor."""
-        if not self.cfg.gbrt_enabled or self._gbrt_model is None:
-            return {q: [0.0] * horizon for q in quantiles}
-        
-        try:
-            # For now, return simple residual forecast
-            # In production, this would extract features and use GBRT model
-            # Placeholder: flat residual forecast
-            gbrt_residuals = {}
-            for q in quantiles:
-                # Simple placeholder - actual implementation would use model
-                gbrt_residuals[q] = [0.0] * horizon
-            
-            self.last_meta["gbrt_available"] = True
-            return gbrt_residuals
-            
-        except Exception as e:
-            _LOG.warning(f"GBRT forecast failed: {e}")
-            self.last_meta["gbrt_available"] = False
-            return {q: [0.0] * horizon for q in quantiles}
-    
-    def _forecast_retrieval(
-        self,
-        recent_window: Sequence[Sequence[float]],
-        context: Dict[str, Any],
-        quantiles: List[float],
-        horizon: int,
-        bucket_ms: int,
-        times: List[int],
-    ) -> Dict[float, List[float]]:
-        """Get forecast from retrieval forecaster."""
-        if not self.cfg.retrieval_enabled or self._retrieval_forecaster is None:
-            # Return zero residuals if retrieval disabled
-            return {q: [0.0] * horizon for q in quantiles}
-        
-        try:
-            _, retrieval_qmap = self._retrieval_forecaster.forecast_path(
-                recent_window,
-                context=context,
-                quantiles=quantiles,
-                horizon_minutes=horizon,
-                bucket_ms=bucket_ms,
-            )
-            
-            # Extract metadata from retrieval
-            if hasattr(self._retrieval_forecaster, 'last_meta'):
-                retr_meta = self._retrieval_forecaster.last_meta or {}
-                self.last_meta["retrieval_candidates"] = retr_meta.get("candidates_total", 0)
-                self.last_meta["retrieval_k"] = retr_meta.get("k_used", self.cfg.retrieval_k)
-            
-            # Convert to list format
-            retrieval_forecast = {}
-            for q in quantiles:
-                retrieval_forecast[q] = list(retrieval_qmap.get(q, [0.0] * horizon))
-            
-            self.last_meta["retrieval_available"] = True
-            return retrieval_forecast
-            
-        except Exception as e:
-            _LOG.warning(f"Retrieval forecast failed: {e}")
-            self.last_meta["retrieval_available"] = False
-            return {q: [0.0] * horizon for q in quantiles}
     
     def _compute_confidence(self, context: Dict[str, Any]) -> float:
         """Compute confidence score for adaptive weighting.
@@ -390,7 +269,7 @@ class EnsembleForecaster(PathForecaster):
         
         return float(max(0.0, min(1.0, confidence)))
     
-    def _compute_weights(self, confidence: float) -> Dict[str, float]:
+    def _compute_weights(self, confidence: float, context: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
         """Compute adaptive weights based on confidence.
         
         Strategy:
@@ -447,6 +326,9 @@ class EnsembleForecaster(PathForecaster):
         w_gbrt = weights["gbrt"]
         w_retrieval = weights["retrieval"]
         
+        # If retrieval failed, we treat its residual as 0.0 (baseline fallback)
+        # If GBRT failed, we treat its residual as 0.0 (baseline fallback)
+        
         for q in quantiles:
             gbrt_res = gbrt_residuals.get(q, [0.0] * horizon)
             retr_vals = retrieval_forecast.get(q, [baseline] * horizon)
@@ -454,7 +336,20 @@ class EnsembleForecaster(PathForecaster):
             combined_q = []
             for i in range(horizon):
                 # Extract retrieval residual (retrieval forecast - baseline)
-                retr_res = retr_vals[i] - baseline if i < len(retr_vals) else 0.0
+                # If retrieval failed, retr_vals will be [0.0]*H (from init) or empty
+                # We need to be careful: if retrieval failed, we want residual to be 0
+                # But if retrieval returned 0.0 (failure fallback), then 0.0 - baseline = -baseline
+                # This is wrong. We should check status.
+                
+                retr_val = retr_vals[i] if i < len(retr_vals) else baseline
+                
+                # If retrieval failed, retr_val is baseline (from initialization)
+                # In that case, residual should be 0.0
+                if self.last_meta.get("retrieval_status") == "failed":
+                    retr_res = 0.0
+                else:
+                    retr_res = retr_val - baseline
+                
                 gbrt_res_i = gbrt_res[i] if i < len(gbrt_res) else 0.0
                 
                 # Weighted combination of residuals
@@ -468,28 +363,6 @@ class EnsembleForecaster(PathForecaster):
         
         return combined
     
-    def _apply_conformal(
-        self,
-        forecast: Dict[float, List[float]],
-        quantiles: List[float],
-        horizon: int,
-    ) -> Dict[float, Sequence[float]]:
-        """Apply conformal calibration to adjust uncertainty bands.
-        
-        This is a placeholder - actual conformal calibration would track
-        historical residuals and adjust bands dynamically.
-        """
-        if not self.cfg.conformal_enabled or self._conformal_band is None:
-            # Return as tuples without calibration
-            return {q: tuple(forecast.get(q, [0.0] * horizon)) for q in quantiles}
-        
-        # For now, just convert to tuples
-        # Full implementation would use conformal band radius to adjust quantiles
-        calibrated = {}
-        for q in quantiles:
-            calibrated[q] = tuple(forecast.get(q, [0.0] * horizon))
-        
-        return calibrated
     
     def _fallback_forecast(
         self,
@@ -512,7 +385,7 @@ class EnsembleForecaster(PathForecaster):
             underlying = float(context.get('underlying', 0.0))
             avg_iv = float(context.get('avg_iv', 0.0))
             minutes_to_expiry = float(context.get('minutes_to_expiry', 375.0))
-            last_tp = self._compute_baseline(underlying, avg_iv, minutes_to_expiry)
+            last_tp = self._baseline.compute(underlying, avg_iv, minutes_to_expiry)
         
         # Flat forecast with 5% bands
         band_pct = 0.05
@@ -537,5 +410,15 @@ class EnsembleForecaster(PathForecaster):
             predicted: Predicted value
             actual: Actual observed value
         """
-        if self._conformal_band is not None:
-            self._conformal_band.update(predicted, actual)
+        self._conformal.update(predicted, actual)
+
+    def adapt_conformal_coverage(self, current_norm_error: float) -> float:
+        """Adapt conformal target coverage based on normalized error.
+        
+        Args:
+            current_norm_error: Recent normalized error metric
+            
+        Returns:
+            New target coverage
+        """
+        return self._conformal.adapt_coverage(current_norm_error)

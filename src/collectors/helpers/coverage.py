@@ -76,9 +76,11 @@ def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str
             if not isinstance(opt, dict):
                 continue
             total_options += 1
-            if not opt.get('volume'): missing_counts['volume'] += 1
-            if not opt.get('oi'): missing_counts['oi'] += 1
-            if not opt.get('avg_price'): missing_counts['avg_price'] += 1
+            # FIXED: Check for None explicitly, not falsy values
+            # Zero volume/OI/price are valid, should not be counted as missing
+            if opt.get('volume') is None: missing_counts['volume'] += 1
+            if opt.get('oi') is None: missing_counts['oi'] += 1
+            if opt.get('avg_price') is None: missing_counts['avg_price'] += 1
         metrics = getattr(ctx, 'metrics', None)
         if total_options > 0:
             if metrics and hasattr(metrics, 'missing_option_fields_total'):
@@ -88,7 +90,8 @@ def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str
                             metrics.missing_option_fields_total.labels(index=index_symbol, expiry=str(expiry_date), field=field).inc(cnt)
                         except (AttributeError, TypeError, ValueError) as e:
                             logger.debug("Failed to inc missing field metric: %s", e, exc_info=True)
-            full_present = sum(1 for _sym,opt in enriched_data.items() if opt.get('volume') and opt.get('oi') and opt.get('avg_price'))
+            # FIXED: Check for None explicitly - zero values are valid and should count as present
+            full_present = sum(1 for _sym,opt in enriched_data.items() if opt.get('volume') is not None and opt.get('oi') is not None and opt.get('avg_price') is not None)
             coverage_pct = (full_present / total_options) * 100.0
             if metrics and hasattr(metrics, 'option_field_coverage_ratio'):
                 try:
@@ -120,7 +123,8 @@ def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str
             if _trace_enabled():  # type: ignore
                 sample_missing = []
                 for sym, opt in enriched_data.items():
-                    if not (opt.get('volume') and opt.get('oi') and opt.get('avg_price')):
+                    # FIXED: Check for None explicitly in trace logging
+                    if opt.get('volume') is None or opt.get('oi') is None or opt.get('avg_price') is None:
                         sample_missing.append({
                             'sym': sym,
                             'vol': opt.get('volume'),

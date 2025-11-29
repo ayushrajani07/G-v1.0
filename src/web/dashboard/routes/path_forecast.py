@@ -9,7 +9,7 @@ from typing import Optional, Sequence, Literal
 from fastapi import APIRouter, HTTPException, Query, Request
 from src.config.env_config import EnvConfig  # Env-driven overrides (abs floor)
 import logging
-from fastapi.responses import PlainTextResponse, JSONResponse, RedirectResponse
+from fastapi.responses import PlainTextResponse, JSONResponse, RedirectResponse, Response
 
 from ..core.paths import project_root as _project_root
 from ..core.csv_io import find_live_csv as _find_live_csv, load_csv_rows_full as _load_csv_rows_full
@@ -2258,6 +2258,10 @@ async def api_ml_path_stats(
         except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             # Value, type, key, attribute, or index errors
             pass
+        
+        # Normalize expiry tag (e.g. auto -> this_week/this_month)
+        expiry_tag = _normalize_expiry_tag(idx, expiry_tag)
+
         base = (_project_root() / "data" / "g6_data")
         p_live = _find_live_csv(base, idx, expiry_tag, offset, the_date)
         if not p_live or not p_live.exists():
@@ -2478,6 +2482,10 @@ async def api_ml_path_advisor(
         except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             # Value, type, key, attribute, or index errors
             pass
+        
+        # Normalize expiry tag (e.g. auto -> this_week/this_month)
+        expiry_tag = _normalize_expiry_tag(idx, expiry_tag)
+
         base = (_project_root() / "data" / "g6_data")
         p_live = _find_live_csv(base, idx, expiry_tag, offset, the_date)
         alerts: list[dict] = []
@@ -2868,6 +2876,9 @@ async def api_ml_path_coverage_history(
             # Value, type, key, attribute, or index errors
             pass
 
+        # Normalize expiry tag (e.g. auto -> this_week/this_month)
+        expiry_tag = _normalize_expiry_tag(idx, expiry_tag)
+
         base = (_project_root() / "data" / "g6_data")
         p_live = _find_live_csv(base, idx, expiry_tag, offset, the_date)
         if not p_live or not p_live.exists():
@@ -3203,8 +3214,10 @@ async def api_ml_path_calibrate_now(
     offset: str = Query("0", description="live_csv offset"),
     bucket_ms: int = Query(60_000, ge=1_000, le=3_600_000),
     date_str: Optional[str] = Query(None, description="Override date (YYYY-MM-DD)"),
-) -> JSONResponse:
-    """Compute a calibration suggestion (do not persist)."""
+    confirm: bool = Query(False, description="If true, persist the calibration result"),
+    view: str = Query("json", description="Response format: json|html"),
+) -> Response:
+    """Compute a calibration suggestion (persist if confirm=True)."""
     try:
         from datetime import date
         import csv, math
@@ -3216,6 +3229,10 @@ async def api_ml_path_calibrate_now(
         except (ValueError, TypeError, KeyError, AttributeError, IndexError):
             # Value, type, key, attribute, or index errors
             pass
+        
+        # Normalize expiry tag (e.g. auto -> this_week/this_month)
+        expiry_tag = _normalize_expiry_tag(idx, expiry_tag)
+
         # Load realized from live_csv
         base = (_project_root() / "data" / "g6_data")
         p_live = _find_live_csv(base, idx, expiry_tag, offset, the_date)
@@ -3330,6 +3347,25 @@ async def api_ml_path_calibrate_now(
             ratio = 1.0
         new_scale = prev_scale * (ratio ** 0.5)
         new_scale = max(0.5, min(5.0, float(new_scale)))
+
+        if confirm:
+            _save_calibration(idx, band_scale=float(new_scale), prev=float(prev_scale), target=float(target), actual=float(actual), samples=int(total))
+
+        if view == "html":
+            html_content = f"""
+            <html>
+                <body style="font-family: sans-serif; padding: 20px; background-color: #111; color: #eee;">
+                    <h3>Calibration Complete</h3>
+                    <p>Index: <b>{idx}</b></p>
+                    <p>New Band Scale: <b style="color: #4f4;">{float(new_scale):.4f}</b> (was {float(prev_scale):.4f})</p>
+                    <p>Actual Coverage: {float(actual):.2%}</p>
+                    <p>Samples: {int(total)}</p>
+                    <br/>
+                    <button onclick="history.back()" style="padding: 10px 20px; cursor: pointer; background-color: #333; color: #fff; border: 1px solid #555;">Return to Dashboard</button>
+                </body>
+            </html>
+            """
+            return Response(content=html_content, media_type="text/html")
 
         return JSONResponse({
             "index": idx,

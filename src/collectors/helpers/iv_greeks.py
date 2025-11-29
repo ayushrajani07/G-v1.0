@@ -15,6 +15,9 @@ def iv_estimation_block(ctx, enriched_data, index_symbol, expiry_rule, expiry_da
     metrics = getattr(ctx, 'metrics', None)
     if not (estimate_iv and greeks_calculator):
         return
+    # OPTIMIZATION: Early return if no data to process
+    if not enriched_data:
+        return
     try:
         spot = float(index_price)
         solver_max_iter = iv_max_iterations or 100
@@ -22,6 +25,16 @@ def iv_estimation_block(ctx, enriched_data, index_symbol, expiry_rule, expiry_da
         solver_max_iv = iv_max if iv_max is not None else 5.0
         solver_precision = iv_precision if iv_precision is not None else 1e-5
         iv_success = iv_fail = total_iter = 0
+        
+        # OPTIMIZATION: Quick scan to check if any options need IV calculation
+        needs_iv = False
+        for data in enriched_data.values():
+            if float(data.get('iv', 0)) <= 0 and float(data.get('last_price', 0)) > 0:
+                needs_iv = True
+                break
+        if not needs_iv:
+            return  # All options already have IV, skip processing
+        
         for symbol, data in enriched_data.items():
             try:
                 strike = float(data.get('strike') or data.get('strike_price') or 0)

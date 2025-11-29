@@ -4,12 +4,14 @@ Phase 1 Implementation: 2025-11-16
 - Three tiers: Terminal (clean) → Ops (JSON) → Debug (detailed)
 - Environment-driven configuration
 - Standardized message formats
+- Daily log rotation with automatic cleanup
 """
 from __future__ import annotations
 
 import logging
 import os
 import sys
+from logging.handlers import TimedRotatingFileHandler
 from typing import Optional
 
 # Tier definitions
@@ -54,11 +56,16 @@ def setup_logging(
         G6_OPS_LOG: Override ops_file path
         G6_DEBUG_LOG: Override debug_file path
     
+    Log Rotation:
+        Debug logs rotate daily at midnight, keeping the last 7 days.
+        Files are named: debug.log (current), debug.log.2025-11-21 (previous day), etc.
+        Oldest files are automatically deleted after 7 days.
+    
     Examples:
         # Production: Quiet terminal, ops logs only
         setup_logging(terminal_level="WARNING", ops_file="logs/ops.jsonl")
         
-        # Development: Verbose terminal, debug logs
+        # Development: Verbose terminal, debug logs (rotates daily)
         setup_logging(terminal_level="INFO", debug_file="logs/debug.log")
         
         # Legacy compatibility
@@ -126,13 +133,27 @@ def setup_logging(
         except Exception as e:
             root.error("Failed to create ops log handler: %s", e)
     
-    # Tier 3: Debug logs (full detail)
+    # Tier 3: Debug logs (full detail) with daily rotation
     if debug_file:
         try:
             os.makedirs(os.path.dirname(debug_file), exist_ok=True)
-            debug_handler = logging.FileHandler(debug_file, encoding='utf-8')
+            
+            # Use TimedRotatingFileHandler for daily rotation
+            # Files will be named: debug.log, debug.log.2025-11-21, debug.log.2025-11-20, etc.
+            debug_handler = TimedRotatingFileHandler(
+                debug_file,
+                when='midnight',      # Rotate at midnight
+                interval=1,           # Every 1 day
+                backupCount=7,        # Keep last 7 days
+                encoding='utf-8',
+                utc=False             # Use local time
+            )
             debug_handler.setLevel(logging.DEBUG)
             debug_handler.setFormatter(logging.Formatter(FMT_DEBUG))
+            
+            # Set suffix format for rotated files (YYYY-MM-DD)
+            debug_handler.suffix = "%Y-%m-%d"
+            
             root.addHandler(debug_handler)
         except Exception as e:
             root.error("Failed to create debug log handler: %s", e)
@@ -153,7 +174,7 @@ def setup_production():
     )
 
 def setup_development():
-    """Development: Verbose terminal + debug logs."""
+    """Development: Verbose terminal + debug logs (rotates daily, keeps 7 days)."""
     return setup_logging(
         terminal_level="INFO",
         debug_file="logs/debug.log"

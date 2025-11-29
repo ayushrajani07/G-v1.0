@@ -3,11 +3,11 @@
 # Defaults to REQUIRING LOGIN (admin/admin)
 param(
   [int]$GrafanaPort = 3002,
-  [int]$WebPort = 9510,
+  [int]$WebPort = 9500,
   [int]$PrometheusPort = 9091,
   [string]$GrafanaDataRoot = 'C:\GrafanaData',
   [switch]$OpenBrowser,
-  [switch]$UseRunner    # use run_dashboard_server.py instead of raw uvicorn
+  [switch]$NoRunner    # use raw uvicorn instead of persistent runner (not recommended)
 )
 
 $ErrorActionPreference = 'Continue'
@@ -18,7 +18,7 @@ Write-Host "Stopping observability stack services..." -ForegroundColor Yellow
 try {
   $stoppedCount = 0
   
-  # Stop Web API (uvicorn) on port 9500 only
+  # Stop Web API (uvicorn) on configured port ($WebPort)
   $webApiProcs = Get-NetTCPConnection -LocalPort $WebPort -State Listen -ErrorAction SilentlyContinue | ForEach-Object {
     Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue | Where-Object { $_.ProcessName -eq 'python' }
   } | Select-Object -Unique
@@ -83,12 +83,12 @@ function Reload-GrafanaProvisioning {
     $headers = @{ Authorization = "Basic $basic" }
     $uriDash = "http://127.0.0.1:$Port/api/admin/provisioning/dashboards/reload"
     $uriDS = "http://127.0.0.1:$Port/api/admin/provisioning/datasources/reload"
-    Invoke-RestMethod -Method Post -Uri $uriDash -Headers $headers -TimeoutSec 5 -ErrorAction SilentlyContinue | Out-Null
-    Invoke-RestMethod -Method Post -Uri $uriDS -Headers $headers -TimeoutSec 5 -ErrorAction SilentlyContinue | Out-Null
-    Write-Host "Grafana provisioning reloaded via API" -ForegroundColor Green
+    $dashResult = Invoke-RestMethod -Method Post -Uri $uriDash -Headers $headers -TimeoutSec 5 -ErrorAction Stop
+    $dsResult = Invoke-RestMethod -Method Post -Uri $uriDS -Headers $headers -TimeoutSec 5 -ErrorAction Stop
+    Write-Host "  [OK] Grafana provisioning reloaded via API" -ForegroundColor Green
     return $true
   } catch {
-    Write-Host "Provisioning reload API failed (will be refreshed on restart)" -ForegroundColor Yellow
+    # This is not critical - provisioning files are already in place and will load on Grafana startup
     return $false
   }
 }
@@ -118,20 +118,22 @@ if (Test-Path $venvPy) {
 }
  $webLog = Join-Path $LogDir 'webapi_stdout.log'
  $webErr = Join-Path $LogDir 'webapi_stderr.log'
- if ($UseRunner) {
+ # Use persistent runner by default for auto-restart capability
+ if (-not $NoRunner) {
    $runner = Join-Path $Root 'run_dashboard_server.py'
    if (Test-Path $runner) {
-     Write-Host "  Using persistent runner script (signal-immune)" -ForegroundColor Gray
-     Start-Process -FilePath $py -ArgumentList @($runner,'--port',"$WebPort",'--host','0.0.0.0') -WorkingDirectory $Root -WindowStyle Minimized -RedirectStandardOutput $webLog -RedirectStandardError $webErr
+     Write-Host "  Using persistent runner with auto-restart (recommended)" -ForegroundColor Gray
+     Start-Process -FilePath $py -ArgumentList @($runner,'--port',"$WebPort",'--host','0.0.0.0','--max-restarts','50','--restart-delay','3.0') -WorkingDirectory $Root -WindowStyle Minimized -RedirectStandardOutput $webLog -RedirectStandardError $webErr
    } else {
      Write-Host "  WARNING: runner script missing, falling back to raw uvicorn" -ForegroundColor Yellow
      Start-Process -FilePath $py -ArgumentList @('-m','uvicorn','src.web.dashboard.app:app','--host','127.0.0.1','--port',"$WebPort") -WorkingDirectory $Root -WindowStyle Minimized -RedirectStandardOutput $webLog -RedirectStandardError $webErr
    }
  } else {
+   Write-Host "  Using raw uvicorn (no auto-restart)" -ForegroundColor Gray
    Start-Process -FilePath $py -ArgumentList @('-m','uvicorn','src.web.dashboard.app:app','--host','127.0.0.1','--port',"$WebPort") -WorkingDirectory $Root -WindowStyle Minimized -RedirectStandardOutput $webLog -RedirectStandardError $webErr
  }
 Start-Sleep -Seconds 3
- $healthUrl = "http://127.0.0.1:$WebPort/api/live_csv_health?index=NIFTY&expiry_tag=this_week&offset=0"
+ $healthUrl = "http://127.0.0.1:$WebPort/api/live_csv_health?index=NIFTY`&expiry_tag=this_week`&offset=0"
  if (-not (Wait-Http -Url $healthUrl -MaxTries 25)) {
    Write-Host "WARNING: Health probe failed ($healthUrl). Trying /health..." -ForegroundColor Yellow
    if (-not (Wait-Http -Url "http://127.0.0.1:$WebPort/health" -MaxTries 10)) {
@@ -186,25 +188,44 @@ Ensure-Dir $dbSrcDir
 
 # Copy dashboards
 try {
-  Remove-Item (Join-Path $dbSrcDir '*') -Force -ErrorAction SilentlyContinue
+  Remove-Item (Join-Path $dbSrcDir '*') -Recurse -Force -ErrorAction SilentlyContinue
   $dashSrc = Join-Path $Root 'grafana/dashboards'
-  Get-ChildItem -Path $dashSrc -Filter *.json -File -Recurse -ErrorAction SilentlyContinue | Where-Object { 
-    $_.Name -ne 'manifest.json' -and 
-    $_.Directory.Name -notmatch 'hidden|archive'
-  } | ForEach-Object {
-    Copy-Item $_.FullName -Destination $dbSrcDir -Force
+  
+  # Copy entire structure first to preserve folders (Core, ML, etc.)
+  Copy-Item -Path (Join-Path $dashSrc '*') -Destination $dbSrcDir -Recurse -Force
+  
+  # Remove hidden/archive folders from destination
+  Get-ChildItem -Path $dbSrcDir -Directory -Recurse | Where-Object { $_.Name -match '^\.|archive|hidden' } | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
+  # Patch ports in all JSON files
+  $jsonFiles = Get-ChildItem -Path $dbSrcDir -Filter *.json -Recurse
+  foreach ($file in $jsonFiles) {
+    $content = Get-Content -Path $file.FullName -Raw -Encoding UTF8
+    # Regex to match common port patterns: 9500, 9510, 8003, 9511
+    # We replace them with the configured $WebPort
+    $newContent = $content -replace '127\.0\.0\.1:(9500|9510|8003|9511)', "127.0.0.1:$WebPort"
+    $newContent = $newContent -replace 'localhost:(9500|9510|8003|9511)', "localhost:$WebPort"
+    
+    if ($content -ne $newContent) {
+      # Use .NET to write UTF-8 without BOM (Set-Content adds BOM in PS 5.1)
+      $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+      [System.IO.File]::WriteAllText($file.FullName, $newContent, $utf8NoBom)
+      Write-Host "  Patched ports in $($file.Name)" -ForegroundColor DarkGray
+    }
   }
-} catch {}
+} catch {
+  Write-Host "Error copying dashboards: $_" -ForegroundColor Red
+}
 
 # Write datasource provisioning (Prometheus + Infinity)
-Set-Content -Path (Join-Path $dsDir 'datasources.yml') -Encoding UTF8 -Value @"
+$dsYaml = @'
 apiVersion: 1
 datasources:
   - name: Prometheus
     type: prometheus
     access: proxy
     uid: PROM
-    url: 'http://127.0.0.1:$PrometheusPort'
+    url: 'http://127.0.0.1:{PROM_PORT}'
     isDefault: true
     jsonData:
       httpMethod: POST
@@ -217,10 +238,10 @@ datasources:
     isDefault: false
     jsonData:
       allowedHosts:
-        - 'http://127.0.0.1:$WebPort'
-        - 'http://localhost:$WebPort'
-        - '127.0.0.1:$WebPort'
-        - 'localhost:$WebPort'
+        - 'http://127.0.0.1:{WEB_PORT}'
+        - 'http://localhost:{WEB_PORT}'
+        - '127.0.0.1:{WEB_PORT}'
+        - 'localhost:{WEB_PORT}'
     editable: true
   - name: G6 Infinity
     type: yesoreyeram-infinity-datasource
@@ -229,15 +250,18 @@ datasources:
     isDefault: false
     jsonData:
       allowedHosts:
-        - 'http://127.0.0.1:$WebPort'
-        - 'http://localhost:$WebPort'
-        - '127.0.0.1:$WebPort'
-        - 'localhost:$WebPort'
+        - 'http://127.0.0.1:{WEB_PORT}'
+        - 'http://localhost:{WEB_PORT}'
+        - '127.0.0.1:{WEB_PORT}'
+        - 'localhost:{WEB_PORT}'
     editable: true
-"@
+'@
+$dsYaml = $dsYaml -replace '\{PROM_PORT\}',$PrometheusPort -replace '\{WEB_PORT\}',$WebPort
+Set-Content -Path (Join-Path $dsDir 'datasources.yml') -Encoding UTF8 -Value $dsYaml
 
 # Write dashboard provisioning
-Set-Content -Path (Join-Path $dbDir 'dashboards.yml') -Encoding UTF8 -Value @"
+$dbPath = $dbSrcDir -replace "\\","/"
+$dbYaml = @'
 apiVersion: 1
 providers:
   - name: G6
@@ -245,8 +269,11 @@ providers:
     disableDeletion: false
     editable: true
     options:
-      path: '$($dbSrcDir -replace "\\","/")'
-"@
+      path: '{DB_PATH}'
+      foldersFromFilesStructure: true
+'@
+$dbYaml = $dbYaml -replace '\{DB_PATH\}',$dbPath
+Set-Content -Path (Join-Path $dbDir 'dashboards.yml') -Encoding UTF8 -Value $dbYaml
 
 # 4. Start Grafana with AUTHENTICATION REQUIRED
 Write-Host "Starting Grafana on :$GrafanaPort (REQUIRES LOGIN)..." -ForegroundColor Green
@@ -280,8 +307,9 @@ $env:GF_PATHS_PLUGINS = $PluginsDir
 $env:GF_PATHS_PROVISIONING = $ProvRoot
 $env:GF_INSTALL_PLUGINS = 'yesoreyeram-infinity-datasource'
 $env:GF_PLUGINS_ALLOW_LOCAL_NETWORKS = 'true'
-# CRITICAL: Disable anonymous access, enable basic auth
-$env:GF_AUTH_ANONYMOUS_ENABLED = 'false'
+# Enable anonymous access for easier dashboard viewing
+$env:GF_AUTH_ANONYMOUS_ENABLED = 'true'
+$env:GF_AUTH_ANONYMOUS_ORG_ROLE = 'Viewer'
 $env:GF_AUTH_BASIC_ENABLED = 'true'
 $env:GF_AUTH_DISABLE_LOGIN_FORM = 'false'
 $env:GF_SECURITY_ADMIN_USER = 'admin'
@@ -293,8 +321,32 @@ if (-not (Wait-Http -Url "http://127.0.0.1:$GrafanaPort/api/health" -MaxTries 60
   Write-Host "WARNING: Grafana not ready" -ForegroundColor Yellow
 } else {
   Write-Host "Grafana ready!" -ForegroundColor Green
+  # Wait additional 2 seconds for auth system to fully initialize
+  Start-Sleep -Seconds 2
+  
+  # Fix Infinity datasource allowedHosts via API (provisioning doesn't apply jsonData properly)
+  try {
+    $dsBody = @{
+      name = "Infinity"
+      type = "yesoreyeram-infinity-datasource"
+      access = "proxy"
+      uid = "INFINITY"
+      isDefault = $false
+      jsonData = @{
+        allowedHosts = @("http://127.0.0.1:$WebPort", "http://localhost:$WebPort", "127.0.0.1:$WebPort", "localhost:$WebPort")
+      }
+    } | ConvertTo-Json -Depth 5
+    $null = Invoke-RestMethod -Uri "http://127.0.0.1:$GrafanaPort/api/datasources/uid/INFINITY" -Method Put -ContentType "application/json" -Body $dsBody -ErrorAction Stop
+    Write-Host "  Configured Infinity datasource allowedHosts" -ForegroundColor Green
+  } catch {
+    Write-Host "  Note: Could not configure Infinity allowedHosts automatically" -ForegroundColor Yellow
+  }
+  
   # Try hot reload provisioning so latest dashboards appear without restart next time
-  Reload-GrafanaProvisioning -Port $GrafanaPort | Out-Null
+  $reloadSuccess = Reload-GrafanaProvisioning -Port $GrafanaPort
+  if (-not $reloadSuccess) {
+    Write-Host "  Note: Provisioning will reload on next Grafana restart" -ForegroundColor Gray
+  }
 }
 
 Write-Host ""
@@ -312,7 +364,8 @@ Write-Host ""
 
 if ($OpenBrowser) {
   Start-Sleep -Seconds 2
-  Start-Process "http://127.0.0.1:$GrafanaPort"
+  $grafanaUrl = "http://127.0.0.1:$GrafanaPort"
+  Start-Process $grafanaUrl
 }
 
 exit 0

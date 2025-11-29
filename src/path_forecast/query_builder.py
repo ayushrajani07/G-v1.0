@@ -82,7 +82,11 @@ def build_query_parts(
 
     n_today = len(today_tp)
     if n_today < W:
-        raise ValueError("insufficient rows in recent window for query window")
+        # Relaxed constraint: if we have at least 10 rows, use what we have
+        if n_today < 10:
+            raise ValueError(f"insufficient rows in recent window for query window (have {n_today}, need {W})")
+        # Use available rows as effective window
+        W = n_today
 
     query = today_tp[n_today - W: n_today]
     query_z = _zscore(query)

@@ -178,7 +178,7 @@ def log_cycle_complete(logger: logging.Logger,
     for index, metrics in index_metrics.items():
         success_pct = metrics.get("success_pct", 0.0)
         field_coverage_pct = metrics.get("field_coverage_pct", 0.0)
-        strike_count = metrics.get("strike_count", 0)
+        option_count = metrics.get("strike_count", 0)  # Historical key name, actually option count
         missing_strike_cov = metrics.get("missing_strike_cov", 0)
         missing_field_cov = metrics.get("missing_field_cov", 0)
         expiries_total = metrics.get("expiries", 0)
@@ -196,8 +196,8 @@ def log_cycle_complete(logger: logging.Logger,
         coverage_colored = _colorize_metric(field_coverage_pct, THRESHOLD_COVERAGE_EXCELLENT, THRESHOLD_COVERAGE_GOOD)
         
         index_parts.append(
-            "%s %s: %d strikes (%s success, %s coverage)" % (
-                icon, index, strike_count, success_colored, coverage_colored
+            "%s %s: %d options (%s success, %s coverage)" % (
+                icon, index, option_count, success_colored, coverage_colored
             )
         )
         if success_pct < THRESHOLD_SUCCESS_GOOD or field_coverage_pct < THRESHOLD_COVERAGE_GOOD:
@@ -250,7 +250,7 @@ def log_index_complete(logger: logging.Logger,
     Args:
         logger: Logger instance
         index: Index name (e.g., "NIFTY")
-        strike_count: Number of strikes collected
+        strike_count: Number of option instruments collected (CE + PE across strikes)
         duration_ms: Collection duration in milliseconds
         success_pct: Success percentage (0-100)
         field_coverage_pct: Field coverage percentage (0-100)
@@ -261,7 +261,7 @@ def log_index_complete(logger: logging.Logger,
                           iv_missing=2, oi_missing=1)
     
     Terminal Output:
-        ✓ NIFTY: 234 strikes in 1.2s (98.5% success, 95.2% coverage)
+        ✓ NIFTY: 234 options in 1.2s (98.5% success, 95.2% coverage)
     """
     duration_s = duration_ms / 1000.0
     
@@ -273,7 +273,7 @@ def log_index_complete(logger: logging.Logger,
     else:
         icon = ICON_ERROR
     
-    msg = "%d strikes in %.1fs (%.1f%% success, %.1f%% coverage)" % (
+    msg = "%d options in %.1fs (%.1f%% success, %.1f%% coverage)" % (
         strike_count, duration_s, success_pct, field_coverage_pct
     )
     

@@ -24,6 +24,8 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, List, Optional, Tuple
 
+from .ann_index import AnnIndex
+
 _LOG = logging.getLogger("path_forecast.ann_cache")
 
 # In-memory ANN window vector cache
@@ -183,23 +185,37 @@ def load_ann_index_from_disk(
         return None
     
     key = _make_disk_cache_key(index, expiry_tag, offset, window, space, dim, model_id)
-    index_file = cache_path / f"{key}_index.pkl"
-    meta_file = cache_path / f"{key}_meta.json"
+    # We use {key}_cache_meta.json for cache metadata (day map etc)
+    # And {key}_ann for the index itself
+    cache_meta_file = cache_path / f"{key}_cache_meta.json"
+    ann_prefix = cache_path / f"{key}_ann"
     
-    if not index_file.exists() or not meta_file.exists():
+    if not cache_meta_file.exists():
         _ANN_DISK_CACHE_MISSES += 1
         return None
     
     try:
         t_start = time.perf_counter()
         
-        # Load metadata first to validate version
-        with open(meta_file, 'r') as f:
-            metadata = json.load(f)
+        # Load cache metadata
+        with open(cache_meta_file, 'r') as f:
+            cache_meta = json.load(f)
+            
+        ann_day_map = cache_meta.get('ann_day_map', [])
         
-        # Load pickled index
-        with open(index_file, 'rb') as f:
-            data = pickle.load(f)
+        # Load ANN index
+        # We need to instantiate AnnIndex first. 
+        # We can get dim from cache_meta or arguments.
+        # If dim is None in args, we hope it's in metadata.
+        loaded_dim = cache_meta.get('dim') or dim
+        if loaded_dim is None:
+             # Try to peek at ann_index meta if possible, or fail
+             # But AnnIndex.load handles its own meta.
+             # We need to instantiate AnnIndex with *some* dim, but load() overwrites it.
+             loaded_dim = 0 
+        
+        ann_index = AnnIndex(dim=int(loaded_dim))
+        ann_index.load(str(ann_prefix))
         
         load_ms = int((time.perf_counter() - t_start) * 1000)
         
@@ -207,10 +223,10 @@ def load_ann_index_from_disk(
         _LOG.info(f"ANN disk cache hit: {key} (loaded in {load_ms}ms)")
         
         return {
-            'ann_index': data.get('ann_index'),
-            'ann_day_map': data.get('ann_day_map', []),
-            'ann_index_mem_bytes': data.get('ann_index_mem_bytes'),
-            'metadata': metadata,
+            'ann_index': ann_index,
+            'ann_day_map': ann_day_map,
+            'ann_index_mem_bytes': cache_meta.get('ann_index_mem_bytes', 0),
+            'metadata': cache_meta,
             'load_ms': load_ms,
         }
     except Exception as exc:
@@ -254,11 +270,11 @@ def save_ann_index_to_disk(
         return False
     
     key = _make_disk_cache_key(index, expiry_tag, offset, window, space, dim, model_id)
-    index_file = cache_path / f"{key}_index.pkl"
-    meta_file = cache_path / f"{key}_meta.json"
+    cache_meta_file = cache_path / f"{key}_cache_meta.json"
+    ann_prefix = cache_path / f"{key}_ann"
     
     try:
-        # Save metadata
+        # Save cache metadata
         metadata = {
             'index': index,
             'expiry_tag': expiry_tag,
@@ -268,22 +284,22 @@ def save_ann_index_to_disk(
             'dim': dim,
             'model_id': model_id,
             'created_at': time.time(),
-            'version': '1.0',
+            'version': '2.0', # Bump version for new format
+            'ann_day_map': list(ann_day_map),
+            'ann_index_mem_bytes': ann_index_mem_bytes
         }
         if extra_metadata:
             metadata.update(extra_metadata)
         
-        with open(meta_file, 'w') as f:
+        with open(cache_meta_file, 'w') as f:
             json.dump(metadata, f, indent=2)
         
-        # Save pickled index
-        data = {
-            'ann_index': ann_index,
-            'ann_day_map': list(ann_day_map),
-            'ann_index_mem_bytes': ann_index_mem_bytes,
-        }
-        with open(index_file, 'wb') as f:
-            pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
+        # Save ANN index using its own method
+        if hasattr(ann_index, 'save'):
+            ann_index.save(str(ann_prefix))
+        else:
+            _LOG.warning(f"ANN index object does not support save(): {type(ann_index)}")
+            return False
         
         _ANN_DISK_CACHE_SAVES += 1
         _LOG.info(f"ANN disk cache saved: {key}")

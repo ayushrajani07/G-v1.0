@@ -145,16 +145,22 @@ class Providers:
                 start_fetch = _time.time()
                 t.start()
                 # Poll with heartbeat to avoid watchdog false stalls
+                # Use shorter sleep intervals (0.1s) to minimize latency overhead
+                poll_interval = 0.1
+                heartbeat_counter = 0
                 while t.is_alive() and (_time.time() - start_fetch) < timeout_sec:
-                    _time.sleep(1.0)
-                    # Lightweight heartbeat (no direct dependency on unified collectors internals)
-                    try:
-                        import src.collectors.unified_collectors as _uc  # type: ignore
-                        _hb = getattr(_uc, '_mark_cycle_progress', None)
-                        if callable(_hb):
-                            _hb()
-                    except Exception:
-                        pass
+                    _time.sleep(poll_interval)
+                    # Heartbeat every ~1 second (10 iterations at 0.1s interval) to avoid overhead
+                    heartbeat_counter += 1
+                    if heartbeat_counter >= 10:
+                        heartbeat_counter = 0
+                        try:
+                            import src.collectors.unified_collectors as _uc  # type: ignore
+                            _hb = getattr(_uc, '_mark_cycle_progress', None)
+                            if callable(_hb):
+                                _hb()
+                        except Exception:
+                            pass
                 if t.is_alive():
                     self.logger.warning("get_quote timeout index=%s elapsed=%.2fs timeout=%.2fs fallback=synthetic", index_symbol, (_time.time()-start_fetch), timeout_sec)
                     # Leave thread running (daemon) but proceed with synthetic path below (quotes empty)

@@ -53,6 +53,38 @@ class ConformalBand:
         inside = sum(1 for x in self._residuals if x <= r)
         return inside / len(self._residuals)
 
+    def adapt_target_coverage(self, current_norm_error: float, target_norm_error: float = 0.1) -> float:
+        """Adapt target coverage based on normalized error trend.
+        
+        If current error is high relative to target, widen bands (increase coverage).
+        If current error is low, narrow bands (decrease coverage).
+        
+        Args:
+            current_norm_error: Recent normalized error (e.g. MAE / band_width)
+            target_norm_error: Desired normalized error level
+            
+        Returns:
+            New target coverage (clamped 0.5-0.99)
+        """
+        # Simple P-controller logic
+        error_ratio = current_norm_error / max(1e-6, target_norm_error)
+        
+        # If error is 2x target, we want to increase coverage significantly
+        # If error is 0.5x target, we can decrease coverage
+        
+        # Adjustment factor: 
+        # ratio > 1 -> increase coverage
+        # ratio < 1 -> decrease coverage
+        
+        # Dampening factor to prevent oscillation
+        k = 0.05
+        
+        delta = (error_ratio - 1.0) * k
+        new_coverage = self.target_coverage + delta
+        
+        self.target_coverage = self._clamp(new_coverage, 0.5, 0.99)
+        return self.target_coverage
+
     @staticmethod
     def _clamp(x: float, lo: float, hi: float) -> float:
         return max(lo, min(hi, x))

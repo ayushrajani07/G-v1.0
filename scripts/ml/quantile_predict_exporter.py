@@ -210,6 +210,15 @@ def main() -> None:
     horizon = str(args.horizon)
 
     out_fp = ensure_pred_csv(idx)
+    
+    # Metrics CSV setup
+    metrics_dir = project_root() / "data" / "ml" / "metrics"
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+    metrics_fp = metrics_dir / f"{idx}_conformal.csv"
+    if not metrics_fp.exists():
+        with open(metrics_fp, "w", encoding="utf-8") as f:
+            f.write("timestamp,index,horizon,model,radius,coverage_estimate,target_coverage\n")
+
     logger.info("writing predictions", extra={"path": str(out_fp), "index": idx, "horizon": horizon})
 
     while True:
@@ -227,11 +236,18 @@ def main() -> None:
             last = rows[-1]
             X = get_latest_features(last, feat_list)
             preds = model.predict(X)
-            p50 = float(preds.get("p50", preds.get("q0.50", [float("nan")])[0])) if isinstance(preds.get("p50"), np.ndarray) else float(preds.get("p50", float("nan")))
-            p10 = float(preds.get("p10", preds.get("q0.10", [float("nan")])[0])) if isinstance(preds.get("p10"), np.ndarray) else float(preds.get("p10", float("nan")))
-            p90 = float(preds.get("p90", preds.get("q0.90", [float("nan")])[0])) if isinstance(preds.get("p90"), np.ndarray) else float(preds.get("p90", float("nan")))
+            def _extract_scalar(val):
+                if isinstance(val, (list, np.ndarray)):
+                    if len(val) > 0:
+                        return float(val[0])
+                    return float("nan")
+                return float(val) if val is not None else float("nan")
+
+            p50 = _extract_scalar(preds.get("p50", preds.get("q0.50")))
+            p10 = _extract_scalar(preds.get("p10", preds.get("q0.10")))
+            p90 = _extract_scalar(preds.get("p90", preds.get("q0.90")))
             pred = p50
-            ts_iso = datetime.now(tz=timezone.utc).replace(microsecond=0).isoformat()
+            ts_iso = datetime.now(tz=timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
             append_prediction(out_fp, ts_iso, pred, idx, horizon, p10, p50, p90)
             # Update conformal residuals using latest actual if present
             try:
@@ -252,6 +268,17 @@ def main() -> None:
                 pass
             # Export gauges if available
             try:
+                rad = conf.radius(coverage=float(args.coverage))
+                cov_est = 0.0
+                try:
+                    cov_est = float(conf.coverage_estimate(rad))
+                except Exception:
+                    pass
+                
+                # Write to metrics CSV
+                with open(metrics_fp, "a", encoding="utf-8") as f:
+                    f.write(f"{ts_iso},{idx},{horizon},{MODEL_NAME},{rad},{cov_est},{args.coverage}\n")
+
                 if METRICS_ENABLED:
                     # set with labels
                     if g_p10 is not None:
@@ -261,16 +288,9 @@ def main() -> None:
                     if g_p50 is not None:
                         g_p50.labels(index=idx, horizon=horizon, model=MODEL_NAME).set(float(p50))
                     if g_radius is not None:
-                        rad = conf.radius(coverage=float(args.coverage))
                         g_radius.labels(index=idx, horizon=horizon, model=MODEL_NAME).set(float(rad))
                     if g_cov is not None:
-                        try:
-                            # coverage estimate for the current radius (same coverage param)
-                            cur_rad = conf.radius(coverage=float(args.coverage))
-                            cov_est = float(conf.coverage_estimate(cur_rad))
-                            g_cov.labels(index=idx, horizon=horizon, model=MODEL_NAME).set(cov_est)
-                        except Exception:
-                            pass
+                        g_cov.labels(index=idx, horizon=horizon, model=MODEL_NAME).set(cov_est)
             except Exception:
                 # Don't let metrics failures stop the exporter
                 pass
@@ -278,13 +298,18 @@ def main() -> None:
             break
         except Exception as e:
             # Log and continue; record metric counter if enabled
+            print(f"Exporter Loop Error: {e}")
+            import traceback
+            traceback.print_exc()
             logger.warning("exporter loop error", extra={"error": str(e), "index": idx, "horizon": horizon})
             try:
                 if METRICS_ENABLED and g_loop_errors is not None:  # type: ignore
                     g_loop_errors.labels(index=idx, horizon=horizon, model=MODEL_NAME).inc()  # type: ignore
             except Exception:  # pragma: no cover - metrics failure should never stop loop
                 pass
-    _sleep_s(max(1, int(args.interval)))
+        
+        # Sleep inside the loop!
+        _sleep_s(max(1, int(args.interval)))
 
 
 if __name__ == "__main__":

@@ -72,6 +72,9 @@ from typing import (
   cast,
 )
 
+# Phase 7: Import shared type contracts
+from src.collectors.types import ExpiryResult, IndexResult, PipelineReturn
+
 from src.collectors.pipeline.errors import PhaseFatalError, PhaseRecoverableError
 from src.config.env_config import EnvConfig
 
@@ -754,55 +757,32 @@ def run_pipeline(
   total_cycle_s: float = time.time() - start_wall
   try:
     if metrics is not None:
-      from prometheus_client import Counter as _C
-      from prometheus_client import Gauge as _G
-      from prometheus_client import Histogram as _H
-      from prometheus_client import Summary as _S
-      # Cycle duration histogram (bucket selection conservative)
-      if not hasattr(metrics, 'pipeline_cycle_duration_seconds'):
-        try:
-          metrics.pipeline_cycle_duration_seconds = _H('g6_pipeline_cycle_duration_seconds','Pipeline cycle duration seconds', buckets=(0.05,0.1,0.25,0.5,1,2,5,10))
+      # Phase 5: use centralized registry helpers
+      from src.metrics.registry import ensure_cycle_histograms, ensure_alert_counter
+      histograms = ensure_cycle_histograms(metrics)
+      
+      # Record cycle duration
+      if histograms.get('pipeline_cycle_duration_seconds'):
+        try: histograms['pipeline_cycle_duration_seconds'].observe(total_cycle_s)
         except (AttributeError, ValueError, TypeError): pass
-      if not hasattr(metrics, 'pipeline_cycle_duration_summary'):
-        try:
-          metrics.pipeline_cycle_duration_summary = _S('g6_pipeline_cycle_duration_summary','Pipeline cycle duration summary')
+      if histograms.get('pipeline_cycle_duration_summary'):
+        try: histograms['pipeline_cycle_duration_summary'].observe(total_cycle_s)
         except (AttributeError, ValueError, TypeError): pass
-      h = getattr(metrics,'pipeline_cycle_duration_seconds',None)
-      s_summary = getattr(metrics,'pipeline_cycle_duration_summary',None)
-      if h:
-        try: h.observe(total_cycle_s)
-        except (AttributeError, ValueError, TypeError): pass
-      if s_summary:
-        try: s_summary.observe(total_cycle_s)
-        except (AttributeError, ValueError, TypeError): pass
-      # Phase latency histograms
-      if not hasattr(metrics, 'pipeline_enrich_duration_seconds'):
-        try:
-          metrics.pipeline_enrich_duration_seconds = _H('g6_pipeline_enrich_duration_seconds','Per-expiry enrichment duration seconds', buckets=(0.001,0.005,0.01,0.02,0.05,0.1,0.25,0.5,1,2))
-        except (AttributeError, ValueError, TypeError): pass
-      if not hasattr(metrics, 'pipeline_finalize_duration_seconds'):
-        try:
-          metrics.pipeline_finalize_duration_seconds = _H('g6_pipeline_finalize_duration_seconds','Per-expiry finalize_expiry duration seconds', buckets=(0.0005,0.001,0.002,0.005,0.01,0.02,0.05,0.1,0.25))
-        except (AttributeError, ValueError, TypeError): pass
-      _h_enrich = getattr(metrics,'pipeline_enrich_duration_seconds',None)
-      _h_final = getattr(metrics,'pipeline_finalize_duration_seconds',None)
-      if _h_enrich:
+      
+      # Record phase latencies
+      if histograms.get('pipeline_enrich_duration_seconds'):
         for d in enrich_phase_durations:
-          try: _h_enrich.observe(d)
+          try: histograms['pipeline_enrich_duration_seconds'].observe(d)
           except (AttributeError, ValueError, TypeError): pass
-      if _h_final:
+      if histograms.get('pipeline_finalize_duration_seconds'):
         for d in finalize_phase_durations:
-          try: _h_final.observe(d)
+          try: histograms['pipeline_finalize_duration_seconds'].observe(d)
           except (AttributeError, ValueError, TypeError): pass
-      # Alert category counters
+      
+      # Alert category counters (use helper for idempotent creation)
       if alert_summary is not None:
         for cat, val in alert_summary.categories.items():
-          metric_name = f'pipeline_alerts_{cat}_total'
-          if not hasattr(metrics, metric_name):
-            try:
-              setattr(metrics, metric_name, _C(f'g6_{metric_name}','Count of pipeline cycles with occurrences for category'))
-            except (AttributeError, ValueError, TypeError): pass
-          c = getattr(metrics, metric_name, None)
+          c = ensure_alert_counter(metrics, cat)
           if c and val>0:
             try: c.inc(val)
             except (AttributeError, ValueError, TypeError): pass
@@ -924,6 +904,18 @@ def run_pipeline(
     pass
   if _include_diag:
     ret_obj['diagnostics'] = diagnostics
+  
+  # Phase 6: Emit cycle summary line(s) respecting G6_CYCLE_OUTPUT and G6_CYCLE_STYLE
+  # This provides logging parity with unified_collectors path
+  try:
+    _emit_pipeline_cycle_summary(
+      total_cycle_s=total_cycle_s,
+      indices_struct=indices_struct,
+      metrics=metrics,
+    )
+  except (AttributeError, TypeError, ValueError, RuntimeError, OSError):
+    logger.debug('pipeline_cycle_summary_emission_failed', exc_info=True)
+  
   # W4-09: periodic benchmark cycle integration (best-effort, post main work)
   try:
     _maybe_run_benchmark_cycle(metrics)
@@ -931,6 +923,132 @@ def run_pipeline(
     # Benchmark cycle may fail due to various runtime issues
     logger.debug('benchmark_cycle_integration_failed', exc_info=True)
   return ret_obj
+
+def _emit_pipeline_cycle_summary(
+  total_cycle_s: float,
+  indices_struct: list,
+  metrics: Any,
+) -> None:
+  """Emit cycle summary line(s) respecting G6_CYCLE_OUTPUT and G6_CYCLE_STYLE (Phase 6).
+  
+  Provides logging parity with unified_collectors:
+  - G6_CYCLE_OUTPUT: 'raw' (CYCLE line) | 'pretty' (table) | 'both' (default: 'raw')
+  - G6_CYCLE_STYLE: 'legacy' | 'readable' (default: 'legacy')
+  - G6_DISABLE_PRETTY_CYCLE: if truthy, forces 'raw' mode
+  - G6_CYCLE_VERBOSE_LOGS: if truthy, enables detailed step-by-step logging
+  
+  Pipeline defaults to 'raw' mode since phase_log already provides detailed events.
+  """
+  try:
+    # Import formatters from unified_collectors
+    from src.collectors.unified_collectors import format_cycle, format_cycle_readable, format_cycle_table
+  except ImportError:
+    logger.debug("Cycle formatters not available, skipping cycle summary")
+    return
+  
+  # Determine mode (Phase 6 parity)
+  legacy_disable = EnvConfig.get_bool('G6_DISABLE_PRETTY_CYCLE', False)
+  mode = 'raw' if legacy_disable else EnvConfig.get_str('G6_CYCLE_OUTPUT', 'raw').lower()
+  if mode not in ('pretty', 'raw', 'both'):
+    mode = 'raw'  # Pipeline defaults to raw since phase_log provides detail
+  
+  cycle_style = EnvConfig.get_str('G6_CYCLE_STYLE', 'legacy').lower()
+  
+  # Gather cycle stats
+  opts_total = 0
+  for idx_entry in indices_struct:
+    opts_total += idx_entry.get('option_count', 0)
+  
+  opts_per_min = (opts_total / total_cycle_s * 60.0) if total_cycle_s > 0 and opts_total > 0 else None
+  
+  # Calculate collection success from strike coverage
+  coll_succ = None
+  if indices_struct:
+    try:
+      total_success = 0.0
+      total_count = 0
+      for idx_entry in indices_struct:
+        strike_cov = float(idx_entry.get('strike_coverage_avg', 0.0) or 0.0)
+        total_success += strike_cov
+        total_count += 1
+      if total_count > 0:
+        coll_succ = (total_success / total_count) * 100.0
+    except (TypeError, ValueError, KeyError):
+      pass
+  
+  # Metrics (best-effort from registry)
+  api_succ = getattr(metrics, '_last_api_success_pct', None) if metrics else None
+  api_ms = getattr(metrics, '_last_api_latency_ms', None) if metrics else None
+  cpu = getattr(metrics, '_last_cpu_pct', None) if metrics else None
+  mem_mb = getattr(metrics, '_last_mem_mb', None) if metrics else None
+  
+  # Build cycle lines
+  raw_line = None
+  pretty_line = None
+  
+  if mode in ('raw', 'both'):
+    try:
+      if cycle_style == 'readable':
+        raw_line = format_cycle_readable(
+          duration_s=total_cycle_s,
+          options=opts_total,
+          options_per_min=opts_per_min,
+          cpu=cpu,
+          mem_mb=mem_mb,
+          api_latency_ms=api_ms,
+          api_success_pct=api_succ,
+          collection_success_pct=coll_succ,
+          indices=len(indices_struct),
+          stall_flag=None
+        )
+      else:
+        raw_line = format_cycle(
+          duration_s=total_cycle_s,
+          options=opts_total,
+          options_per_min=opts_per_min,
+          cpu=cpu,
+          mem_mb=mem_mb,
+          api_latency_ms=api_ms,
+          api_success_pct=api_succ,
+          collection_success_pct=coll_succ,
+          indices=len(indices_struct),
+          stall_flag=None,
+          extra=None,
+        )
+    except (TypeError, ValueError, AttributeError, KeyError) as e:
+      logger.debug("Failed to format pipeline raw cycle line: %s", e)
+  
+  if mode in ('pretty', 'both'):
+    try:
+      header_line, value_line = format_cycle_table(
+        duration_s=total_cycle_s,
+        options=opts_total,
+        options_per_min=opts_per_min,
+        cpu=cpu,
+        mem_mb=mem_mb,
+        api_latency_ms=api_ms,
+        api_success_pct=api_succ,
+        collection_success_pct=coll_succ,
+        indices=len(indices_struct),
+        stall_flag=None
+      )
+      pretty_line = f"{header_line}\n{value_line}"
+    except (TypeError, ValueError, AttributeError, KeyError) as e:
+      logger.debug("Failed to format pipeline pretty cycle table: %s", e)
+  
+  # Emit in deterministic order: raw then pretty
+  if raw_line:
+    try:
+      logger.info(raw_line)
+    except (OSError, ValueError) as e:
+      logger.debug("Failed to emit pipeline raw cycle line: %s", e)
+  
+  if pretty_line:
+    try:
+      logger.info(pretty_line)
+    except (OSError, ValueError) as e:
+      logger.debug("Failed to emit pipeline pretty cycle line: %s", e)
+
 
 def _infer_expiry_rule(expiry_date: datetime.date) -> str:
   """Simple rule inference placeholder; legacy had richer mapping (week/month tags)."""

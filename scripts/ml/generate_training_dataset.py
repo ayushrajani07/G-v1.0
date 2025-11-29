@@ -212,20 +212,106 @@ def generate_synthetic_data(
 
 
 def load_historical_data(input_path: str) -> pd.DataFrame:
-    """Load historical data from CSV.
+    """Load historical data from CSV or directory of CSVs.
     
     Args:
-        input_path: Path to input CSV
+        input_path: Path to input CSV or directory
         
     Returns:
         DataFrame with historical data
     """
     logger.info(f"Loading historical data from {input_path}")
-    df = pd.read_csv(input_path)
+    path_obj = Path(input_path)
+    
+    if path_obj.is_dir():
+        # Load all CSVs in directory
+        csv_files = sorted(list(path_obj.glob("*.csv")))
+        if not csv_files:
+            raise ValueError(f"No CSV files found in {input_path}")
+            
+        logger.info(f"Found {len(csv_files)} CSV files")
+        dfs = []
+        for f in csv_files:
+            try:
+                # Use on_bad_lines='skip' to handle malformed rows
+                df = pd.read_csv(f, on_bad_lines='skip')
+                dfs.append(df)
+            except Exception as e:
+                logger.warning(f"Failed to read {f}: {e}")
+        
+        if not dfs:
+            raise ValueError("Failed to load any data files")
+            
+        df = pd.concat(dfs, ignore_index=True)
+    else:
+        # Load single CSV
+        df = pd.read_csv(input_path, on_bad_lines='skip')
     
     # Convert timestamp if present
     if "timestamp" in df.columns:
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        # Handle mixed formats and coerce errors
+        df["timestamp"] = pd.to_datetime(df["timestamp"], dayfirst=True, errors='coerce')
+        
+        # Drop rows with invalid timestamps
+        before_len = len(df)
+        df = df.dropna(subset=["timestamp"])
+        dropped = before_len - len(df)
+        if dropped > 0:
+            logger.info(f"Dropped {dropped} rows with invalid timestamps")
+            
+        # Sort by timestamp
+        df = df.sort_values("timestamp")
+        
+        # Drop duplicates
+        before_dedup = len(df)
+        df = df.drop_duplicates(subset=["timestamp"], keep="last")
+        deduped = before_dedup - len(df)
+        if deduped > 0:
+            logger.info(f"Dropped {deduped} duplicate timestamps")
+            
+        df = df.reset_index(drop=True)
+    
+    # Rename columns to match expected schema
+    rename_map = {
+        "index_price": "underlying",
+        "tp": "tp_actual",
+        "avg_tp": "tp_baseline" # Some files might have avg_tp which is close to baseline
+    }
+    df = df.rename(columns=rename_map)
+    
+    # Calculate avg_iv if missing
+    if "avg_iv" not in df.columns:
+        if "ce_iv" in df.columns and "pe_iv" in df.columns:
+            df["avg_iv"] = (df["ce_iv"] + df["pe_iv"]) / 2.0
+            logger.info("Calculated avg_iv from ce_iv and pe_iv")
+        elif "iv" in df.columns:
+            df["avg_iv"] = df["iv"]
+            logger.info("Used iv column as avg_iv")
+    
+    # Calculate minutes_to_expiry if missing
+    if "minutes_to_expiry" not in df.columns and "expiry_date" in df.columns and "timestamp" in df.columns:
+        try:
+            # Parse expiry date with flexible format
+            expiry_dt = pd.to_datetime(df["expiry_date"], dayfirst=True, errors='coerce')
+            
+            # Drop rows where expiry parsing failed
+            if expiry_dt.isna().any():
+                logger.warning(f"Dropped {expiry_dt.isna().sum()} rows with invalid expiry dates")
+                df = df[expiry_dt.notna()].copy()
+                expiry_dt = expiry_dt.dropna()
+            
+            # Add 15:30 (market close)
+            expiry_dt = expiry_dt + pd.Timedelta(hours=15, minutes=30)
+            
+            # Calculate difference in minutes
+            diff = expiry_dt - df["timestamp"]
+            df["minutes_to_expiry"] = diff.dt.total_seconds() / 60.0
+            
+            # Ensure non-negative
+            df["minutes_to_expiry"] = df["minutes_to_expiry"].clip(lower=0)
+            logger.info("Calculated minutes_to_expiry from expiry_date")
+        except Exception as e:
+            logger.warning(f"Failed to calculate minutes_to_expiry: {e}")
     
     return df
 

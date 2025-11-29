@@ -35,6 +35,9 @@ from typing import (
     runtime_checkable,
 )
 
+# Phase 7: Import shared type contracts
+from src.collectors.types import StrikeUniverseResult, IndexProcessResult, ExpiryDetail
+
 from src.collectors.env_adapter import get_bool as _env_bool
 from src.collectors.env_adapter import get_str as _env_str
 from src.error_handling import handle_collector_error  # parity with legacy path
@@ -64,18 +67,9 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
-class StrikeUniverseResult(TypedDict, total=False):
-    strikes: list[float]
-    meta: dict[str, Any]
+# Phase 7: Type contracts now imported from shared types module
+# (StrikeUniverseResult, IndexProcessResult, ExpiryDetail moved to src.collectors.types)
 
-class IndexProcessResult(TypedDict, total=False):
-    human_block: str | None
-    indices_struct_entry: dict[str, Any] | None
-    summary_rows_entry: dict[str, Any] | None
-    overall_legs: int
-    overall_fails: int
-
-ExpiryDetail = dict[str, Any]  # current dynamic; could be narrowed in later wave
 DepsMap = dict[str, Any]
 
 @runtime_checkable
@@ -678,38 +672,21 @@ def process_index(
         stale_field_thr = 0.0
         cycle_status = None
 
-    # Emit stale metrics (per-index) before any potential snapshot gating
+    # Emit stale metrics (per-index) - Phase 5: use centralized registry helper
     if metrics:
         try:  # pragma: no cover - metrics side-effects
-            from prometheus_client import Counter as _C
-            from prometheus_client import Gauge as _G
-            # Lazy metric creation (attributes cached on metrics registry object)
-            if not hasattr(metrics, 'stale_cycles_total'):
-                try:
-                    metrics.stale_cycles_total = _C(
-                        'g6_stale_cycles_total',
-                        'Count of cycles where index or system classified stale',
-                        ['index','mode'],
-                    )
-                except (AttributeError, ValueError, TypeError):
-                    pass
-            if not hasattr(metrics, 'stale_active'):
-                try:
-                    metrics.stale_active = _G(
-                        'g6_stale_active',
-                        'Whether index stale in current cycle (1 stale, 0 ok)',
-                        ['index'],
-                    )
-                except (AttributeError, ValueError, TypeError):
-                    pass
+            from src.metrics.registry import ensure_stale_metrics
+            stale_m = ensure_stale_metrics(metrics)
             # Update gauges & counters (best-effort)
             try:
-                metrics.stale_active.labels(index=index_symbol).set(1 if index_stale else 0)
+                if stale_m.get('stale_active'):
+                    stale_m['stale_active'].labels(index=index_symbol).set(1 if index_stale else 0)
             except (AttributeError, ValueError, TypeError):
                 pass
             if index_stale:
                 try:
-                    metrics.stale_cycles_total.labels(index=index_symbol, mode=stale_mode).inc()
+                    if stale_m.get('stale_cycles_total'):
+                        stale_m['stale_cycles_total'].labels(index=index_symbol, mode=stale_mode).inc()
                 except (AttributeError, ValueError, TypeError):
                     pass
         except (AttributeError, ImportError, ValueError, TypeError) as e:

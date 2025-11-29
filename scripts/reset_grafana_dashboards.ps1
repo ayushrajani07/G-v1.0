@@ -1,27 +1,24 @@
-<#!
+<#
 .SYNOPSIS
-  Backup then delete all dashboards from Grafana DB and reload provisioning so file versions are re-imported.
+Backup then delete all dashboards from Grafana DB and reload provisioning so file versions are re-imported.
 .DESCRIPTION
-  1. Fetch all dashboards via /api/search.
-  2. For each UID, GET its full JSON and store under backups/<timestamp>/<uid>.json.
-  3. Delete the dashboard via /api/dashboards/uid/{uid}.
-  4. After all deletions, call provisioning reload endpoint.
-  Supports selective mode (only delete dashboards whose UID appears in a file on disk OR those NOT on disk).
-.PARAMETER GrafanaUrl
-  Base URL of Grafana (default http://127.0.0.1:3002)
-.PARAMETER Creds
-  Basic auth in user:pass form. (Default admin:admin)
-.PARAMETER Mode
-  all            -> delete everything returned by /api/search.
-  file           -> delete only dashboards whose UID matches a JSON file under grafana/dashboards/**.
-  orphan         -> delete only dashboards whose UID has NO matching file under grafana/dashboards/**.
-.PARAMETER DryRun
-  If set, just report what would be deleted.
+1. Fetch all dashboards via /api/search.
+2. For each UID, GET its full JSON and store under backups/<timestamp>/<uid>.json.
+3. Delete the dashboard via /api/dashboards/uid/{uid}.
+4. After all deletions, call provisioning reload endpoint.
+Selective modes:
+  - all    : delete everything returned by /api/search.
+  - file   : delete only dashboards whose UID matches a JSON file under grafana/dashboards/**.
+  - orphan : delete only dashboards whose UID has NO matching file under grafana/dashboards/**.
+.PARAMETER GrafanaUrl Base URL of Grafana (default http://127.0.0.1:3002)
+.PARAMETER Creds      Basic auth in user:pass form. (Default admin:admin)
+.PARAMETER Mode       Deletion mode (all|file|orphan)
+.PARAMETER DryRun     If set, just report what would be deleted.
 .EXAMPLE
-  powershell -File scripts/reset_grafana_dashboards.ps1 -Mode all
+powershell -File scripts/reset_grafana_dashboards.ps1 -Mode all
 .EXAMPLE
-  powershell -File scripts/reset_grafana_dashboards.ps1 -Mode orphan -DryRun
-!>
+powershell -File scripts/reset_grafana_dashboards.ps1 -Mode orphan -DryRun
+#>
 Param(
   [string]$GrafanaUrl = 'http://127.0.0.1:3002',
   [string]$Creds = 'admin:admin',
@@ -49,7 +46,8 @@ $search = Invoke-RestMethod -Uri "$GrafanaUrl/api/search?query=" -Headers $heade
 if(-not $search){ Write-Host 'No dashboards returned from API.' -ForegroundColor Yellow; exit }
 
 $fileUIDs = Get-DashboardUIDsFromFiles 'grafana/dashboards'
-$setFile = [System.Collections.Generic.HashSet[string]]::new($fileUIDs)
+$setFile = New-Object 'System.Collections.Generic.HashSet[string]'
+foreach($u in $fileUIDs){ [void]$setFile.Add($u) }
 
 # Determine candidates
 $candidates = @()

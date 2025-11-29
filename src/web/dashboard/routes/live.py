@@ -65,6 +65,8 @@ async def api_live_csv(
     include_oi: str | None = None,
     include_volume: str | None = None,
     include_pcr: str | None = None,
+    pct: str | None = None,
+    pct_fields: str | None = None,
     indices: str | None = None,
 ) -> JSONResponse:
     """Return today's live CSV as JSON rows for Infinity.
@@ -122,6 +124,8 @@ async def api_live_csv(
         inc_oi = _parse_bool_flag(include_oi, False)
         inc_vol = _parse_bool_flag(include_volume, False)
         inc_pcr = _parse_bool_flag(include_pcr, False)
+        do_pct = _parse_bool_flag(pct, False)
+        p_fields = [s.strip() for s in (pct_fields or "").split(",") if s.strip()]
 
         def _find_with_fallback(_idx: str) -> Path | None:
             p = _find_live_csv(base, _idx, expiry_tag, offset, day)
@@ -175,6 +179,10 @@ async def api_live_csv(
                         "pe_rho",
                     }
                 )
+            
+            # Ensure fields needed for pct calculation are present
+            if do_pct and p_fields:
+                keep_keys.update(p_fields)
 
             rows_sel = [{k: r.get(k, None) for k in keep_keys} for r in rows_full]
             # Time range filter
@@ -221,6 +229,33 @@ async def api_live_csv(
                     # Value conversion, type errors, division by zero, or dict access errors
                     for r in rows_sel:
                         r["index_pct"] = None
+
+            # Generic percentage change calculation
+            if do_pct and p_fields:
+                for field in p_fields:
+                    pct_field = f"{field}_pct"
+                    try:
+                        base_val: float | None = None
+                        # Find first valid base value
+                        for r in rows_sel:
+                            v = r.get(field)
+                            if isinstance(v, (int, float)) and v != 0:
+                                base_val = float(v)
+                                break
+                        
+                        if base_val is not None:
+                            for r in rows_sel:
+                                v = r.get(field)
+                                if isinstance(v, (int, float)):
+                                    r[pct_field] = (float(v) / base_val - 1.0) * 100.0
+                                else:
+                                    r[pct_field] = None
+                        else:
+                            for r in rows_sel:
+                                r[pct_field] = None
+                    except Exception:
+                        for r in rows_sel:
+                            r[pct_field] = None
 
             # Derive PCR if requested
             if inc_pcr:
@@ -285,7 +320,7 @@ async def api_live_csv(
             etag_src = (
                 f"{index}|{expiry_tag}|{offset}|{date_str}|{limit}|{from_ms}|{to_ms}|"
                 f"{include_avg}|{include_ce}|{include_pe}|{include_index}|{index_pct}|"
-                f"{include_iv}|{include_greeks}|{include_analytics}"
+                f"{include_iv}|{include_greeks}|{include_analytics}|{pct}|{pct_fields}"
             ).encode()
             h = zlib.crc32(etag_src)
             if pth and pth.exists():

@@ -30,7 +30,7 @@ Notes / Limitations:
 - Underlying at evaluation approximated by latest inferred value (best-effort); fallback to underlying at forecast time if unavailable.
 - No persistence; window resets on process restart.
 - Clock drift / delayed evaluation may slightly shift horizon alignment for large horizons; acceptable for rolling monitoring.
-"""
+
 Thread-safety: protected by _LOCK.
 Persistence: none (in-memory only). Reset on process restart.
 """

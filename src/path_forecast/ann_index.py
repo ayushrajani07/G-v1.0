@@ -85,6 +85,76 @@ class AnnIndex:
         sel = order[:k]
         return list(map(int, sel)), list(map(float, dist[sel]))
 
+    def save(self, path_prefix: str) -> None:
+        """Save index to disk."""
+        import json
+        
+        # Save metadata
+        meta = {
+            "dim": self.dim,
+            "count": self._count,
+            "params": {
+                "space": self.params.space,
+                "M": self.params.M,
+                "ef_construction": self.params.ef_construction,
+                "ef_search": self.params.ef_search
+            },
+            "type": "hnsw" if (HAS_HNSWLIB and self._index is not None) else "numpy"
+        }
+        with open(f"{path_prefix}.meta.json", "w") as f:
+            json.dump(meta, f)
+
+        if HAS_HNSWLIB and self._index is not None:
+            self._index.save_index(f"{path_prefix}.bin")
+        elif self._vectors is not None:
+            if np is None:
+                raise RuntimeError("AnnIndex requires numpy")
+            np.save(f"{path_prefix}.npy", self._vectors)
+
+    def load(self, path_prefix: str) -> None:
+        """Load index from disk."""
+        import json
+        import os
+        
+        meta_path = f"{path_prefix}.meta.json"
+        if not os.path.exists(meta_path):
+            raise FileNotFoundError(f"Metadata not found: {meta_path}")
+            
+        with open(meta_path, "r") as f:
+            meta = json.load(f)
+            
+        self.dim = meta["dim"]
+        self._count = meta["count"]
+        p = meta["params"]
+        self.params = AnnParams(
+            space=p["space"],
+            M=p["M"],
+            ef_construction=p["ef_construction"],
+            ef_search=p["ef_search"]
+        )
+        
+        idx_type = meta["type"]
+        
+        if idx_type == "hnsw" and HAS_HNSWLIB:
+            space = "cosine" if self.params.space == "cosine" else "l2"
+            self._index = hnswlib.Index(space=space, dim=self.dim)
+            # HNSW requires init before load, with max_elements >= current count
+            self._index.init_index(max_elements=max(self._count, 1), 
+                                  ef_construction=self.params.ef_construction, 
+                                  M=self.params.M)
+            self._index.load_index(f"{path_prefix}.bin", max_elements=max(self._count, 1))
+            self._index.set_ef(self.params.ef_search)
+            self._vectors = None
+        elif idx_type == "numpy":
+            if np is None:
+                raise RuntimeError("AnnIndex requires numpy")
+            self._vectors = np.load(f"{path_prefix}.npy")
+            self._index = None
+        else:
+            # Fallback or mismatch (e.g. saved as hnsw but hnswlib missing)
+            # If saved as hnsw but we don't have hnswlib, we can't load it easily unless we also saved vectors.
+            # For now, raise error.
+            raise RuntimeError(f"Cannot load index type {idx_type} (HAS_HNSWLIB={HAS_HNSWLIB})")
 
 def zscore_window(x):
     if np is None:

@@ -41,6 +41,8 @@ from .routes.overlay import router as overlay_router
 from .routes.system import router as system_router
 from .routes.path_forecast import router as path_forecast_router
 from .routes.ensemble import router as ensemble_router
+from .routes.ml import router as ml_router
+from .routes.drift import router as drift_router
 try:
     # Advisor router provides universal advisor endpoints
     from .routes.advisor import router as advisor_router
@@ -301,6 +303,8 @@ app.include_router(overlay_router)
 app.include_router(system_router)
 app.include_router(path_forecast_router)
 app.include_router(ensemble_router)
+app.include_router(ml_router)
+app.include_router(drift_router)
 # Memory status endpoint (lightweight; avoid dedicated router for single path)
 try:
     from src.utils.memory_manager import get_memory_manager as _get_mm
@@ -1041,7 +1045,7 @@ except (ImportError, ModuleNotFoundError, AttributeError):
 def _ml_live_predictions_dir() -> Path:
     try:
         return _paths_core.project_root() / 'data' / 'ml' / 'live_predictions'
-    except (AttributeError, TypeError, OSError):
+    except (AttributeError, OSError, TypeError):
         # Missing project_root function, type error, or OS error
         return Path('data/ml/live_predictions')
 
@@ -1112,6 +1116,55 @@ async def alert_webhook_file(request: Request) -> JSONResponse:
         return JSONResponse({'error': 'write_failed'}, status_code=500)
     return JSONResponse({'written': len(lines), 'file': str(log_fp)})
 
+@app.post('/api/alerts/console')
+async def alert_webhook_console(request: Request) -> JSONResponse:
+    """Log alerts to stdout via application logger."""
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({'error': 'invalid_json'}, status_code=400)
+    
+    alerts = []
+    if isinstance(payload, dict):
+        raw_alerts = payload.get('alerts')
+        if isinstance(raw_alerts, list):
+            alerts = [a for a in raw_alerts if isinstance(a, dict)]
+            
+    for a in alerts:
+        labels = a.get('labels', {})
+        annotations = a.get('annotations', {})
+        name = labels.get('alertname', 'unknown')
+        severity = labels.get('severity', 'unknown')
+        summary = annotations.get('summary', '')
+        _LOG.info(f"ALERT [{severity.upper()}] {name}: {summary}", extra={'alert': a})
+        
+    return JSONResponse({'status': 'ok', 'processed': len(alerts)})
+
+@app.post('/api/alerts/path_forecast')
+async def alert_webhook_path_forecast(request: Request) -> JSONResponse:
+    """Specialized receiver for path forecast alerts."""
+    # For now, just log them as console alerts, but with a specific tag
+    try:
+        payload = await request.json()
+    except Exception:
+        return JSONResponse({'error': 'invalid_json'}, status_code=400)
+        
+    alerts = []
+    if isinstance(payload, dict):
+        raw_alerts = payload.get('alerts')
+        if isinstance(raw_alerts, list):
+            alerts = [a for a in raw_alerts if isinstance(a, dict)]
+            
+    for a in alerts:
+        labels = a.get('labels', {})
+        annotations = a.get('annotations', {})
+        name = labels.get('alertname', 'unknown')
+        severity = labels.get('severity', 'unknown')
+        summary = annotations.get('summary', '')
+        _LOG.info(f"PATH_FORECAST_ALERT [{severity.upper()}] {name}: {summary}", extra={'alert': a, 'component': 'path_forecast'})
+        
+    return JSONResponse({'status': 'ok', 'processed': len(alerts)})
+
 @app.get('/api/ml/ensemble/k_calibration')
 async def api_ml_ensemble_k_calibration(index: str, horizon: str | None = None) -> PlainTextResponse:
     """Return k calibration CSV row from <index>_ensemble_k_calibration.json sidecar.
@@ -1149,39 +1202,6 @@ async def api_ml_ensemble_k_calibration(index: str, horizon: str | None = None) 
         k_smooth_fmt = ''
     row = f"{ts},{recommended_k},{k_smooth_fmt},{effective_cov},{band_radius},{target},{index},{horizon_val},{n}"
     return PlainTextResponse(f"{header}\n{row}")
-
-@app.get('/api/ml/ensemble/forecast')
-async def api_ml_ensemble_forecast(index: str, horizon: int = 60) -> JSONResponse:
-    """Unified ensemble forecast endpoint (migrated from Flask).
-
-    Returns JSON structure:
-    { index, horizon, timestamp, forecast{p10,p50,p90,band_low,band_high}, confidence, metadata }
-    Currently returns mock values until real-time integration enabled.
-    """
-    idx = index.upper().strip()
-    # Mock values
-    forecast = {
-        'p10': 180.5,
-        'p50': 195.3,
-        'p90': 210.8,
-        'band_low': 178.2,
-        'band_high': 212.5,
-    }
-    metadata = {
-        'latency_ms': 0.0,
-        'components_used': ['baseline', 'gbrt', 'retrieval', 'conformal'],
-        'weights': {'gbrt': 0.7, 'retrieval': 0.3},
-    }
-    import time as _t
-    body = {
-        'index': idx,
-        'horizon': horizon,
-        'timestamp': int(_t.time()*1000),
-        'forecast': forecast,
-        'confidence': 0.75,
-        'metadata': metadata,
-    }
-    return JSONResponse(body)
 
 @app.get('/api/ml/ensemble/weights')
 async def api_ml_ensemble_weights(index: str, horizon: str) -> PlainTextResponse:

@@ -220,3 +220,13 @@ async def metrics_json(request: Request) -> JSONResponse:
         },
     }
     return JSONResponse(payload)
+
+
+@router.get("/api/routes")
+async def api_routes(request: Request) -> JSONResponse:
+    """Return list of all registered routes and their count."""
+    routes = []
+    for route in request.app.routes:
+        if hasattr(route, "path"):
+            routes.append({"path": route.path, "name": route.name})
+    return JSONResponse({"count": len(routes), "routes": routes})

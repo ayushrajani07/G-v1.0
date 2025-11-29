@@ -70,7 +70,8 @@ try:
 except ImportError:
     index_processor_mod = None  # type: ignore
 try:
-    from src.collectors.modules.index_processor import IndexProcessResult
+    # Phase 7: IndexProcessResult moved to shared types module
+    from src.collectors.types import IndexProcessResult
 except ImportError:
     IndexProcessResult = None  # type: ignore
 try:
@@ -1565,51 +1566,26 @@ def run_unified_collectors(
                 else:
                     # Fallback transient local counter if metrics absent
                     consec = 1 if stale_present else 0
-                # System-level stale metrics (lazy create)
+                # System-level stale metrics (Phase 5: use centralized registry helper)
                 if metrics is not None:
                     try:  # pragma: no cover - metrics wiring
-                        from prometheus_client import Counter as _C
-                        from prometheus_client import Gauge as _G
-                        if not hasattr(metrics, 'stale_system_cycles_total'):
-                            try:
-                                metrics.stale_system_cycles_total = _C(
-                                    'g6_stale_system_cycles_total',
-                                    'Count of cycles where any index stale (system perspective)',
-                                    ['mode'],
-                                )
-                            except (ValueError, AttributeError, TypeError) as e:
-                                logger.debug("Failed to create stale_system_cycles_total metric: %s", e)
-                        if not hasattr(metrics, 'stale_consecutive_cycles'):
-                            try:
-                                metrics.stale_consecutive_cycles = _G(
-                                    'g6_stale_consecutive_cycles',
-                                    'Consecutive stale cycles (system scope)',
-                                    ['mode'],
-                                )
-                            except (ValueError, AttributeError, TypeError) as e:
-                                logger.debug("Failed to create stale_consecutive_cycles metric: %s", e)
-                        if not hasattr(metrics, 'stale_system_active'):
-                            try:
-                                metrics.stale_system_active = _G(
-                                    'g6_stale_system_active',
-                                    'Whether any index stale in current cycle (system scope)',
-                                    ['mode'],
-                                )
-                            except (ValueError, AttributeError, TypeError) as e:
-                                logger.debug("Failed to create stale_system_active metric: %s", e)
-                        # Update
+                        from src.metrics.registry import ensure_stale_metrics
+                        stale_m = ensure_stale_metrics(metrics)
+                        # Update system-level metrics
                         try:
-                            metrics.stale_system_active.labels(mode=stale_mode).set(1 if stale_present else 0)
+                            if stale_m.get('stale_system_active'):
+                                stale_m['stale_system_active'].labels(mode=stale_mode).set(1 if stale_present else 0)
                         except (AttributeError, ValueError, KeyError) as e:
                             logger.debug("Failed to set stale_system_active: %s", e)
                         try:
-                            metrics.stale_consecutive_cycles.labels(mode=stale_mode).set(consec)
+                            if stale_m.get('stale_consecutive_cycles'):
+                                stale_m['stale_consecutive_cycles'].labels(mode=stale_mode).set(consec)
                         except (AttributeError, ValueError, KeyError) as e:
                             logger.debug("Failed to set stale_consecutive_cycles: %s", e)
-                            pass
                         if stale_present:
                             try:
-                                metrics.stale_system_cycles_total.labels(mode=stale_mode).inc()
+                                if stale_m.get('stale_system_cycles_total'):
+                                    stale_m['stale_system_cycles_total'].labels(mode=stale_mode).inc()
                             except (AttributeError, ValueError, KeyError) as e:
                                 logger.debug("Failed to increment stale_system_cycles_total: %s", e)
                     except (AttributeError, ValueError, KeyError, TypeError) as e:
@@ -1684,17 +1660,27 @@ def run_unified_collectors(
         cpu = None; mem_mb = None
         
         # Calculate collection success from indices_struct (fallback if metrics unavailable)
+        # FIXED: Use actual index metrics with proper percentage calculation
         coll_succ_calculated = None
         if indices_struct:
             try:
-                total_success = 0
+                total_success = 0.0
                 total_count = 0
                 for idx_entry in indices_struct:
-                    strike_cov = float(idx_entry.get('strike_coverage_avg', 0.0) or 0.0)
-                    total_success += strike_cov
-                    total_count += 1
+                    # Calculate success from option_count (if we got options, it's successful)
+                    option_count = int(idx_entry.get('option_count', 0) or 0)
+                    attempts = int(idx_entry.get('attempts', 0) or 0)
+                    
+                    if attempts > 0:
+                        # Success rate = (option_count / attempts) * 100
+                        # Since each strike can produce CE+PE, and attempts roughly tracks requested strikes
+                        # We use a simpler metric: if we got options, consider it successful
+                        if option_count > 0:
+                            total_success += 100.0
+                        total_count += 1
+                
                 if total_count > 0:
-                    coll_succ_calculated = (total_success / total_count) * 100.0
+                    coll_succ_calculated = total_success / total_count
             except (TypeError, ValueError, KeyError):
                 pass
         

@@ -19,6 +19,7 @@ Metrics exposed:
  - g6_forecast_mae_drift_ratio: Gauge of short/long MAE ratio (per index,horizon)
  - g6_forecast_norm_error_drift_ratio: Gauge of short/long normalized error ratio (per index,horizon)
  - g6_forecast_coverage_drift_delta_pct: Gauge of short minus long coverage percentage (per index,horizon)
+ - g6_forecast_adaptive_ttl_sec: Gauge of current adaptive TTL in seconds (per index,horizon)
 """
 from __future__ import annotations
 
@@ -48,6 +49,7 @@ _FORECAST_NORM_ERROR_HIST: Any = None
 _FORECAST_MAE_DRIFT: Any = None
 _FORECAST_NORM_DRIFT: Any = None
 _FORECAST_COVERAGE_DRIFT: Any = None
+_FORECAST_ADAPTIVE_TTL: Any = None
 _TTL_STUDY_LATENCY_P95: Any = None
 _TTL_STUDY_LATENCY_P50: Any = None
 _TTL_STUDY_HIT_RATIO: Any = None
@@ -174,11 +176,16 @@ def _init_metrics() -> bool:
         )
         _FORECAST_COVERAGE_DRIFT = Gauge(
             "g6_forecast_coverage_drift_delta_pct",
-            "Short minus long window coverage percentage delta (pct points)",
+            "Short window coverage minus long window coverage (percentage points)",
             labelnames=["index", "horizon"],
             registry=_REGISTRY,
         )
-        # TTL study scenario metrics (populated dynamically from JSON file if present)
+        _FORECAST_ADAPTIVE_TTL = Gauge(
+            "g6_forecast_adaptive_ttl_sec",
+            "Current adaptive TTL in seconds",
+            labelnames=["index", "horizon"],
+            registry=_REGISTRY,
+        )
         _TTL_STUDY_LATENCY_P95 = Gauge(
             "g6_ttl_study_latency_p95_ms",
             "TTL impact study p95 latency (milliseconds) per scenario",
@@ -646,4 +653,16 @@ __all__ = [
     "observe_forecast_errors",
     "get_registry",
     # TTL study metrics are auto-refreshed; no public setter functions
+    "set_forecast_adaptive_ttl",
+    "set_ttl_study_metrics",
+    "collect_metrics",
 ]
+
+def set_forecast_adaptive_ttl(index: str, horizon: int, ttl_sec: float) -> None:
+    """Set current adaptive TTL gauge."""
+    if not _init_metrics() or _FORECAST_ADAPTIVE_TTL is None:
+        return
+    try:
+        _FORECAST_ADAPTIVE_TTL.labels(index=index, horizon=horizon).set(ttl_sec)
+    except Exception:
+        pass

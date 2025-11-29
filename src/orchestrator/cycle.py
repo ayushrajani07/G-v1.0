@@ -461,7 +461,7 @@ def run_cycle(ctx: RuntimeContext) -> float:
                             overview_capture: dict[str, dict[str,float]] = {}
                             base_ts: dict[str, float] = {}
                             day_width_map: dict[str, int] = {}
-                                for _idx, _params in (ctx.index_params or {}).items():
+                            for _idx, _params in (ctx.index_params or {}).items():
                                 if not isinstance(_params, dict) or not _params.get('enable', True):
                                     continue
                                 expiries = _params.get('expiries', ['this_week'])
@@ -510,7 +510,7 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                 except (ImportError, AttributeError, TypeError, ValueError):
                                     # Handle strikes module or build_strikes failures
                                     strikes = []
-                                        for _rule in expiries:
+                                for _rule in expiries:
                                     outcome = _pipeline_run_expiry(
                                         pipe, _idx, _rule, strikes, index_price, atm
                                     )

@@ -1,67 +1,65 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional
+from pydantic import BaseModel, Field, model_validator
 
 # Modular sub-configs for retrieval forecaster. Backward compatible: legacy fields
 # in RetrievalConfig are mapped into these structs.
 
-@dataclass
-class PruningConfig:
+class PruningConfig(BaseModel):
     min_days: int = 3
     min_future: int = 30
-    max_days_scan: int | None = None
-    min_hist_rows: int | None = None
-    max_time_gap_ratio: float | None = None
+    max_days_scan: Optional[int] = None
+    min_hist_rows: Optional[int] = None
+    max_time_gap_ratio: Optional[float] = None
 
-@dataclass
-class RegimeConfig:
+class RegimeConfig(BaseModel):
     distance_metric: str = "l2"  # l2|cosine|recent_l2
     recent_gamma: float = 0.9
-    weight_mode: str | None = None  # None|inv_dist
-    regime_tolerance: float | None = None
+    weight_mode: Optional[str] = None  # None|inv_dist
+    regime_tolerance: Optional[float] = None
     regime_penalty: float = 1.25
 
-@dataclass
-class AnnConfig:
+class AnnConfig(BaseModel):
     use_ann: bool = False
     ann_space: str = "cosine"
-    ann_max_candidates: int | None = None
-    ann_dim: int | None = None
+    ann_max_candidates: Optional[int] = None
+    ann_dim: Optional[int] = None
 
-@dataclass
-class RetrievalConfig:
+class RetrievalConfig(BaseModel):
     root: Path
     expiry_tag: str = "this_week"
     offset: str = "0"
     window: int = 60
     k: int = 15
+    
     # Legacy flat fields retained for backward compatibility (will populate sub-configs)
     min_days: int = 3
     min_future: int = 30
-    max_days_scan: int | None = None
-    min_hist_rows: int | None = None
-    max_time_gap_ratio: float | None = None
+    max_days_scan: Optional[int] = None
+    min_hist_rows: Optional[int] = None
+    max_time_gap_ratio: Optional[float] = None
     distance_metric: str = "l2"
     recent_gamma: float = 0.9
-    weight_mode: str | None = None
-    regime_tolerance: float | None = None
+    weight_mode: Optional[str] = None
+    regime_tolerance: Optional[float] = None
     regime_penalty: float = 1.25
     use_ann: bool = False
     ann_space: str = "cosine"
-    ann_max_candidates: int | None = None
-    ann_dim: int | None = None
+    ann_max_candidates: Optional[int] = None
+    ann_dim: Optional[int] = None
 
     # New modular configs (optional injection)
-    pruning: PruningConfig | None = None
-    regime: RegimeConfig | None = None
-    ann: AnnConfig | None = None
+    pruning: Optional[PruningConfig] = None
+    regime: Optional[RegimeConfig] = None
+    ann: Optional[AnnConfig] = None
 
     # Arbitrary extras for forward compatibility
-    extras: Dict[str, Any] = field(default_factory=dict)
+    extras: Dict[str, Any] = Field(default_factory=dict)
 
-    def __post_init__(self) -> None:
+    @model_validator(mode='after')
+    def populate_subconfigs(self) -> "RetrievalConfig":
         # If modular configs not provided, build them from legacy values.
         if self.pruning is None:
             self.pruning = PruningConfig(
@@ -86,6 +84,7 @@ class RetrievalConfig:
                 ann_max_candidates=self.ann_max_candidates,
                 ann_dim=self.ann_dim,
             )
+        return self
 
     @classmethod
     def from_modular(
@@ -129,3 +128,61 @@ class RetrievalConfig:
             "ann_max_candidates": self.ann.ann_max_candidates if self.ann else self.ann_max_candidates,
             "ann_dim": self.ann.ann_dim if self.ann else self.ann_dim,
         }
+
+class EnsembleConfig(BaseModel):
+    """Configuration for ensemble forecaster.
+    
+    Component configs:
+    - baseline: Structural TP formula
+    - gbrt: GBRT quantile regression on residuals
+    - retrieval: K-NN historical retrieval
+    - conformal: Conformal prediction bands
+    """
+    # Component enable/disable flags
+    baseline_enabled: bool = True
+    gbrt_enabled: bool = True
+    retrieval_enabled: bool = True
+    conformal_enabled: bool = True
+    
+    # Baseline configuration
+    baseline_k: float = 1.0
+    
+    # GBRT configuration
+    gbrt_model_path: Optional[Path] = None
+    gbrt_feature_config: Optional[Dict[str, Any]] = None
+    
+    # Retrieval configuration (passed to RetrievalPathForecaster)
+    retrieval_root: Optional[Path] = None
+    retrieval_expiry_tag: str = "this_week"
+    retrieval_offset: str = "0"
+    retrieval_window: int = 60
+    retrieval_k: int = 20
+    retrieval_min_days: int = 3
+    retrieval_distance_metric: str = "l2"
+    retrieval_weight_mode: Optional[str] = None
+    retrieval_use_ann: bool = False
+    
+    # Conformal configuration
+    conformal_target_coverage: float = 0.8
+    conformal_window: int = 600
+    conformal_min_radius: float = 0.0
+    
+    # Weighting strategy
+    weighting_strategy: str = "confidence_adaptive"  # confidence_adaptive | static | dynamic
+    
+    # Weights for high confidence (>= threshold)
+    weights_high_conf_gbrt: float = 0.8
+    weights_high_conf_retrieval: float = 0.2
+    
+    # Weights for low confidence (< threshold)
+    weights_low_conf_gbrt: float = 0.5
+    weights_low_conf_retrieval: float = 0.5
+    
+    # Confidence threshold for weight transition
+    confidence_threshold: float = 0.7
+    
+    # Fallback settings
+    min_candidates_threshold: int = 5
+    
+    # Diagnostics
+    enable_profiling: bool = False

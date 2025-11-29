@@ -602,7 +602,7 @@ async def api_ml_ensemble_quarantine_log(
                     continue
                 valid_rows.append(row)
             except (ValueError, TypeError):
-                # Invalid numeric conversion or type error
+                # Invalid numeric conversion or type
                 continue
         # Apply tail after filtering valid rows
         if tail and len(valid_rows) > tail:
@@ -772,7 +772,7 @@ async def api_ml_ensemble_k_override(
         if fp.exists():
             try:
                 obj = _json.loads(fp.read_text(encoding="utf-8")) or {"overrides": {}}
-            except (json.JSONDecodeError, OSError, ValueError):
+            except (_json.JSONDecodeError, OSError, ValueError):
                 # JSON parsing or file read error
                 obj = {"overrides": {}}
         now_ms = int(_time.time() * 1000)
@@ -967,7 +967,9 @@ async def api_ml_delta(
             return None
 
         pred_by_bucket: dict[int, float] = {}
-        for r in rows[-max(tail * 2, 100):]:  # read a bit extra for safety then trim by bucket
+        # read a bit extra for safety then trim by bucket
+        subset_rows = rows[-max(tail * 2, 100):]
+        for r in subset_rows:
             parts = r.split(",")
             if len(parts) <= max(ts_idx, pred_idx, mdl_idx, hor_idx):
                 continue
@@ -1540,6 +1542,8 @@ async def api_ml_diagnostics(
     index: str = Query("NIFTY", description="Index name e.g., NIFTY, BANKNIFTY, SENSEX, FINNIFTY"),
     horizon: str = Query("1", description="Horizon label to select (string)"),
     model: str = Query("all", description="Model name to select or 'all' for all models found"),
+   
+   
     expiry_tag: str = Query("this_month", description="Expiry tag for live_csv lookup"),
     offset: str = Query("0", description="Offset for live_csv lookup"),
     bucket_ms: int = Query(60_000, ge=1_000, le=3_600_000, description="Bucket size for time alignment in ms"),
@@ -1702,7 +1706,6 @@ async def api_ml_diagnostics(
                         # model constant expected: sk_hgb_residual
                         mname = parts[h_mdl_idx]
                         if mname not in include_models:
-                            # include if user asked for all
                             include_models.add(mname)
                             preds_map.setdefault(mname, {})
                         ems = _to_epoch_ms(parts[h_ts_idx])
@@ -1730,7 +1733,6 @@ async def api_ml_diagnostics(
             except (ValueError, TypeError, KeyError, AttributeError):
                 # Value conversion, type, key, or attribute errors
                 pass
-
         # Load tp from live_csv
         from datetime import date
         p = _resolve_live_csv_path(idx_norm, expiry_tag, offset, date.today())
@@ -1744,7 +1746,7 @@ async def api_ml_diagnostics(
             except (ValueError, TypeError):
                 # Invalid numeric conversion or type error
                 continue
-            if not ems or ems < cutoff_ms:
+            if not ems:
                 continue
             bucket = (ems // bucket_ms) * bucket_ms
             # accept numeric strings for tp as well
@@ -1808,8 +1810,6 @@ async def api_ml_diagnostics(
                         except (ValueError, IndexError):
                             h_ts_idx = h_pred_idx = h_mdl_idx = h_hor_idx = -1  # Column not found
                             h_base_idx = h_resid_idx = -1
-                        hybrid_baseline_by_bucket.clear()
-                        hybrid_residual_by_bucket.clear()
                         for r in h_lines:
                             parts = r.split(",")
                             if h_ts_idx < 0 or len(parts) <= max(h_ts_idx, h_pred_idx, h_mdl_idx, h_hor_idx):
@@ -2066,9 +2066,7 @@ async def api_ml_diagnostics(
                             k = (len(s) - 1) * q
                             f = int(k)
                             c = min(f + 1, len(s) - 1)
-                            if f == c:
-                                return s[f]
-                            return s[f] + (s[c] - s[f]) * (k - f)
+                            return s[f] if f == c else (s[f] + (s[c] - s[f]) * (k - f))
                         count = len(probs)
                         avg_prob = (sum(probs) / count) if count else float("nan")
                         hi_share = (hi_count / total) if total else float("nan")
@@ -2141,7 +2139,7 @@ async def api_ml_diagnostics(
                             bias_mean = sum(deltas) / n
                             sd = sorted(deltas)
                             mpos = n // 2
-                            bias_median = sd[mpos] if n % 2 == 1 else 0.5 * (sd[mpos - 1] + sd[mpos])
+                            bias_median = sd[mpos] if n % 2 == 1 else (sd[mpos - 1] + sd[mpos]) / 2.0
                             # simple corr and slopes skipped in fallback; leave blanks
                             p10 = sd[int((n - 1) * 0.10)]
                             p90 = sd[int((n - 1) * 0.90)]
@@ -2360,288 +2358,34 @@ async def api_ml_diagnostics(
                             except (ValueError, TypeError, KeyError, AttributeError):
                                 # Value conversion, type, key, or attribute errors
                                 pass
-                        base_parts.extend([
-                            (f"{b_rmse_v:.4f}" if isinstance(b_rmse_v, (int, float)) and b_rmse_v == b_rmse_v else ""),
-                            (f"{h_rmse_v:.4f}" if isinstance(h_rmse_v, (int, float)) and h_rmse_v == h_rmse_v else ""),
-                            (f"{ratio_v:.4f}" if isinstance(ratio_v, (int, float)) and ratio_v == ratio_v else ""),
-                            (f"{last_base_v:.4f}" if isinstance(last_base_v, (int, float)) and last_base_v == last_base_v else ""),
-                            (f"{last_resid_v:.4f}" if isinstance(last_resid_v, (int, float)) and last_resid_v == last_resid_v else ""),
-                        ])
-                    else:
-                        base_parts.extend(["", "", "", "", ""])  # non-hybrid rows
-                # Bands
-                if include_bands:
-                    base_parts.extend(["", ""])  # band_radius,coverage_estimate
-                    if include_effective_bands:
-                        base_parts.extend(["", "", ""])  # effective_cov_estimate,effective_radius_avg,effective_radius_last
-                # Move stats
-                if include_move_stats:
-                    base_parts.extend(["", "", "", "", "", "", ""])  # 7 move stat columns
-                # Pad to header length defensively
-                if len(base_parts) < expected_len:
-                    base_parts.extend([""] * (expected_len - len(base_parts)))
-                out.append(",".join(base_parts))
-                continue
-            preds = [pmap[k] for k in keys]
-            tps = [tp_by_bucket[k] for k in keys]
-            deltas = [a - b for a, b in zip(preds, tps)]
-            # Metrics
-            import math
-            n = len(keys)
-            mae = sum(abs(d) for d in deltas) / n
-            rmse = math.sqrt(sum((d) ** 2 for d in deltas) / n)
-            bias_mean = sum(deltas) / n
-            sorted_d = sorted(deltas)
-            mid = n // 2
-            if n % 2 == 1:
-                bias_median = sorted_d[mid]
+                base_parts.extend([
+                    (f"{b_rmse_v:.4f}" if isinstance(b_rmse_v, (int, float)) and b_rmse_v == b_rmse_v else ""),
+                    (f"{h_rmse_v:.4f}" if isinstance(h_rmse_v, (int, float)) and h_rmse_v == h_rmse_v else f"{rmse:.4f}"),
+                    (f"{ratio_v:.4f}" if isinstance(ratio_v, (int, float)) and ratio_v == ratio_v else ""),
+                    (f"{last_base_v:.4f}" if isinstance(last_base_v, (int, float)) and last_base_v == last_base_v else ""),
+                    (f"{last_resid_v:.4f}" if isinstance(last_resid_v, (int, float)) and last_resid_v == last_resid_v else ""),
+                ])
             else:
-                bias_median = 0.5 * (sorted_d[mid - 1] + sorted_d[mid])
-            corr = _corr(preds, tps)
-            slope_pred = _slope_per_hr(keys, preds)
-            slope_tp = _slope_per_hr(keys, tps)
-            # percentiles
-            def _pct(vals: list[float], p: float) -> float:
-                if not vals:
-                    return float("nan")
-                s = sorted(vals)
-                k = (len(s) - 1) * p
-                f = int(k)
-                c = min(f + 1, len(s) - 1)
-                if f == c:
-                    return s[f]
-                return s[f] + (s[c] - s[f]) * (k - f)
-
-            p10 = _pct(deltas, 0.10)
-            p90 = _pct(deltas, 0.90)
-            last_k = keys[-1]
-            last_pred = pmap[last_k]
-            last_tp = tp_by_bucket[last_k]
-            last_delta = last_pred - last_tp
-            # Hybrid extras (only for hybrid residual model)
-            baseline_rmse = hybrid_rmse = improv_ratio = None
-            last_base = last_resid = None
-            if mname == "sk_hgb_residual":
-                # Compute baseline RMSE on overlapping keys where baseline is present
-                b_keys = [k for k in keys if k in hybrid_baseline_by_bucket]
-                if b_keys:
-                    b_deltas = [hybrid_baseline_by_bucket[k] - tp_by_bucket[k] for k in b_keys]
-                    if b_deltas:
-                        baseline_rmse = math.sqrt(sum((d) ** 2 for d in b_deltas) / len(b_deltas))
-                    hybrid_rmse = rmse  # already computed from hybrid preds
-                    try:
-                        if hybrid_rmse and hybrid_rmse > 0:
-                            improv_ratio = baseline_rmse / hybrid_rmse  # >1 means hybrid improves over baseline
-                    except (ValueError, TypeError, ZeroDivisionError):
-                        # Value error, type error, or division by zero
-                        improv_ratio = None
-                    # last baseline/residual if present
-                    if last_k in hybrid_baseline_by_bucket:
-                        try:
-                            last_base = float(hybrid_baseline_by_bucket[last_k])
-                        except (ValueError, TypeError):
-                            last_base = None  # Invalid numeric conversion
-                    if last_k in hybrid_residual_by_bucket:
-                        try:
-                            last_resid = float(hybrid_residual_by_bucket[last_k])
-                        except (ValueError, TypeError):
-                            last_resid = None  # Invalid numeric conversion
-                # If overlapping-key computation unavailable or NaN, fall back to sequence-aligned RMSE
-                def _seq_rmse(xs: list[float], ys: list[float]) -> float | None:
-                    try:
-                        n = min(len(xs), len(ys))
-                        if n < 3:
-                            return None
-                        xs2 = xs[:n]
-                        ys2 = ys[:n]
-                        dd = [(a - b) for a, b in zip(xs2, ys2)]
-                        return math.sqrt(sum((d) ** 2 for d in dd) / n)
-                    except (AttributeError, OSError, TypeError):
-                        return None  # Path resolution or file system error
-                try:
-                    if (not isinstance(baseline_rmse, (int, float)) or not (baseline_rmse == baseline_rmse)):
-                        b_rmse_seq = _seq_rmse(list(seq_hybrid_baseline), list(seq_tp))
-                        if isinstance(b_rmse_seq, (int, float)) and b_rmse_seq == b_rmse_seq:
-                            baseline_rmse = b_rmse_seq
-                    if (not isinstance(hybrid_rmse, (int, float)) or not (hybrid_rmse == hybrid_rmse)):
-                        h_rmse_seq = _seq_rmse(list(seq_pred_by_model.get(mname, [])), list(seq_tp))
-                        if isinstance(h_rmse_seq, (int, float)) and h_rmse_seq == h_rmse_seq:
-                            hybrid_rmse = h_rmse_seq
-                    # Ultimate fallback: parse full hybrid file if sequence lists empty
-                    if (mname == "sk_hgb_residual" and (not isinstance(baseline_rmse, (int, float)) or baseline_rmse == 0.0)) and hybrid_fp.exists():
-                        try:
-                            h_lines2 = hybrid_fp.read_text(encoding="utf-8").splitlines()
-                            if len(h_lines2) > 1:
-                                h_cols2 = h_lines2[0].split(",")
-                                try:
-                                    _h_pred = h_cols2.index("prediction")
-                                    _h_base = h_cols2.index("baseline") if "baseline" in h_cols2 else -1
-                                    _h_resid = h_cols2.index("residual") if "residual" in h_cols2 else -1
-                                except (ValueError, IndexError):
-                                    _h_pred = _h_base = _h_resid = -1  # Column not found
-                                bases_seq: list[float] = []
-                                hybrid_seq: list[float] = []
-                                for _r in h_lines2[1:]:
-                                    _parts = _r.split(",")
-                                    if _h_pred < 0 or len(_parts) <= _h_pred:
-                                        continue
-                                    try:
-                                        hybrid_seq.append(float(_parts[_h_pred]))
-                                    except (ValueError, TypeError):
-                                        # Invalid numeric conversion or type error
-                                        continue
-                                    if _h_base >= 0 and len(_parts) > _h_base:
-                                        try:
-                                            bases_seq.append(float(_parts[_h_base]))
-                                        except (ValueError, TypeError, KeyError, AttributeError):
-                                            # Value conversion, type, key, or attribute errors
-                                            pass
-                                # Compute direct baseline rmse if possible (baseline vs tp joined by position)
-                                if not seq_tp:
-                                    for row in live_rows:
-                                        try:
-                                            tp_raw = row.get("tp")
-                                            tp_val = float(tp_raw) if tp_raw is not None else None
-                                        except (ValueError, TypeError):
-                                            tp_val = None  # Invalid numeric conversion
-                                        if isinstance(tp_val, (int, float)):
-                                            seq_tp.append(float(tp_val))
-                                # Positional RMSE baseline
-                                pos_n = min(len(bases_seq), len(seq_tp))
-                                if pos_n >= 3 and (not isinstance(baseline_rmse, (int, float)) or baseline_rmse == 0.0):
-                                    pos_dd = [(bases_seq[i] - seq_tp[i]) for i in range(pos_n)]
-                                    try:
-                                        baseline_rmse = math.sqrt(sum(d*d for d in pos_dd) / pos_n)
-                                    except (ValueError, TypeError, KeyError, AttributeError):
-                                        # Value conversion, type, key, or attribute errors
-                                        pass
-                                # Build seq_tp if still empty (no cutoff)
-                                # (Already handled positional collection above)
-                                b_rmse_seq2 = _seq_rmse(bases_seq, list(seq_tp))
-                                h_rmse_seq2 = _seq_rmse(hybrid_seq, list(seq_tp))
-                                if isinstance(b_rmse_seq2, (int, float)) and b_rmse_seq2 == b_rmse_seq2:
-                                    baseline_rmse = b_rmse_seq2
-                                if isinstance(h_rmse_seq2, (int, float)) and h_rmse_seq2 == h_rmse_seq2 and (not isinstance(hybrid_rmse, (int, float)) or hybrid_rmse == hybrid_rmse):
-                                    hybrid_rmse = h_rmse_seq2 or hybrid_rmse
-                                if isinstance(baseline_rmse, (int, float)) and isinstance(hybrid_rmse, (int, float)) and hybrid_rmse > 0:
-                                    improv_ratio = baseline_rmse / hybrid_rmse
-                                if last_base is None and bases_seq:
-                                    try:
-                                        last_base = float(bases_seq[-1])
-                                    except (ValueError, TypeError, KeyError, AttributeError):
-                                        # Value conversion, type, key, or attribute errors
-                                        pass
-                                if last_resid is None and _h_resid >= 0 and len(h_lines2) > 1:
-                                    try:
-                                        # reuse residual sequence if needed
-                                        last_resid = float(h_lines2[-1].split(",")[_h_resid])
-                                    except (ValueError, TypeError, KeyError, AttributeError):
-                                        # Value conversion, type, key, or attribute errors
-                                        pass
-                        except (ValueError, TypeError, KeyError, AttributeError):
-                            # Value conversion, type, key, or attribute errors
-                            pass
-                    if (isinstance(baseline_rmse, (int, float)) and baseline_rmse == baseline_rmse
-                        and isinstance(hybrid_rmse, (int, float)) and hybrid_rmse == hybrid_rmse and hybrid_rmse > 0):
-                        improv_ratio = baseline_rmse / hybrid_rmse
-                    # Last values fallback
-                    if last_base is None and seq_hybrid_baseline:
-                        try:
-                            last_base = float(seq_hybrid_baseline[-1])
-                        except (ValueError, TypeError):
-                            last_base = None  # Invalid numeric conversion
-                    if last_resid is None and seq_hybrid_residual:
-                        try:
-                            last_resid = float(seq_hybrid_residual[-1])
-                        except (ValueError, TypeError):
-                            last_resid = None  # Invalid numeric conversion
-                except (ValueError, TypeError, KeyError, AttributeError):
-                    # Value conversion, type, key, or attribute errors
-                    pass
-            # Optional conformal band computation per model
-            band_radius = None
-            cov_est = None
+                base_parts.extend(["", "", "", "", ""])  # non-hybrid rows
+            # Bands
             if include_bands:
-                abs_res = [abs(d) for d in deltas]
-                if abs_res:
-                    s = sorted(abs_res)
-                    q = min(max(coverage, 0.5), 0.99)
-                    kf = (len(s) - 1) * q
-                    fi = int(kf)
-                    ci = min(fi + 1, len(s) - 1)
-                    band_radius = s[fi] if fi == ci else (s[fi] + (s[ci] - s[fi]) * (kf - fi))
-                    inside = sum(1 for r in abs_res if r <= band_radius)
-                    cov_est = inside / len(abs_res)
-                    # Effective bands coverage: radius_e(b) = max(band_radius, k * dis[b])
-                    if include_effective_bands:
-                        kfac = float(disagreement_k)
-                        eff_inside = 0
-                        eff_radii: list[float] = []
-                        for i, k_b in enumerate(keys):
-                            r = abs_res[i]
-                            dis_b = float(dis_by_bucket.get(k_b, 0.0))
-                            rad_b = band_radius if band_radius is not None else 0.0
-                            eff_r = max(float(rad_b), kfac * dis_b)
-                            eff_radii.append(eff_r)
-                            if r <= eff_r:
-                                eff_inside += 1
-                        eff_cov = eff_inside / len(abs_res) if abs_res else float("nan")
-                        eff_avg = (sum(eff_radii) / len(eff_radii)) if eff_radii else float("nan")
-                        eff_last = (eff_radii[-1] if eff_radii else float("nan"))
-
-            row_parts = [
-                mname,
-                idx_norm,
-                str(horizon),
-                str(n),
-                f"{mae:.4f}",
-                f"{rmse:.4f}",
-                f"{bias_mean:.4f}",
-                f"{bias_median:.4f}",
-                f"{corr:.4f}" if corr == corr else "",
-                f"{slope_pred:.4f}",
-                f"{slope_tp:.4f}",
-                f"{p10:.4f}",
-                f"{p90:.4f}",
-                f"{last_pred:.4f}",
-                f"{last_tp:.4f}",
-                f"{last_delta:.4f}",
-                str(window_minutes),
-            ]
-            # Append hybrid extras if header includes them
-            if "sk_hgb_residual" in include_models:
-                if mname == "sk_hgb_residual":
-                    row_parts.extend([
-                        (f"{baseline_rmse:.4f}" if isinstance(baseline_rmse, (int, float)) and baseline_rmse == baseline_rmse else ""),
-                        (f"{hybrid_rmse:.4f}" if isinstance(hybrid_rmse, (int, float)) and hybrid_rmse == hybrid_rmse else f"{rmse:.4f}"),
-                        (f"{improv_ratio:.4f}" if isinstance(improv_ratio, (int, float)) and improv_ratio == improv_ratio else ""),
-                        (f"{last_base:.4f}" if isinstance(last_base, (int, float)) else ""),
-                        (f"{last_resid:.4f}" if isinstance(last_resid, (int, float)) else ""),
-                    ])
-                else:
-                    # non-hybrid model: blanks for hybrid columns
-                    row_parts.extend(["", "", "", "", ""])            
-            if include_bands:
-                row_parts.append(f"{(band_radius if band_radius is not None else float('nan')):.4f}")
-                row_parts.append(f"{(cov_est if cov_est is not None else float('nan')):.4f}")
+                base_parts.append(f"{(band_radius if band_radius is not None else float('nan')):.4f}")
+                base_parts.append(f"{(cov_est if cov_est is not None else float('nan')):.4f}")
                 if include_effective_bands:
-                    try:
-                        row_parts.append(f"{eff_cov:.4f}")
-                        row_parts.append(f"{eff_avg:.4f}")
-                        row_parts.append(f"{eff_last:.4f}")
-                    except (ValueError, KeyError, TypeError):
-                        # Value, key, or type errors
-                        row_parts.extend(["", "", ""])            
+                    base_parts.append(f"{eff_cov:.4f}")
+                    base_parts.append(f"{eff_avg:.4f}")
+                    base_parts.append(f"{eff_last:.4f}")
+            # Move stats
             if include_move_stats:
                 if move_stats_row is not None:
-                    row_parts.extend(move_stats_row)
+                    base_parts.extend(move_stats_row)
                 else:
                     # append blanks for move columns
-                    row_parts.extend(["", "", "", "", "", "", ""])
+                    base_parts.extend(["", "", "", "", "", "", ""])
             # Pad to header length defensively to avoid mismatches
-            if len(row_parts) < expected_len:
-                row_parts.extend([""] * (expected_len - len(row_parts)))
-            out.append(",".join(row_parts))
+            if len(base_parts) < expected_len:
+                base_parts.extend([""] * (expected_len - len(base_parts)))
+            out.append(",".join(base_parts))
 
         return PlainTextResponse("\n".join(out), media_type="text/csv")
     except HTTPException:
@@ -2650,213 +2394,156 @@ async def api_ml_diagnostics(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/api/ml/move_stats")
-async def api_ml_move_stats(
-    index: str = Query("NIFTY", description="Index name e.g., NIFTY, BANKNIFTY, SENSEX, FINNIFTY"),
-    horizon: str = Query("1", description="Horizon label to select (string)"),
-    window_minutes: int = Query(180, ge=5, le=24 * 60, description="Lookback window in minutes"),
-    prob_threshold: float = Query(0.6, ge=0.0, le=1.0, description="Threshold to consider a 'high probability' move"),
-    tail: int = Query(5000, ge=10, le=200000, description="Max rows to read from tail of file for efficiency"),
+@router.get("/api/ml/drift/features")
+async def api_ml_drift_features(
+    index: str = Query("NIFTY", description="Index name e.g., NIFTY, BANKNIFTY"),
+    limit: int = Query(100, ge=1, le=1000, description="Max records to return"),
 ) -> PlainTextResponse:
-    """Summarize move signal stream over a recent window.
+    """Return feature-level drift metrics (PSI, etc.) from history.
+    
+    Output CSV: timestamp,index,feature,psi,ks_pvalue,mean_delta,var_delta,alert_flag
+    """
+    try:
+        idx_norm = (index or "NIFTY").strip().upper()
+        base = _project_root() / "data" / "ml" / "drift"
+        fp = base / "drift_history.jsonl"
+        
+        if not fp.exists():
+            return PlainTextResponse("timestamp,index,feature,psi,ks_pvalue,mean_delta,var_delta,alert_flag\n", media_type="text/csv")
+            
+        import json
+        out = ["timestamp,index,feature,psi,ks_pvalue,mean_delta,var_delta,alert_flag"]
+        
+        # Read last N lines efficiently
+        try:
+            lines = fp.read_text(encoding="utf-8").splitlines()
+        except Exception:
+            lines = []
+            
+        # Filter and process
+        count = 0
+        for line in reversed(lines):
+            if count >= limit:
+                break
+            try:
+                rec = json.loads(line)
+                if rec.get("index") != idx_norm:
+                    continue
+                
+                ts = rec.get("iso_timestamp", "")
+                data_drift = rec.get("data_drift", {})
+                
+                # If data_drift is simple dict {feature: psi}, normalize it
+                # If it's complex dict {feature: {psi: ..., ...}}, use it
+                
+                for feat, metrics in data_drift.items():
+                    psi = 0.0
+                    ks_p = 1.0
+                    mean_d = 0.0
+                    var_d = 0.0
+                    alert = 0
+                    
+                    if isinstance(metrics, (int, float)):
+                        psi = float(metrics)
+                    elif isinstance(metrics, dict):
+                        psi = float(metrics.get("psi", 0.0))
+                        ks_p = float(metrics.get("ks_pvalue", 1.0))
+                        mean_d = float(metrics.get("mean_delta", 0.0))
+                        var_d = float(metrics.get("var_delta", 0.0))
+                        alert = 1 if metrics.get("alert_flag") else 0
+                        
+                    out.append(f"{ts},{idx_norm},{feat},{psi:.4f},{ks_p:.4f},{mean_d:.4f},{var_d:.4f},{alert}")
+                
+                count += 1
+            except Exception:
+                continue
+                
+        return PlainTextResponse("\n".join(out), media_type="text/csv")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    Input source: data/ml/live_predictions/<INDEX>_move.csv with columns
-      timestamp,move_prob,move_label_pred,conditional_magnitude,model,index,horizon
 
-    Output columns:
-      index,horizon,count,avg_probability,high_prob_share,mag_p10,mag_p50,mag_p90,last_prob,last_mag,window_minutes
+@router.get("/api/ml/drift/concept")
+async def api_ml_drift_concept(
+    index: str = Query("NIFTY", description="Index name e.g., NIFTY, BANKNIFTY"),
+    limit: int = Query(100, ge=1, le=1000, description="Max records to return"),
+) -> PlainTextResponse:
+    """Return model-level concept drift metrics (MAE, MAPE) from history.
+    
+    Output CSV: timestamp,index,mae,rmse,mape
+    """
+    try:
+        idx_norm = (index or "NIFTY").strip().upper()
+        base = _project_root() / "data" / "ml" / "drift"
+        fp = base / "drift_history.jsonl"
+        
+        if not fp.exists():
+            return PlainTextResponse("timestamp,index,mae,rmse,mape\n", media_type="text/csv")
+            
+        import json
+        out = ["timestamp,index,mae,rmse,mape"]
+        
+        try:
+            lines = fp.read_text(encoding="utf-8").splitlines()
+        except Exception:
+            lines = []
+            
+        count = 0
+        for line in reversed(lines):
+            if count >= limit:
+                break
+            try:
+                rec = json.loads(line)
+                if rec.get("index") != idx_norm:
+                    continue
+                
+                ts = rec.get("iso_timestamp", "")
+                cd = rec.get("concept_drift", {})
+                
+                mae = float(cd.get("mae", 0.0) or 0.0)
+                rmse = float(cd.get("rmse", 0.0) or 0.0)
+                mape = float(cd.get("mape", 0.0) or 0.0)
+                
+                out.append(f"{ts},{idx_norm},{mae:.4f},{rmse:.4f},{mape:.4f}")
+                count += 1
+            except Exception:
+                continue
+                
+        return PlainTextResponse("\n".join(out), media_type="text/csv")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/ml/conformal_metrics")
+async def api_ml_conformal_metrics(
+    index: str = Query("NIFTY", description="Index name"),
+    tail: int = Query(600, ge=1, le=20000, description="Return last N rows"),
+) -> PlainTextResponse:
+    """Serve conformal metrics CSV.
+
+    Expects file at data/ml/metrics/<INDEX>_conformal.csv with header:
+      timestamp,index,horizon,model,radius,coverage_estimate,target_coverage
     """
     try:
         idx_norm = (index or "NIFTY").strip().upper()
         if any(ch in idx_norm for ch in ("$", "{", "}")):
             idx_norm = "NIFTY"
 
-        base = _project_root() / "data" / "ml" / "live_predictions"
-        fp = base / f"{idx_norm}_move.csv"
+        base = _project_root() / "data" / "ml" / "metrics"
+        fp = base / f"{idx_norm}_conformal.csv"
         if not fp.exists():
-            raise HTTPException(status_code=404, detail=f"move file not found: {fp}")
+            # Return empty CSV with header if file doesn't exist yet
+            return PlainTextResponse("timestamp,index,horizon,model,radius,coverage_estimate,target_coverage\n", media_type="text/csv")
 
         lines = fp.read_text(encoding="utf-8").splitlines()
         if not lines:
-            return PlainTextResponse(
-                "index,horizon,count,avg_probability,high_prob_share,mag_p10,mag_p50,mag_p90,last_prob,last_mag,window_minutes\n",
-                media_type="text/csv",
-            )
-
-        header = lines[0].split(",")
-        try:
-            ts_idx = header.index("timestamp")
-            prob_idx = header.index("move_prob")
-            lbl_idx = header.index("move_label_pred")
-            mag_idx = header.index("conditional_magnitude")
-            hor_idx = header.index("horizon")
-        except (ValueError, IndexError):
-            # Column not found in CSV header
-            raise HTTPException(status_code=500, detail="malformed move CSV header")
-
-        # Helpers
-        def _to_epoch_ms(s: str) -> int | None:
-            try:
-                for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%d-%m-%Y %H:%M:%S"):
-                    try:
-                        dt = _dt.datetime.strptime(s.strip(), fmt)
-                        return int(dt.timestamp() * 1000)
-                    except (ValueError, TypeError):
-                        # Invalid numeric conversion or type error
-                        continue
-                s2 = s.strip()
-                if s2.isdigit():
-                    if len(s2) >= 13:
-                        return int(s2[:13])
-                    return int(s2) * 1000
-            except (ValueError, TypeError, KeyError, AttributeError):
-                # Value conversion, type, key, or attribute errors
-                pass
-            return None
-
-        now_ms = int(_dt.datetime.now(tz=_dt.timezone.utc).timestamp() * 1000)
-        cutoff_ms = now_ms - window_minutes * 60_000
-
-        probs: list[float] = []
-        mags_on_pred: list[float] = []
-        last_prob: Optional[float] = None
-        last_mag: Optional[float] = None
-        hi_count = 0
-        total = 0
-
-        for r in lines[-tail:]:
-            parts = r.split(",")
-            if len(parts) <= max(ts_idx, prob_idx, lbl_idx, mag_idx, hor_idx):
-                continue
-            if parts[hor_idx] != str(horizon):
-                continue
-            ems = _to_epoch_ms(parts[ts_idx])
-            if ems is None or ems < cutoff_ms:
-                continue
-            try:
-                p = float(parts[prob_idx])
-            except (ValueError, TypeError):
-                p = None  # type: ignore  # Invalid numeric conversion
-            try:
-                lbl = int(parts[lbl_idx])
-            except (ValueError, TypeError, IndexError):
-                # Invalid numeric conversion or index error
-                lbl = 0
-            try:
-                mag = float(parts[mag_idx])
-            except (ValueError, TypeError):
-                mag = None  # type: ignore  # Invalid numeric conversion
-
-            total += 1
-            if isinstance(p, (int, float)):
-                probs.append(float(p))
-                if p >= prob_threshold:
-                    hi_count += 1
-                last_prob = float(p)
-            if lbl == 1 and isinstance(mag, (int, float)):
-                mags_on_pred.append(float(mag))
-                last_mag = float(mag)
-
-        def _pct(vals: list[float], q: float) -> float:
-            if not vals:
-                return float("nan")
-            s = sorted(vals)
-            k = (len(s) - 1) * q
-            f = int(k)
-            c = min(f + 1, len(s) - 1)
-            if f == c:
-                return s[f]
-            return s[f] + (s[c] - s[f]) * (k - f)
-
-        count = len(probs)
-        avg_prob = (sum(probs) / count) if count else float("nan")
-        hi_share = (hi_count / total) if total else float("nan")
-        p10 = _pct(mags_on_pred, 0.10)
-        p50 = _pct(mags_on_pred, 0.50)
-        p90 = _pct(mags_on_pred, 0.90)
-
-        row = [
-            idx_norm,
-            str(horizon),
-            str(count),
-            (f"{avg_prob:.4f}" if count else ""),
-            (f"{hi_share:.4f}" if total else ""),
-            (f"{p10:.4f}" if mags_on_pred else ""),
-            (f"{p50:.4f}" if mags_on_pred else ""),
-            (f"{p90:.4f}" if mags_on_pred else ""),
-            (f"{last_prob:.4f}" if isinstance(last_prob, (int, float)) else ""),
-            (f"{last_mag:.4f}" if isinstance(last_mag, (int, float)) else ""),
-            str(window_minutes),
-        ]
-
-        out = [
-            "index,horizon,count,avg_probability,high_prob_share,mag_p10,mag_p50,mag_p90,last_prob,last_mag,window_minutes",
-            ",".join(row),
-        ]
-        return PlainTextResponse("\n".join(out), media_type="text/csv")
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/api/ml/move_stats_archive")
-async def api_ml_move_stats_archive(
-    index: str = Query("NIFTY", description="Index name e.g., NIFTY, BANKNIFTY, SENSEX, FINNIFTY"),
-    horizon: str = Query("1", description="Horizon label to select (string)"),
-    days: int = Query(3, ge=1, le=30, description="Number of past days to include"),
-    tail: int = Query(5000, ge=10, le=200000, description="Max rows per daily file"),
-) -> PlainTextResponse:
-    """Return concatenated historical move stats rows from snapshot CSVs.
-
-    Source files: data/ml/live_predictions/snapshots/<INDEX>_move_YYYY-MM-DD.csv
-
-    Output columns mirror live move file:
-      timestamp,move_prob,move_label_pred,conditional_magnitude,model,index,horizon
-    """
-    try:
-        idx_norm = (index or "NIFTY").strip().upper()
-        if any(ch in idx_norm for ch in ("$", "{", "}")):
-            idx_norm = "NIFTY"
-        base = _project_root() / "data" / "ml" / "live_predictions" / "snapshots"
-        if not base.exists():
-            raise HTTPException(status_code=404, detail="snapshot directory not found")
-        # gather files for last N days
-        import datetime as _d
-        out_rows: list[str] = []
-        header = "timestamp,move_prob,move_label_pred,conditional_magnitude,model,index,horizon"
-        today = _d.date.today()
-        for i in range(days):
-            d = today - _d.timedelta(days=i)
-            fp = base / f"{idx_norm}_move_{d.isoformat()}.csv"
-            if not fp.exists():
-                continue
-            try:
-                lines = fp.read_text(encoding="utf-8").splitlines()
-            except (ValueError, TypeError):
-                # Invalid numeric conversion or type error
-                continue
-            if not lines:
-                continue
-            # assume first line header
-            data_lines = lines[1:]
-            if tail and len(data_lines) > tail:
-                data_lines = data_lines[-tail:]
-            # Filter by horizon column if present
-            # Determine positions from header
-            hcols = lines[0].split(",")
-            try:
-                hor_idx = hcols.index("horizon")
-            except (ValueError, IndexError):
-                hor_idx = -1  # Column not found
-            for r in data_lines:
-                parts = r.split(",")
-                if hor_idx >= 0 and len(parts) > hor_idx and parts[hor_idx] != str(horizon):
-                    continue
-                out_rows.append(r)
-        out_rows.sort()  # chronological sort by timestamp string (ISO format assumption)
-        return PlainTextResponse("\n".join([header, *out_rows]), media_type="text/csv")
-    except HTTPException:
-        raise
+            return PlainTextResponse("timestamp,index,horizon,model,radius,coverage_estimate,target_coverage\n", media_type="text/csv")
+        
+        header = lines[0]
+        rows = lines[1:]
+        if tail and len(rows) > tail:
+            rows = rows[-tail:]
+            
+        return PlainTextResponse("\n".join([header, *rows]), media_type="text/csv")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

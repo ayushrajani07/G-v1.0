@@ -227,24 +227,40 @@ class OptionGreeks:
         if market_price <= 0.01:
             return (min_iv, 0) if return_iterations else min_iv  # Minimum IV to avoid division by zero issues
 
-        # Initial guess
-        sigma = 0.3  # 30% as starting point
+        # OPTIMIZATION: Better initial guess using Brenner-Subrahmanyam approximation
+        # sigma ≈ sqrt(2π/T) * (market_price/S)
+        # This provides a much better starting point than fixed 30%
+        try:
+            intrinsic = max(0, (S - K) if is_call else (K - S))
+            time_value = max(0.01, market_price - intrinsic)
+            # Simple approximation for ATM options
+            if 0.8 <= (S/K) <= 1.2:  # Near ATM
+                sigma = math.sqrt(2 * math.pi / T) * (time_value / S)
+            else:
+                sigma = 0.3  # Fall back to 30% for deep ITM/OTM
+        except (ValueError, ZeroDivisionError):
+            sigma = 0.3  # Fall back to 30% on error
+        
+        # Clamp initial guess within bounds
         if sigma < min_iv:
             sigma = min_iv
-        if sigma > max_iv:
+        elif sigma > max_iv:
             sigma = max_iv
 
         # Newton-Raphson iterations
         iterations_used = 0
         for i in range(max_iterations):
             iterations_used = i + 1
-            bs_price = self.black_scholes(is_call, S, K, T, r, sigma, q)["price"]
+            # OPTIMIZATION: Calculate BS price and vega in one call (avoid duplicate calculation)
+            bs_result = self.black_scholes(is_call, S, K, T, r, sigma, q)
+            bs_price = bs_result["price"]
+            vega = bs_result["vega"] * 100  # Convert back from 1% to 1.0 scale
+            
             price_diff = bs_price - market_price
 
             if abs(price_diff) < precision:
                 return (sigma, iterations_used) if return_iterations else sigma
 
-            vega = self.black_scholes(is_call, S, K, T, r, sigma, q)["vega"] * 100  # Convert back from 1% to 1.0 scale
             if abs(vega) < 1e-10:
                 return (sigma, iterations_used) if return_iterations else sigma
 

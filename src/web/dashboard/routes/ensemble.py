@@ -33,10 +33,12 @@ try:
 except Exception:  # pragma: no cover
     ZoneInfo = None  # type: ignore
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from src.path_forecast.ensemble import EnsembleConfig, EnsembleForecaster
+from src.path_forecast.learned_ensemble import LearnedEnsembleForecaster
 from src.error_handling import safe_read_json
 
 _LOG = logging.getLogger("web.dashboard.ensemble")
@@ -223,25 +225,194 @@ def _quantile_to_label(q: float) -> str:
     pct = round(q * 100)
     return f"p{pct}"
 
-# --------------------------- Simple In-Memory Forecast Cache ---------------------------
-_CACHE: OrderedDict[Tuple[str,int,str,float,float,float,int,str], ForecastResponse] = OrderedDict()
-_CACHE_LOCK = threading.Lock()
-_CACHE_TTL_SEC = max(0, int(os.environ.get('G6_FORECAST_CACHE_TTL', '30')))
-_CACHE_MAX_SIZE = max(1, int(os.environ.get('G6_FORECAST_CACHE_MAX', '500')))
-_CACHE_TIME: OrderedDict[Tuple[str,int,str,float,float,float,int,str], float] = OrderedDict()
-# Per-key TTL map (seconds) to support adaptive TTL prototype
-_CACHE_TTL_MAP: Dict[Tuple[str,int,str,float,float,float,int,str], float] = {}
-# Adaptive TTL controls (prototype, behind flag)
-_ADAPTIVE_TTL_ENABLED = str(os.environ.get('G6_FORECAST_CACHE_ADAPTIVE_TTL', '0')).lower() in ('1','true','yes','on')
-_ADAPTIVE_TTL_MIN = max(1, int(os.environ.get('G6_FORECAST_CACHE_TTL_MIN', '10')))
-_ADAPTIVE_TTL_MAX = max(_ADAPTIVE_TTL_MIN, int(os.environ.get('G6_FORECAST_CACHE_TTL_MAX', '60')))
-_ADAPTIVE_TTL_IV_REF = max(1e-6, float(os.environ.get('G6_ADAPTIVE_TTL_IV_REF', '0.35')))
-_ADAPTIVE_TTL_W_IV = min(1.0, max(0.0, float(os.environ.get('G6_ADAPTIVE_TTL_W_IV', '0.7'))))
-_ADAPTIVE_TTL_W_WIN = min(1.0, max(0.0, float(os.environ.get('G6_ADAPTIVE_TTL_W_WIN', '0.3'))))
-_CACHE_HITS = 0
-_CACHE_MISSES = 0
-_CACHE_EVICTIONS = 0
-_CACHE_START_TIME = time.time()
+# --------------------------- Forecast Cache ---------------------------
+class ForecastCache:
+    """Encapsulated forecast cache with adaptive TTL and thread safety."""
+    
+    def __init__(self):
+        self._cache: OrderedDict[Tuple[str,int,str,float,float,float,int,str], ForecastResponse] = OrderedDict()
+        self._lock = threading.Lock()
+        self._ttl_sec = max(0, int(os.environ.get('G6_FORECAST_CACHE_TTL', '30')))
+        self._max_size = max(1, int(os.environ.get('G6_FORECAST_CACHE_MAX', '500')))
+        self._time: OrderedDict[Tuple[str,int,str,float,float,float,int,str], float] = OrderedDict()
+        self._ttl_map: Dict[Tuple[str,int,str,float,float,float,int,str], float] = {}
+        
+        # Statistics
+        self._hits = 0
+        self._misses = 0
+        self._evictions = 0
+        self._start_time = time.time()
+        
+        # Adaptive TTL controls
+        self._adaptive_enabled = str(os.environ.get('G6_FORECAST_CACHE_ADAPTIVE_TTL', '0')).lower() in ('1','true','yes','on')
+        self._adaptive_min = max(1, int(os.environ.get('G6_FORECAST_CACHE_TTL_MIN', '10')))
+        self._adaptive_max = max(self._adaptive_min, int(os.environ.get('G6_FORECAST_CACHE_TTL_MAX', '60')))
+        self._adaptive_iv_ref = max(1e-6, float(os.environ.get('G6_ADAPTIVE_TTL_IV_REF', '0.35')))
+        self._adaptive_w_iv = min(1.0, max(0.0, float(os.environ.get('G6_ADAPTIVE_TTL_W_IV', '0.7'))))
+        self._adaptive_w_win = min(1.0, max(0.0, float(os.environ.get('G6_ADAPTIVE_TTL_W_WIN', '0.3'))))
+
+    def get(self, key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[ForecastResponse]:
+        if self._ttl_sec == 0:
+            return None
+            
+        with self._lock:
+            ts = self._time.get(key)
+            if ts is None:
+                self._misses += 1
+                try:
+                    from ..prom_metrics import increment_forecast_cache_miss
+                    increment_forecast_cache_miss(key[0])
+                except Exception:
+                    pass
+                return None
+                
+            # Check TTL
+            ttl_for_key = self._ttl_map.get(key, float(self._ttl_sec))
+            if (time.time() - ts) > ttl_for_key:
+                # Expired
+                self._cache.pop(key, None)
+                self._time.pop(key, None)
+                self._ttl_map.pop(key, None)
+                self._misses += 1
+                try:
+                    from ..prom_metrics import increment_forecast_cache_miss
+                    increment_forecast_cache_miss(key[0])
+                except Exception:
+                    pass
+                return None
+                
+            # Hit
+            self._cache.move_to_end(key)
+            self._time.move_to_end(key)
+            self._hits += 1
+            try:
+                from ..prom_metrics import increment_forecast_cache_hit
+                increment_forecast_cache_hit(key[0])
+            except Exception:
+                pass
+            return self._cache.get(key)
+
+    def put(self, key: Tuple[str,int,str,float,float,float,int,str], value: ForecastResponse, ttl_override: float | None = None) -> None:
+        if self._ttl_sec == 0:
+            return
+            
+        with self._lock:
+            self._cache[key] = value
+            self._time[key] = time.time()
+            
+            if ttl_override is not None and ttl_override > 0:
+                self._ttl_map[key] = float(ttl_override)
+            else:
+                self._ttl_map[key] = float(self._ttl_sec)
+                
+            self._cache.move_to_end(key)
+            self._time.move_to_end(key)
+            
+            # Eviction
+            while len(self._cache) > self._max_size:
+                oldest_key = next(iter(self._cache))
+                self._cache.pop(oldest_key, None)
+                self._time.pop(oldest_key, None)
+                self._ttl_map.pop(oldest_key, None)
+                self._evictions += 1
+                
+            try:
+                from ..prom_metrics import set_forecast_cache_size
+                set_forecast_cache_size(len(self._cache))
+            except Exception:
+                pass
+
+    def compute_adaptive_ttl(self, avg_iv: float, recent_window: list[list[float]] | None) -> float | None:
+        if not self._adaptive_enabled:
+            return None
+        try:
+            iv_norm = max(0.0, min(1.0, float(avg_iv) / float(self._adaptive_iv_ref)))
+            iv_norm = min(iv_norm, 2.0) / 2.0
+
+            win_norm = 0.0
+            vals: list[float] = []
+            if recent_window:
+                try:
+                    vals = [float(row[0]) for row in recent_window if row and len(row) > 0]
+                except Exception:
+                    vals = []
+            if len(vals) >= 8:
+                seg = vals[-60:]
+                rets: list[float] = []
+                for i in range(1, len(seg)):
+                    a = seg[i-1]
+                    b = seg[i]
+                    denom = max(abs(b), 1e-6)
+                    rets.append(abs(b - a) / denom)
+                if rets:
+                    m = sum(rets) / len(rets)
+                    var = sum((r - m) ** 2 for r in rets) / len(rets)
+                    std = var ** 0.5
+                    win_norm = max(0.0, min(1.0, std / 0.01))
+            
+            w_sum = max(1e-6, (self._adaptive_w_iv + self._adaptive_w_win))
+            vol_score = (self._adaptive_w_iv * iv_norm + self._adaptive_w_win * win_norm) / w_sum
+            vol_score = max(0.0, min(1.0, vol_score))
+            
+            ttl_span = float(max(0, self._adaptive_max - self._adaptive_min))
+            ttl = float(self._adaptive_max) - vol_score * ttl_span
+            
+            return max(float(self._adaptive_min), min(float(self._adaptive_max), ttl))
+        except Exception:
+            return None
+
+    def get_stats(self) -> dict:
+        now = time.time()
+        with self._lock:
+            entries = []
+            for k, ts in self._time.items():
+                age = now - ts
+                ttl_val = self._ttl_map.get(k, float(self._ttl_sec))
+                entries.append({
+                    'key': {
+                        'index': k[0], 'horizon': k[1], 'quantiles': k[2], 
+                        'underlying': k[3], 'avg_iv': k[4], 'minutes_to_expiry': k[5], 
+                        'recent_window_size': k[6], 'detail': k[7]
+                    },
+                    'age_sec': round(age, 3),
+                    'ttl_sec': ttl_val
+                })
+            
+            total_reqs = self._hits + self._misses
+            hit_ratio = (self._hits / total_reqs) if total_reqs > 0 else 0.0
+            
+            runtime_min = max(1e-6, (now - self._start_time) / 60.0)
+            eviction_rate = self._evictions / runtime_min
+            
+            return {
+                'ttl_sec_default': self._ttl_sec,
+                'adaptive': self._adaptive_enabled,
+                'ttl_min': self._adaptive_min,
+                'ttl_max': self._adaptive_max,
+                'max_size': self._max_size,
+                'size': len(self._cache),
+                'hits': self._hits,
+                'misses': self._misses,
+                'evictions': self._evictions,
+                'eviction_rate_per_min': round(eviction_rate, 3),
+                'hit_ratio': round(hit_ratio, 4),
+                'oldest_age_sec': max((e['age_sec'] for e in entries), default=0.0),
+                'newest_age_sec': min((e['age_sec'] for e in entries), default=0.0),
+                'entries': entries
+            }
+
+    def clear(self) -> None:
+        with self._lock:
+            self._cache.clear()
+            self._time.clear()
+            self._ttl_map.clear()
+            self._hits = 0
+            self._misses = 0
+            self._evictions = 0
+            self._start_time = time.time()
+
+# Singleton instance
+_FORECAST_CACHE = ForecastCache()
 
 # Key normalization (bucket avg_iv) optional controls
 _NORMALIZE_AVG_IV = str(os.environ.get('G6_FORECAST_CACHE_NORMALIZE_AVG_IV', '0')).lower() in ('1','true','yes','on')
@@ -275,182 +446,30 @@ _RECENT_FILE_CACHE_MAX_SIZE = max(1, int(os.environ.get('G6_RECENT_FILE_CACHE_MA
 _RECENT_FILE_CACHE_HITS = 0
 _RECENT_FILE_CACHE_MISSES = 0
 
-def _cache_get(key: Tuple[str,int,str,float,float,float,int,str]) -> Optional[ForecastResponse]:
-    if _CACHE_TTL_SEC == 0:
-        return None
-    with _CACHE_LOCK:
-        ts = _CACHE_TIME.get(key)
-        if ts is None:
-            global _CACHE_MISSES
-            _CACHE_MISSES += 1
-            # Track Prometheus metric
-            try:
-                from ..prom_metrics import increment_forecast_cache_miss
-                increment_forecast_cache_miss(key[0])  # key[0] is index
-            except Exception:
-                pass
-            return None
-        # Determine per-key TTL (adaptive if stored), else fallback to default
-        ttl_for_key = _CACHE_TTL_MAP.get(key, float(_CACHE_TTL_SEC))
-        if (time.time() - ts) > ttl_for_key:
-            # expired - purge
-            _CACHE.pop(key, None)
-            _CACHE_TIME.pop(key, None)
-            _CACHE_TTL_MAP.pop(key, None)
-            _CACHE_MISSES += 1
-            # Track Prometheus metric
-            try:
-                from ..prom_metrics import increment_forecast_cache_miss
-                increment_forecast_cache_miss(key[0])  # key[0] is index
-            except Exception:
-                pass
-            return None
-        # Mark as recently used (LRU)
-        _CACHE.move_to_end(key)
-        _CACHE_TIME.move_to_end(key)
-        global _CACHE_HITS
-        _CACHE_HITS += 1
-        # Track Prometheus metric
-        try:
-            from ..prom_metrics import increment_forecast_cache_hit
-            increment_forecast_cache_hit(key[0])  # key[0] is index
-        except Exception:
-            pass
-        return _CACHE.get(key)
-
-def _cache_put(key: Tuple[str,int,str,float,float,float,int,str], value: ForecastResponse, ttl_override: float | None = None) -> None:
-    if _CACHE_TTL_SEC == 0:
-        return
-    global _CACHE_EVICTIONS
-    with _CACHE_LOCK:
-        _CACHE[key] = value
-        _CACHE_TIME[key] = time.time()
-        # Store per-key TTL (adaptive or default)
-        if ttl_override is not None and ttl_override > 0:
-            _CACHE_TTL_MAP[key] = float(ttl_override)
-        else:
-            _CACHE_TTL_MAP[key] = float(_CACHE_TTL_SEC)
-        # Move to end to mark as most recently used
-        _CACHE.move_to_end(key)
-        _CACHE_TIME.move_to_end(key)
-        
-        # LRU eviction: remove oldest entries when size exceeds max
-        while len(_CACHE) > _CACHE_MAX_SIZE:
-            # Remove oldest (first) entry
-            oldest_key = next(iter(_CACHE))
-            _CACHE.pop(oldest_key, None)
-            _CACHE_TIME.pop(oldest_key, None)
-            _CACHE_TTL_MAP.pop(oldest_key, None)
-            _CACHE_EVICTIONS += 1
-        
-        # Update Prometheus gauge
-        try:
-            from ..prom_metrics import set_forecast_cache_size
-            set_forecast_cache_size(len(_CACHE))
-        except Exception:
-            pass
-
 @router.get('/cache/stats')
 async def cache_stats():
     """Return in-memory forecast cache statistics and recent file cache statistics.
 
     Stable primary cache diagnostics endpoint. Alias available at /cache_metrics for legacy scripts.
     """
-    now = time.time()
-    
     # Forecast cache stats
-    with _CACHE_LOCK:
-        entries = []
-        for k, ts in _CACHE_TIME.items():
-            age = now - ts
-            ttl_val = _CACHE_TTL_MAP.get(k, float(_CACHE_TTL_SEC))
-            entries.append({'key': {
-                'index': k[0], 'horizon': k[1], 'quantiles': k[2], 'underlying': k[3], 'avg_iv': k[4], 'minutes_to_expiry': k[5], 'recent_window_size': k[6], 'detail': k[7]
-            }, 'age_sec': round(age, 3), 'ttl_sec': ttl_val})
-        oldest = max((e['age_sec'] for e in entries), default=0.0)
-        newest = min((e['age_sec'] for e in entries), default=0.0)
-        hit_ratio = (_CACHE_HITS / (_CACHE_HITS + _CACHE_MISSES)) if (_CACHE_HITS + _CACHE_MISSES) else 0.0
-        # TTL remaining stats
-        if entries:
-            remaining_list = [max(0.0, e['ttl_sec'] - e['age_sec']) for e in entries]
-            ttl_remaining_min = min(remaining_list)
-            ttl_remaining_max = max(remaining_list)
-            ttl_remaining_avg = sum(remaining_list) / len(remaining_list)
-        else:
-            ttl_remaining_min = ttl_remaining_max = ttl_remaining_avg = 0.0
-
-        # Simple bucketed distribution of TTL remaining (seconds)
-        buckets = {'le_15': 0, 'le_30': 0, 'le_45': 0, 'le_60': 0, 'gt_60': 0}
-        for r in ([] if not entries else [max(0.0, e['ttl_sec'] - e['age_sec']) for e in entries]):
-            if r <= 15:
-                buckets['le_15'] += 1
-            elif r <= 30:
-                buckets['le_30'] += 1
-            elif r <= 45:
-                buckets['le_45'] += 1
-            elif r <= 60:
-                buckets['le_60'] += 1
-            else:
-                buckets['gt_60'] += 1
-
-        runtime_min = max(1e-6, (now - _CACHE_START_TIME) / 60.0)
-        eviction_rate_per_min = _CACHE_EVICTIONS / runtime_min
-
-        forecast_cache_stats = {
-            'ttl_sec_default': _CACHE_TTL_SEC,
-            'adaptive': _ADAPTIVE_TTL_ENABLED,
-            'ttl_min': _ADAPTIVE_TTL_MIN,
-            'ttl_max': _ADAPTIVE_TTL_MAX,
-            'max_size': _CACHE_MAX_SIZE,
-            'size': len(entries),
-            'hits': _CACHE_HITS,
-            'misses': _CACHE_MISSES,
-            'evictions': _CACHE_EVICTIONS,
-            'eviction_rate_per_min': round(eviction_rate_per_min, 4),
-            'hit_ratio': round(hit_ratio, 4),
-            'oldest_age_sec': oldest,
-            'newest_age_sec': newest,
-            'ttl_remaining_min_sec': round(ttl_remaining_min, 3),
-            'ttl_remaining_max_sec': round(ttl_remaining_max, 3),
-            'ttl_remaining_avg_sec': round(ttl_remaining_avg, 3),
-            'ttl_distribution': buckets,
-            'avg_iv_normalization_enabled': _NORMALIZE_AVG_IV,
-            'avg_iv_bucket_edges': _AVG_IV_BUCKET_EDGES,
-            'entries': entries[:50],  # cap detail
-        }
+    forecast_stats = _FORECAST_CACHE.get_stats()
     
     # Recent file cache stats
     with _RECENT_FILE_CACHE_LOCK:
-        file_entries = []
-        for k, entry in _RECENT_FILE_CACHE.items():
-            age = now - entry['ts']
-            file_entries.append({
-                'key': {
-                    'index': k[0],
-                    'date': k[1],
-                    'window_size': k[2],
-                },
-                'age_sec': round(age, 3),
-                'row_count': len(entry.get('rows', [])),
-            })
-        file_oldest = max((e['age_sec'] for e in file_entries), default=0.0)
-        file_newest = min((e['age_sec'] for e in file_entries), default=0.0)
-        file_hit_ratio = (_RECENT_FILE_CACHE_HITS / (_RECENT_FILE_CACHE_HITS + _RECENT_FILE_CACHE_MISSES)) if (_RECENT_FILE_CACHE_HITS + _RECENT_FILE_CACHE_MISSES) else 0.0
-        recent_file_cache_stats = {
-            'ttl_sec': _RECENT_FILE_CACHE_TTL_SEC,
-            'max_size': _RECENT_FILE_CACHE_MAX_SIZE,
-            'current_entries': len(file_entries),
-            'hits': _RECENT_FILE_CACHE_HITS,
-            'misses': _RECENT_FILE_CACHE_MISSES,
-            'hit_ratio': round(file_hit_ratio, 4),
-            'oldest_age_sec': file_oldest,
-            'newest_age_sec': file_newest,
-            'entries': file_entries[:50],  # cap detail
-        }
-    
+        file_entries = len(_RECENT_FILE_CACHE)
+        file_hits = _RECENT_FILE_CACHE_HITS
+        file_misses = _RECENT_FILE_CACHE_MISSES
+        
     return {
-        'forecast_cache': forecast_cache_stats,
-        'recent_file_cache': recent_file_cache_stats,
+        'forecast_cache': forecast_stats,
+        'recent_file_cache': {
+            'size': file_entries,
+            'hits': file_hits,
+            'misses': file_misses,
+            'ttl_sec': _RECENT_FILE_CACHE_TTL_SEC,
+            'max_size': _RECENT_FILE_CACHE_MAX_SIZE
+        }
     }
 
 @router.get('/cache_metrics')
@@ -461,12 +480,10 @@ async def cache_metrics_alias():
 @router.post('/cache/clear')
 async def cache_clear():
     """Clear the in-memory forecast cache and recent file cache, and reset counters."""
-    global _CACHE_HITS, _CACHE_MISSES, _RECENT_FILE_CACHE_HITS, _RECENT_FILE_CACHE_MISSES
-    with _CACHE_LOCK:
-        _CACHE.clear()
-        _CACHE_TIME.clear()
-        _CACHE_HITS = 0
-        _CACHE_MISSES = 0
+    global _RECENT_FILE_CACHE_HITS, _RECENT_FILE_CACHE_MISSES
+    
+    _FORECAST_CACHE.clear()
+    
     with _RECENT_FILE_CACHE_LOCK:
         _RECENT_FILE_CACHE.clear()
         _RECENT_FILE_CACHE_HITS = 0
@@ -531,10 +548,18 @@ def _get_forecaster(index: str) -> Optional[EnsembleForecaster]:
             weights_low_conf_retrieval=weighting.get('weights_low_confidence', {}).get('retrieval', 0.5),
             min_candidates_threshold=weighting.get('min_candidates_threshold', 5),
         )
-        fore = EnsembleForecaster(cfg)
+        
+        # Phase 13: Use LearnedEnsembleForecaster if strategy is 'learned'
+        if cfg.weighting_strategy == "learned":
+            # Assume meta-model is at models/ml/meta_model_v1.joblib (or configured)
+            meta_path = Path("models/ml/meta_model_v1.joblib")
+            fore = LearnedEnsembleForecaster(cfg, meta_model_path=meta_path)
+        else:
+            fore = EnsembleForecaster(cfg)
+            
         _configs[idx] = cfg
         _forecasters[idx] = fore
-        _LOG.info(f"Ensemble forecaster initialized for {idx}")
+        _LOG.info(f"Ensemble forecaster initialized for {idx} (strategy={cfg.weighting_strategy})")
         return fore
     except Exception as e:  # pragma: no cover
         _init_errors[idx] = f"init_failed: {e}"
@@ -826,70 +851,10 @@ def _infer_live_params(index: str) -> Dict[str, float]:
     return result
 
 # --------------------------- Endpoints ---------------------------
-def _compute_adaptive_ttl(
-    index: str,
-    horizon: int,
-    underlying: float,
-    avg_iv: float,
-    minutes_to_expiry: float,
-    recent_window: list[list[float]] | None,
-) -> float | None:
-    """Compute adaptive TTL seconds based on simple volatility proxies.
-
-    Uses weighted combination of:
-    - avg_iv normalized to reference (_ADAPTIVE_TTL_IV_REF)
-    - recent window normalized return volatility
-
-    Returns None when adaptive TTL is disabled.
-    """
-    if not _ADAPTIVE_TTL_ENABLED:
-        return None
-    try:
-        # Normalize IV approximately to 0..1 by comparing to reference
-        iv_norm = max(0.0, min(1.0, float(avg_iv) / float(_ADAPTIVE_TTL_IV_REF)))
-        iv_norm = min(iv_norm, 2.0) / 2.0  # cap at 2x ref, then map to 0..1
-
-        # Recent window normalized volatility (std of absolute returns)
-        win_norm = 0.0
-        vals: list[float] = []
-        if recent_window:
-            try:
-                vals = [float(row[0]) for row in recent_window if row and len(row) > 0]
-            except Exception:
-                vals = []
-        if len(vals) >= 8:  # need at least 8 points for a rough estimate
-            # Use last up to 60 points
-            seg = vals[-60:]
-            rets: list[float] = []
-            for i in range(1, len(seg)):
-                a = seg[i-1]
-                b = seg[i]
-                denom = max(abs(b), 1e-6)
-                rets.append(abs(b - a) / denom)
-            if rets:
-                # population stddev
-                m = sum(rets) / len(rets)
-                var = sum((r - m) ** 2 for r in rets) / len(rets)
-                std = var ** 0.5
-                # Normalize against 1% baseline
-                win_norm = max(0.0, min(1.0, std / 0.01))
-        # Weighted vol score
-        w_sum = max(1e-6, (_ADAPTIVE_TTL_W_IV + _ADAPTIVE_TTL_W_WIN))
-        vol_score = (_ADAPTIVE_TTL_W_IV * iv_norm + _ADAPTIVE_TTL_W_WIN * win_norm) / w_sum
-        vol_score = max(0.0, min(1.0, vol_score))
-        ttl_span = float(max(0, _ADAPTIVE_TTL_MAX - _ADAPTIVE_TTL_MIN))
-        ttl = float(_ADAPTIVE_TTL_MAX) - vol_score * ttl_span
-        # Final clamp
-        if ttl < _ADAPTIVE_TTL_MIN:
-            ttl = float(_ADAPTIVE_TTL_MIN)
-        if ttl > _ADAPTIVE_TTL_MAX:
-            ttl = float(_ADAPTIVE_TTL_MAX)
-        return ttl
-    except Exception:
-        return None
 
 @router.get('/forecast', response_model=ForecastResponse)
 async def forecast(
+    background_tasks: BackgroundTasks,
     index: str = Query(..., description="Index e.g. NIFTY"),
     horizon: int = Query(60, ge=1, le=720),
     quantiles: str = Query("0.1,0.5,0.9", description="Comma separated quantiles"),
@@ -910,6 +875,22 @@ async def forecast(
     fore = _get_forecaster(idx)
     if fore is None:
         raise HTTPException(status_code=404, detail=f"forecaster_unavailable: {idx}")
+
+    # Phase 14: Async Pre-fetch
+    # If user requests horizon H, speculatively pre-fetch 2*H (up to max)
+    next_horizon = horizon * 2
+    if next_horizon <= 720:
+        background_tasks.add_task(
+            _prefetch_forecast,
+            index=idx,
+            horizon=next_horizon,
+            quantiles=quantiles,
+            underlying=underlying,
+            avg_iv=avg_iv,
+            minutes_to_expiry=minutes_to_expiry,
+            recent_window_size=recent_window_size,
+            detail=detail
+        )
 
     # Parse quantiles
     q_list: list[float] = []
@@ -953,13 +934,15 @@ async def forecast(
     cache_key = (idx, horizon, quantiles, underlying, avg_iv_bucket, minutes_to_expiry, recent_window_size, detail_normalized)
     cached: Optional[ForecastResponse] = None
     if cache_bust == 0:
-        cached = _cache_get(cache_key)
+        cached = _FORECAST_CACHE.get(cache_key)
     if cached is not None:
         # Mark cache hit in metadata clone
         cached.metadata.cache_hit = True
         return cached
     try:
-        times, qmap = fore.forecast_path(
+        # Phase 16: Non-blocking forecast execution
+        times, qmap = await run_in_threadpool(
+            fore.forecast_path,
             recent_window=recent_window,
             context=context,
             quantiles=q_list,
@@ -1050,13 +1033,16 @@ async def forecast(
         quantile_paths=quantile_paths_obj
     )
     # Compute adaptive TTL (if enabled) and store alongside entry
-    ttl_override = _compute_adaptive_ttl(idx, horizon, underlying, avg_iv, minutes_to_expiry, recent_window)
+    ttl_override = _FORECAST_CACHE.compute_adaptive_ttl(avg_iv, recent_window)
     if ttl_override is not None:
         try:
             setattr(resp.metadata, 'adaptive_ttl_sec', ttl_override)
+            # Phase 12: Export adaptive TTL to Prometheus
+            from ..prom_metrics import set_forecast_adaptive_ttl  # type: ignore
+            set_forecast_adaptive_ttl(idx, horizon, float(ttl_override))
         except Exception:
             pass
-    _cache_put(cache_key, resp, ttl_override=ttl_override)
+    _FORECAST_CACHE.put(cache_key, resp, ttl_override=ttl_override)
     
     # Track Prometheus latency metric
     try:
@@ -1072,8 +1058,154 @@ async def forecast(
         log_forecast_event(idx, horizon, now_ms, p50, underlying, band_low, band_high)
     except Exception:
         pass
-    
+
+    # Phase 13: Log Meta-Data for Learned Weighting
+    try:
+        from ..meta_collector import log_forecast_event  # type: ignore
+        # Extract component predictions from last_meta if available
+        comp_preds = {}
+        if 'baseline_tp' in lm:
+            comp_preds['baseline'] = float(lm['baseline_tp'])
+        # TODO: Add GBRT/Retrieval p50s once exposed in last_meta
+        
+        log_forecast_event(
+            index=idx,
+            horizon=horizon,
+            context=context,
+            forecast_data=forecast_data,
+            metadata={'weights': meta.weights, 'confidence': confidence},
+            component_preds=comp_preds
+        )
+    except Exception:
+        pass
+
     return resp
+
+def _prefetch_forecast(
+    index: str,
+    horizon: int,
+    quantiles: str,
+    underlying: float,
+    avg_iv: float,
+    minutes_to_expiry: float,
+    recent_window_size: int,
+    detail: Optional[str]
+):
+    """Background task to pre-calculate forecast for a different horizon."""
+    try:
+        # Re-use the same logic as the main endpoint, but without returning response
+        # Just populating the cache
+        idx = index.upper().strip()
+        fore = _get_forecaster(idx)
+        if fore is None:
+            return
+
+        # Parse quantiles
+        q_list: list[float] = []
+        for part in quantiles.split(','):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                q_list.append(float(part))
+            except ValueError:
+                continue
+        if not q_list:
+            q_list = [0.1, 0.5, 0.9]
+
+        # Build minimal context
+        now_ms = int(time.time() * 1000)
+        context = {
+            'index': idx,
+            'now_ms': now_ms,
+            'underlying': underlying,
+            'avg_iv': avg_iv,
+            'minutes_to_expiry': minutes_to_expiry,
+            'live_rows': [],
+        }
+
+        recent_window = _load_recent_window(idx, recent_window_size)
+        if recent_window is None:
+            recent_window = []
+
+        # Check cache first to avoid redundant work
+        detail_normalized = detail.lower() if detail else ""
+        avg_iv_bucket = _bucket_avg_iv(avg_iv)
+        cache_key = (idx, horizon, quantiles, underlying, avg_iv_bucket, minutes_to_expiry, recent_window_size, detail_normalized)
+        
+        if _FORECAST_CACHE.get(cache_key) is not None:
+            return
+
+        # Compute
+        times, qmap = fore.forecast_path(
+            recent_window=recent_window,
+            context=context,
+            quantiles=q_list,
+            horizon_minutes=horizon,
+            bucket_ms=60_000,
+        )
+        
+        if qmap is None:
+            qmap = {}
+
+        # Construct response object to cache it
+        # (Simplified construction for cache population)
+        def _first(q: float) -> float:
+            seq = qmap.get(q, ())
+            return float(seq[0]) if seq else 0.0
+
+        lm = getattr(fore, 'last_meta', {}) or {}
+        confidence = float(lm.get('confidence', 0.0))
+        
+        p10 = _first(0.1 if 0.1 in qmap else q_list[0])
+        p50 = _first(0.5 if 0.5 in qmap else q_list[len(q_list)//2])
+        p90 = _first(0.9 if 0.9 in qmap else q_list[-1])
+        
+        forecast_data = {'p10': p10, 'p50': p50, 'p90': p90}
+        
+        meta = ForecastMetadata(
+            latency_ms=0.0, # Background task
+            components_used=['background_prefetch'],
+            weights={},
+            recent_count=len(recent_window),
+            cache_hit=False
+        )
+        
+        # Handle detail mode
+        time_grid_obj = None
+        quantile_paths_obj = None
+        if detail_normalized == 'full':
+            time_grid_obj = TimeGrid(
+                start=now_ms,
+                end=now_ms + horizon * 60_000,
+                resolution_ms=60_000,
+                values=times
+            )
+            quantile_paths_obj = {}
+            for q in q_list:
+                label = _quantile_to_label(q)
+                path = qmap.get(q, [])
+                quantile_paths_obj[label] = [float(v) for v in path] if path else []
+
+        resp = ForecastResponse(
+            index=idx, 
+            horizon=horizon, 
+            timestamp=str(now_ms), 
+            forecast=forecast_data, 
+            confidence=confidence, 
+            metadata=meta,
+            time_grid=time_grid_obj,
+            quantile_paths=quantile_paths_obj
+        )
+        
+        # Compute adaptive TTL
+        ttl_override = _FORECAST_CACHE.compute_adaptive_ttl(avg_iv, recent_window)
+        _FORECAST_CACHE.put(cache_key, resp, ttl_override=ttl_override)
+        
+        _LOG.info(f"Prefetched forecast for {idx} horizon={horizon}")
+        
+    except Exception as e:
+        _LOG.warning(f"Prefetch failed: {e}")
 
 @router.get('/diagnostics', response_model=DiagnosticsResponse)
 async def diagnostics(index: str = Query(...)):
@@ -1132,55 +1264,7 @@ async def regime_breaches(index: str = Query(..., description="Index e.g. NIFTY"
 # NOTE: Duplicate /regime/breaches definition removed later in file; this version kept for backward compatibility with
 # existing flat-list consumers. Prefer the typed version (response_model=list[RegimeBreach]) below for new integrations.
 
-@router.get('/metrics/compare')
-async def metrics_compare(
-    index: str = Query(..., description="Index e.g. NIFTY"),
-    horizon: int = Query(60, ge=1, le=720),
-    include_drift: int = Query(0, ge=0, le=1, description="Set to 1 to include drift summary"),
-):
-    """Return metrics comparison (rolling vs EMA) and optional drift summary for index,horizon.
-
-    Provides fields needed by test_ml_regime_and_drift_endpoints.
-    """
-    try:
-        from ..rolling_mae import get_metric_comparison, get_drift_summary, ensure_started  # type: ignore
-        ensure_started()
-        comp = get_metric_comparison(index=index, horizon=horizon)
-        entry = None
-        for ent in comp.get('entries', []):
-            if int(ent.get('horizon', -1)) == int(horizon):
-                entry = ent
-                break
-        if entry is None:
-            # return minimal stub
-            base = {"index": index.upper(), "horizon": horizon, "available": False}
-            if include_drift:
-                drift = get_drift_summary(index.upper(), horizon)
-                base['drift_summary'] = drift
-            return base
-        resp = {"index": index.upper(), "horizon": horizon}
-        # expose selected fields directly
-        for k in [
-            'mae_window','mae_short','mae_drift_ratio','coverage_window_pct','coverage_short_pct','coverage_drift_delta_pct',
-            'norm_error_window','norm_error_short','norm_error_drift_ratio','count_window'
-        ]:
-            if k in entry:
-                resp[k] = entry[k]
-        if include_drift:
-            resp['drift_summary'] = get_drift_summary(index.upper(), horizon)
-            # Export drift ratios to Prometheus
-            try:
-                from ..prom_metrics import set_forecast_drift_ratios, set_forecast_coverage_drift  # type: ignore
-                drift = resp['drift_summary']
-                set_forecast_drift_ratios(index.upper(), horizon, float(drift.get('mae_ratio',0.0)), float(drift.get('norm_ratio',0.0)))
-                set_forecast_coverage_drift(index.upper(), horizon, float(drift.get('coverage_delta_pct',0.0)))
-            except Exception:
-                pass
-        return resp
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"metrics_compare_failed: {e}")
-
-# NOTE: Duplicate /metrics/compare definition appears later with optional filters; consolidation pending.
+# NOTE: /metrics/compare definition moved to end of file (consolidated).
 
 
 @router.get('/regime/status', response_model=RegimeStatusResponse | Dict[str, RegimeStatusResponse])
@@ -1644,19 +1728,47 @@ async def metrics_compare(
     - window & EMA normalized error
     - p50/p90 percentiles for error, normalized error, band width (if >=5 samples)
     - last evaluation timestamp (epoch ms)
+    
+    If include_drift=1:
+    - Adds feature drift summary (PSI/KS) if index provided.
+    - Adds performance drift summary (MAE/Norm ratios) if index AND horizon provided.
+    - Exports performance drift metrics to Prometheus if index AND horizon provided.
     """
     try:
         from ..rolling_mae import ensure_started, get_metric_comparison  # type: ignore
         ensure_started()
         result = get_metric_comparison(index=index, horizon=horizon)
+        
         if include_drift == 1 and index:
+            # 1. Feature Drift (PSI/KS)
             try:
-                from ..drift_metrics import get_drift_summary  # type: ignore
-                drift = get_drift_summary(index=index)
+                from ..drift_metrics import get_drift_summary as get_feature_drift_summary  # type: ignore
+                drift_feat = get_feature_drift_summary(index=index)
                 if isinstance(result, dict):
-                    result["drift_summary"] = drift
+                    result["drift_summary"] = drift_feat
             except Exception:
                 pass
+
+            # 2. Performance Drift (MAE/Norm Ratios) - requires horizon
+            if horizon:
+                try:
+                    from ..rolling_mae import get_drift_summary as get_perf_drift_summary  # type: ignore
+                    drift_perf = get_perf_drift_summary(index.upper(), horizon)
+                    
+                    # Merge into drift_summary
+                    if isinstance(result, dict):
+                        if "drift_summary" not in result:
+                            result["drift_summary"] = {}
+                        if isinstance(result["drift_summary"], dict):
+                            result["drift_summary"].update(drift_perf)
+
+                    # Export to Prometheus (Side Effect)
+                    from ..prom_metrics import set_forecast_drift_ratios, set_forecast_coverage_drift  # type: ignore
+                    set_forecast_drift_ratios(index.upper(), horizon, float(drift_perf.get('mae_ratio',0.0)), float(drift_perf.get('norm_ratio',0.0)))
+                    set_forecast_coverage_drift(index.upper(), horizon, float(drift_perf.get('coverage_delta_pct',0.0)))
+                except Exception:
+                    pass
+                    
         return result
     except Exception as e:
         _LOG.warning(f"metrics_compare_failed: {e}")

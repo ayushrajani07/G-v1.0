@@ -3,6 +3,9 @@ from __future__ import annotations
 """
 Simple structural baseline for ATM Total Premium (TP).
 
+Note: TP (Total Premium) refers to the sum of ATM Call and Put premiums (ATM CE + PE).
+It relies on variables like index price, IV, Greek values, and time to expiry.
+
 Baseline formula (scaled Bachelier-like proxy):
   baseline_tp = k * underlying * iv_proxy * sqrt(T)
 where
