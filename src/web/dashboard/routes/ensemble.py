@@ -418,6 +418,8 @@ try:
     _CACHE_LOCK = _FORECAST_CACHE._lock  # type: ignore[attr-defined]
 except Exception:
     _CACHE_LOCK = threading.Lock()
+# Backward-compatibility alias: historical tests reference `_CACHE`
+_CACHE = _FORECAST_CACHE
 
 # Key normalization (bucket avg_iv) optional controls
 _NORMALIZE_AVG_IV = str(os.environ.get('G6_FORECAST_CACHE_NORMALIZE_AVG_IV', '0')).lower() in ('1','true','yes','on')
