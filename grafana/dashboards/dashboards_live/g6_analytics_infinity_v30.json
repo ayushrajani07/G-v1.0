@@ -1,0 +1,4799 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": false,
+  "g6_lock": true,
+  "version_tag": "v1.0.0",
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 2,
+  "id": 174,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "panels": [],
+      "title": "Index prices",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "NS2"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "SENSEX"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "NS1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "NS2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX – Index Price",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "BF2"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "FINNIFTY"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "BF1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "BF2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY – Index Price",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "panels": [],
+      "title": "Implied Volatility (IV)",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "SENSEX IV"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 10
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_iv=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_iv=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – IV (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "FINNIFTY IV"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 10
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "C",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_iv=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "D",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_iv=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – IV (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 7,
+      "panels": [],
+      "title": "Greeks – NS pair",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pe_delta"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PE Delta"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 19
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Delta (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B2"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "SENSEX Theta"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 19
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Theta (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "B3"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "SENSEX Vega"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 25
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A3",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B3",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Vega (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pe_gamma"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PE Gamma"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 25
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A4",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B4",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Gamma (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pe_rho"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PE Rho"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 25
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "A5",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "B5",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Rho (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 13,
+      "panels": [],
+      "title": "Greeks – BF pair",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pe_delta"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PE Delta"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "C1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "D1",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Delta (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D2"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "FINNIFTY Theta"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "C2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "D2",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Theta (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "D3"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "FINNIFTY Vega"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 38
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "C3",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "D3",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Vega (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pe_gamma"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PE Gamma"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 38
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "C4",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "D4",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Gamma (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_rho": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_rho": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS1.*index_price|^NS1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Nifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "NS2.*index_price|^NS2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Sensex"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF1.*index_price|^BF1 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Banknifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "BF2.*index_price|^BF2 index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Finnifty"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*ce_.*|^A$.*ce_.*|^A[1-5] .*ce_.*|^A[1-5]$.*ce_.*|^A ce_|^A[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^A .*pe_.*|^A$.*pe_.*|^A[1-5] .*pe_.*|^A[1-5]$.*pe_.*|^A pe_|^A[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "NF PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*ce_.*|^B$.*ce_.*|^B[1-5] .*ce_.*|^B[1-5]$.*ce_.*|^B ce_|^B[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^B .*pe_.*|^B$.*pe_.*|^B[1-5] .*pe_.*|^B[1-5]$.*pe_.*|^B pe_|^B[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "SX PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*ce_.*|^C$.*ce_.*|^C[1-5] .*ce_.*|^C[1-5]$.*ce_.*|^C ce_|^C[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^C .*pe_.*|^C$.*pe_.*|^C[1-5] .*pe_.*|^C[1-5]$.*pe_.*|^C pe_|^C[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "BN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*ce_.*|^D$.*ce_.*|^D[1-5] .*ce_.*|^D[1-5]$.*ce_.*|^D ce_|^D[1-5] ce_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN CE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "^D .*pe_.*|^D$.*pe_.*|^D[1-5] .*pe_.*|^D[1-5]$.*pe_.*|^D pe_|^D[1-5] pe_"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "FN PE"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "pe_rho"
+            },
+            "properties": [
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "PE Rho"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 38
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "C5",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "D5",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=true&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Rho (CE/PE)",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "ts"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "avg_tp": true,
+              "ce": true,
+              "ce_delta": true,
+              "ce_gamma": true,
+              "ce_iv": true,
+              "ce_oi": true,
+              "ce_theta": true,
+              "ce_vega": true,
+              "ce_vol": true,
+              "index_price": true,
+              "pcr": true,
+              "pe": true,
+              "pe_delta": true,
+              "pe_gamma": true,
+              "pe_iv": true,
+              "pe_oi": true,
+              "pe_theta": true,
+              "pe_vega": true,
+              "pe_vol": true,
+              "time": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "tp": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "g6",
+    "analytics"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "0",
+          "value": "0"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Offset",
+        "multi": false,
+        "name": "offset",
+        "options": [
+          {
+            "selected": true,
+            "text": "0",
+            "value": "0"
+          },
+          {
+            "selected": false,
+            "text": "100",
+            "value": "100"
+          },
+          {
+            "selected": false,
+            "text": "-100",
+            "value": "-100"
+          },
+          {
+            "selected": false,
+            "text": "200",
+            "value": "200"
+          },
+          {
+            "selected": false,
+            "text": "-200",
+            "value": "-200"
+          }
+        ],
+        "query": "0,100,-100,200,-200",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "this_week",
+          "value": "this_week"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Expiry (NIFTY/SENSEX)",
+        "multi": false,
+        "name": "expiry_ns",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_week",
+            "value": "this_week"
+          },
+          {
+            "selected": false,
+            "text": "next_week",
+            "value": "next_week"
+          },
+          {
+            "selected": false,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_week,next_week,this_month,next_month",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "this_month",
+          "value": "this_month"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Expiry (BANK/FIN)",
+        "multi": false,
+        "name": "expiry_bf",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_month,next_month",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "2025-11-21T03:44:32.572Z",
+    "to": "2025-11-21T05:44:32.572Z"
+  },
+  "timepicker": {},
+  "timezone": "Asia/Kolkata",
+  "title": "G6 Analytics  Infinity v3",
+  "uid": "g6-analytics-infinity-v30",
+  "version": 1,
+  "weekStart": ""
+}

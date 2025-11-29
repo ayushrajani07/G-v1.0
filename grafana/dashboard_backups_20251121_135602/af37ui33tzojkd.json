@@ -1,0 +1,45 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "g6-ml",
+                 "url":  "/dashboards/f/af37ui33tzojkd/g6-ml",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-05T20:49:29+05:30",
+                 "updated":  "2025-11-05T20:49:29+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  true,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  false,
+                 "provisionedExternalId":  "",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "id":  186,
+                      "schemaVersion":  17,
+                      "title":  "G6 ML",
+                      "uid":  "af37ui33tzojkd",
+                      "version":  1
+                  }
+}

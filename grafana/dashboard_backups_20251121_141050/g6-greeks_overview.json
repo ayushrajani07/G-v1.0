@@ -1,0 +1,194 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "greeks-overview",
+                 "url":  "/d/g6-greeks_overview/greeks-overview",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T09:31:21+05:30",
+                 "updated":  "2025-11-20T09:31:21+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "greeks_overview.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "prometheus",
+                                             "name":  "Prometheus",
+                                             "type":  "prometheus",
+                                             "version":  "1.0.0"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "g6_meta":  {
+                                      "description":  "",
+                                      "families":  [
+                                                       "greeks"
+                                                   ],
+                                      "spec_hash":  "b1fb37bf991f1a94"
+                                  },
+                      "id":  276,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "greeks",
+                                                         "kind":  "gauge",
+                                                         "metric":  "g6_iv_estimation_avg_iterations",
+                                                         "panel_uuid":  "191d86de0337476c",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  421365470,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_iv_estimation_avg_iterations",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_iv_estimation_avg_iterations (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "greeks",
+                                                         "kind":  "counter",
+                                                         "metric":  "g6_iv_estimation_failure",
+                                                         "panel_uuid":  "b2a71ffb51298007",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  0
+                                                     },
+                                         "id":  2997297147,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum(rate(g6_iv_estimation_failure[5m]))",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_iv_estimation_failure Rate (5m auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "greeks",
+                                                         "kind":  "counter",
+                                                         "metric":  "g6_iv_estimation_success",
+                                                         "panel_uuid":  "6fb18793f9a60485",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  8
+                                                     },
+                                         "id":  1873905555,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum(rate(g6_iv_estimation_success[5m]))",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_iv_estimation_success Rate (5m auto)",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  39,
+                      "tags":  [
+                                   "analytics",
+                                   "g6",
+                                   "generated"
+                               ],
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timezone":  "browser",
+                      "title":  "Greeks Overview",
+                      "uid":  "g6-greeks_overview",
+                      "version":  1
+                  }
+}

@@ -1,0 +1,893 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "g6-essential-metrics",
+                 "url":  "/d/g6_essential_metrics/g6-essential-metrics",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-10-25T14:45:23+05:30",
+                 "updated":  "2025-10-25T14:45:23+05:30",
+                 "updatedBy":  "admin",
+                 "createdBy":  "admin",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  false,
+                 "provisionedExternalId":  "",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "annotations":  {
+                                          "list":  [
+                                                       {
+                                                           "builtIn":  1,
+                                                           "datasource":  "-- Grafana --",
+                                                           "enable":  true,
+                                                           "hide":  true,
+                                                           "iconColor":  "rgba(0, 211, 255, 1)",
+                                                           "name":  "Annotations \u0026 Alerts",
+                                                           "type":  "dashboard"
+                                                       }
+                                                   ]
+                                      },
+                      "editable":  true,
+                      "gnetId":  null,
+                      "graphTooltip":  0,
+                      "id":  51,
+                      "links":  [
+
+                                ],
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "thresholds"
+                                                                                        },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "max":  100,
+                                                                              "min":  0,
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "red",
+                                                                                                                   "value":  null
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "yellow",
+                                                                                                                   "value":  90
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  95
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "percent"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  6,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  1,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           },
+                                                         "showThresholdLabels":  false,
+                                                         "showThresholdMarkers":  true
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "g6_api_success_rate_percent",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Kite API Success Rate",
+                                         "type":  "gauge"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "custom":  {
+                                                                                             "axisLabel":  "",
+                                                                                             "axisPlacement":  "auto",
+                                                                                             "barAlignment":  0,
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  10,
+                                                                                             "gradientMode":  "none",
+                                                                                             "hideFrom":  {
+                                                                                                              "legend":  false,
+                                                                                                              "tooltip":  false,
+                                                                                                              "viz":  false
+                                                                                                          },
+                                                                                             "lineInterpolation":  "linear",
+                                                                                             "lineWidth":  1,
+                                                                                             "pointSize":  5,
+                                                                                             "scaleDistribution":  {
+                                                                                                                       "type":  "linear"
+                                                                                                                   },
+                                                                                             "showPoints":  "never",
+                                                                                             "spanNulls":  true,
+                                                                                             "stacking":  {
+                                                                                                              "group":  "A",
+                                                                                                              "mode":  "none"
+                                                                                                          },
+                                                                                             "thresholdsStyle":  {
+                                                                                                                     "mode":  "off"
+                                                                                                                 }
+                                                                                         },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  6,
+                                                         "x":  6,
+                                                         "y":  0
+                                                     },
+                                         "id":  2,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "calcs":  [
+
+                                                                                  ],
+                                                                        "displayMode":  "list",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "single"
+                                                                     }
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "rate(g6_collection_cycles[5m])",
+                                                             "legendFormat":  "Cycles/sec",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Collection Cycles Completed",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "thresholds"
+                                                                                        },
+                                                                              "custom":  {
+                                                                                             "align":  "auto",
+                                                                                             "displayMode":  "auto"
+                                                                                         },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  0
+                                                     },
+                                         "id":  3,
+                                         "options":  {
+                                                         "footer":  {
+                                                                        "fields":  "",
+                                                                        "reducer":  [
+                                                                                        "sum"
+                                                                                    ],
+                                                                        "show":  false
+                                                                    },
+                                                         "showHeader":  true
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "sum by (index) (g6_options_collected)",
+                                                             "format":  "table",
+                                                             "instant":  true,
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Active Indices (Option Data Collected)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "Time":  true
+                                                                                                       },
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+                                                                                                          "Value":  "Options Count",
+                                                                                                          "index":  "Index"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "thresholds"
+                                                                                        },
+                                                                              "custom":  {
+                                                                                             "align":  "auto",
+                                                                                             "displayMode":  "auto"
+                                                                                         },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  8
+                                                     },
+                                         "id":  4,
+                                         "options":  {
+                                                         "footer":  {
+                                                                        "fields":  "",
+                                                                        "reducer":  [
+                                                                                        "sum"
+                                                                                    ],
+                                                                        "show":  false
+                                                                    },
+                                                         "showHeader":  true
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "g6_index_atm_strike",
+                                                             "format":  "table",
+                                                             "instant":  true,
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "ATM Strike \u0026 Offset Range (by Index)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "Time":  true,
+                                                                                                           "__name__":  true,
+                                                                                                           "instance":  true,
+                                                                                                           "job":  true
+                                                                                                       },
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+                                                                                                          "Value":  "ATM Strike",
+                                                                                                          "index":  "Index"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "custom":  {
+                                                                                             "axisLabel":  "",
+                                                                                             "axisPlacement":  "auto",
+                                                                                             "barAlignment":  0,
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  10,
+                                                                                             "gradientMode":  "none",
+                                                                                             "hideFrom":  {
+                                                                                                              "legend":  false,
+                                                                                                              "tooltip":  false,
+                                                                                                              "viz":  false
+                                                                                                          },
+                                                                                             "lineInterpolation":  "linear",
+                                                                                             "lineWidth":  1,
+                                                                                             "pointSize":  5,
+                                                                                             "scaleDistribution":  {
+                                                                                                                       "type":  "linear"
+                                                                                                                   },
+                                                                                             "showPoints":  "never",
+                                                                                             "spanNulls":  true,
+                                                                                             "stacking":  {
+                                                                                                              "group":  "A",
+                                                                                                              "mode":  "none"
+                                                                                                          },
+                                                                                             "thresholdsStyle":  {
+                                                                                                                     "mode":  "off"
+                                                                                                                 }
+                                                                                         },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  8
+                                                     },
+                                         "id":  5,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "calcs":  [
+                                                                                      "last"
+                                                                                  ],
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "right"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "sum by (index) (g6_options_collected)",
+                                                             "legendFormat":  "{{index}}",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Option Instruments Collected (by Index)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "custom":  {
+                                                                                             "axisLabel":  "",
+                                                                                             "axisPlacement":  "auto",
+                                                                                             "barAlignment":  0,
+                                                                                             "drawStyle":  "bars",
+                                                                                             "fillOpacity":  80,
+                                                                                             "gradientMode":  "none",
+                                                                                             "hideFrom":  {
+                                                                                                              "legend":  false,
+                                                                                                              "tooltip":  false,
+                                                                                                              "viz":  false
+                                                                                                          },
+                                                                                             "lineInterpolation":  "linear",
+                                                                                             "lineWidth":  1,
+                                                                                             "pointSize":  5,
+                                                                                             "scaleDistribution":  {
+                                                                                                                       "type":  "linear"
+                                                                                                                   },
+                                                                                             "showPoints":  "never",
+                                                                                             "spanNulls":  true,
+                                                                                             "stacking":  {
+                                                                                                              "group":  "A",
+                                                                                                              "mode":  "normal"
+                                                                                                          },
+                                                                                             "thresholdsStyle":  {
+                                                                                                                     "mode":  "off"
+                                                                                                                 }
+                                                                                         },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  16
+                                                     },
+                                         "id":  6,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "calcs":  [
+                                                                                      "last"
+                                                                                  ],
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "right"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "sum by (index, expiry) (g6_options_collected{expiry=~\".*0[CPMN]E\"})",
+                                                             "legendFormat":  "{{index}} ATM",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "ATM Option Instruments (Offset=0, by Index)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "thresholds"
+                                                                                        },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  6,
+                                                         "x":  12,
+                                                         "y":  16
+                                                     },
+                                         "id":  7,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           },
+                                                         "showThresholdLabels":  false,
+                                                         "showThresholdMarkers":  true
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "g6_csv_files_created_total",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "CSV Files Created",
+                                         "type":  "gauge"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "thresholds"
+                                                                                        },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  6,
+                                                         "x":  18,
+                                                         "y":  16
+                                                     },
+                                         "id":  8,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           },
+                                                         "showThresholdLabels":  false,
+                                                         "showThresholdMarkers":  true
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "g6_csv_records_written_total",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Total CSV Records Written",
+                                         "type":  "gauge"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "custom":  {
+                                                                                             "axisLabel":  "",
+                                                                                             "axisPlacement":  "auto",
+                                                                                             "barAlignment":  0,
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  10,
+                                                                                             "gradientMode":  "none",
+                                                                                             "hideFrom":  {
+                                                                                                              "legend":  false,
+                                                                                                              "tooltip":  false,
+                                                                                                              "viz":  false
+                                                                                                          },
+                                                                                             "lineInterpolation":  "linear",
+                                                                                             "lineWidth":  2,
+                                                                                             "pointSize":  5,
+                                                                                             "scaleDistribution":  {
+                                                                                                                       "type":  "linear"
+                                                                                                                   },
+                                                                                             "showPoints":  "never",
+                                                                                             "spanNulls":  true,
+                                                                                             "stacking":  {
+                                                                                                              "group":  "A",
+                                                                                                              "mode":  "none"
+                                                                                                          },
+                                                                                             "thresholdsStyle":  {
+                                                                                                                     "mode":  "off"
+                                                                                                                 }
+                                                                                         },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "Collection Errors"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "red",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "API Errors"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "orange",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "Network Errors"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "yellow",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "Data Errors"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "purple",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  10,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  24
+                                                     },
+                                         "id":  9,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "calcs":  [
+                                                                                      "last",
+                                                                                      "max",
+                                                                                      "mean"
+                                                                                  ],
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "pluginVersion":  "11.2.0",
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "rate(g6_collection_errors_total[5m])",
+                                                             "legendFormat":  "Collection Errors ({{index}}, {{error_type}})",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "rate(g6_api_errors_total[5m])",
+                                                             "legendFormat":  "API Errors",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "rate(g6_network_errors_total[5m])",
+                                                             "legendFormat":  "Network Errors",
+                                                             "refId":  "C"
+                                                         },
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "prometheus",
+                                                                                "uid":  "PROM"
+                                                                            },
+                                                             "expr":  "rate(g6_data_errors_total[5m])",
+                                                             "legendFormat":  "Data Errors",
+                                                             "refId":  "D"
+                                                         }
+                                                     ],
+                                         "title":  "Errors, Warnings \u0026 Exceptions (Production)",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "5s",
+                      "schemaVersion":  36,
+                      "style":  "dark",
+                      "tags":  [
+                                   "g6",
+                                   "essential",
+                                   "custom"
+                               ],
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-15m",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+
+                                     },
+                      "timezone":  "",
+                      "title":  "G6 Essential Metrics",
+                      "uid":  "g6_essential_metrics",
+                      "version":  1,
+                      "weekStart":  ""
+                  }
+}

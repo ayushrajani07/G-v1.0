@@ -1,0 +1,84 @@
+{
+    "version":  1,
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-1h"
+             },
+    "title":  "G6 Analytics - Infinity Base",
+    "templating":  {
+                       "list":  [
+                                    {
+                                        "current":  {
+                                                        "text":  "0",
+                                                        "value":  "0"
+                                                    },
+                                        "label":  "Offset",
+                                        "type":  "custom",
+                                        "name":  "offset",
+                                        "options":  [
+
+                                                    ],
+                                        "query":  "0,100,-100,200,-200"
+                                    },
+                                    {
+                                        "current":  {
+                                                        "text":  "this_week",
+                                                        "value":  "this_week"
+                                                    },
+                                        "label":  "Expiry (NIFTY/SENSEX)",
+                                        "type":  "custom",
+                                        "name":  "expiry_ns",
+                                        "options":  [
+
+                                                    ],
+                                        "query":  "this_week,next_week,this_month,next_month"
+                                    },
+                                    {
+                                        "current":  {
+                                                        "text":  "this_month",
+                                                        "value":  "this_month"
+                                                    },
+                                        "label":  "Expiry (BANK/FIN)",
+                                        "type":  "custom",
+                                        "name":  "expiry_bf",
+                                        "options":  [
+
+                                                    ],
+                                        "query":  "this_month,next_month"
+                                    }
+                                ]
+                   },
+    "fiscalYearStartMonth":  0,
+    "schemaVersion":  41,
+    "tags":  [
+                 "g6",
+                 "analytics"
+             ],
+    "uid":  "g6-analytics-infinity-base",
+    "panels":  [
+
+               ],
+    "graphTooltip":  2,
+    "timezone":  "Asia/Kolkata",
+    "refresh":  "15s",
+    "annotations":  {
+                        "list":  [
+                                     {
+                                         "hide":  true,
+                                         "iconColor":  "rgba(0, 211, 255, 1)",
+                                         "builtIn":  1,
+                                         "datasource":  {
+                                                            "type":  "grafana",
+                                                            "uid":  "-- Grafana --"
+                                                        },
+                                         "type":  "dashboard",
+                                         "name":  "Annotations \u0026 Alerts",
+                                         "enable":  true
+                                     }
+                                 ]
+                    },
+    "editable":  true,
+    "links":  [
+
+              ]
+}

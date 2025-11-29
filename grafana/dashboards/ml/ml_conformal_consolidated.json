@@ -1,0 +1,161 @@
+{
+  "title": "ML: Conformal Metrics & Alerts",
+  "uid": "ml-conformal-consolidated",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "base_url",
+        "type": "custom",
+        "query": "http://127.0.0.1:9500",
+        "label": "Base URL",
+        "current": { "text": "http://127.0.0.1:9500", "value": "http://127.0.0.1:9500" },
+        "hide": 2
+      },
+      {
+        "name": "index",
+        "type": "custom",
+        "query": "NIFTY,BANKNIFTY,SENSEX",
+        "label": "Index",
+        "current": { "text": "NIFTY", "value": "NIFTY" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Conformal Radius",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "csv",
+          "source": "url",
+          "url": "${base_url}/api/ml/conformal_metrics?index=${index}&tail=600",
+          "url_options": { "method": "GET" },
+          "columns": [
+            { "selector": "timestamp", "text": "time", "type": "time" },
+            { "selector": "radius", "text": "radius", "type": "number" }
+          ]
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Coverage Estimate",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "csv",
+          "source": "url",
+          "url": "${base_url}/api/ml/conformal_metrics?index=${index}&tail=600",
+          "url_options": { "method": "GET" },
+          "columns": [
+            { "selector": "timestamp", "text": "time", "type": "time" },
+            { "selector": "coverage_estimate", "text": "coverage_estimate", "type": "number" },
+            { "selector": "target_coverage", "text": "target_coverage", "type": "number" }
+          ]
+        }
+      ],
+      "fieldConfig": { "defaults": { "min": 0, "max": 1, "unit": "percentunit" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "Band Width (2 * Radius)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "csv",
+          "source": "url",
+          "url": "${base_url}/api/ml/conformal_metrics?index=${index}&tail=600",
+          "url_options": { "method": "GET" },
+          "columns": [
+            { "selector": "timestamp", "text": "time", "type": "time" },
+            { "selector": "radius", "text": "radius", "type": "number" }
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "binary",
+            "reduce": { "reducer": "sum" },
+            "binary": {
+              "left": "radius",
+              "operator": "*",
+              "right": "2"
+            },
+            "alias": "band_width"
+          }
+        },
+        {
+            "id": "organize",
+            "options": {
+                "excludeByName": {
+                    "radius": true
+                }
+            }
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none" } }
+    },
+    {
+      "type": "stat",
+      "title": "Under-Coverage (Current vs Target)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "csv",
+          "source": "url",
+          "url": "${base_url}/api/ml/conformal_metrics?index=${index}&tail=1",
+          "url_options": { "method": "GET" },
+          "columns": [
+            { "selector": "timestamp", "text": "time", "type": "time" },
+            { "selector": "coverage_estimate", "text": "coverage_estimate", "type": "number" },
+            { "selector": "target_coverage", "text": "target_coverage", "type": "number" }
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "binary",
+            "reduce": { "reducer": "sum" },
+            "binary": {
+              "left": "target_coverage",
+              "operator": "-",
+              "right": "coverage_estimate"
+            },
+            "alias": "under_coverage"
+          }
+        }
+      ],
+      "fieldConfig": { 
+          "defaults": { 
+              "unit": "percentunit",
+              "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                      { "color": "green", "value": -1 },
+                      { "color": "orange", "value": 0.05 },
+                      { "color": "red", "value": 0.10 }
+                  ]
+              }
+          } 
+      }
+    }
+  ]
+}

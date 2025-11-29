@@ -1,0 +1,51 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "regime-dynamic-thresholds-misc",
+                 "url":  "/d/ff4nougmfixa8a/regime-dynamic-thresholds-misc",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T09:31:21+05:30",
+                 "updated":  "2025-11-20T10:32:42+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  2,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "regime_dynamic_thresholds.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "id":  277,
+                      "moved_from":  "grafana/dashboards/regime_dynamic_thresholds.json",
+                      "tags":  [
+                                   "regime",
+                                   "drift",
+                                   "dynamic-thresholds",
+                                   "misc"
+                               ],
+                      "title":  "Regime Dynamic Thresholds (Misc)",
+                      "uid":  "ff4nougmfixa8a",
+                      "version":  2
+                  }
+}

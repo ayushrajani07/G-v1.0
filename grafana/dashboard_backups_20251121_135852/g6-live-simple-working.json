@@ -1,0 +1,353 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "g6-live-simple-working",
+                 "url":  "/d/g6-live-simple-working/g6-live-simple-working",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-17T14:34:45+05:30",
+                 "updated":  "2025-11-17T14:34:45+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "g6_live_simple_working.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "editable":  true,
+                      "fiscalYearStartMonth":  0,
+                      "graphTooltip":  2,
+                      "id":  256,
+                      "links":  [
+
+                                ],
+                      "panels":  [
+                                     {
+                                         "collapsed":  false,
+                                         "gridPos":  {
+                                                         "h":  1,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  1,
+                                         "panels":  [
+
+                                                    ],
+                                         "title":  "Index Prices",
+                                         "type":  "row"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "custom":  {
+                                                                                             "axisBorderShow":  false,
+                                                                                             "axisCenteredZero":  false,
+                                                                                             "axisColorMode":  "text",
+                                                                                             "axisLabel":  "",
+                                                                                             "axisPlacement":  "auto",
+                                                                                             "barAlignment":  0,
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  0,
+                                                                                             "gradientMode":  "none",
+                                                                                             "hideFrom":  {
+                                                                                                              "legend":  false,
+                                                                                                              "tooltip":  false,
+                                                                                                              "viz":  false
+                                                                                                          },
+                                                                                             "insertNulls":  false,
+                                                                                             "lineInterpolation":  "smooth",
+                                                                                             "lineWidth":  2,
+                                                                                             "pointSize":  5,
+                                                                                             "scaleDistribution":  {
+                                                                                                                       "type":  "linear"
+                                                                                                                   },
+                                                                                             "showPoints":  "auto",
+                                                                                             "spanNulls":  true,
+                                                                                             "stacking":  {
+                                                                                                              "group":  "A",
+                                                                                                              "mode":  "none"
+                                                                                                          },
+                                                                                             "thresholdsStyle":  {
+                                                                                                                     "mode":  "off"
+                                                                                                                 }
+                                                                                         },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  1
+                                                     },
+                                         "id":  2,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "calcs":  [
+
+                                                                                  ],
+                                                                        "displayMode":  "list",
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "none"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "refId":  "A",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=NIFTY\u0026expiry_tag=this_week\u0026offset=0"
+                                                         }
+                                                     ],
+                                         "title":  "NIFTY - Index Price",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "time"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "avg_tp":  true,
+                                                                                                           "ce":  true,
+                                                                                                           "pe":  true,
+                                                                                                           "time_str":  true,
+                                                                                                           "tp":  true,
+                                                                                                           "ts":  true
+                                                                                                       },
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "custom":  {
+                                                                                             "axisBorderShow":  false,
+                                                                                             "axisCenteredZero":  false,
+                                                                                             "axisColorMode":  "text",
+                                                                                             "axisLabel":  "",
+                                                                                             "axisPlacement":  "auto",
+                                                                                             "barAlignment":  0,
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  0,
+                                                                                             "gradientMode":  "none",
+                                                                                             "hideFrom":  {
+                                                                                                              "legend":  false,
+                                                                                                              "tooltip":  false,
+                                                                                                              "viz":  false
+                                                                                                          },
+                                                                                             "insertNulls":  false,
+                                                                                             "lineInterpolation":  "smooth",
+                                                                                             "lineWidth":  2,
+                                                                                             "pointSize":  5,
+                                                                                             "scaleDistribution":  {
+                                                                                                                       "type":  "linear"
+                                                                                                                   },
+                                                                                             "showPoints":  "auto",
+                                                                                             "spanNulls":  true,
+                                                                                             "stacking":  {
+                                                                                                              "group":  "A",
+                                                                                                              "mode":  "none"
+                                                                                                          },
+                                                                                             "thresholdsStyle":  {
+                                                                                                                     "mode":  "off"
+                                                                                                                 }
+                                                                                         },
+                                                                              "mappings":  [
+
+                                                                                           ],
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  1
+                                                     },
+                                         "id":  3,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "calcs":  [
+
+                                                                                  ],
+                                                                        "displayMode":  "list",
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "none"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "refId":  "A",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=NIFTY\u0026expiry_tag=this_week\u0026offset=0"
+                                                         }
+                                                     ],
+                                         "title":  "NIFTY - TP (CE + PE)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "time"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "index_price":  true,
+                                                                                                           "time_str":  true,
+                                                                                                           "ts":  true
+                                                                                                       },
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "15s",
+                      "schemaVersion":  39,
+                      "tags":  [
+                                   "g6",
+                                   "test",
+                                   "working"
+                               ],
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+
+                                     },
+                      "timezone":  "browser",
+                      "title":  "G6 Live - Simple Working",
+                      "uid":  "g6-live-simple-working",
+                      "version":  1
+                  }
+}

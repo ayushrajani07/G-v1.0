@@ -1,0 +1,158 @@
+{
+  "id": null,
+  "uid": "g6-grouped-expiry-overlays",
+  "title": "G6 Overlays – Grouped Expiry Toggles",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "style": "dark",
+  "tags": ["g6", "overlays"],
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "expiry_ns",
+        "label": "Nifty/Sensex Expiry",
+        "type": "custom",
+        "query": "this_week,next_week,this_month,next_month",
+        "current": { "text": "this_week", "value": "this_week", "selected": true },
+        "options": [
+          { "text": "this_week", "value": "this_week", "selected": true },
+          { "text": "next_week", "value": "next_week" },
+          { "text": "this_month", "value": "this_month" },
+          { "text": "next_month", "value": "next_month" }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "expiry_bf",
+        "label": "BankNIFTY/FINNIFTY Expiry",
+        "type": "custom",
+        "query": "this_month,next_month",
+        "current": { "text": "this_month", "value": "this_month", "selected": true },
+        "options": [
+          { "text": "this_month", "value": "this_month", "selected": true },
+          { "text": "next_month", "value": "next_month" }
+        ],
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "NIFTY – TP & avg_tp (offset=0)",
+      "description": "Index: NIFTY",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": {
+        "defaults": { "unit": "none" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "freshness_s" },
+            "properties": [
+              { "id": "unit", "value": "s" },
+              { "id": "displayName", "value": "Freshness (s)" },
+              { "id": "custom.hideFrom", "value": { "viz": true, "legend": false, "tooltip": false } }
+            ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "refId": "A", "expr": "tp{index=\"NIFTY\",expiry_tag=\"$expiry_ns\",offset=\"0\"}" },
+        { "refId": "B", "expr": "avg_tp{index=\"NIFTY\",expiry_tag=\"$expiry_ns\",offset=\"0\"}" },
+        { "refId": "C", "expr": "tp_mean{index=\"NIFTY\",expiry_tag=\"$expiry_ns\",offset=\"0\"}" },
+        { "refId": "D", "expr": "avg_tp_mean{index=\"NIFTY\",expiry_tag=\"$expiry_ns\",offset=\"0\"}" },
+        { "refId": "E", "expr": "time()-timestamp(tp{index=\"NIFTY\",expiry_tag=\"$expiry_ns\",offset=\"0\"})", "legendFormat": "freshness_s" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "SENSEX – TP & avg_tp (offset=0)",
+      "description": "Index: SENSEX",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": {
+        "defaults": { "unit": "none" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "freshness_s" },
+            "properties": [
+              { "id": "unit", "value": "s" },
+              { "id": "displayName", "value": "Freshness (s)" },
+              { "id": "custom.hideFrom", "value": { "viz": true, "legend": false, "tooltip": false } }
+            ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "refId": "A", "expr": "tp{index=\"SENSEX\",expiry_tag=\"$expiry_ns\",offset=\"0\"}" },
+        { "refId": "B", "expr": "avg_tp{index=\"SENSEX\",expiry_tag=\"$expiry_ns\",offset=\"0\"}" },
+        { "refId": "C", "expr": "tp_mean{index=\"SENSEX\",expiry_tag=\"$expiry_ns\",offset=\"0\"}" },
+        { "refId": "D", "expr": "avg_tp_mean{index=\"SENSEX\",expiry_tag=\"$expiry_ns\",offset=\"0\"}" },
+        { "refId": "E", "expr": "time()-timestamp(tp{index=\"SENSEX\",expiry_tag=\"$expiry_ns\",offset=\"0\"})", "legendFormat": "freshness_s" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "BANKNIFTY – TP & avg_tp (offset=0)",
+      "description": "Index: BANKNIFTY",
+      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": {
+        "defaults": { "unit": "none" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "freshness_s" },
+            "properties": [
+              { "id": "unit", "value": "s" },
+              { "id": "displayName", "value": "Freshness (s)" },
+              { "id": "custom.hideFrom", "value": { "viz": true, "legend": false, "tooltip": false } }
+            ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "refId": "A", "expr": "tp{index=\"BANKNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"}" },
+        { "refId": "B", "expr": "avg_tp{index=\"BANKNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"}" },
+        { "refId": "C", "expr": "tp_mean{index=\"BANKNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"}" },
+        { "refId": "D", "expr": "avg_tp_mean{index=\"BANKNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"}" },
+        { "refId": "E", "expr": "time()-timestamp(tp{index=\"BANKNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"})", "legendFormat": "freshness_s" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "FINNIFTY – TP & avg_tp (offset=0)",
+      "description": "Index: FINNIFTY",
+      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": {
+        "defaults": { "unit": "none" },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "freshness_s" },
+            "properties": [
+              { "id": "unit", "value": "s" },
+              { "id": "displayName", "value": "Freshness (s)" },
+              { "id": "custom.hideFrom", "value": { "viz": true, "legend": false, "tooltip": false } }
+            ]
+          }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "calcs": ["last"] } },
+      "targets": [
+        { "refId": "A", "expr": "tp{index=\"FINNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"}" },
+        { "refId": "B", "expr": "avg_tp{index=\"FINNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"}" },
+        { "refId": "C", "expr": "tp_mean{index=\"FINNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"}" },
+        { "refId": "D", "expr": "avg_tp_mean{index=\"FINNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"}" },
+        { "refId": "E", "expr": "time()-timestamp(tp{index=\"FINNIFTY\",expiry_tag=\"$expiry_bf\",offset=\"0\"})", "legendFormat": "freshness_s" }
+      ]
+    }
+  ],
+  "annotations": { "list": [] },
+  "refresh": "10s"
+}

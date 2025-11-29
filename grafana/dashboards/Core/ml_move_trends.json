@@ -1,0 +1,99 @@
+{
+  "title": "Move Signal Trends",
+  "uid": "ml-move-trends",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Avg Move Probability (Archive)",
+      "id": 1,
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "type": "csv",
+          "source": "url",
+          "format": "timeseries",
+          "url": "/api/ml/move_stats_archive?index=$index&horizon=$horizon&days=3",
+          "parser": "backend",
+          "url_options": { "method": "GET" },
+          "series_count": 0,
+          "columns": [
+            { "selector": "timestamp", "type": "time" },
+            { "selector": "move_prob", "type": "number" }
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 2,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 0.6 }, { "color": "red", "value": 0.8 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Conditional Magnitude (Archive)",
+      "id": 2,
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "type": "csv",
+          "source": "url",
+          "format": "timeseries",
+          "url": "/api/ml/move_stats_archive?index=$index&horizon=$horizon&days=3",
+          "parser": "backend",
+          "url_options": { "method": "GET" },
+          "columns": [
+            { "selector": "timestamp", "type": "time" },
+            { "selector": "conditional_magnitude", "type": "number" }
+          ]
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] }
+    },
+    {
+      "type": "table",
+      "title": "Recent Move Events (Archive Tail)",
+      "id": 3,
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "type": "csv",
+          "source": "url",
+          "format": "table",
+          "url": "/api/ml/move_stats_archive?index=$index&horizon=$horizon&days=3",
+          "parser": "backend",
+          "url_options": { "method": "GET" }
+        }
+      ],
+      "options": { "showHeader": true },
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "index",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(g6_ml_move_probability, index)",
+        "refresh": 2
+      },
+      {
+        "name": "horizon",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(g6_ml_move_probability, horizon)",
+        "refresh": 2
+      }
+    ]
+  }
+}

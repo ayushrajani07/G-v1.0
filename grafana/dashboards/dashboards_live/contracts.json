@@ -1,0 +1,1621 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 29,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ce_oi$|.*ce_oi .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Call Open Interest"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Open Interest"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pe_oi$|.*pe_oi .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Put Open Interest"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Open Interest"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ce_vol$|.*ce_vol .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Call Volume"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Volume"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pe_vol$|.*pe_vol .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Put Volume"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Volume"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Ii]ndex.*|.*price"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pcr$|.*PCR"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "PCR"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "time_str",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "index_price",
+              "text": "Index Price",
+              "type": "number"
+            },
+            {
+              "selector": "pcr",
+              "text": "pcr",
+              "type": "number"
+            },
+            {
+              "selector": "ce_vol",
+              "text": "ce_vol",
+              "type": "number"
+            },
+            {
+              "selector": "pe_vol",
+              "text": "pe_vol",
+              "type": "number"
+            },
+            {
+              "selector": "ce_oi",
+              "text": "ce_oi",
+              "type": "number"
+            },
+            {
+              "selector": "pe_oi",
+              "text": "pe_oi",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "parser": "backend",
+          "queryType": "json",
+          "refId": "IDX",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "include_analytics",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "NIFTY | $expiry_ns | $offset – Contracts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ce_oi$|.*ce_oi .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Call Open Interest"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Open Interest"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pe_oi$|.*pe_oi .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Put Open Interest"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Open Interest"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ce_vol$|.*ce_vol .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Call Volume"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Volume"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pe_vol$|.*pe_vol .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Put Volume"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Volume"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Ii]ndex.*|.*price"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pcr$|.*PCR"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "PCR"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 14
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "time_str",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "index_price",
+              "text": "Index Price",
+              "type": "number"
+            },
+            {
+              "selector": "pcr",
+              "text": "pcr",
+              "type": "number"
+            },
+            {
+              "selector": "ce_vol",
+              "text": "ce_vol",
+              "type": "number"
+            },
+            {
+              "selector": "pe_vol",
+              "text": "pe_vol",
+              "type": "number"
+            },
+            {
+              "selector": "ce_oi",
+              "text": "ce_oi",
+              "type": "number"
+            },
+            {
+              "selector": "pe_oi",
+              "text": "pe_oi",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "parser": "backend",
+          "queryType": "json",
+          "refId": "IDX",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "include_analytics",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "SENSEX | $expiry_ns | $offset – Contracts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisPlacement": "auto",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ce_oi$|.*ce_oi .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Call Open Interest"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Open Interest"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pe_oi$|.*pe_oi .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Put Open Interest"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Open Interest"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ce_vol$|.*ce_vol .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Call Volume"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Volume"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pe_vol$|.*pe_vol .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Put Volume"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Volume"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Ii]ndex.*|.*price"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pcr$|.*PCR"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "PCR"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "time_str",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "index_price",
+              "text": "Index Price",
+              "type": "number"
+            },
+            {
+              "selector": "pcr",
+              "text": "pcr",
+              "type": "number"
+            },
+            {
+              "selector": "ce_vol",
+              "text": "ce_vol",
+              "type": "number"
+            },
+            {
+              "selector": "pe_vol",
+              "text": "pe_vol",
+              "type": "number"
+            },
+            {
+              "selector": "ce_oi",
+              "text": "ce_oi",
+              "type": "number"
+            },
+            {
+              "selector": "pe_oi",
+              "text": "pe_oi",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "parser": "backend",
+          "queryType": "json",
+          "refId": "IDX",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "include_analytics",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "BANKNIFTY | $expiry_bf | $offset – Contracts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisPlacement": "auto",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ce_oi$|.*ce_oi .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Call Open Interest"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Open Interest"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pe_oi$|.*pe_oi .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Put Open Interest"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Open Interest"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*ce_vol$|.*ce_vol .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Call Volume"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Volume"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pe_vol$|.*pe_vol .*"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Put Volume"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Volume"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*[Ii]ndex.*|.*price"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*pcr$|.*PCR"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "PCR"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "hidden"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "columns": [
+            {
+              "selector": "time_str",
+              "text": "time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "index_price",
+              "text": "Index Price",
+              "type": "number"
+            },
+            {
+              "selector": "pcr",
+              "text": "pcr",
+              "type": "number"
+            },
+            {
+              "selector": "ce_vol",
+              "text": "ce_vol",
+              "type": "number"
+            },
+            {
+              "selector": "pe_vol",
+              "text": "pe_vol",
+              "type": "number"
+            },
+            {
+              "selector": "ce_oi",
+              "text": "ce_oi",
+              "type": "number"
+            },
+            {
+              "selector": "pe_oi",
+              "text": "pe_oi",
+              "type": "number"
+            }
+          ],
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "json_options": {
+            "root_is_array": true
+          },
+          "method": "GET",
+          "parser": "backend",
+          "queryType": "json",
+          "refId": "IDX",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              {
+                "key": "limit",
+                "value": "2000"
+              },
+              {
+                "key": "include_index",
+                "value": "1"
+              },
+              {
+                "key": "include_analytics",
+                "value": "1"
+              },
+              {
+                "key": "from_ms",
+                "value": "${__from}"
+              },
+              {
+                "key": "to_ms",
+                "value": "${__to}"
+              },
+              {
+                "key": "cb",
+                "value": "${__unixEpochMs}"
+              }
+            ]
+          }
+        }
+      ],
+      "title": "FINNIFTY | $expiry_bf | $offset – Contracts",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": [
+    "g6",
+    "contracts",
+    "infinity",
+    "csv"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "0",
+          "value": "0"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Offset",
+        "multi": false,
+        "name": "offset",
+        "options": [
+          {
+            "selected": true,
+            "text": "0",
+            "value": "0"
+          },
+          {
+            "selected": false,
+            "text": "+100",
+            "value": "+100"
+          },
+          {
+            "selected": false,
+            "text": "-100",
+            "value": "-100"
+          },
+          {
+            "selected": false,
+            "text": "+200",
+            "value": "+200"
+          },
+          {
+            "selected": false,
+            "text": "-200",
+            "value": "-200"
+          }
+        ],
+        "query": "0,+100,-100,+200,-200",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "this_week",
+          "value": "this_week"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Expiry (NIFTY/SENSEX)",
+        "multi": false,
+        "name": "expiry_ns",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_week",
+            "value": "this_week"
+          },
+          {
+            "selected": false,
+            "text": "next_week",
+            "value": "next_week"
+          },
+          {
+            "selected": false,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_week,next_week,this_month,next_month",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "this_month",
+          "value": "this_month"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Expiry (BANK/FIN)",
+        "multi": false,
+        "name": "expiry_bf",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_month,next_month",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-12h",
+    "to": "now+6h"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "2m",
+      "5m"
+    ]
+  },
+  "timezone": "Asia/Kolkata",
+  "title": "G6 Contracts - Live v2",
+  "uid": "g6-contracts-live-v2",
+  "version": 6,
+  "weekStart": ""
+}

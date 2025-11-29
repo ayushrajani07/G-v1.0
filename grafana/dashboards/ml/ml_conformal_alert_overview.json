@@ -1,0 +1,63 @@
+{
+  "title": "ML Conformal Alert Overview",
+  "uid": "ml-conformal-alerts-ml",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Coverage Avg 5m",
+      "id": 1,
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "ml:conformal:coverage_avg_5m", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 2 }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Coverage Avg 15m",
+      "id": 2,
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "ml:conformal:coverage_avg_15m", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 2 }, "overrides": [] }
+    },
+    {
+      "type": "timeseries",
+      "title": "Coverage Averages",
+      "id": 3,
+      "datasource": "Prometheus",
+      "targets": [
+        { "expr": "ml:conformal:coverage_avg_5m", "legendFormat": "cov_avg_5m", "refId": "A" },
+        { "expr": "ml:conformal:coverage_avg_15m", "legendFormat": "cov_avg_15m", "refId": "B" },
+        { "expr": "scalar(0.8)", "legendFormat": "target", "refId": "C" }
+      ],
+      "fieldConfig": { "defaults": { "min": 0, "max": 1 }, "overrides": [] }
+    },
+    {
+      "type": "timeseries",
+      "title": "Band Width",
+      "id": 4,
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "ml:conformal:band_width", "legendFormat": "band_width", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Under-Coverage 15m (Δ vs 0.8)",
+      "id": 5,
+      "datasource": "Prometheus",
+      "targets": [ { "expr": "ml:conformal:under_coverage_15m", "refId": "A" } ],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 3 }, "overrides": [] }
+    }
+  ],
+  "templating": {"list": []},
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "type": "dashboard"
+      }
+    ]
+  }
+}

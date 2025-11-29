@@ -1,0 +1,744 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "feature-distribution-shift-psi-ks",
+                 "url":  "/d/feature-shift/feature-distribution-shift-psi-ks",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T09:31:22+05:30",
+                 "updated":  "2025-11-20T09:31:22+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "feature_shift.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+                                       {
+                                           "label":  "Infinity",
+                                           "name":  "DS_INFINITY",
+                                           "pluginId":  "yesoreyeram-infinity-datasource",
+                                           "pluginName":  "Infinity",
+                                           "type":  "datasource"
+                                       }
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "grafana",
+                                             "name":  "Grafana",
+                                             "type":  "grafana",
+                                             "version":  "9.0.0"
+                                         },
+                                         {
+                                             "id":  "table",
+                                             "name":  "Table",
+                                             "type":  "panel"
+                                         },
+                                         {
+                                             "id":  "timeseries",
+                                             "name":  "Time series",
+                                             "type":  "panel"
+                                         },
+                                         {
+                                             "id":  "state-timeline",
+                                             "name":  "State timeline",
+                                             "type":  "panel"
+                                         },
+                                         {
+                                             "id":  "yesoreyeram-infinity-datasource",
+                                             "name":  "Infinity",
+                                             "type":  "datasource",
+                                             "version":  "2.6.0"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+                                                       {
+                                                           "datasource":  {
+                                                                              "type":  "prometheus",
+                                                                              "uid":  "PROMETHEUS_DS_UID"
+                                                                          },
+                                                           "enable":  true,
+                                                           "expr":  "((clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.25) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.2) bool), 1) - clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.3) bool), 1)) == 1) and on(index) (changes(clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.25) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.2) bool), 1) - clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.3) bool), 1))[5m]) \u003e 0)",
+                                                           "iconColor":  "rgba(237, 129, 40, 1)",
+                                                           "name":  "Shift Warn Escalation",
+                                                           "tagKeys":  "index",
+                                                           "textFormat":  "PSI/KS crossed warn threshold",
+                                                           "titleFormat":  "WARN escalation: {{index}}",
+                                                           "type":  "dashboard"
+                                                       },
+                                                       {
+                                                           "datasource":  {
+                                                                              "type":  "prometheus",
+                                                                              "uid":  "PROMETHEUS_DS_UID"
+                                                                          },
+                                                           "enable":  true,
+                                                           "expr":  "(clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.3) bool), 1) == 1) and on(index) (changes(clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.3) bool), 1)[5m]) \u003e 0)",
+                                                           "iconColor":  "rgba(245, 54, 54, 1)",
+                                                           "name":  "Shift Crit Escalation",
+                                                           "tagKeys":  "index",
+                                                           "textFormat":  "PSI/KS crossed critical threshold",
+                                                           "titleFormat":  "CRIT escalation: {{index}}",
+                                                           "type":  "dashboard"
+                                                       }
+                                                   ]
+                                      },
+                      "description":  "LIMIT controls history depth for heatmap/timeseries; higher values increase backend load and may slow rendering.",
+                      "id":  283,
+                      "panels":  [
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "psi"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "none"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "thresholds",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "absolute",
+                                                                                                                        "steps":  [
+                                                                                                                                      {
+                                                                                                                                          "color":  "green",
+                                                                                                                                          "value":  0.0
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "yellow",
+                                                                                                                                          "value":  0.1
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "orange",
+                                                                                                                                          "value":  0.25
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "red",
+                                                                                                                                          "value":  0.5
+                                                                                                                                      }
+                                                                                                                                  ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "ks"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "thresholds",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "absolute",
+                                                                                                                        "steps":  [
+                                                                                                                                      {
+                                                                                                                                          "color":  "green",
+                                                                                                                                          "value":  0.0
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "yellow",
+                                                                                                                                          "value":  0.1
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "orange",
+                                                                                                                                          "value":  0.2
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "red",
+                                                                                                                                          "value":  0.3
+                                                                                                                                      }
+                                                                                                                                  ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "id":  1,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "features",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "${G6_API_BASE}/api/ml/ensemble/feature_shift/latest"
+                                                         }
+                                                     ],
+                                         "title":  "Latest Feature Shift",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "renameByName":  {
+                                                                                                          "feature":  "Feature",
+                                                                                                          "ks":  "KS",
+                                                                                                          "psi":  "PSI",
+                                                                                                          "sample_size":  "Samples"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never",
+                                                                                             "spanNulls":  true
+                                                                                         },
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  10
+                                                     },
+                                         "id":  2,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "list",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "${G6_API_BASE}/api/ml/ensemble/feature_shift/history?limit=${LIMIT}\u0026index=${INDEX}"
+                                                         }
+                                                     ],
+                                         "title":  "PSI History (Max per run)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "features":  false
+                                                                                                       }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "extractFields",
+                                                                     "options":  {
+                                                                                     "format":  "json",
+                                                                                     "sourceField":  "features"
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "renameByName":  {
+                                                                                                          "feature":  "feature",
+                                                                                                          "ks":  "ks",
+                                                                                                          "psi":  "psi"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROMETHEUS_DS_UID"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "red",
+                                                                                                                   "value":  1
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  0,
+                                                         "y":  22
+                                                     },
+                                         "id":  3,
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "last"
+                                                                                         ],
+                                                                               "values":  false
+                                                                           },
+                                                         "textMode":  "value"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum(ALERTS{alertstate=\"firing\", alertname=~\"Feature(PSIHigh|KSHigh).+\", index=~\"${INDEX:regex}\"})",
+                                                             "instant":  true,
+                                                             "legendFormat":  "active_shift_alerts"
+                                                         }
+                                                     ],
+                                         "title":  "Active Shift Alerts",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROMETHEUS_DS_UID"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  28
+                                                     },
+                                         "id":  4,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum(ALERTS{alertstate=\"firing\", alertname=~\"Feature(PSIHigh|KSHigh).+\", index=~\"${INDEX:regex}\"}) by (alertname,severity,index,feature)",
+                                                             "instant":  true,
+                                                             "legendFormat":  "{{alertname}}"
+                                                         }
+                                                     ],
+                                         "title":  "Firing Shift Alerts (PSI/KS)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "renameByName":  {
+                                                                                                          "Value":  "active",
+                                                                                                          "alertname":  "alert",
+                                                                                                          "feature":  "feature",
+                                                                                                          "index":  "index",
+                                                                                                          "severity":  "severity"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROMETHEUS_DS_UID"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "Value"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "displayName",
+                                                                                                          "value":  "severity"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "thresholds",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "absolute",
+                                                                                                                        "steps":  [
+                                                                                                                                      {
+                                                                                                                                          "color":  "green",
+                                                                                                                                          "value":  null
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "yellow",
+                                                                                                                                          "value":  1
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "red",
+                                                                                                                                          "value":  2
+                                                                                                                                      }
+                                                                                                                                  ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "severity"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "mappings",
+                                                                                                          "value":  [
+                                                                                                                        {
+                                                                                                                            "options":  {
+                                                                                                                                            "match":  "0",
+                                                                                                                                            "result":  {
+                                                                                                                                                           "color":  "green",
+                                                                                                                                                           "text":  "OK"
+                                                                                                                                                       }
+                                                                                                                                        },
+                                                                                                                            "type":  1
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "options":  {
+                                                                                                                                            "match":  "1",
+                                                                                                                                            "result":  {
+                                                                                                                                                           "color":  "yellow",
+                                                                                                                                                           "text":  "WARN"
+                                                                                                                                                       }
+                                                                                                                                        },
+                                                                                                                            "type":  1
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "options":  {
+                                                                                                                                            "match":  "2",
+                                                                                                                                            "result":  {
+                                                                                                                                                           "color":  "red",
+                                                                                                                                                           "text":  "CRIT"
+                                                                                                                                                       }
+                                                                                                                                        },
+                                                                                                                            "type":  1
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  10,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  40
+                                                     },
+                                         "id":  5,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "2 * clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.3) bool), 1) + (1 - clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.5) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.3) bool), 1)) * clamp_max(max by (index) ((g6_feature_psi{index=~\"${INDEX:regex}\"} \u003e 0.25) bool + (g6_feature_ks{index=~\"${INDEX:regex}\"} \u003e 0.2) bool), 1)",
+                                                             "instant":  true,
+                                                             "legendFormat":  "severity"
+                                                         }
+                                                     ],
+                                         "title":  "Combined Severity by Index",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "renameByName":  {
+                                                                                                          "Value":  "severity"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "yellow",
+                                                                                                                   "value":  0.25
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "red",
+                                                                                                                   "value":  0.5
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  50
+                                                     },
+                                         "id":  6,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "hidden"
+                                                                    }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}\u0026limit=${LIMIT}\u0026index=${INDEX}"
+                                                         }
+                                                     ],
+                                         "title":  "${METRIC:upper} Heatmap (24h)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  [
+                                                                                                     "ts",
+                                                                                                     "feature",
+                                                                                                     "value"
+                                                                                                 ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "labelsToFields",
+                                                                     "options":  {
+                                                                                     "labels":  [
+                                                                                                    "feature"
+                                                                                                ],
+                                                                                     "valueLabel":  "value"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "state-timeline"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never",
+                                                                                             "spanNulls":  true
+                                                                                         },
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  14,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  62
+                                                     },
+                                         "id":  7,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "${G6_API_BASE}/api/ml/ensemble/feature_shift/heatmap?metric=${METRIC}\u0026limit=${LIMIT}\u0026index=${INDEX}"
+                                                         }
+                                                     ],
+                                         "title":  "Per-Feature ${METRIC:upper} Timeseries",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  [
+                                                                                                     "ts",
+                                                                                                     "feature",
+                                                                                                     "value"
+                                                                                                 ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "renameByName":  {
+                                                                                                          "ts":  "time"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "labelsToFields",
+                                                                     "options":  {
+                                                                                     "labels":  [
+                                                                                                    "feature"
+                                                                                                ],
+                                                                                     "valueLabel":  "value"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "1m",
+                      "schemaVersion":  36,
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "http://localhost:9500",
+                                                                          "value":  "http://localhost:9500"
+                                                                      },
+                                                          "label":  "API Base",
+                                                          "name":  "G6_API_BASE",
+                                                          "query":  "http://localhost:9500",
+                                                          "type":  "textbox"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "500",
+                                                                          "value":  "500"
+                                                                      },
+                                                          "label":  "History Limit",
+                                                          "name":  "LIMIT",
+                                                          "query":  "100,200,500,1000",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "psi",
+                                                                          "value":  "psi"
+                                                                      },
+                                                          "label":  "Metric",
+                                                          "name":  "METRIC",
+                                                          "query":  "psi,ks",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "All",
+                                                                          "value":  [
+                                                                                        "NIFTY",
+                                                                                        "BANKNIFTY",
+                                                                                        "SENSEX"
+                                                                                    ]
+                                                                      },
+                                                          "includeAll":  true,
+                                                          "label":  "Index",
+                                                          "multi":  true,
+                                                          "name":  "INDEX",
+                                                          "query":  "NIFTY,BANKNIFTY,SENSEX",
+                                                          "type":  "custom"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-24h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+                                         "refresh_intervals":  [
+                                                                   "30s",
+                                                                   "1m",
+                                                                   "5m",
+                                                                   "15m",
+                                                                   "1h"
+                                                               ]
+                                     },
+                      "timezone":  "browser",
+                      "title":  "Feature Distribution Shift (PSI / KS)",
+                      "uid":  "feature-shift",
+                      "version":  1
+                  }
+}

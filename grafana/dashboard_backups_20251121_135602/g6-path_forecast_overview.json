@@ -1,0 +1,411 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "path-forecast-overview",
+                 "url":  "/d/g6-path_forecast_overview/path-forecast-overview",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-17T09:36:30+05:30",
+                 "updated":  "2025-11-17T09:36:30+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "path_forecast_overview.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "prometheus",
+                                             "name":  "Prometheus",
+                                             "type":  "prometheus",
+                                             "version":  "1.0.0"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "g6_meta":  {
+                                      "description":  "",
+                                      "families":  [
+                                                       "path_forecast"
+                                                   ],
+                                      "spec_hash":  "80f3777d25ab7c5d"
+                                  },
+                      "id":  244,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "histogram",
+                                                         "metric":  "g6_pf_alpha_hist",
+                                                         "panel_uuid":  "0d5511ea3b67e4a5",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  223678954,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_alpha_hist",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_alpha_hist (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "histogram",
+                                                         "metric":  "g6_pf_candidate_richness",
+                                                         "panel_uuid":  "75808347121ed73f",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  0
+                                                     },
+                                         "id":  1971356487,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_candidate_richness",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_candidate_richness (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "gauge",
+                                                         "metric":  "g6_pf_composite_alpha",
+                                                         "panel_uuid":  "9db56b4807e6fb28",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  8
+                                                     },
+                                         "id":  2645912392,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_composite_alpha",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_composite_alpha (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "histogram",
+                                                         "metric":  "g6_pf_composite_latency_ms",
+                                                         "panel_uuid":  "54c6c8965e4fb8aa",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  8
+                                                     },
+                                         "id":  1422313622,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_composite_latency_ms",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_composite_latency_ms (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "gauge",
+                                                         "metric":  "g6_pf_horizon_sanitized",
+                                                         "panel_uuid":  "55bbb83826078065",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  16
+                                                     },
+                                         "id":  1438365752,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_horizon_sanitized",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_horizon_sanitized (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "gauge",
+                                                         "metric":  "g6_pf_quantile_agg_ms",
+                                                         "panel_uuid":  "5b4c3575e1dc1a97",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  16
+                                                     },
+                                         "id":  1531721077,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_quantile_agg_ms",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_quantile_agg_ms (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "gauge",
+                                                         "metric":  "g6_pf_retrieval_candidates_total",
+                                                         "panel_uuid":  "ecb859dd4c26e7d8",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  24
+                                                     },
+                                         "id":  3971504605,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_retrieval_candidates_total",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_retrieval_candidates_total (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "histogram",
+                                                         "metric":  "g6_pf_retrieval_latency_ms",
+                                                         "panel_uuid":  "c9d410b2a950689d",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  24
+                                                     },
+                                         "id":  3386118322,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_retrieval_latency_ms",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_retrieval_latency_ms (auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "path_forecast",
+                                                         "kind":  "gauge",
+                                                         "metric":  "g6_pf_window_sanitized",
+                                                         "panel_uuid":  "47a72496a062660b",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  32
+                                                     },
+                                         "id":  1202136214,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_pf_window_sanitized",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_pf_window_sanitized (auto)",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  39,
+                      "tags":  [
+                                   "forecast",
+                                   "path",
+                                   "g6",
+                                   "generated"
+                               ],
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timezone":  "browser",
+                      "title":  "Path Forecast Overview",
+                      "uid":  "g6-path_forecast_overview",
+                      "version":  1
+                  }
+}

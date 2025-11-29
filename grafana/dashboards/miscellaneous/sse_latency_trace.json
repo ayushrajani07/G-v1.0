@@ -1,0 +1,6 @@
+{
+  "moved_from": ".grafana/provisioning_baseline/dashboards_src/sse_latency.json",
+  "title": "SSE Latency & Trace (Misc)",
+  "tags": ["g6","generated","misc"],
+  "panels_count": 4
+}

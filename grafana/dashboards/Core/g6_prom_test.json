@@ -1,0 +1,1 @@
+{"uid":"g6-prom-test","title":"G6 Prometheus Test","editable":true,"schemaVersion":39,"refresh":"15s","panels":[{"id":1,"type":"timeseries","title":"Prometheus Test - g6_option_oi","gridPos":{"h":12,"w":24,"x":0,"y":0},"targets":[{"refId":"A","datasource":{"type":"prometheus","uid":"PROM"},"expr":"g6_option_oi","format":"time_series"}]}]}

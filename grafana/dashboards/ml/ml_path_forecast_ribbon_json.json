@@ -1,0 +1,603 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_INFINITY",
+      "label": "Infinity",
+      "description": "yesoreyeram-infinity-datasource",
+      "type": "datasource",
+      "pluginId": "yesoreyeram-infinity-datasource",
+      "pluginName": "Infinity"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.5.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "9.5.0" },
+    { "type": "datasource", "id": "yesoreyeram-infinity-datasource", "name": "Infinity", "version": "2.7.0" }
+  ],
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1,
+  "links": [
+    {
+      "title": "Zoom last ${horizon}m (align trailing)",
+      "url": "/d/${__dashboard.uid}/${__dashboard.slug}?from=now-${horizon}m&to=now&var-pf_align=trailing",
+      "targetBlank": false,
+      "includeVars": true
+    },
+    {
+      "title": "Zoom next ${horizon}m (align future)",
+      "url": "/d/${__dashboard.uid}/${__dashboard.slug}?from=now&to=now%2B${horizon}m&var-pf_align=future",
+      "targetBlank": false,
+      "includeVars": true
+    },
+    {
+      "title": "Reset: last 2h",
+      "url": "/d/${__dashboard.uid}/${__dashboard.slug}?from=now-2h&to=now",
+      "targetBlank": false,
+      "includeVars": true
+    },
+    {
+      "title": "Reset all to defaults",
+      "url": "http://127.0.0.1:9500/api/ml/reset_defaults?uid=${__dashboard.uid}&slug=${__dashboard.slug}&index=${index}&expiry_tag=${expiry_tag}&offset=${offset}&horizon=${horizon}",
+      "targetBlank": false,
+      "includeVars": false
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "ML Path Forecast – Ribbon (JSON)",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 15, "w": 24, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2, "spanNulls": true, "gradientMode": "hue" },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green" } ] }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "q50" }, "properties": [
+            { "id": "color", "value": { "fixedColor": "#4477aa", "mode": "fixed" } },
+            { "id": "custom.drawStyle", "value": "line" },
+            { "id": "custom.fillOpacity", "value": 0 }
+          ] },
+          { "matcher": { "id": "byName", "options": "q10" }, "properties": [
+            { "id": "color", "value": { "fixedColor": "#00aa55", "mode": "fixed" } },
+            { "id": "custom.drawStyle", "value": "line" },
+            { "id": "custom.fillOpacity", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "dash": [6, 3] } }
+          ] },
+          { "matcher": { "id": "byName", "options": "q90" }, "properties": [
+            { "id": "color", "value": { "fixedColor": "#8000ff", "mode": "fixed" } },
+            { "id": "custom.drawStyle", "value": "line" },
+            { "id": "custom.fillOpacity", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "dash": [6, 3] } }
+          ] },
+          { "matcher": { "id": "byName", "options": "tp" }, "properties": [
+            { "id": "color", "value": { "fixedColor": "#ffcc00", "mode": "fixed" } },
+            { "id": "custom.lineWidth", "value": 1 },
+            { "id": "custom.fillOpacity", "value": 0 }
+          ] },
+          { "matcher": { "id": "byFrameRefID", "options": "TP" }, "properties": [
+            { "id": "displayName", "value": "tp_live" }
+          ] },
+          { "matcher": { "id": "byFrameRefID", "options": "TR" }, "properties": [
+            { "id": "color", "value": { "fixedColor": "rgba(160,160,160,0.7)", "mode": "fixed" } },
+            { "id": "custom.lineWidth", "value": 1 },
+            { "id": "custom.fillOpacity", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "dash": [2, 4] } }
+          ] }
+        ]
+      },
+      "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_forecast_json?index=${index}&horizon_minutes=${horizon}&mode=${pf_mode}&window=${pf_window}&k=${pf_k}&bucket_ms=${pf_bucket}&calibrate=${calibrate}&no_cache=true&date_str=${date_str}&now_override_ms=${now_ms}&expiry_tag=${expiry_tag}&offset=${offset}&align=${pf_align}&profile=${profile}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "$",
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+           "columns": [
+             { "selector": "plot_time", "type": "string" },
+             { "selector": "q10", "type": "number" },
+             { "selector": "q50", "type": "number" },
+             { "selector": "q90", "type": "number" }
+           ]
+        },
+        {
+          "refId": "TR",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_forecast_json?index=${index}&horizon_minutes=${horizon}&mode=${pf_mode}&window=${pf_window}&k=${pf_k}&bucket_ms=${pf_bucket}&calibrate=${calibrate}&no_cache=true&date_str=${date_str}&now_override_ms=${now_ms}&expiry_tag=${expiry_tag}&offset=${offset}&align=trailing&profile=${profile}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "$",
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [
+            { "selector": "plot_time", "type": "string" },
+            { "selector": "q10", "type": "number" },
+            { "selector": "q50", "type": "number" },
+            { "selector": "q90", "type": "number" }
+          ]
+        },
+        {
+          "refId": "TP",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/tp_series?index=${index}&expiry_tag=${expiry_tag}&offset=${offset}&window_minutes=${hist_minutes}&bucket_ms=${pf_bucket}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "parser": "backend",
+          "format": "table",
+          "root_selector": "$",
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [
+            { "selector": "plot_time", "type": "string" },
+            { "selector": "tp", "type": "number" }
+          ]
+        }
+      ],
+      "transformations": [
+        { "id": "convertFieldType", "options": { "conversions": [ { "targetField": "plot_time", "destinationType": "time" } ] } },
+        { "id": "prepareTimeSeries", "options": { "timeField": "plot_time", "valueFields": ["q10","q50","q90","tp"], "labelFields": [] } }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Generation meta (JSON)",
+      "description": "Generation metadata for the current path forecast: Forecaster mode (hybrid/retrieval), Neighbors (k) used for retrieval, Intraday window in minutes, and the current calibration Band scale applied to quantile bands. Timestamp reflects when the ribbon was generated.",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 15 },
+      "targets": [
+        {
+          "refId": "B",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_forecast_meta?index=${index}&horizon_minutes=${horizon}&mode=${pf_mode}&window=${pf_window}&k=${pf_k}&date_str=${date_str}&now_override_ms=${now_ms}&expiry_tag=${expiry_tag}&offset=${offset}&profile=${profile}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [
+            { "selector": "last_tp", "text": "Last live TP (straddle)", "type": "number" },
+            { "selector": "gen_iso", "text": "Generated at (ISO)", "type": "string" },
+            { "selector": "mode", "text": "Forecaster mode", "type": "string" },
+            { "selector": "k", "text": "Neighbors (k)", "type": "number" },
+            { "selector": "window", "text": "Window (min)", "type": "number" },
+            { "selector": "band_scale", "text": "Band scale", "type": "number" },
+            { "selector": "requested_day", "text": "Requested day", "type": "string" },
+            { "selector": "source_day", "text": "Source day", "type": "string" },
+            { "selector": "source_status", "text": "Source status", "type": "string" },
+            { "selector": "profile", "text": "Profile", "type": "string" },
+            { "selector": "profile_force_mode", "text": "Force mode", "type": "string" }
+          ]
+        }
+      ],
+      "options": { "showHeader": true },
+      "fieldConfig": {
+        "defaults": { },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Last live TP (straddle)" }, "properties": [ { "id": "unit", "value": "short" }, { "id": "decimals", "value": 0 }, { "id": "custom.width", "value": 150 } ] },
+          { "matcher": { "id": "byName", "options": "Generated at (ISO)" }, "properties": [ { "id": "custom.width", "value": 220 } ] },
+          { "matcher": { "id": "byName", "options": "Forecaster mode" }, "properties": [ { "id": "custom.width", "value": 140 } ] },
+          { "matcher": { "id": "byName", "options": "Neighbors (k)" }, "properties": [ { "id": "unit", "value": "short" }, { "id": "decimals", "value": 0 }, { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 120 } ] },
+          { "matcher": { "id": "byName", "options": "Window (min)" }, "properties": [ { "id": "unit", "value": "short" }, { "id": "decimals", "value": 0 }, { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 130 } ] },
+          { "matcher": { "id": "byName", "options": "Band scale" }, "properties": [ { "id": "unit", "value": "short" }, { "id": "decimals", "value": 2 }, { "id": "custom.align", "value": "center" }, { "id": "custom.width", "value": 120 } ] },
+          { "matcher": { "id": "byName", "options": "Requested day" }, "properties": [ { "id": "custom.width", "value": 140 } ] },
+          { "matcher": { "id": "byName", "options": "Source day" }, "properties": [ { "id": "custom.width", "value": 140 } ] },
+          { "matcher": { "id": "byName", "options": "Source status" }, "properties": [ { "id": "custom.width", "value": 120 }, { "id": "mappings", "value": [ { "type": "value", "options": { "live": { "text": "live", "color": "green" }, "backfill": { "text": "backfill", "color": "orange" } } } ] }, { "id": "custom.align", "value": "center" } ] }
+        ]
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Data status",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 27 },
+      "targets": [
+        {
+          "refId": "DS",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_forecast_meta?index=${index}&horizon_minutes=${horizon}&mode=${pf_mode}&window=${pf_window}&k=${pf_k}&date_str=${date_str}&now_override_ms=${now_ms}&expiry_tag=${expiry_tag}&offset=${offset}&profile=${profile}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [ { "selector": "source_status", "text": "status", "type": "string" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "horizontal", "textMode": "value", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "live": { "text": "live", "color": "green" }, "backfill": { "text": "backfill", "color": "orange" } } },
+            { "type": "special", "options": { "match": "null", "result": { "text": "—", "color": "gray" } } }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Calibrated coverage @${horizon}m",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 5, "w": 5, "x": 0, "y": 21 },
+      "targets": [
+        {
+          "refId": "C",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_stats?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&date_str=${date_str}&variant=calibrated&expiry_tag=${expiry_tag}&offset=${offset}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [ { "selector": "coverage_p10_p90", "text": "coverage", "type": "number" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "horizontal", "textMode": "value", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" },
+  "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 2, "mappings": [ { "type": "special", "options": { "match": "null", "result": { "text": "—" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "orange", "value": 0.65 }, { "color": "green", "value": 0.75 } ] } }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Raw coverage @${horizon}m",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 5, "w": 5, "x": 5, "y": 21 },
+      "targets": [
+        {
+          "refId": "D",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_stats?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&date_str=${date_str}&variant=raw&expiry_tag=${expiry_tag}&offset=${offset}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [ { "selector": "coverage_p10_p90", "text": "coverage_raw", "type": "number" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "horizontal", "textMode": "value", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" },
+  "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 2, "mappings": [ { "type": "special", "options": { "match": "null", "result": { "text": "—" } } } ], "thresholds": { "mode": "absolute", "steps": [ { "color": "red", "value": 0 }, { "color": "orange", "value": 0.65 }, { "color": "green", "value": 0.75 } ] } }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Avg band width @${horizon}m",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 5, "w": 5, "x": 10, "y": 21 },
+      "targets": [
+        {
+          "refId": "E",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_stats?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&date_str=${date_str}&variant=calibrated&expiry_tag=${expiry_tag}&offset=${offset}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [ { "selector": "band_width_mean", "text": "bandw", "type": "number" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "horizontal", "textMode": "value", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" },
+  "fieldConfig": { "defaults": { "unit": "short", "decimals": 2, "mappings": [ { "type": "special", "options": { "match": "null", "result": { "text": "—" } } } ] }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Samples @${horizon}m",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 5, "w": 4, "x": 15, "y": 21 },
+      "targets": [
+        {
+          "refId": "F",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_stats?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&date_str=${date_str}&variant=calibrated&expiry_tag=${expiry_tag}&offset=${offset}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [ { "selector": "samples", "text": "samples", "type": "number" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "horizontal", "textMode": "value", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" },
+  "fieldConfig": { "defaults": { "unit": "short", "decimals": 0, "mappings": [ { "type": "special", "options": { "match": "null", "result": { "text": "—" } } } ] }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Band scale (current)",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 5, "w": 5, "x": 19, "y": 21 },
+      "targets": [
+        {
+          "refId": "G",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_forecast_meta?index=${index}&horizon_minutes=${horizon}&date_str=${date_str}&now_override_ms=${now_ms}&expiry_tag=${expiry_tag}&offset=0&profile=${profile}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [ { "selector": "band_scale", "text": "band_scale", "type": "number" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "horizontal", "textMode": "value", "colorMode": "value", "graphMode": "none", "justifyMode": "auto" },
+  "fieldConfig": { "defaults": { "unit": "short", "decimals": 2, "mappings": [ { "type": "special", "options": { "match": "null", "result": { "text": "—" } } } ] }, "overrides": [] }
+    },
+    {
+      "type": "text",
+      "title": "Notes",
+      "gridPos": { "h": 4, "w": 18, "x": 0, "y": 33 },
+      "options": {
+        "mode": "markdown",
+        "content": "- Coverage stats may be null early until bands archive fills for the day.\n- Calibrated uses current band_scale; Raw approximates pre-calibration by reverse-scaling around q50.\n- Variables date_str and now_override_ms keep Meta/Ribbon/Stats aligned for replay."
+      }
+    },
+    {
+      "type": "text",
+      "title": "Manual: Calibrate now",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 33 },
+      "options": {
+        "mode": "markdown",
+        "content": "**Caution**: Triggers calibration immediately using current data.\n\n[Run calibrate now](${base_url}/api/ml/path_calibrate_now?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&target=${cal_target}&confirm=true&view=html)\n\nReturns band_scale, coverage, and samples."
+      }
+    },
+    {
+      "type": "text",
+      "title": "Quick links",
+      "gridPos": { "h": 4, "w": 8, "x": 16, "y": 37 },
+      "options": {
+        "mode": "markdown",
+        "content": "- [Health](${base_url}/health)  |  [Routes](${base_url}/api/routes)  |  [OpenAPI](${base_url}/openapi.json)  |  [Docs UI](${base_url}/docs)  |  [Resolve live path](${base_url}/api/ml/_debug/find_live_path?index=${index}&expiry_tag=${expiry_tag}&offset=0&date_str=${date_str})  |  [User Guide](/d/${__dashboard.uid}/${__dashboard.slug}?viewPanel=1999)"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Advisor summary",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 37 },
+      "targets": [
+        {
+          "refId": "SUM",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_advisor?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&date_str=${date_str}&gap_warn=${gap_warn}&gap_crit=${gap_crit}&min_samples_warn=${min_samples_warn}&min_samples_crit=${min_samples_crit}&expiry_tag=${expiry_tag}&offset=${offset}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$.summary" },
+          "columns": [ { "selector": "level", "text": "level", "type": "string" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "auto", "textMode": "value" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "ok": { "text": "ok", "color": "green" }, "warn": { "text": "warn", "color": "orange" }, "crit": { "text": "crit", "color": "red" } } }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "API routes (count)",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 37 },
+      "targets": [
+        {
+          "refId": "RC",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/routes",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$" },
+          "columns": [ { "selector": "count", "text": "count", "type": "number" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "auto", "textMode": "value" },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Gap vs target (abs)",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 37 },
+      "targets": [
+        {
+          "refId": "GAP",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_advisor?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&date_str=${date_str}&gap_warn=${gap_warn}&gap_crit=${gap_crit}&expiry_tag=${expiry_tag}&offset=${offset}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$.summary" },
+          "columns": [ { "selector": "gap_abs", "text": "gap_abs", "type": "number" } ]
+        }
+      ],
+      "options": { "reduceOptions": { "calculations": ["lastNotNull"], "values": false }, "orientation": "auto" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "decimals": 2,
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": 0 }, { "color": "orange", "value": 0.05 }, { "color": "red", "value": 0.10 } ] }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "table",
+      "title": "Advisor Alerts",
+      "description": "Live advisories from the path forecast advisor. Level indicates severity; code is a short machine-readable key. Message explains the condition; Prognosis tells what to expect; Remedy suggests next action.",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 41 },
+      "targets": [
+        {
+          "refId": "H",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_advisor?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&date_str=${date_str}&gap_warn=${gap_warn}&gap_crit=${gap_crit}&min_samples_warn=${min_samples_warn}&min_samples_crit=${min_samples_crit}&expiry_tag=${expiry_tag}&offset=0",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "json_options": { "root_is_not_first_line": false, "root": "$.alerts" },
+          "columns": [
+            { "selector": "level", "text": "Level", "type": "string" },
+            { "selector": "code", "text": "Code", "type": "string" },
+            { "selector": "message", "text": "Message", "type": "string" },
+            { "selector": "prognosis", "text": "Prognosis", "type": "string" },
+            { "selector": "remedy", "text": "Suggested remedy", "type": "string" }
+          ]
+        }
+      ],
+      "options": { "showHeader": true },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Level" },
+            "properties": [
+              { "id": "mappings", "value": [ { "type": "value", "options": { "ok": { "text": "OK", "color": "green" }, "warn": { "text": "WARN", "color": "orange" }, "crit": { "text": "CRIT", "color": "red" } } } ] },
+              { "id": "custom.displayMode", "value": "color-text" },
+              { "id": "custom.align", "value": "center" },
+              { "id": "custom.width", "value": 90 }
+            ]
+          },
+          { "matcher": { "id": "byName", "options": "Code" }, "properties": [ { "id": "custom.align", "value": "left" }, { "id": "custom.width", "value": 160 } ] },
+          { "matcher": { "id": "byName", "options": "Message" }, "properties": [ { "id": "custom.align", "value": "left" }, { "id": "custom.width", "value": 420 }, { "id": "mappings", "value": [ { "type": "special", "options": { "match": "null", "result": { "text": "—" } } } ] }, { "id": "custom.wrap", "value": true } ] },
+          { "matcher": { "id": "byName", "options": "Prognosis" }, "properties": [ { "id": "custom.align", "value": "left" }, { "id": "custom.width", "value": 420 }, { "id": "mappings", "value": [ { "type": "special", "options": { "match": "null", "result": { "text": "—" } } } ] }, { "id": "custom.wrap", "value": true } ] },
+          { "matcher": { "id": "byName", "options": "Suggested remedy" }, "properties": [ { "id": "custom.align", "value": "left" }, { "id": "custom.width", "value": 420 }, { "id": "mappings", "value": [ { "type": "special", "options": { "match": "null", "result": { "text": "—" } } } ] }, { "id": "custom.wrap", "value": true } ] }
+        ]
+      }
+    }
+    ,
+    {
+      "type": "timeseries",
+      "title": "Calibration history",
+      "description": "Recent calibration actions and coverage vs target. Band scale on left Y; coverage actual/target on right Y.",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 49 },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "spanNulls": true } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "band_scale" }, "properties": [ { "id": "unit", "value": "short" }, { "id": "decimals", "value": 2 }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#8888ff" } }, { "id": "custom.axisPlacement", "value": "left" } ] },
+          { "matcher": { "id": "byName", "options": "actual" }, "properties": [ { "id": "unit", "value": "percentunit" }, { "id": "decimals", "value": 2 }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33aa55" } }, { "id": "custom.axisPlacement", "value": "right" } ] },
+          { "matcher": { "id": "byName", "options": "target" }, "properties": [ { "id": "unit", "value": "percentunit" }, { "id": "decimals", "value": 2 }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#ffaa33" } }, { "id": "custom.axisPlacement", "value": "right" }, { "id": "custom.lineWidth", "value": 1 }, { "id": "custom.fillOpacity", "value": 0 } ] }
+        ]
+      },
+      "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "refId": "CAL",
+          "type": "json",
+          "parser": "backend",
+          "format": "timeseries",
+          "root_selector": "$",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_calibration_history?index=${index}&limit=200",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "columns": [
+            { "selector": "ts_ms", "type": "timestamp" },
+            { "selector": "band_scale", "type": "number" },
+            { "selector": "actual", "type": "number" },
+            { "selector": "target", "type": "number" }
+          ]
+        }
+      ]
+    }
+    ,
+    {
+      "type": "timeseries",
+      "title": "Coverage vs target (snapshots)",
+      "description": "Periodic snapshots of realized coverage vs target using a sliding window.",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 65 },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "spanNulls": true } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "coverage" }, "properties": [ { "id": "unit", "value": "percentunit" }, { "id": "decimals", "value": 2 }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#1f78b4" } }, { "id": "custom.axisPlacement", "value": "right" } ] },
+          { "matcher": { "id": "byName", "options": "target" }, "properties": [ { "id": "unit", "value": "percentunit" }, { "id": "decimals", "value": 2 }, { "id": "color", "value": { "mode": "fixed", "fixedColor": "#ff7f00" } }, { "id": "custom.axisPlacement", "value": "right" }, { "id": "custom.lineWidth", "value": 1 } ] }
+        ]
+      },
+      "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "refId": "SNAP",
+          "type": "json",
+          "parser": "backend",
+          "format": "timeseries",
+          "root_selector": "$",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_coverage_history?index=${index}&horizon=${horizon}&window_minutes=${diag_window}&history_minutes=${hist_minutes}&step_minutes=5&date_str=${date_str}&expiry_tag=${expiry_tag}&offset=${offset}",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "columns": [
+            { "selector": "ts_ms", "type": "timestamp" },
+            { "selector": "coverage", "type": "number" },
+            { "selector": "target", "type": "number" }
+          ]
+        }
+      ]
+    }
+    ,
+    {
+      "type": "timeseries",
+      "title": "Gap trend (abs) — calibrations",
+      "description": "Absolute coverage gap |actual - target| at calibration points.",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 73 },
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "spanNulls": true }, "unit": "percentunit", "decimals": 2 },
+        "overrides": []
+      },
+      "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "refId": "GAPH",
+          "type": "json",
+          "parser": "backend",
+          "format": "timeseries",
+          "root_selector": "$",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_calibration_history?index=${index}&limit=200",
+          "url_options": { "method": "GET", "data": "", "params": [], "headers": [] },
+          "columns": [
+            { "selector": "ts_ms", "type": "timestamp" },
+            { "selector": "gap_abs", "type": "number" }
+          ]
+        }
+      ]
+    }
+    ,
+    {
+      "id": 1999,
+      "type": "text",
+      "title": "User Guide",
+      "description": "How to read and operate the Path Forecast Ribbon dashboard",
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 79 },
+      "options": {
+        "mode": "markdown",
+  "content": "## What this shows\n\n- Ribbon: q10/q50/q90 forecast for ${index} at ${horizon}m.\n- TP: Live target price (straddle) overlay.\n- Coverage: Realized share inside [q10,q90] over Diagnostics window.\n- Advisor: Summarizes health, samples, and gap to target.\n\n## Key toggles\n\n- Index: Market to visualize.\n- Expiry tag: Select live_csv source (auto/this_week/next_week/this_month/next_month).\n- Horizon (min): 30/60/390; affects ribbon and stats.\n- Profile: Optimized/Base/Since_open/Wide_bands/Retrieval_only/Conservative/High_variance.\n- Forecaster mode: auto | hybrid | retrieval.\n- Window (min): Lookback window for retrieval/features.\n- Neighbors (k): Retrieval blend size (higher = smoother).\n- Bucket (ms): Time bucket (1m=60000, 5m=300000).\n- Time align: trailing (history) | future (project ahead) | auto.\n- Calibrate: Apply band_scale so coverage ≈ target.\n- Date / now_override_ms: Replay specific day/time (ISO date, epoch ms).\n- Diagnostics window: Coverage/stat window length.\n- History (min): Visual history for snapshot series.\n- Calibrate target: Desired coverage (default 0.8).\n- Gap warn/crit: |actual-target| thresholds (0.05/0.10).\n- Min samples warn/crit: Data sufficiency thresholds (30/10).\n\n## Tips\n\n- For future view, set Time align=future and use \"Zoom next ${horizon}m\".\n- Compare Calibrated vs Raw panels to assess calibration impact.\n- Larger Window and k stabilize bands but can reduce reactivity.\n- Date + now_override_ms keep Ribbon/Meta/Stats aligned for replay.\n\n## Useful endpoints\n\n- Health: ${base_url}/health\n- Routes: ${base_url}/api/routes\n- OpenAPI: ${base_url}/openapi.json\n- Docs UI: ${base_url}/docs\n"
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["ml", "path-forecast", "ribbon", "json"],
+  "templating": {
+    "list": [
+  { "name": "base_url", "type": "custom", "query": "http://127.0.0.1:9500", "label": "Base URL", "current": { "text": "http://127.0.0.1:9500", "value": "http://127.0.0.1:9500" }, "hide": 2, "description": "Dashboard API origin. Keep default unless your API runs on a different port." },
+  { "name": "index", "type": "custom", "query": "NIFTY,BANKNIFTY,SENSEX,FINNIFTY", "label": "Index", "current": { "text": "SENSEX", "value": "SENSEX" }, "description": "Market/index to visualize and query across all panels." },
+  { "name": "expiry_tag", "type": "custom", "query": "auto,this_week,next_week,this_month,next_month", "label": "Expiry tag", "current": { "text": "auto", "value": "auto" }, "description": "Selects the live_csv dataset (week/month). Tip: auto is safe for normal use; to replay historical days, switch to the specific week/month that matches that date (e.g., this_week/next_week/this_month) and adjust Offset if needed. Use Quick links › Resolve live path to verify." },
+    { "name": "horizon", "type": "custom", "query": "30,60,390", "label": "Horizon (min)", "current": { "text": "60", "value": "60" }, "description": "Forecast horizon for the ribbon and diagnostics (minutes ahead)." },
+    { "name": "pf_mode", "type": "custom", "query": "auto,hybrid,retrieval", "label": "Forecaster mode", "current": { "text": "auto", "value": "auto" }, "description": "High-level algorithm choice. Auto picks the best; hybrid blends; retrieval forces NN retrieval." },
+  { "name": "pf_window", "type": "custom", "query": "0,60,120,180,240,360,480,720", "label": "Window (min)", "current": { "text": "180", "value": "180" }, "description": "Intraday lookback window used for retrieval/feature context. Use 0 for Open→Now (since 09:15 IST)." },
+  { "name": "pf_k", "type": "custom", "query": "10,15,20,25,30,40", "label": "Neighbors (k)", "current": { "text": "20", "value": "20" }, "description": "Number of similar historical samples for retrieval; higher=k smoother bands." },
+    { "name": "pf_bucket", "type": "custom", "query": "60000,300000", "label": "Bucket (ms)", "current": { "text": "60000", "value": "60000" }, "description": "Time aggregation bucket for series (1m=60000, 5m=300000)." },
+    { "name": "offset", "type": "custom", "query": "-200,-150,-100,-50,0,50,100,150,200", "label": "Offset", "current": { "text": "0", "value": "0" }, "description": "Variant offset for live_csv alignment within the expiry (advanced)." },
+  { "name": "pf_align", "type": "custom", "query": "trailing,future,auto", "label": "Time align", "current": { "text": "future", "value": "future" }, "description": "Where to place the forecast: future keeps targets > now (default); trailing shifts the curve to end at now for visual comparison; auto behaves like future." },
+    { "name": "calibrate", "type": "custom", "query": "true,false", "label": "Calibrate", "current": { "text": "true", "value": "true" }, "description": "Apply band_scale to quantiles so realized coverage matches target." },
+  { "name": "profile", "type": "custom", "query": "optimized,base,since_open,wide_bands,retrieval_only,conservative,high_variance", "label": "Profile", "current": { "text": "optimized", "value": "optimized" }, "description": "Profile presets for mode/window/k/band behavior. since_open uses dynamic window; retrieval_only may force retrieval mode." },
+  { "name": "date_str", "type": "textbox", "query": "", "label": "Date (YYYY-MM-DD)", "current": { "text": "", "value": "" }, "description": "Optional backfill date (ISO). Leave blank for today. For historical replay (e.g., 2025-11-04), also set Expiry tag to the matching week/month and ensure data exists for that day (Quick links › Resolve live path)." },
+  { "name": "now_ms", "type": "textbox", "query": "", "label": "now_override_ms (epoch ms)", "current": { "text": "${__to}", "value": "${__to}" }, "description": "Override 'now' with epoch ms. Defaults to the dashboard time range end (${__to}). Tip: set time range then leave this as-is for quick replay; enter a specific epoch ms to pause anywhere within the day." }
+    ,
+    { "name": "diag_window", "type": "custom", "query": "60,120,180,240,360,480,720", "label": "Diagnostics window (min)", "current": { "text": "180", "value": "180" }, "description": "Window used by diagnostics/stat panels for coverage, width, and samples." },
+    { "name": "hist_minutes", "type": "custom", "query": "60,120,180,240,360,480,720", "label": "History (min)", "current": { "text": "240", "value": "240" }, "description": "Lookback for history/snapshot time series (does not change ribbon generation)." },
+    { "name": "cal_target", "type": "textbox", "query": "0.8", "label": "Calibrate target", "current": { "text": "0.8", "value": "0.8" }, "description": "Desired coverage for [q10,q90] after calibration (0.8 = 80%)." },
+    { "name": "gap_warn", "type": "textbox", "query": "0.05", "label": "Gap warn (abs)", "current": { "text": "0.05", "value": "0.05" }, "description": "Warn if |actual-target| exceeds this (e.g., 0.05 = 5%)." },
+    { "name": "gap_crit", "type": "textbox", "query": "0.10", "label": "Gap crit (abs)", "current": { "text": "0.10", "value": "0.10" }, "description": "Critical if |actual-target| exceeds this (e.g., 0.10 = 10%)." },
+    { "name": "min_samples_warn", "type": "textbox", "query": "30", "label": "Min samples warn", "current": { "text": "30", "value": "30" }, "description": "Warn if sample count in diagnostic window is below this threshold." },
+    { "name": "min_samples_crit", "type": "textbox", "query": "10", "label": "Min samples crit", "current": { "text": "10", "value": "10" }, "description": "Critical if sample count in diagnostic window is below this threshold." }
+    ]
+  },
+  "time": { "from": "now-2h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s","10s","30s","1m"] },
+  "timezone": "browser",
+  "title": "ML: Path Forecast Ribbon (Infinity JSON)",
+  "version": 1
+}

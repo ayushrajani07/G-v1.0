@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -21,16 +24,29 @@
       "type": "table",
       "title": "Correlations (long) — ${index} / ${set} / ${window}m",
       "id": 1,
-      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 0 },
-      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
       "targets": [
         {
           "refId": "A",
-          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "type": "csv",
           "source": "url",
-          "url": "http://127.0.0.1:9500/api/ml/correlations?index=${index}&set=${set}&format=long&window_minutes=${window}",
-          "url_options": { "method": "GET" },
+          "url": "http://${api_server}/api/ml/correlations?index=${index}&set=${set}&format=long&window_minutes=${window}",
+          "url_options": {
+            "method": "GET"
+          },
           "parser": "backend",
           "format": "table"
         }
@@ -40,14 +56,27 @@
       },
       "fieldConfig": {
         "defaults": {
-          "custom": { "align": "auto" }
+          "custom": {
+            "align": "auto"
+          }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "correlation" },
+            "matcher": {
+              "id": "byName",
+              "options": "correlation"
+            },
             "properties": [
-              { "id": "decimals", "value": 4 },
-              { "id": "color", "value": { "mode": "continuous-GrYlRd" } }
+              {
+                "id": "decimals",
+                "value": 4
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "continuous-GrYlRd"
+                }
+              }
             ]
           }
         ]
@@ -58,35 +87,87 @@
       "type": "heatmap",
       "title": "Correlation Heatmap — ${index} / ${set} / ${window}m",
       "id": 2,
-      "gridPos": { "h": 16, "w": 24, "x": 0, "y": 12 },
-      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
       "targets": [
         {
           "refId": "HM",
-          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "type": "csv",
           "source": "url",
-          "url": "http://127.0.0.1:9500/api/ml/correlations?index=${index}&set=${set}&format=long&window_minutes=${window}",
-          "url_options": { "method": "GET" },
+          "url": "http://${api_server}/api/ml/correlations?index=${index}&set=${set}&format=long&window_minutes=${window}",
+          "url_options": {
+            "method": "GET"
+          },
           "parser": "backend",
           "format": "table"
         }
       ],
       "options": {
-        "color": { "mode": "continuous-GrYlRd" },
-        "legend": { "show": true },
-        "yAxis": { "reverse": false },
-        "xAxis": { "show": true },
-        "tooltip": { "mode": "single" },
+        "color": {
+          "mode": "continuous-GrYlRd"
+        },
+        "legend": {
+          "show": true
+        },
+        "yAxis": {
+          "reverse": false
+        },
+        "xAxis": {
+          "show": true
+        },
+        "tooltip": {
+          "mode": "single"
+        },
         "dataFormat": "tsbuckets",
         "xBucketNumber": null,
         "yBucketNumber": null
       },
       "transformations": [
-        { "id": "filterFieldsByName", "options": { "include": { "names": ["col_i", "col_j", "correlation"] } } },
-        { "id": "renameByRegex", "options": { "regex": "^col_i$", "renamePattern": "Y" } },
-        { "id": "renameByRegex", "options": { "regex": "^col_j$", "renamePattern": "X" } },
-        { "id": "renameByRegex", "options": { "regex": "^correlation$", "renamePattern": "Value" } }
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "col_i",
+                "col_j",
+                "correlation"
+              ]
+            }
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^col_i$",
+            "renamePattern": "Y"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^col_j$",
+            "renamePattern": "X"
+          }
+        },
+        {
+          "id": "renameByRegex",
+          "options": {
+            "regex": "^correlation$",
+            "renamePattern": "Value"
+          }
+        }
       ],
       "fieldConfig": {
         "defaults": {
@@ -98,34 +179,105 @@
   ],
   "refresh": "30s",
   "schemaVersion": 39,
-  "tags": ["g6", "ml", "correlations"],
+  "tags": [
+    "g6",
+    "ml",
+    "correlations"
+  ],
   "templating": {
     "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "127.0.0.1:9500",
+          "value": "127.0.0.1:9500"
+        },
+        "description": "API Server endpoint (select based on which port your API is running on)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "API Server",
+        "multi": false,
+        "name": "api_server",
+        "options": [
+          {
+            "selected": true,
+            "text": "127.0.0.1:9500 (default)",
+            "value": "127.0.0.1:9500"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:9510 (alt)",
+            "value": "127.0.0.1:9510"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:8003 (dev)",
+            "value": "127.0.0.1:8003"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9500",
+            "value": "localhost:9500"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9510",
+            "value": "localhost:9510"
+          }
+        ],
+        "query": "127.0.0.1:9500,127.0.0.1:9510,127.0.0.1:8003,localhost:9500,localhost:9510",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
       {
         "name": "index",
         "type": "custom",
         "label": "Index",
         "query": "NIFTY,BANKNIFTY,SENSEX,FINNIFTY",
-        "current": { "selected": true, "text": "NIFTY", "value": "NIFTY" }
+        "current": {
+          "selected": true,
+          "text": "NIFTY",
+          "value": "NIFTY"
+        }
       },
       {
         "name": "set",
         "type": "custom",
         "label": "Column Set",
         "query": "set1,set2,all",
-        "current": { "selected": true, "text": "set1", "value": "set1" }
+        "current": {
+          "selected": true,
+          "text": "set1",
+          "value": "set1"
+        }
       },
       {
         "name": "window",
         "type": "custom",
         "label": "Lookback (minutes)",
         "query": "30,60,120,240",
-        "current": { "selected": true, "text": "60", "value": "60" }
+        "current": {
+          "selected": true,
+          "text": "60",
+          "value": "60"
+        }
       }
     ]
   },
-  "time": { "from": "now-12h", "to": "now" },
-  "timepicker": { "refresh_intervals": ["15s", "30s", "1m", "2m", "5m"] },
+  "time": {
+    "from": "now-12h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "2m",
+      "5m"
+    ]
+  },
   "timezone": "Asia/Kolkata",
   "title": "ML Correlations",
   "uid": "g6-ml-correlations",

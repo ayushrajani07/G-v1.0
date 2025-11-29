@@ -1,4 +1,4 @@
-﻿{
+{
   "annotations": {
     "list": [
       {
@@ -141,7 +141,7 @@
           "refId": "NS1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -211,7 +211,7 @@
           "refId": "NS2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -267,7 +267,7 @@
           }
         }
       ],
-      "title": "NIFTY + SENSEX â€“ Index Price",
+      "title": "NIFTY + SENSEX – Index Price",
       "type": "timeseries",
       "transformations": [
         {
@@ -396,7 +396,7 @@
           "refId": "BF1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -466,7 +466,7 @@
           "refId": "BF2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -522,7 +522,7 @@
           }
         }
       ],
-      "title": "BANKNIFTY + FINNIFTY â€“ Index Price",
+      "title": "BANKNIFTY + FINNIFTY – Index Price",
       "type": "timeseries",
       "transformations": [
         {
@@ -652,7 +652,7 @@
           "refId": "A",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -722,7 +722,7 @@
           "refId": "B",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -778,7 +778,7 @@
           }
         }
       ],
-      "title": "NIFTY + SENSEX | $expiry_ns | $offset â€“ IV (CE/PE)",
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – IV (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -895,7 +895,7 @@
           "refId": "C",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -965,7 +965,7 @@
           "refId": "D",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -1021,7 +1021,7 @@
           }
         }
       ],
-      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset â€“ IV (CE/PE)",
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – IV (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -1053,7 +1053,7 @@
       },
       "id": 7,
       "panels": [],
-      "title": "Greeks â€“ NS pair",
+      "title": "Greeks – NS pair",
       "type": "row"
     },
     {
@@ -1150,7 +1150,7 @@
           "refId": "A1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -1220,7 +1220,7 @@
           "refId": "B1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -1276,7 +1276,7 @@
           }
         }
       ],
-      "title": "NIFTY + SENSEX | $expiry_ns | $offset â€“ Delta (CE/PE)",
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Delta (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -1392,7 +1392,7 @@
           "refId": "A2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -1462,7 +1462,7 @@
           "refId": "B2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -1518,7 +1518,7 @@
           }
         }
       ],
-      "title": "NIFTY + SENSEX | $expiry_ns | $offset â€“ Theta (CE/PE)",
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Theta (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -1634,7 +1634,7 @@
           "refId": "A3",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -1704,7 +1704,7 @@
           "refId": "B3",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -1760,7 +1760,7 @@
           }
         }
       ],
-      "title": "NIFTY + SENSEX | $expiry_ns | $offset â€“ Vega (CE/PE)",
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Vega (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -1876,7 +1876,7 @@
           "refId": "A4",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -1946,7 +1946,7 @@
           "refId": "B4",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2002,7 +2002,7 @@
           }
         }
       ],
-      "title": "NIFTY + SENSEX | $expiry_ns | $offset â€“ Gamma (CE/PE)",
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Gamma (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -2118,7 +2118,7 @@
           "refId": "A5",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2188,7 +2188,7 @@
           "refId": "B5",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2244,7 +2244,7 @@
           }
         }
       ],
-      "title": "NIFTY + SENSEX | $expiry_ns | $offset â€“ Rho (CE/PE)",
+      "title": "NIFTY + SENSEX | $expiry_ns | $offset – Rho (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -2276,7 +2276,7 @@
       },
       "id": 13,
       "panels": [],
-      "title": "Greeks â€“ BF pair",
+      "title": "Greeks – BF pair",
       "type": "row"
     },
     {
@@ -2373,7 +2373,7 @@
           "refId": "C1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2443,7 +2443,7 @@
           "refId": "D1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2499,7 +2499,7 @@
           }
         }
       ],
-      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset â€“ Delta (CE/PE)",
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Delta (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -2615,7 +2615,7 @@
           "refId": "C2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2685,7 +2685,7 @@
           "refId": "D2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2741,7 +2741,7 @@
           }
         }
       ],
-      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset â€“ Theta (CE/PE)",
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Theta (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -2857,7 +2857,7 @@
           "refId": "C3",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2927,7 +2927,7 @@
           "refId": "D3",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -2983,7 +2983,7 @@
           }
         }
       ],
-      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset â€“ Vega (CE/PE)",
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Vega (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -3099,7 +3099,7 @@
           "refId": "C4",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -3169,7 +3169,7 @@
           "refId": "D4",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -3225,7 +3225,7 @@
           }
         }
       ],
-      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset â€“ Gamma (CE/PE)",
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Gamma (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -3341,7 +3341,7 @@
           "refId": "C5",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -3411,7 +3411,7 @@
           "refId": "D5",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://${api_server}/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "method": "GET",
             "params": [
@@ -3467,7 +3467,7 @@
           }
         }
       ],
-      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset â€“ Rho (CE/PE)",
+      "title": "BANKNIFTY + FINNIFTY | $expiry_bf | $offset – Rho (CE/PE)",
       "type": "timeseries",
       "transformations": [
         {
@@ -3501,6 +3501,50 @@
   ],
   "templating": {
     "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "127.0.0.1:9500",
+          "value": "127.0.0.1:9500"
+        },
+        "description": "API Server endpoint (select based on which port your API is running on)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "API Server",
+        "multi": false,
+        "name": "api_server",
+        "options": [
+          {
+            "selected": true,
+            "text": "127.0.0.1:9500 (default)",
+            "value": "127.0.0.1:9500"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:9510 (alt)",
+            "value": "127.0.0.1:9510"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:8003 (dev)",
+            "value": "127.0.0.1:8003"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9500",
+            "value": "localhost:9500"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9510",
+            "value": "localhost:9510"
+          }
+        ],
+        "query": "127.0.0.1:9500,127.0.0.1:9510,127.0.0.1:8003,localhost:9500,localhost:9510",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
       {
         "current": {
           "text": "0",
@@ -3600,7 +3644,7 @@
   },
   "timepicker": {},
   "timezone": "Asia/Kolkata",
-  "title": "G6 Analytics â€“ Infinity v3",
+  "title": "G6 Analytics – Infinity v3",
   "uid": "g6-analytics-infinity-v3",
   "version": 2
 }

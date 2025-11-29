@@ -1,0 +1,94 @@
+{
+  "title": "Advisor Detail",
+  "uid": "advisor-detail",
+  "tags": ["advisor","ml","health"],
+  "timezone": "browser",
+  "version": 1,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "links": [
+    {
+      "title": "Open Advisor API (detail)",
+      "url": "http://127.0.0.1:9500/api/ml/universal_advisor?detail=true&index=${index}",
+      "targetBlank": true,
+      "type": "link"
+    }
+  ],
+  "annotations": {"list": []},
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Health Score",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_health_score{index=~\"$index\"}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "max": 100}, "overrides": []},
+      "options": {"legend": {"displayMode":"table"}, "tooltip": {"mode":"single"}}
+    },
+    {
+      "type": "stat",
+      "title": "Worst Overall Level (5m)",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "max_over_time(advisor_overall_level{level=\"crit\",index=~\"$index\"}[5m])"}
+      ],
+      "fieldConfig": {"defaults": {"mappings": [{"type":"value","options":{"0":{"text":"OK"},"1":{"text":"CRIT"}}}], "thresholds": {"mode":"absolute","steps":[{"color":"green"},{"color":"red","value":0.5}]}}},
+      "options": {"colorMode":"value","graphMode":"none","justifyMode":"center"}
+    },
+    {
+      "type": "timeseries",
+      "title": "Composite Risk (0/1)",
+      "gridPos": {"h": 6, "w": 18, "x": 6, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_composite_risk{index=~\"$index\"}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "max": 1}, "overrides": []},
+      "options": {"legend": {"displayMode":"hidden"}, "tooltip": {"mode":"single"}}
+    },
+    {
+      "type": "table",
+      "title": "Active Findings",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 14},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_flag{index=~\"$index\",code=~\"$codes\"}"}
+      ],
+      "transformations": [
+        {"id":"filterFieldsByName","options":{"include":["__name__","index","code","Value"]}}
+      ],
+      "options": {"showHeader": true}
+    }
+  ],
+  "time": {"from":"now-6h","to":"now"},
+  "templating": {"list": [
+    {
+      "name": "index",
+      "type": "query",
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "refresh": 1,
+      "query": "label_values(advisor_health_score,index)",
+      "includeAll": true,
+      "allValue": ".*",
+      "multi": true,
+      "current": {"text": "All", "value": "$__all"}
+    },
+    {
+      "name": "codes",
+      "type": "custom",
+      "query": ".* , ^CRIT_.*$ , ^WARN_.*$ , ^INFO_.*$",
+      "current": {"text": ".*", "value": ".*"},
+      "options": [
+        {"text": ".*", "value": ".*", "selected": true},
+        {"text": "CRIT only", "value": "^CRIT_.*$"},
+        {"text": "WARN only", "value": "^WARN_.*$"},
+        {"text": "INFO only", "value": "^INFO_.*$"}
+      ],
+      "includeAll": false,
+      "multi": false
+    }
+  ]}
+}

@@ -1,0 +1,51 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "sse-latency-and-trace-misc",
+                 "url":  "/d/ef4nv0hmyes5cd/sse-latency-and-trace-misc",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T10:40:30+05:30",
+                 "updated":  "2025-11-20T10:40:30+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "sse_latency_trace.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "id":  289,
+                      "moved_from":  ".grafana/provisioning_baseline/dashboards_src/sse_latency.json",
+                      "panels_count":  4,
+                      "tags":  [
+                                   "g6",
+                                   "generated",
+                                   "misc"
+                               ],
+                      "title":  "SSE Latency \u0026 Trace (Misc)",
+                      "uid":  "ef4nv0hmyes5cd",
+                      "version":  1
+                  }
+}

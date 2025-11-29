@@ -1,0 +1,63 @@
+{
+  "model_type": "quantile_gbrt",
+  "index": "SENSEX",
+  "target": "tp_residual",
+  "quantiles": [0.1, 0.5, 0.9],
+  "hyperparameters": {
+    "n_estimators": 500,
+    "max_depth": 4,
+    "learning_rate": 0.03,
+    "subsample": 0.8,
+    "max_features": "sqrt",
+    "min_samples_leaf": 10,
+    "random_state": 42
+  },
+  "training": {
+    "train_days": 45,
+    "val_days": 5,
+    "cv_folds": 5
+  },
+  "feature_config": {
+    "use_lag_features": true,
+    "use_market_features": true,
+    "use_regime_features": true,
+    "exclude_features": ["volume_ratio", "oi_change_rate"]
+  },
+  "features": [
+    "residual_lag_1",
+    "residual_lag_2",
+    "residual_lag_5",
+    "residual_lag_10",
+    "residual_lag_30",
+    "residual_lag_60",
+    "residual_rolling_mean_5",
+    "residual_rolling_mean_15",
+    "residual_rolling_mean_30",
+    "residual_rolling_std_5",
+    "residual_rolling_std_15",
+    "residual_rolling_std_30",
+    "index_return_1m",
+    "index_return_5m",
+    "avg_iv",
+    "iv_change_1m",
+    "minutes_to_expiry_norm",
+    "time_of_day_sin",
+    "time_of_day_cos",
+    "weekday",
+    "iv_percentile",
+    "index_vol_percentile",
+    "index_return_1m_abs",
+    "index_return_1m_sign",
+    "index_iv_correlation_5m",
+    "rv_iv_ratio",
+    "index_price_percentile",
+    "index_return_x_iv",
+    "index_return_x_gamma",
+    "index_vol_x_vega"
+  ],
+  "output": {
+    "model_dir": "models/sensex_gbrt_quantile",
+    "save_feature_importance": true,
+    "save_training_metrics": true
+  }
+}

@@ -1,0 +1,1143 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "ml3a-path-forecast-ribbon-infinity-json-1",
+                 "url":  "/d/ef377uzh8dptsc/ml3a-path-forecast-ribbon-infinity-json-1",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-05T16:35:40+05:30",
+                 "updated":  "2025-11-05T16:35:40+05:30",
+                 "updatedBy":  "admin",
+                 "createdBy":  "admin",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  false,
+                 "provisionedExternalId":  "",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "editable":  true,
+                      "graphTooltip":  0,
+                      "id":  184,
+                      "iteration":  1,
+                      "links":  [
+
+                                ],
+                      "liveNow":  false,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "lineWidth":  2,
+                                                                                             "spanNulls":  true
+                                                                                         },
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green"
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q50"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#4477aa",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q10"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(68,119,170,0.35)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  12
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q90"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(68,119,170,0.35)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  12
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  15,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "time",
+                                                                                 "type":  "timestamp"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q10",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q50",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q90",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "A",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_json?index=${index}\u0026horizon_minutes=${horizon}\u0026mode=auto\u0026calibrate=${calibrate}\u0026no_cache=true\u0026date_str=${date_str}\u0026now_override_ms=${now_ms}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "ML Path Forecast â Ribbon (JSON)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  15
+                                                     },
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "gen_iso",
+                                                                                 "text":  "gen_iso",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "mode",
+                                                                                 "text":  "mode",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "k",
+                                                                                 "text":  "k_used",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "window",
+                                                                                 "text":  "window",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "band_scale",
+                                                                                 "text":  "band_scale",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "B",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_meta?index=${index}\u0026horizon_minutes=${horizon}\u0026date_str=${date_str}\u0026now_override_ms=${now_ms}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Generation meta (JSON)",
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "red",
+                                                                                                                   "value":  0
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "orange",
+                                                                                                                   "value":  0.65
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  0.75
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "percentunit"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  8,
+                                                         "x":  0,
+                                                         "y":  21
+                                                     },
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calculations":  [
+                                                                                                    "lastNotNull"
+                                                                                                ],
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "coverage_p10_p90",
+                                                                                 "text":  "coverage",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "C",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_stats?index=${index}\u0026horizon=${horizon}\u0026window_minutes=${diag_window}\u0026date_str=${date_str}\u0026variant=calibrated",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Calibrated coverage @${horizon}m",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "red",
+                                                                                                                   "value":  0
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "orange",
+                                                                                                                   "value":  0.65
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  0.75
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "percentunit"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  8,
+                                                         "x":  8,
+                                                         "y":  21
+                                                     },
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calculations":  [
+                                                                                                    "lastNotNull"
+                                                                                                ],
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "coverage_p10_p90",
+                                                                                 "text":  "coverage_raw",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "D",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_stats?index=${index}\u0026horizon=${horizon}\u0026window_minutes=${diag_window}\u0026date_str=${date_str}\u0026variant=raw",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Raw coverage @${horizon}m",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  8,
+                                                         "x":  16,
+                                                         "y":  21
+                                                     },
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calculations":  [
+                                                                                                    "lastNotNull"
+                                                                                                ],
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "band_width_mean",
+                                                                                 "text":  "bandw",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "E",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_stats?index=${index}\u0026horizon=${horizon}\u0026window_minutes=${diag_window}\u0026date_str=${date_str}\u0026variant=calibrated",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Avg band width @${horizon}m",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  0,
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  8,
+                                                         "x":  0,
+                                                         "y":  27
+                                                     },
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calculations":  [
+                                                                                                    "lastNotNull"
+                                                                                                ],
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "samples",
+                                                                                 "text":  "samples",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "F",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_stats?index=${index}\u0026horizon=${horizon}\u0026window_minutes=${diag_window}\u0026date_str=${date_str}\u0026variant=calibrated",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Samples @${horizon}m",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  8,
+                                                         "x":  8,
+                                                         "y":  27
+                                                     },
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calculations":  [
+                                                                                                    "lastNotNull"
+                                                                                                ],
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "band_scale",
+                                                                                 "text":  "band_scale",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "G",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_meta?index=${index}\u0026horizon_minutes=${horizon}\u0026date_str=${date_str}\u0026now_override_ms=${now_ms}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Band scale (current)",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  33
+                                                     },
+                                         "options":  {
+                                                         "content":  "- Coverage stats may be null early until bands archive fills for the day.\n- Calibrated uses current band_scale; Raw approximates pre-calibration by reverse-scaling around q50.\n- Variables date_str and now_override_ms keep Meta/Ribbon/Stats aligned for replay.",
+                                                         "mode":  "markdown"
+                                                     },
+                                         "title":  "Notes",
+                                         "type":  "text"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "mappings":  [
+                                                                                               {
+                                                                                                   "options":  {
+                                                                                                                   "crit":  {
+                                                                                                                                "color":  "red",
+                                                                                                                                "text":  "crit"
+                                                                                                                            },
+                                                                                                                   "ok":  {
+                                                                                                                              "color":  "green",
+                                                                                                                              "text":  "ok"
+                                                                                                                          },
+                                                                                                                   "warn":  {
+                                                                                                                                "color":  "orange",
+                                                                                                                                "text":  "warn"
+                                                                                                                            }
+                                                                                                               },
+                                                                                                   "type":  "value"
+                                                                                               }
+                                                                                           ]
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  6,
+                                                         "x":  0,
+                                                         "y":  37
+                                                     },
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calculations":  [
+                                                                                                    "lastNotNull"
+                                                                                                ],
+                                                                               "values":  false
+                                                                           },
+                                                         "textMode":  "value"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "level",
+                                                                                 "text":  "level",
+                                                                                 "type":  "string"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$.summary",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "SUM",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_advisor?index=${index}\u0026horizon=${horizon}\u0026window_minutes=${diag_window}\u0026date_str=${date_str}\u0026gap_warn=${gap_warn}\u0026gap_crit=${gap_crit}\u0026min_samples_warn=${min_samples_warn}\u0026min_samples_crit=${min_samples_crit}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Advisor summary",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  0
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "orange",
+                                                                                                                   "value":  0.05
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "red",
+                                                                                                                   "value":  0.1
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "percentunit"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  6,
+                                                         "x":  6,
+                                                         "y":  37
+                                                     },
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calculations":  [
+                                                                                                    "lastNotNull"
+                                                                                                ],
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "gap_abs",
+                                                                                 "text":  "gap_abs",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$.summary",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "GAP",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_advisor?index=${index}\u0026horizon=${horizon}\u0026window_minutes=${diag_window}\u0026date_str=${date_str}\u0026gap_warn=${gap_warn}\u0026gap_crit=${gap_crit}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Gap vs target (abs)",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "level"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "mappings",
+                                                                                                          "value":  [
+                                                                                                                        {
+                                                                                                                            "options":  {
+                                                                                                                                            "crit":  {
+                                                                                                                                                         "color":  "red",
+                                                                                                                                                         "text":  "crit"
+                                                                                                                                                     },
+                                                                                                                                            "ok":  {
+                                                                                                                                                       "color":  "green",
+                                                                                                                                                       "text":  "ok"
+                                                                                                                                                   },
+                                                                                                                                            "warn":  {
+                                                                                                                                                         "color":  "orange",
+                                                                                                                                                         "text":  "warn"
+                                                                                                                                                     }
+                                                                                                                                        },
+                                                                                                                            "type":  "value"
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.displayMode",
+                                                                                                          "value":  "color-background"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  41
+                                                     },
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "level",
+                                                                                 "text":  "level",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "code",
+                                                                                 "text":  "code",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "message",
+                                                                                 "text":  "message",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "prognosis",
+                                                                                 "text":  "prognosis",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "remedy",
+                                                                                 "text":  "remedy",
+                                                                                 "type":  "string"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$.alerts",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "H",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_advisor?index=${index}\u0026horizon=${horizon}\u0026window_minutes=${diag_window}\u0026date_str=${date_str}\u0026gap_warn=${gap_warn}\u0026gap_crit=${gap_crit}\u0026min_samples_warn=${min_samples_warn}\u0026min_samples_crit=${min_samples_crit}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Advisor Alerts",
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "lineWidth":  2,
+                                                                                             "spanNulls":  true
+                                                                                         }
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "band_scale"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#4477aa",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "actual"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#66aa55",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "target"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#dd8844",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  49
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "ts_iso",
+                                                                                 "type":  "timestamp"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "band_scale",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "actual",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "target",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "refId":  "HIST",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_calibration_history?index=${index}\u0026limit=200",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Calibration history",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "schemaVersion":  39,
+                      "style":  "dark",
+                      "tags":  [
+                                   "ml",
+                                   "path-forecast",
+                                   "ribbon",
+                                   "json"
+                               ],
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "hide":  0,
+                                                          "label":  "Base URL",
+                                                          "name":  "base_url",
+                                                          "query":  "http://127.0.0.1:9500",
+                                                          "type":  "constant"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "NIFTY",
+                                                                          "value":  "NIFTY"
+                                                                      },
+                                                          "label":  "Index",
+                                                          "name":  "index",
+                                                          "query":  "NIFTY,BANKNIFTY,SENSEX,FINNIFTY",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "60",
+                                                                          "value":  "60"
+                                                                      },
+                                                          "label":  "Horizon (min)",
+                                                          "name":  "horizon",
+                                                          "query":  "30,60,390",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "true",
+                                                                          "value":  "true"
+                                                                      },
+                                                          "label":  "Calibrate",
+                                                          "name":  "calibrate",
+                                                          "query":  "true,false",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "",
+                                                                          "value":  ""
+                                                                      },
+                                                          "description":  "Optional backfill date; leave blank for today",
+                                                          "label":  "Date (YYYY-MM-DD)",
+                                                          "name":  "date_str",
+                                                          "query":  "",
+                                                          "type":  "textbox"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "",
+                                                                          "value":  ""
+                                                                      },
+                                                          "description":  "Optional intraday override (e.g., 1762228860000)",
+                                                          "label":  "now_override_ms (epoch ms)",
+                                                          "name":  "now_ms",
+                                                          "query":  "",
+                                                          "type":  "textbox"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "180",
+                                                                          "value":  "180"
+                                                                      },
+                                                          "label":  "Diagnostics window (min)",
+                                                          "name":  "diag_window",
+                                                          "query":  "60,120,180,240",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "0.05",
+                                                                          "value":  "0.05"
+                                                                      },
+                                                          "label":  "Gap warn (abs)",
+                                                          "name":  "gap_warn",
+                                                          "query":  "0.05",
+                                                          "type":  "textbox"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "0.10",
+                                                                          "value":  "0.10"
+                                                                      },
+                                                          "label":  "Gap crit (abs)",
+                                                          "name":  "gap_crit",
+                                                          "query":  "0.10",
+                                                          "type":  "textbox"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "30",
+                                                                          "value":  "30"
+                                                                      },
+                                                          "label":  "Min samples warn",
+                                                          "name":  "min_samples_warn",
+                                                          "query":  "30",
+                                                          "type":  "textbox"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "10",
+                                                                          "value":  "10"
+                                                                      },
+                                                          "label":  "Min samples crit",
+                                                          "name":  "min_samples_crit",
+                                                          "query":  "10",
+                                                          "type":  "textbox"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+                                         "refresh_intervals":  [
+                                                                   "5s",
+                                                                   "10s",
+                                                                   "30s",
+                                                                   "1m"
+                                                               ]
+                                     },
+                      "timezone":  "browser",
+                      "title":  "ML: Path Forecast Ribbon (Infinity JSON)1",
+                      "uid":  "ef377uzh8dptsc",
+                      "version":  1
+                  }
+}

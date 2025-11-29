@@ -1,0 +1,348 @@
+{
+  "title": "Advisor Unified Health",
+  "uid": "advisor-unified-health",
+  "tags": ["advisor","ml","health"],
+  "timezone": "browser",
+  "version": 1,
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "links": [
+    {
+      "title": "Open Advisor API (detail)",
+      "url": "http://127.0.0.1:9500/api/ml/universal_advisor?detail=true&index=${index}",
+      "targetBlank": true,
+      "type": "link"
+    }
+  ],
+  
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "PROM"},
+        "enable": true,
+        "expr": "advisor_composite_risk{index=~\"$index\"} > 0",
+        "hide": false,
+        "iconColor": "rgba(235, 54, 54, 0.9)",
+        "name": "Composite Risk",
+        "tags": ["advisor", "composite"],
+        "type": "tags"
+      },
+      {
+        "datasource": {"type": "prometheus", "uid": "PROM"},
+        "enable": true,
+        "expr": "advisor_overall_level{level=\"crit\",index=~\"$index\"} == 1",
+        "hide": false,
+        "iconColor": "rgba(255, 96, 96, 0.9)",
+        "name": "Critical Level",
+        "tags": ["advisor", "crit"],
+        "type": "tags"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Per-Index Health Score",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_health_score{index=~\"$index\"}"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "max": 100,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red"},{"color": "yellow","value":70},{"color": "green","value":85}]}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"calcs": ["last"], "displayMode": "table"}, "tooltip": {"mode": "single"}}
+    },
+    {
+      "type": "stat",
+      "title": "Worst Overall Level",
+      "gridPos": {"h": 4, "w": 4, "x": 12, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "max_over_time(advisor_overall_level{level=\\\"crit\\\",index=~\\\"$index\\\"}[5m])"}
+      ],
+      "fieldConfig": {"defaults": {"mappings": [{"type":"value","options":{"0":{"text":"OK"},"1":{"text":"CRIT"}}}], "thresholds": {"mode": "absolute","steps": [{"color":"green"},{"color":"red","value":0.5}]}}},
+      "options": {"colorMode":"value","graphMode":"none","justifyMode":"center"},
+      "links": [
+        {"title": "Drilldown: Detail Dashboard","url": "/d/advisor-detail/advisor-detail?var-index=${index}","targetBlank": true,"type": "link"}
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Composite ANN+Path Risk Active",
+      "gridPos": {"h": 4, "w": 4, "x": 16, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "sum(advisor_composite_risk{index=~\"$index\"})"}
+      ],
+      "fieldConfig": {"defaults": {"mappings": [{"type":"value","options":{"0":{"text":"Inactive"},"1":{"text":"Active"}}}], "thresholds": {"mode":"absolute","steps":[{"color":"green"},{"color":"red","value":0.5}]}}},
+      "options": {"colorMode":"background","graphMode":"none","justifyMode":"center"}
+    },
+    {
+      "type": "stat",
+      "title": "Health Score Mean 15m",
+      "gridPos": {"h": 4, "w": 4, "x": 12, "y": 4},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "avg(advisor_health_score_mean_15m{index=~\"$index\"}) * 100"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "red"},{"color":"yellow","value":70},{"color":"green","value":85}]}}, "overrides": []},
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "center"}
+    },
+    {
+      "type": "stat",
+      "title": "Health Score Mean 30m",
+      "gridPos": {"h": 4, "w": 4, "x": 16, "y": 4},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "avg(advisor_health_score_mean_30m{index=~\"$index\"}) * 100"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "red"},{"color":"yellow","value":70},{"color":"green","value":85}]}}, "overrides": []},
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "center"}
+    },
+    {
+      "type": "table",
+      "title": "Active Findings (Last Run)",
+      "gridPos": {"h": 10, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_flag{index=~\"$index\",code=~\"$codes\"}"}
+      ],
+      "transformations": [
+        {"id":"filterFieldsByName","options":{"include":["__name__","index","code","Value"]}}
+      ],
+      "options": {
+        "showHeader": true
+      },
+      "links": [
+        {
+          "title": "Open Detail Dashboard",
+          "url": "/d/advisor-detail/advisor-detail?var-index=${index}&var-codes=${codes}",
+          "targetBlank": true,
+          "type": "link"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Composite Risk Mean 15m",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_composite_risk_mean_15m{index=~\"$index\"}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "max": 1, "thresholds": {"mode":"absolute","steps":[{"color":"green"},{"color":"red","value":0.2}]}}},
+      "options": {"legend": {"displayMode":"table"}, "tooltip": {"mode":"single"}}
+    },
+    {
+      "type": "stat",
+      "title": "Health Score Min 30m",
+      "gridPos": {"h": 4, "w": 4, "x": 20, "y": 0},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_health_score_min_30m{index=~\"$index\"} * 100"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "max": 100, "thresholds": {"mode": "absolute", "steps": [{"color": "red"},{"color":"yellow","value":70},{"color":"green","value":85}]}}, "overrides": []},
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "center"}
+    },
+    {
+      "type": "stat",
+      "title": "CRIT Findings (active)",
+      "gridPos": {"h": 2, "w": 4, "x": 12, "y": 16},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "sum(advisor_flag{index=~\\\"$index\\\",code=~\\\"^CRIT_.*$\\\"})"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "thresholds": {"mode": "absolute", "steps": [{"color": "green"},{"color":"red","value":0.5}]}}, "overrides": []},
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center"},
+      "links": [
+        {"title": "Drilldown: CRIT Detail","url": "/d/advisor-detail/advisor-detail?var-index=${index}&var-codes=^CRIT_.*$","targetBlank": true,"type": "link"}
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "WARN Findings (active)",
+      "gridPos": {"h": 2, "w": 4, "x": 16, "y": 16},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "sum(advisor_flag{index=~\\\"$index\\\",code=~\\\"^WARN_.*$\\\"})"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "thresholds": {"mode": "absolute", "steps": [{"color": "green"},{"color":"yellow","value":0.5}]}}, "overrides": []},
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center"},
+      "links": [
+        {"title": "Drilldown: WARN Detail","url": "/d/advisor-detail/advisor-detail?var-index=${index}&var-codes=^WARN_.*$","targetBlank": true,"type": "link"}
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "INFO Findings (active)",
+      "gridPos": {"h": 2, "w": 4, "x": 20, "y": 16},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "sum(advisor_flag{index=~\\\"$index\\\",code=~\\\"^INFO_.*$\\\"})"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "thresholds": {"mode": "absolute", "steps": [{"color": "green"},{"color":"blue","value":0.5}]}}, "overrides": []},
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "center"},
+      "links": [
+        {"title": "Drilldown: INFO Detail","url": "/d/advisor-detail/advisor-detail?var-index=${index}&var-codes=^INFO_.*$","targetBlank": true,"type": "link"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Health Score Mean 15m (Sparkline)",
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 18},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_health_score_mean_15m{index=~\"$index\"} * 100"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "max": 100, "thresholds": {"mode":"absolute","steps":[{"color":"red"},{"color":"yellow","value":70},{"color":"green","value":85}]}}, "overrides": []},
+      "options": {"legend": {"displayMode":"hidden"}, "tooltip": {"mode":"single"}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Health Score Mean 30m (Sparkline)",
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 18},
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "targets": [
+        {"refId": "A", "expr": "advisor_health_score_mean_30m{index=~\"$index\"} * 100"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short", "min": 0, "max": 100, "thresholds": {"mode":"absolute","steps":[{"color":"red"},{"color":"yellow","value":70},{"color":"green","value":85}]}}, "overrides": []},
+      "options": {"legend": {"displayMode":"hidden"}, "tooltip": {"mode":"single"}}
+    },
+    {
+      "type": "table",
+      "title": "Remedy Details",
+      "description": "Full list of remedies with automation and steps for current index selection.",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 24},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "url": "http://127.0.0.1:9500/api/ml/universal_advisor?detail=true&index=${index}",
+          "url_options": {"method": "GET", "data": ""},
+          "root_selector": "remedies",
+          "format": "table",
+          "columns": []
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {"code": true, "priority": true, "automated": true, "steps": true},
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {"steps": "steps"}
+          }
+        }
+      ],
+      "options": {"showHeader": true}
+    },
+    {
+      "type": "table",
+      "title": "Top Remedies (Advisor API)",
+      "description": "Prioritized ordered actions (first = highest impact).",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 34},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "url": "http://127.0.0.1:9500/api/ml/universal_advisor?detail=true&index=${index}",
+          "url_options": {"method": "GET", "data": ""},
+          "root_selector": "summary.actions_ordered",
+          "format": "table",
+          "columns": []
+        }
+      ],
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {}, "indexByName": {}, "renameByName": {"0": "action", "Value": "action"}}}
+      ],
+      "options": {"showHeader": true}
+    }
+    ,
+    {
+      "type": "stat",
+      "title": "Advisor Generated At Age (min)",
+      "description": "Minutes since advisor report generation (freshness).",
+      "gridPos": {"h": 4, "w": 4, "x": 0, "y": 42},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "url": "http://127.0.0.1:9500/api/ml/universal_advisor/generated_at_age_minutes?indices=${index}",
+          "url_options": {"method": "GET", "data": ""},
+          "root_selector": ".",
+          "format": "table",
+          "columns": []
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "m",
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green"},
+            {"color": "yellow", "value": 5},
+            {"color": "red", "value": 10}
+          ]}
+        },
+        "overrides": []
+      },
+      "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "center"},
+      "transformations": [
+        {"id": "organize", "options": {"includeByName": {"age_minutes": true}, "renameByName": {"age_minutes": "Age (min)"}}}
+      ]
+    }
+  ],
+  "time": {"from":"now-6h","to":"now"},
+  "templating": {"list": [
+    {
+      "name": "index",
+      "type": "query",
+      "datasource": {"type": "prometheus", "uid": "PROM"},
+      "refresh": 1,
+      "query": "label_values(advisor_health_score,index)",
+      "includeAll": true,
+      "allValue": ".*",
+      "multi": true,
+      "current": {"text": "All", "value": "$__all"}
+    },
+    {
+      "name": "codes",
+      "type": "custom",
+      "query": ".* , ^CRIT_.*$ , ^WARN_.*$ , ^INFO_.*$",
+      "current": {"text": ".*", "value": ".*"},
+      "options": [
+        {"text": ".*", "value": ".*", "selected": true},
+        {"text": "CRIT only", "value": "^CRIT_.*$"},
+        {"text": "WARN only", "value": "^WARN_.*$"},
+        {"text": "INFO only", "value": "^INFO_.*$"}
+      ],
+      "includeAll": false,
+      "multi": false
+    }
+  ]}
+}

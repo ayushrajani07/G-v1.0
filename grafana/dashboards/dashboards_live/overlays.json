@@ -1,4 +1,4 @@
-﻿{
+{
   "annotations": {
     "list": [
       {
@@ -15,7 +15,9 @@
       }
     ]
   },
-  "editable": true,
+  "editable": false,
+  "g6_lock": true,
+  "version_tag": "v1.0.0",
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": 24,
@@ -1408,8 +1410,8 @@
     ]
   },
   "timezone": "Asia/Kolkata",
-  "title": "Overlays - All Indices",
-  "uid": "g6-overlays43",
+  "title": "G6 Overlays - Live",
+  "uid": "g6-overlays-live",
   "version": 11,
   "weekStart": ""
 }

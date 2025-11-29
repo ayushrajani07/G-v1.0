@@ -1,0 +1,1261 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: G6 ML Path Alerts
+    folder: G6 ML
+    interval: 1m
+    rules:
+      # ML Coverage Gap Critical (NIFTY, H=60m)
+      - uid: ml_gap_crit_nifty60
+        title: ML Coverage Gap Critical (NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: '$.summary.gap_abs'
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/api/ml/path_advisor?index=NIFTY&horizon=60&window_minutes=180&gap_warn=0.05&gap_crit=0.10'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0.10
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          description: 'Coverage gap_abs critical (>{{ $values.B }}).'
+          summary: 'Critical: Coverage gap high'
+        labels:
+          severity: critical
+          component: ml_path
+          metric: gap_abs
+        isPaused: false
+
+      # ML Coverage Gap Warn (NIFTY, H=60m)
+      - uid: ml_gap_warn_nifty60
+        title: ML Coverage Gap Warn (NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: '$.summary.gap_abs'
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/api/ml/path_advisor?index=NIFTY&horizon=60&window_minutes=180&gap_warn=0.05&gap_crit=0.10'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0.05
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          description: 'Coverage gap_abs warning (>{{ $values.B }}).'
+          summary: 'Warning: Coverage gap elevated'
+        labels:
+          severity: high
+          component: ml_path
+          metric: gap_abs
+        isPaused: false
+
+      # Low Samples Critical
+      - uid: ml_low_samples_crit_nifty60
+        title: ML Low Samples Critical (NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: '$.summary.samples'
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/api/ml/path_advisor?index=NIFTY&horizon=60&window_minutes=180&gap_warn=0.05&gap_crit=0.10&min_samples_warn=30&min_samples_crit=10'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 10
+                      - 0
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          description: 'Samples below critical threshold (<=10).'
+          summary: 'Critical: Low samples'
+        labels:
+          severity: critical
+          component: ml_path
+          metric: samples
+        isPaused: false
+
+      # Low Samples Warn
+      - uid: ml_low_samples_warn_nifty60
+        title: ML Low Samples Warn (NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: '$.summary.samples'
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/api/ml/path_advisor?index=NIFTY&horizon=60&window_minutes=180&gap_warn=0.05&gap_crit=0.10&min_samples_warn=30&min_samples_crit=10'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 30
+                      - 0
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          description: 'Samples below warning threshold (<=30).'
+          summary: 'Warning: Low samples'
+        labels:
+          severity: high
+          component: ml_path
+          metric: samples
+        isPaused: false
+
+      # Calibration Saturation (High)
+      - uid: ml_calibration_sat_high_nifty60
+        title: ML Calibration Saturation High (NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: '$.summary.band_scale'
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/api/ml/path_advisor?index=NIFTY&horizon=60&window_minutes=180'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 4.9
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          description: 'Band scale near upper cap (>=4.9).'
+          summary: 'Warning: Calibration saturation (high)'
+        labels:
+          severity: medium
+          component: ml_path
+          metric: band_scale
+        isPaused: false
+
+      # Calibration Saturation (Low)
+      - uid: ml_calibration_sat_low_nifty60
+        title: ML Calibration Saturation Low (NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: '$.summary.band_scale'
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/api/ml/path_advisor?index=NIFTY&horizon=60&window_minutes=180'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0.55
+                      - 0
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          description: 'Band scale near lower cap (<=0.55).'
+          summary: 'Warning: Calibration saturation (low)'
+        labels:
+          severity: medium
+          component: ml_path
+          metric: band_scale
+        isPaused: false
+
+      # Fallback Mode Critical (via flags)
+      - uid: ml_fallback_mode_crit_nifty60
+        title: ML Fallback Mode Critical (NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              columns: []
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              filters: []
+              format: table
+              global_query_id: ''
+              refId: A
+              root_selector: '$.fallback'
+              source: url
+              type: json
+              url: 'http://127.0.0.1:9500/api/ml/path_advisor_flags?index=NIFTY&horizon=60&window_minutes=180'
+              url_options:
+                data: ''
+                method: GET
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              intervalMs: 1000
+              maxDataPoints: 43200
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0.5
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    params: []
+                    type: avg
+                  type: query
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 1m
+        annotations:
+          description: 'Forecast operating in fallback mode.'
+          summary: 'Critical: ML forecast fallback'
+        labels:
+          severity: critical
+          component: ml_path
+          metric: fallback
+        isPaused: false
+
+      # Gap abs (calibration history) - Critical
+      - uid: ml_gap_abs_hist_crit_nifty60
+        title: ML Gap Abs Critical (Calib History, NIFTY H60)
+        condition: E
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              type: json
+              parser: backend
+              format: timeseries
+              root_selector: '$'
+              source: url
+              url: 'http://127.0.0.1:9500/api/ml/path_calibration_history?index=NIFTY&limit=200'
+              url_options:
+                method: GET
+                data: ''
+              columns:
+                - selector: ts_ms
+                  type: timestamp
+                - selector: gap_abs
+                  type: number
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              type: reduce
+              reducer: last
+              refId: B
+          - refId: E
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              refId: E
+              expression: B
+              conditions:
+                - type: query
+                  query:
+                    params: []
+                  reducer:
+                    type: last
+                    params: []
+                  evaluator:
+                    type: gt
+                    params: [0.10, 0]
+                  operator:
+                    type: and
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: 'Critical: Calibration gap_abs high'
+          description: 'Calibrations show |coverage-target| above 0.10.'
+        labels:
+          severity: critical
+          component: ml_path
+          metric: gap_abs
+        isPaused: false
+
+      # Gap abs (calibration history) - Warning
+      - uid: ml_gap_abs_hist_warn_nifty60
+        title: ML Gap Abs Warning (Calib History, NIFTY H60)
+        condition: E
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              type: json
+              parser: backend
+              format: timeseries
+              root_selector: '$'
+              source: url
+              url: 'http://127.0.0.1:9500/api/ml/path_calibration_history?index=NIFTY&limit=200'
+              url_options:
+                method: GET
+                data: ''
+              columns:
+                - selector: ts_ms
+                  type: timestamp
+                - selector: gap_abs
+                  type: number
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              expression: A
+              type: reduce
+              reducer: last
+              refId: B
+          - refId: E
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              refId: E
+              expression: B
+              conditions:
+                - type: query
+                  query:
+                    params: []
+                  reducer:
+                    type: last
+                    params: []
+                  evaluator:
+                    type: gt
+                    params: [0.05, 0]
+                  operator:
+                    type: and
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: 'Warning: Calibration gap_abs elevated'
+          description: 'Calibrations show |coverage-target| above 0.05.'
+        labels:
+          severity: high
+          component: ml_path
+          metric: gap_abs
+        isPaused: false
+
+      # Snapshots coverage delta - Critical
+      - uid: ml_snap_gap_crit_nifty60
+        title: ML Snapshots Coverage Delta Critical (NIFTY H60)
+        condition: F
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              type: json
+              parser: backend
+              format: timeseries
+              root_selector: '$'
+              source: url
+              url: 'http://127.0.0.1:9500/api/ml/path_coverage_history?index=NIFTY&horizon=60&window_minutes=180&history_minutes=240&step_minutes=5'
+              url_options:
+                method: GET
+                data: ''
+              columns:
+                - selector: ts_ms
+                  type: timestamp
+                - selector: coverage
+                  type: number
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              type: json
+              parser: backend
+              format: timeseries
+              root_selector: '$'
+              source: url
+              url: 'http://127.0.0.1:9500/api/ml/path_coverage_history?index=NIFTY&horizon=60&window_minutes=180&history_minutes=240&step_minutes=5'
+              url_options:
+                method: GET
+                data: ''
+              columns:
+                - selector: ts_ms
+                  type: timestamp
+                - selector: target
+                  type: number
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: math
+              expression: abs($A - $B)
+              refId: C
+          - refId: D
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              expression: C
+              reducer: last
+              refId: D
+          - refId: F
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              refId: F
+              expression: D
+              conditions:
+                - type: query
+                  query:
+                    params: []
+                  reducer:
+                    type: last
+                    params: []
+                  evaluator:
+                    type: gt
+                    params: [0.10, 0]
+                  operator:
+                    type: and
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: 'Critical: Coverage snapshots |coverage-target| high'
+          description: 'Snapshots gap above 0.10.'
+        labels:
+          severity: critical
+          component: ml_path
+          metric: snapshot_gap
+        isPaused: false
+
+      # Snapshots coverage delta - Warning
+      - uid: ml_snap_gap_warn_nifty60
+        title: ML Snapshots Coverage Delta Warning (NIFTY H60)
+        condition: F
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              type: json
+              parser: backend
+              format: timeseries
+              root_selector: '$'
+              source: url
+              url: 'http://127.0.0.1:9500/api/ml/path_coverage_history?index=NIFTY&horizon=60&window_minutes=180&history_minutes=240&step_minutes=5'
+              url_options:
+                method: GET
+                data: ''
+              columns:
+                - selector: ts_ms
+                  type: timestamp
+                - selector: coverage
+                  type: number
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              type: json
+              parser: backend
+              format: timeseries
+              root_selector: '$'
+              source: url
+              url: 'http://127.0.0.1:9500/api/ml/path_coverage_history?index=NIFTY&horizon=60&window_minutes=180&history_minutes=240&step_minutes=5'
+              url_options:
+                method: GET
+                data: ''
+              columns:
+                - selector: ts_ms
+                  type: timestamp
+                - selector: target
+                  type: number
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: math
+              expression: abs($A - $B)
+              refId: C
+          - refId: D
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              expression: C
+              reducer: last
+              refId: D
+          - refId: F
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              refId: F
+              expression: D
+              conditions:
+                - type: query
+                  query:
+                    params: []
+                  reducer:
+                    type: last
+                    params: []
+                  evaluator:
+                    type: gt
+                    params: [0.05, 0]
+                  operator:
+                    type: and
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: 'Warning: Coverage snapshots |coverage-target| elevated'
+          description: 'Snapshots gap above 0.05.'
+        labels:
+          severity: high
+          component: ml_path
+          metric: snapshot_gap
+        isPaused: false
+
+      # Calibration band_scale saturation - High
+      - uid: ml_band_scale_high_nifty60
+        title: ML Band Scale High (Calib History, NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              type: json
+              parser: backend
+              format: timeseries
+              root_selector: '$'
+              source: url
+              url: 'http://127.0.0.1:9500/api/ml/path_calibration_history?index=NIFTY&limit=200'
+              url_options:
+                method: GET
+                data: ''
+              columns:
+                - selector: ts_ms
+                  type: timestamp
+                - selector: band_scale
+                  type: number
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              refId: C
+              expression: B
+              conditions:
+                - type: query
+                  query:
+                    params: []
+                  reducer:
+                    type: last
+                    params: []
+                  evaluator:
+                    type: gt
+                    params: [4.9, 0]
+                  operator:
+                    type: and
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: 'Warning: Band scale near upper cap'
+          description: 'band_scale >= 4.9'
+        labels:
+          severity: medium
+          component: ml_path
+          metric: band_scale
+        isPaused: false
+
+      # Calibration band_scale saturation - Low
+      - uid: ml_band_scale_low_nifty60
+        title: ML Band Scale Low (Calib History, NIFTY H60)
+        condition: C
+        data:
+          - refId: A
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: 'INFINITY'
+            model:
+              datasource:
+                type: yesoreyeram-infinity-datasource
+                uid: 'INFINITY'
+              type: json
+              parser: backend
+              format: timeseries
+              root_selector: '$'
+              source: url
+              url: 'http://127.0.0.1:9500/api/ml/path_calibration_history?index=NIFTY&limit=200'
+              url_options:
+                method: GET
+                data: ''
+              columns:
+                - selector: ts_ms
+                  type: timestamp
+                - selector: band_scale
+                  type: number
+          - refId: B
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: C
+            queryType: ''
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: __expr__
+            model:
+              datasource:
+                name: Expression
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              refId: C
+              expression: B
+              conditions:
+                - type: query
+                  query:
+                    params: []
+                  reducer:
+                    type: last
+                    params: []
+                  evaluator:
+                    type: lt
+                    params: [0.55, 0]
+                  operator:
+                    type: and
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: 'Warning: Band scale near lower cap'
+          description: 'band_scale <= 0.55'
+        labels:
+          severity: medium
+          component: ml_path
+          metric: band_scale
+        isPaused: false

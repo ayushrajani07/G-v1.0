@@ -1,0 +1,486 @@
+{
+  "uid": "g6-contracts-ts",
+  "title": "Contracts – Index / OI / Volume (Time Series)",
+  "tags": ["g6", "contracts", "oi", "volume", "index"],
+  "schemaVersion": 39,
+  "refresh": "15s",
+  "timezone": "Asia/Kolkata",
+  "time": { "from": "now-12h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "base_url",
+        "label": "Base URL",
+        "type": "custom",
+        "query": "http://127.0.0.1:9500,http://127.0.0.1:8003",
+        "current": { "text": "http://127.0.0.1:9500", "value": "http://127.0.0.1:9500" }
+      },
+      {
+        "name": "expiry",
+        "label": "Expiry",
+        "type": "custom",
+        "query": "this_week,next_week,this_month",
+        "current": { "text": "this_week", "value": "this_week" }
+      },
+      {
+        "name": "offset",
+        "label": "Offset",
+        "type": "custom",
+        "query": "0,+100,-100,+200,-200",
+        "current": { "text": "0", "value": "0" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "NIFTY | ${expiry} | Offset ${offset}",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${base_url}/api/live_csv?index=NIFTY&expiry_tag=${expiry}&offset=${offset}",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              { "key": "tail", "value": "2000" },
+              { "key": "cb", "value": "${__unixEpochMs}" }
+            ],
+            "headers": []
+          },
+          "parser": "backend",
+          "root_selector": "$",
+          "json_options": { "root": "$" },
+          "columns": [
+            { "selector": "ts", "type": "number" },
+            { "selector": "index_price", "type": "number" },
+            { "selector": "ce_vol", "type": "number" },
+            { "selector": "pe_vol", "type": "number" },
+            { "selector": "ce_oi", "type": "number" },
+            { "selector": "pe_oi", "type": "number" },
+            { "selector": "pcr", "type": "number" }
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              { "targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms" }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "index_price": "Index",
+              "ce_vol": "CE Vol",
+              "pe_vol": "PE Vol",
+              "ce_oi": "CE OI",
+              "pe_oi": "PE OI",
+              "pcr": "PCR"
+            },
+            "excludeByName": { "time_str": true, "time_epoch_s": true, "PCR": true }
+          }
+        },
+        { "id": "prepareTimeSeries", "options": { "format": "multi" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "showPoints": "never", "drawStyle": "line", "lineStyle": { "mode": "solid" } } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "index_price" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "hidden" },
+            { "id": "custom.axisLabel", "value": "Index" },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#f1c40f" } },
+            { "id": "decimals", "value": 0 }
+          ] },
+          { "matcher": { "id": "byName", "options": "Index" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "hidden" },
+            { "id": "custom.axisLabel", "value": "Index" },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#f1c40f" } },
+            { "id": "decimals", "value": 0 }
+          ] },
+          { "matcher": { "id": "byName", "options": "ce_vol" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "pe_vol" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "ce_oi" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "pe_oi" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "CE Vol" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } },
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "PE Vol" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } },
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "CE OI" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } },
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "PE OI" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } },
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] }
+        ]
+      },
+      "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "BANKNIFTY | ${expiry} | Offset ${offset}",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 10 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${base_url}/api/live_csv?index=BANKNIFTY&expiry_tag=${expiry}&offset=${offset}",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              { "key": "tail", "value": "2000" },
+              { "key": "cb", "value": "${__unixEpochMs}" }
+            ],
+            "headers": []
+          },
+          "parser": "backend",
+          "root_selector": "$",
+          "json_options": { "root": "$" },
+          "columns": [
+            { "selector": "ts", "type": "number" },
+            { "selector": "index_price", "type": "number" },
+            { "selector": "ce_vol", "type": "number" },
+            { "selector": "pe_vol", "type": "number" },
+            { "selector": "ce_oi", "type": "number" },
+            { "selector": "pe_oi", "type": "number" },
+            { "selector": "pcr", "type": "number" }
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              { "targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms" }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "index_price": "Index",
+              "ce_vol": "CE Vol",
+              "pe_vol": "PE Vol",
+              "ce_oi": "CE OI",
+              "pe_oi": "PE OI",
+              "pcr": "PCR"
+            },
+            "excludeByName": { "time_str": true, "time_epoch_s": true, "PCR": true }
+          }
+        },
+        { "id": "prepareTimeSeries", "options": { "format": "multi" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "showPoints": "never", "drawStyle": "line", "lineStyle": { "mode": "solid" } } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "index_price" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "hidden" },
+            { "id": "custom.axisLabel", "value": "Index" },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#f1c40f" } },
+            { "id": "decimals", "value": 0 }
+          ] },
+          { "matcher": { "id": "byName", "options": "Index" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "hidden" },
+            { "id": "custom.axisLabel", "value": "Index" },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#f1c40f" } },
+            { "id": "decimals", "value": 0 }
+          ] },
+          { "matcher": { "id": "byName", "options": "ce_vol" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "pe_vol" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "ce_oi" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "pe_oi" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "CE Vol" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } },
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "PE Vol" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } },
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "CE OI" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } },
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "PE OI" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } },
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] }
+        ]
+      },
+      "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    },
+    {
+      "type": "timeseries",
+      "title": "FINNIFTY | ${expiry} | Offset ${offset}",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 20 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${base_url}/api/live_csv?index=FINNIFTY&expiry_tag=${expiry}&offset=${offset}",
+          "url_options": {
+            "method": "GET",
+            "params": [
+              { "key": "tail", "value": "2000" },
+              { "key": "cb", "value": "${__unixEpochMs}" }
+            ],
+            "headers": []
+          },
+          "parser": "backend",
+          "root_selector": "$",
+          "json_options": { "root": "$" },
+          "columns": [
+            { "selector": "ts", "type": "number" },
+            { "selector": "index_price", "type": "number" },
+            { "selector": "ce_vol", "type": "number" },
+            { "selector": "pe_vol", "type": "number" },
+            { "selector": "ce_oi", "type": "number" },
+            { "selector": "pe_oi", "type": "number" },
+            { "selector": "pcr", "type": "number" }
+          ]
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              { "targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms" }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "index_price": "Index",
+              "ce_vol": "CE Vol",
+              "pe_vol": "PE Vol",
+              "ce_oi": "CE OI",
+              "pe_oi": "PE OI",
+              "pcr": "PCR"
+            },
+            "excludeByName": { "time_str": true, "time_epoch_s": true, "PCR": true }
+          }
+        },
+        { "id": "prepareTimeSeries", "options": { "format": "multi" } }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "showPoints": "never", "drawStyle": "line", "lineStyle": { "mode": "solid" } } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "index_price" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "hidden" },
+            { "id": "custom.axisLabel", "value": "Index" },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#f1c40f" } },
+            { "id": "decimals", "value": 0 }
+          ] },
+          { "matcher": { "id": "byName", "options": "Index" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "hidden" },
+            { "id": "custom.axisLabel", "value": "Index" },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#f1c40f" } },
+            { "id": "decimals", "value": 0 }
+          ] },
+          { "matcher": { "id": "byName", "options": "ce_vol" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "pe_vol" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "ce_oi" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "pe_oi" }, "properties": [
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 },
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } }
+          ] },
+          { "matcher": { "id": "byName", "options": "CE Vol" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } },
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "PE Vol" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } },
+            { "id": "custom.axisPlacement", "value": "right" },
+            { "id": "custom.axisLabel", "value": "Vol" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "CE OI" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#e31a1c" } },
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] },
+          { "matcher": { "id": "byName", "options": "PE OI" }, "properties": [
+            { "id": "color", "value": { "mode": "fixed", "fixedColor": "#33a02c" } },
+            { "id": "custom.axisPlacement", "value": "left" },
+            { "id": "custom.axisLabel", "value": "OI" },
+            { "id": "unit", "value": "short" },
+            { "id": "decimals", "value": 0 },
+            { "id": "custom.lineStyle", "value": { "mode": "solid" } },
+            { "id": "custom.lineWidth", "value": 2 }
+          ] }
+        ]
+      },
+      "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "multi" } }
+    }
+  ]
+}

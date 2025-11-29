@@ -1,0 +1,1220 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "multi-pane-explorer-minimal",
+                 "url":  "/d/g6-multi_pane_explorer_minimal/multi-pane-explorer-minimal",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-17T14:34:46+05:30",
+                 "updated":  "2025-11-17T14:34:46+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "multi_pane_explorer_minimal.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "prometheus",
+                                             "name":  "Prometheus",
+                                             "type":  "prometheus",
+                                             "version":  "1.0.0"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "g6_meta":  {
+                                      "alerts_count":  0,
+                                      "alerts_panel":  false,
+                                      "band_pct":  20.0,
+                                      "compact":  false,
+                                      "description":  "Minimal overlay-style single panel (Live Today vs Master Avg)",
+                                      "enriched":  true,
+                                      "explorer":  true,
+                                      "families":  [
+                                                       "system"
+                                                   ],
+                                      "generator_version":  "phaseDEF-1m",
+                                      "metric_kinds":  {
+                                                           "avg_tp":  "gauge",
+                                                           "avg_tp_ema":  "gauge",
+                                                           "avg_tp_mean":  "gauge",
+                                                           "g6_api_calls_total":  "counter",
+                                                           "g6_api_response_latency_ms":  "histogram",
+                                                           "g6_api_response_time_ms":  "gauge",
+                                                           "g6_api_success_rate_percent":  "gauge",
+                                                           "g6_build_config_hash_info":  "gauge",
+                                                           "g6_bus_events_dropped_total":  "counter",
+                                                           "g6_bus_events_published_total":  "counter",
+                                                           "g6_bus_publish_latency_ms":  "histogram",
+                                                           "g6_bus_queue_retained_events":  "gauge",
+                                                           "g6_bus_subscriber_lag_events":  "gauge",
+                                                           "g6_cardinality_guard_allowed_growth_percent":  "gauge",
+                                                           "g6_cardinality_guard_growth_percent":  "gauge",
+                                                           "g6_cardinality_guard_last_run_epoch":  "gauge",
+                                                           "g6_cardinality_guard_new_groups_total":  "gauge",
+                                                           "g6_cardinality_guard_offenders_total":  "gauge",
+                                                           "g6_cardinality_series_total":  "gauge",
+                                                           "g6_cs_ingest_backlog_rows":  "gauge",
+                                                           "g6_cs_ingest_backpressure_flag":  "gauge",
+                                                           "g6_cs_ingest_bytes_total":  "counter",
+                                                           "g6_cs_ingest_failures_total":  "counter",
+                                                           "g6_cs_ingest_latency_ms":  "histogram",
+                                                           "g6_cs_ingest_retries_total":  "counter",
+                                                           "g6_cs_ingest_rows_total":  "counter",
+                                                           "g6_emission_failure_once_total":  "counter",
+                                                           "g6_emission_failures_total":  "counter",
+                                                           "g6_empty_quote_fields_total":  "counter",
+                                                           "g6_expiry_resolve_fail_total":  "counter",
+                                                           "g6_index_zero_price_fallback_total":  "counter",
+                                                           "g6_metric_duplicates_total":  "counter",
+                                                           "g6_metrics_batch_adaptive_target":  "gauge",
+                                                           "g6_metrics_batch_flush_duration_ms":  "histogram",
+                                                           "g6_metrics_batch_flush_increments":  "gauge",
+                                                           "g6_metrics_batch_queue_depth":  "gauge",
+                                                           "g6_metrics_spec_hash_info":  "gauge",
+                                                           "g6_option_contracts_active":  "gauge",
+                                                           "g6_option_contracts_new_total":  "counter",
+                                                           "g6_option_iv_mean":  "gauge",
+                                                           "g6_option_open_interest":  "gauge",
+                                                           "g6_option_spread_bps_mean":  "gauge",
+                                                           "g6_option_volume_24h":  "gauge",
+                                                           "g6_panel_diff_bytes_last":  "gauge",
+                                                           "g6_panel_diff_bytes_total":  "counter",
+                                                           "g6_panel_diff_truncated_total":  "counter",
+                                                           "g6_panel_diff_writes_total":  "counter",
+                                                           "g6_provider_failover_total":  "counter",
+                                                           "g6_provider_mode":  "gauge",
+                                                           "g6_quote_avg_price_fallback_total":  "counter",
+                                                           "g6_quote_enriched_total":  "counter",
+                                                           "g6_quote_missing_volume_oi_total":  "counter",
+                                                           "g6_sse_flush_seconds":  "histogram",
+                                                           "g6_sse_trace_stages_total":  "counter",
+                                                           "g6_stale_active":  "gauge",
+                                                           "g6_stale_cycles_total":  "counter",
+                                                           "g6_stale_system_active":  "gauge",
+                                                           "g6_stale_system_cycles_total":  "counter",
+                                                           "g6_stream_append_total":  "counter",
+                                                           "g6_stream_conflict_total":  "counter",
+                                                           "g6_stream_skipped_total":  "counter",
+                                                           "g6_stream_state_persist_errors_total":  "counter",
+                                                           "tp":  "gauge",
+                                                           "tp_ema":  "gauge",
+                                                           "tp_mean":  "gauge"
+                                                       },
+                                      "placeholder_panels":  false,
+                                      "spec_hash":  "0533405d11f9f66e",
+                                      "ultra":  false
+                                  },
+                      "id":  265,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byFrameRefID",
+                                                                                                   "options":  "A"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "red",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.showPoints",
+                                                                                                          "value":  "always"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.pointSize",
+                                                                                                          "value":  4
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byFrameRefID",
+                                                                                                   "options":  "B"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#808080",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     6,
+                                                                                                                                     4
+                                                                                                                                 ],
+                                                                                                                        "fill":  "dash"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "explorer_kind":  "minimal_overlay",
+                                                         "group":  "explorer",
+                                                         "panel_uuid":  "461d336ebf1c724f",
+                                                         "source":  "explorer_template"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  10,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  1176318830,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    }
+                                                     },
+                                         "repeat":  "metric_rate",
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum(rate(${metric_rate}{index=\"$index\",expiry_tag=\"$expiry_tag\"}[1m]))",
+                                                             "legendFormat":  "Live Today (rate)",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "avg_over_time(sum(rate(${metric_rate}{index=\"$index\",expiry_tag=\"$expiry_tag\"}[1m]))[30m:1m])",
+                                                             "legendFormat":  "Master Avg (rate)",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "$index | $expiry_tag (rate)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byFrameRefID",
+                                                                                                   "options":  "A"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "red",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.showPoints",
+                                                                                                          "value":  "always"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.pointSize",
+                                                                                                          "value":  4
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byFrameRefID",
+                                                                                                   "options":  "B"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#808080",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     6,
+                                                                                                                                     4
+                                                                                                                                 ],
+                                                                                                                        "fill":  "dash"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "explorer_kind":  "minimal_overlay_gauge",
+                                                         "group":  "explorer",
+                                                         "panel_uuid":  "3e76ca0d4ae3ad49",
+                                                         "source":  "explorer_template"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  10,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  10
+                                                     },
+                                         "id":  1047972365,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    }
+                                                     },
+                                         "repeat":  "metric_gauge",
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum(${metric_gauge}{index=\"$index\",expiry_tag=\"$expiry_tag\"})",
+                                                             "legendFormat":  "Live Today",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "avg_over_time(sum(${metric_gauge}{index=\"$index\",expiry_tag=\"$expiry_tag\"})[30m:1m])",
+                                                             "legendFormat":  "Master Avg",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "$index | $expiry_tag (gauge)",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  39,
+                      "tags":  [
+                                   "explorer",
+                                   "minimal",
+                                   "g6",
+                                   "generated"
+                               ],
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "avg_tp",
+                                                                          "value":  "avg_tp"
+                                                                      },
+                                                          "includeAll":  false,
+                                                          "label":  "Metric",
+                                                          "multi":  true,
+                                                          "name":  "metric",
+                                                          "options":  [
+                                                                          {
+                                                                              "selected":  true,
+                                                                              "text":  "avg_tp",
+                                                                              "value":  "avg_tp"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "avg_tp_ema",
+                                                                              "value":  "avg_tp_ema"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "avg_tp_mean",
+                                                                              "value":  "avg_tp_mean"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_api_calls_total",
+                                                                              "value":  "g6_api_calls_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_api_response_latency_ms",
+                                                                              "value":  "g6_api_response_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_api_response_time_ms",
+                                                                              "value":  "g6_api_response_time_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_api_success_rate_percent",
+                                                                              "value":  "g6_api_success_rate_percent"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_build_config_hash_info",
+                                                                              "value":  "g6_build_config_hash_info"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_events_dropped_total",
+                                                                              "value":  "g6_bus_events_dropped_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_events_published_total",
+                                                                              "value":  "g6_bus_events_published_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_publish_latency_ms",
+                                                                              "value":  "g6_bus_publish_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_queue_retained_events",
+                                                                              "value":  "g6_bus_queue_retained_events"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_subscriber_lag_events",
+                                                                              "value":  "g6_bus_subscriber_lag_events"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_allowed_growth_percent",
+                                                                              "value":  "g6_cardinality_guard_allowed_growth_percent"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_growth_percent",
+                                                                              "value":  "g6_cardinality_guard_growth_percent"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_last_run_epoch",
+                                                                              "value":  "g6_cardinality_guard_last_run_epoch"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_new_groups_total",
+                                                                              "value":  "g6_cardinality_guard_new_groups_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_offenders_total",
+                                                                              "value":  "g6_cardinality_guard_offenders_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_series_total",
+                                                                              "value":  "g6_cardinality_series_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_backlog_rows",
+                                                                              "value":  "g6_cs_ingest_backlog_rows"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_backpressure_flag",
+                                                                              "value":  "g6_cs_ingest_backpressure_flag"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_bytes_total",
+                                                                              "value":  "g6_cs_ingest_bytes_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_failures_total",
+                                                                              "value":  "g6_cs_ingest_failures_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_latency_ms",
+                                                                              "value":  "g6_cs_ingest_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_retries_total",
+                                                                              "value":  "g6_cs_ingest_retries_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_rows_total",
+                                                                              "value":  "g6_cs_ingest_rows_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_emission_failure_once_total",
+                                                                              "value":  "g6_emission_failure_once_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_emission_failures_total",
+                                                                              "value":  "g6_emission_failures_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_empty_quote_fields_total",
+                                                                              "value":  "g6_empty_quote_fields_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_expiry_resolve_fail_total",
+                                                                              "value":  "g6_expiry_resolve_fail_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_index_zero_price_fallback_total",
+                                                                              "value":  "g6_index_zero_price_fallback_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metric_duplicates_total",
+                                                                              "value":  "g6_metric_duplicates_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_adaptive_target",
+                                                                              "value":  "g6_metrics_batch_adaptive_target"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_flush_duration_ms",
+                                                                              "value":  "g6_metrics_batch_flush_duration_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_flush_increments",
+                                                                              "value":  "g6_metrics_batch_flush_increments"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_queue_depth",
+                                                                              "value":  "g6_metrics_batch_queue_depth"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_spec_hash_info",
+                                                                              "value":  "g6_metrics_spec_hash_info"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_contracts_active",
+                                                                              "value":  "g6_option_contracts_active"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_contracts_new_total",
+                                                                              "value":  "g6_option_contracts_new_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_iv_mean",
+                                                                              "value":  "g6_option_iv_mean"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_open_interest",
+                                                                              "value":  "g6_option_open_interest"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_spread_bps_mean",
+                                                                              "value":  "g6_option_spread_bps_mean"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_volume_24h",
+                                                                              "value":  "g6_option_volume_24h"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_panel_diff_bytes_last",
+                                                                              "value":  "g6_panel_diff_bytes_last"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_panel_diff_bytes_total",
+                                                                              "value":  "g6_panel_diff_bytes_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_panel_diff_truncated_total",
+                                                                              "value":  "g6_panel_diff_truncated_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_panel_diff_writes_total",
+                                                                              "value":  "g6_panel_diff_writes_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_provider_failover_total",
+                                                                              "value":  "g6_provider_failover_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_provider_mode",
+                                                                              "value":  "g6_provider_mode"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_quote_avg_price_fallback_total",
+                                                                              "value":  "g6_quote_avg_price_fallback_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_quote_enriched_total",
+                                                                              "value":  "g6_quote_enriched_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_quote_missing_volume_oi_total",
+                                                                              "value":  "g6_quote_missing_volume_oi_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_sse_flush_seconds",
+                                                                              "value":  "g6_sse_flush_seconds"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_sse_trace_stages_total",
+                                                                              "value":  "g6_sse_trace_stages_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stale_active",
+                                                                              "value":  "g6_stale_active"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stale_cycles_total",
+                                                                              "value":  "g6_stale_cycles_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stale_system_active",
+                                                                              "value":  "g6_stale_system_active"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stale_system_cycles_total",
+                                                                              "value":  "g6_stale_system_cycles_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stream_append_total",
+                                                                              "value":  "g6_stream_append_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stream_conflict_total",
+                                                                              "value":  "g6_stream_conflict_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stream_skipped_total",
+                                                                              "value":  "g6_stream_skipped_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stream_state_persist_errors_total",
+                                                                              "value":  "g6_stream_state_persist_errors_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "tp",
+                                                                              "value":  "tp"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "tp_ema",
+                                                                              "value":  "tp_ema"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "tp_mean",
+                                                                              "value":  "tp_mean"
+                                                                          }
+                                                                      ],
+                                                          "query":  "avg_tp,avg_tp_ema,avg_tp_mean,g6_api_calls_total,g6_api_response_latency_ms,g6_api_response_time_ms,g6_api_success_rate_percent,g6_build_config_hash_info,g6_bus_events_dropped_total,g6_bus_events_published_total,g6_bus_publish_latency_ms,g6_bus_queue_retained_events,g6_bus_subscriber_lag_events,g6_cardinality_guard_allowed_growth_percent,g6_cardinality_guard_growth_percent,g6_cardinality_guard_last_run_epoch,g6_cardinality_guard_new_groups_total,g6_cardinality_guard_offenders_total,g6_cardinality_series_total,g6_cs_ingest_backlog_rows,g6_cs_ingest_backpressure_flag,g6_cs_ingest_bytes_total,g6_cs_ingest_failures_total,g6_cs_ingest_latency_ms,g6_cs_ingest_retries_total,g6_cs_ingest_rows_total,g6_emission_failure_once_total,g6_emission_failures_total,g6_empty_quote_fields_total,g6_expiry_resolve_fail_total,g6_index_zero_price_fallback_total,g6_metric_duplicates_total,g6_metrics_batch_adaptive_target,g6_metrics_batch_flush_duration_ms,g6_metrics_batch_flush_increments,g6_metrics_batch_queue_depth,g6_metrics_spec_hash_info,g6_option_contracts_active,g6_option_contracts_new_total,g6_option_iv_mean,g6_option_open_interest,g6_option_spread_bps_mean,g6_option_volume_24h,g6_panel_diff_bytes_last,g6_panel_diff_bytes_total,g6_panel_diff_truncated_total,g6_panel_diff_writes_total,g6_provider_failover_total,g6_provider_mode,g6_quote_avg_price_fallback_total,g6_quote_enriched_total,g6_quote_missing_volume_oi_total,g6_sse_flush_seconds,g6_sse_trace_stages_total,g6_stale_active,g6_stale_cycles_total,g6_stale_system_active,g6_stale_system_cycles_total,g6_stream_append_total,g6_stream_conflict_total,g6_stream_skipped_total,g6_stream_state_persist_errors_total,tp,tp_ema,tp_mean",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "g6_api_calls_total",
+                                                                          "value":  "g6_api_calls_total"
+                                                                      },
+                                                          "includeAll":  false,
+                                                          "label":  "Metric (rate)",
+                                                          "multi":  true,
+                                                          "name":  "metric_rate",
+                                                          "options":  [
+                                                                          {
+                                                                              "selected":  true,
+                                                                              "text":  "g6_api_calls_total",
+                                                                              "value":  "g6_api_calls_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_events_dropped_total",
+                                                                              "value":  "g6_bus_events_dropped_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_events_published_total",
+                                                                              "value":  "g6_bus_events_published_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_new_groups_total",
+                                                                              "value":  "g6_cardinality_guard_new_groups_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_offenders_total",
+                                                                              "value":  "g6_cardinality_guard_offenders_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_series_total",
+                                                                              "value":  "g6_cardinality_series_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_bytes_total",
+                                                                              "value":  "g6_cs_ingest_bytes_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_failures_total",
+                                                                              "value":  "g6_cs_ingest_failures_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_retries_total",
+                                                                              "value":  "g6_cs_ingest_retries_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_rows_total",
+                                                                              "value":  "g6_cs_ingest_rows_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_emission_failure_once_total",
+                                                                              "value":  "g6_emission_failure_once_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_emission_failures_total",
+                                                                              "value":  "g6_emission_failures_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_empty_quote_fields_total",
+                                                                              "value":  "g6_empty_quote_fields_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_expiry_resolve_fail_total",
+                                                                              "value":  "g6_expiry_resolve_fail_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_index_zero_price_fallback_total",
+                                                                              "value":  "g6_index_zero_price_fallback_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metric_duplicates_total",
+                                                                              "value":  "g6_metric_duplicates_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_contracts_new_total",
+                                                                              "value":  "g6_option_contracts_new_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_panel_diff_bytes_total",
+                                                                              "value":  "g6_panel_diff_bytes_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_panel_diff_truncated_total",
+                                                                              "value":  "g6_panel_diff_truncated_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_panel_diff_writes_total",
+                                                                              "value":  "g6_panel_diff_writes_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_provider_failover_total",
+                                                                              "value":  "g6_provider_failover_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_quote_avg_price_fallback_total",
+                                                                              "value":  "g6_quote_avg_price_fallback_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_quote_enriched_total",
+                                                                              "value":  "g6_quote_enriched_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_quote_missing_volume_oi_total",
+                                                                              "value":  "g6_quote_missing_volume_oi_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_sse_trace_stages_total",
+                                                                              "value":  "g6_sse_trace_stages_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stale_cycles_total",
+                                                                              "value":  "g6_stale_cycles_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stale_system_cycles_total",
+                                                                              "value":  "g6_stale_system_cycles_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stream_append_total",
+                                                                              "value":  "g6_stream_append_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stream_conflict_total",
+                                                                              "value":  "g6_stream_conflict_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stream_skipped_total",
+                                                                              "value":  "g6_stream_skipped_total"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stream_state_persist_errors_total",
+                                                                              "value":  "g6_stream_state_persist_errors_total"
+                                                                          }
+                                                                      ],
+                                                          "query":  "g6_api_calls_total,g6_bus_events_dropped_total,g6_bus_events_published_total,g6_cardinality_guard_new_groups_total,g6_cardinality_guard_offenders_total,g6_cardinality_series_total,g6_cs_ingest_bytes_total,g6_cs_ingest_failures_total,g6_cs_ingest_retries_total,g6_cs_ingest_rows_total,g6_emission_failure_once_total,g6_emission_failures_total,g6_empty_quote_fields_total,g6_expiry_resolve_fail_total,g6_index_zero_price_fallback_total,g6_metric_duplicates_total,g6_option_contracts_new_total,g6_panel_diff_bytes_total,g6_panel_diff_truncated_total,g6_panel_diff_writes_total,g6_provider_failover_total,g6_quote_avg_price_fallback_total,g6_quote_enriched_total,g6_quote_missing_volume_oi_total,g6_sse_trace_stages_total,g6_stale_cycles_total,g6_stale_system_cycles_total,g6_stream_append_total,g6_stream_conflict_total,g6_stream_skipped_total,g6_stream_state_persist_errors_total",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "tp",
+                                                                          "value":  "tp"
+                                                                      },
+                                                          "includeAll":  false,
+                                                          "label":  "Metric (gauge)",
+                                                          "multi":  true,
+                                                          "name":  "metric_gauge",
+                                                          "options":  [
+                                                                          {
+                                                                              "selected":  true,
+                                                                              "text":  "tp",
+                                                                              "value":  "tp"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "avg_tp",
+                                                                              "value":  "avg_tp"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "tp_mean",
+                                                                              "value":  "tp_mean"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "tp_ema",
+                                                                              "value":  "tp_ema"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "avg_tp_mean",
+                                                                              "value":  "avg_tp_mean"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "avg_tp_ema",
+                                                                              "value":  "avg_tp_ema"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_api_response_latency_ms",
+                                                                              "value":  "g6_api_response_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_api_response_time_ms",
+                                                                              "value":  "g6_api_response_time_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_api_success_rate_percent",
+                                                                              "value":  "g6_api_success_rate_percent"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_build_config_hash_info",
+                                                                              "value":  "g6_build_config_hash_info"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_publish_latency_ms",
+                                                                              "value":  "g6_bus_publish_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_queue_retained_events",
+                                                                              "value":  "g6_bus_queue_retained_events"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_subscriber_lag_events",
+                                                                              "value":  "g6_bus_subscriber_lag_events"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_allowed_growth_percent",
+                                                                              "value":  "g6_cardinality_guard_allowed_growth_percent"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_growth_percent",
+                                                                              "value":  "g6_cardinality_guard_growth_percent"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cardinality_guard_last_run_epoch",
+                                                                              "value":  "g6_cardinality_guard_last_run_epoch"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_backlog_rows",
+                                                                              "value":  "g6_cs_ingest_backlog_rows"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_backpressure_flag",
+                                                                              "value":  "g6_cs_ingest_backpressure_flag"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_latency_ms",
+                                                                              "value":  "g6_cs_ingest_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_adaptive_target",
+                                                                              "value":  "g6_metrics_batch_adaptive_target"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_flush_duration_ms",
+                                                                              "value":  "g6_metrics_batch_flush_duration_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_flush_increments",
+                                                                              "value":  "g6_metrics_batch_flush_increments"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_queue_depth",
+                                                                              "value":  "g6_metrics_batch_queue_depth"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_spec_hash_info",
+                                                                              "value":  "g6_metrics_spec_hash_info"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_contracts_active",
+                                                                              "value":  "g6_option_contracts_active"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_iv_mean",
+                                                                              "value":  "g6_option_iv_mean"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_open_interest",
+                                                                              "value":  "g6_option_open_interest"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_spread_bps_mean",
+                                                                              "value":  "g6_option_spread_bps_mean"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_option_volume_24h",
+                                                                              "value":  "g6_option_volume_24h"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_panel_diff_bytes_last",
+                                                                              "value":  "g6_panel_diff_bytes_last"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_provider_mode",
+                                                                              "value":  "g6_provider_mode"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_sse_flush_seconds",
+                                                                              "value":  "g6_sse_flush_seconds"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stale_active",
+                                                                              "value":  "g6_stale_active"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_stale_system_active",
+                                                                              "value":  "g6_stale_system_active"
+                                                                          }
+                                                                      ],
+                                                          "query":  "tp,avg_tp,tp_mean,tp_ema,avg_tp_mean,avg_tp_ema,g6_api_response_latency_ms,g6_api_response_time_ms,g6_api_success_rate_percent,g6_build_config_hash_info,g6_bus_publish_latency_ms,g6_bus_queue_retained_events,g6_bus_subscriber_lag_events,g6_cardinality_guard_allowed_growth_percent,g6_cardinality_guard_growth_percent,g6_cardinality_guard_last_run_epoch,g6_cs_ingest_backlog_rows,g6_cs_ingest_backpressure_flag,g6_cs_ingest_latency_ms,g6_metrics_batch_adaptive_target,g6_metrics_batch_flush_duration_ms,g6_metrics_batch_flush_increments,g6_metrics_batch_queue_depth,g6_metrics_spec_hash_info,g6_option_contracts_active,g6_option_iv_mean,g6_option_open_interest,g6_option_spread_bps_mean,g6_option_volume_24h,g6_panel_diff_bytes_last,g6_provider_mode,g6_sse_flush_seconds,g6_stale_active,g6_stale_system_active",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "NIFTY",
+                                                                          "value":  "NIFTY"
+                                                                      },
+                                                          "includeAll":  false,
+                                                          "label":  "Index",
+                                                          "multi":  false,
+                                                          "name":  "index",
+                                                          "options":  [
+                                                                          {
+                                                                              "selected":  true,
+                                                                              "text":  "NIFTY",
+                                                                              "value":  "NIFTY"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "BANKNIFTY",
+                                                                              "value":  "BANKNIFTY"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "SENSEX",
+                                                                              "value":  "SENSEX"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "FINNIFTY",
+                                                                              "value":  "FINNIFTY"
+                                                                          }
+                                                                      ],
+                                                          "query":  "NIFTY,BANKNIFTY,SENSEX,FINNIFTY",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "this week",
+                                                                          "value":  "this_week"
+                                                                      },
+                                                          "includeAll":  false,
+                                                          "label":  "Expiry",
+                                                          "multi":  false,
+                                                          "name":  "expiry_tag",
+                                                          "options":  [
+                                                                          {
+                                                                              "selected":  true,
+                                                                              "text":  "this week",
+                                                                              "value":  "this_week"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "next week",
+                                                                              "value":  "next_week"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "month",
+                                                                              "value":  "month"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "this month",
+                                                                              "value":  "this_month"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "next month",
+                                                                              "value":  "next_month"
+                                                                          }
+                                                                      ],
+                                                          "query":  "this_week,next_week,month,this_month,next_month",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "g6_api_response_latency_ms",
+                                                                          "value":  "g6_api_response_latency_ms"
+                                                                      },
+                                                          "includeAll":  false,
+                                                          "label":  "Histogram Metric",
+                                                          "multi":  true,
+                                                          "name":  "metric_hist",
+                                                          "options":  [
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_api_response_latency_ms",
+                                                                              "value":  "g6_api_response_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_bus_publish_latency_ms",
+                                                                              "value":  "g6_bus_publish_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_cs_ingest_latency_ms",
+                                                                              "value":  "g6_cs_ingest_latency_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_metrics_batch_flush_duration_ms",
+                                                                              "value":  "g6_metrics_batch_flush_duration_ms"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "g6_sse_flush_seconds",
+                                                                              "value":  "g6_sse_flush_seconds"
+                                                                          }
+                                                                      ],
+                                                          "query":  "g6_api_response_latency_ms,g6_bus_publish_latency_ms,g6_cs_ingest_latency_ms,g6_metrics_batch_flush_duration_ms,g6_sse_flush_seconds",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "off",
+                                                                          "value":  "off"
+                                                                      },
+                                                          "includeAll":  false,
+                                                          "label":  "Overlay",
+                                                          "multi":  false,
+                                                          "name":  "overlay",
+                                                          "options":  [
+                                                                          {
+                                                                              "selected":  true,
+                                                                              "text":  "off",
+                                                                              "value":  "off"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "fast",
+                                                                              "value":  "fast"
+                                                                          },
+                                                                          {
+                                                                              "selected":  false,
+                                                                              "text":  "ultra",
+                                                                              "value":  "ultra"
+                                                                          }
+                                                                      ],
+                                                          "query":  "off,fast,ultra",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "p95",
+                                                                          "value":  "p95"
+                                                                      },
+                                                          "includeAll":  false,
+                                                          "label":  "Quantile",
+                                                          "multi":  false,
+                                                          "name":  "q",
+                                                          "options":  [
+                                                                          {
+                                                                              "selected":  true,
+                                                                              "text":  "p95",
+                                                                              "value":  "p95"
+                                                                          }
+                                                                      ],
+                                                          "query":  "p95",
+                                                          "type":  "custom"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timezone":  "browser",
+                      "title":  "Multi-Pane Explorer (Minimal)",
+                      "uid":  "g6-multi_pane_explorer_minimal",
+                      "version":  1
+                  }
+}

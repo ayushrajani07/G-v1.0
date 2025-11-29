@@ -477,7 +477,52 @@
     "generated"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "127.0.0.1:9500",
+          "value": "127.0.0.1:9500"
+        },
+        "description": "API Server endpoint (select based on which port your API is running on)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "API Server",
+        "multi": false,
+        "name": "api_server",
+        "options": [
+          {
+            "selected": true,
+            "text": "127.0.0.1:9500 (default)",
+            "value": "127.0.0.1:9500"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:9510 (alt)",
+            "value": "127.0.0.1:9510"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:8003 (dev)",
+            "value": "127.0.0.1:8003"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9500",
+            "value": "localhost:9500"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9510",
+            "value": "localhost:9510"
+          }
+        ],
+        "query": "127.0.0.1:9500,127.0.0.1:9510,127.0.0.1:8003,localhost:9500,localhost:9510",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
   },
   "time": {
     "from": "now-6h",

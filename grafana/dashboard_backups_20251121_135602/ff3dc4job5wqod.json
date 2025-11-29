@@ -1,0 +1,1796 @@
+﻿{
+    "meta":  {
+                 "isStarred":  true,
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "ml3a-path-forecast-e28094-nifty-bn-sensex-3-up",
+                 "url":  "/d/ff3dc4job5wqod/ml3a-path-forecast-e28094-nifty-bn-sensex-3-up",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-07T09:44:52+05:30",
+                 "updated":  "2025-11-10T12:05:16+05:30",
+                 "updatedBy":  "admin",
+                 "createdBy":  "admin",
+                 "version":  21,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  false,
+                 "provisionedExternalId":  "",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "editable":  true,
+                      "graphTooltip":  0,
+                      "id":  187,
+                      "iteration":  1,
+                      "links":  [
+
+                                ],
+                      "liveNow":  false,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "gradientMode":  "none",
+                                                                                             "lineWidth":  2,
+                                                                                             "spanNulls":  true
+                                                                                         },
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green"
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q50"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#1f78b4",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  3
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q10"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     6,
+                                                                                                                                     3
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q90"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#6a3d9a",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     6,
+                                                                                                                                     3
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q50"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(31,120,180,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q10"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(51,160,44,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q90"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(106,61,154,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "tp"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#ffd400",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q10",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q50",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q90",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "A",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_json?index=NIFTY\u0026horizon_minutes=60\u0026mode=auto\u0026window=180\u0026k=20\u0026bucket_ms=60000\u0026calibrate=true\u0026expiry_tag=this_week\u0026offset=0\u0026align=${pf_align}\u0026profile=${profile}\u0026no_cache=true\u0026date_str=\u0026now_override_ms=${__to}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         },
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q10",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q50",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q90",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "PH",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_prediction_history?index=NIFTY\u0026horizon_minutes=60\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000\u0026mode=full\u0026limit=600\u0026prefix=hist_\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         },
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "tp",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "TP",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/live_tp_series?index=NIFTY\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "NIFTY â Path Forecast Ribbon",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "plot_time"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "labelFields":  [
+
+                                                                                                     ],
+                                                                                     "timeField":  "plot_time",
+                                                                                     "valueFields":  [
+                                                                                                         "q10",
+                                                                                                         "q50",
+                                                                                                         "q90",
+                                                                                                         "hist_q10",
+                                                                                                         "hist_q50",
+                                                                                                         "hist_q90",
+                                                                                                         "tp"
+                                                                                                     ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "displayName":  "rows"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  8,
+                                                         "x":  0,
+                                                         "y":  40
+                                                     },
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "justifyMode":  "center"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q50",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "HCN",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_prediction_history?index=NIFTY\u0026horizon_minutes=60\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000\u0026mode=full\u0026limit=600\u0026prefix=hist_\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "History rows (NIFTY, profile=${profile})",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "includeByName":  {
+                                                                                                           "hist_q50":  true
+                                                                                                       }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "reduce",
+                                                                     "options":  {
+                                                                                     "fields":  "",
+                                                                                     "reducers":  [
+                                                                                                      "count"
+                                                                                                  ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "displayName":  "rows"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  8,
+                                                         "x":  8,
+                                                         "y":  40
+                                                     },
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "justifyMode":  "center"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q50",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "HCB",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_prediction_history?index=BANKNIFTY\u0026horizon_minutes=60\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000\u0026mode=full\u0026limit=600\u0026prefix=hist_\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "History rows (BANKNIFTY, profile=${profile})",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "includeByName":  {
+                                                                                                           "hist_q50":  true
+                                                                                                       }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "reduce",
+                                                                     "options":  {
+                                                                                     "fields":  "",
+                                                                                     "reducers":  [
+                                                                                                      "count"
+                                                                                                  ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "displayName":  "rows"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  8,
+                                                         "x":  16,
+                                                         "y":  40
+                                                     },
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "justifyMode":  "center"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q50",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "HCS",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_prediction_history?index=SENSEX\u0026horizon_minutes=60\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000\u0026mode=full\u0026limit=600\u0026prefix=hist_\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "History rows (SENSEX, profile=${profile})",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "includeByName":  {
+                                                                                                           "hist_q50":  true
+                                                                                                       }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "reduce",
+                                                                     "options":  {
+                                                                                     "fields":  "",
+                                                                                     "reducers":  [
+                                                                                                      "count"
+                                                                                                  ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  8,
+                                                         "x":  0,
+                                                         "y":  36
+                                                     },
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "justifyMode":  "center"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "mode",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "window",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "k",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "MN",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_meta?index=NIFTY\u0026expiry_tag=this_week\u0026offset=0\u0026window=180\u0026k=20\u0026horizon_minutes=60\u0026bucket_ms=60000\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Meta: NIFTY (profile=${profile})",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "includeByName":  {
+                                                                                                           "k":  true,
+                                                                                                           "mode":  true,
+                                                                                                           "window":  true
+                                                                                                       }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  8,
+                                                         "x":  8,
+                                                         "y":  36
+                                                     },
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "justifyMode":  "center"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "mode",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "window",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "k",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "MB",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_meta?index=BANKNIFTY\u0026expiry_tag=this_week\u0026offset=0\u0026window=180\u0026k=20\u0026horizon_minutes=60\u0026bucket_ms=60000\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Meta: BANKNIFTY (profile=${profile})",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "includeByName":  {
+                                                                                                           "k":  true,
+                                                                                                           "mode":  true,
+                                                                                                           "window":  true
+                                                                                                       }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  8,
+                                                         "x":  16,
+                                                         "y":  36
+                                                     },
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "justifyMode":  "center"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "mode",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "window",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "k",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "MS",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_meta?index=SENSEX\u0026expiry_tag=this_week\u0026offset=0\u0026window=180\u0026k=20\u0026horizon_minutes=60\u0026bucket_ms=60000\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "Meta: SENSEX (profile=${profile})",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "includeByName":  {
+                                                                                                           "k":  true,
+                                                                                                           "mode":  true,
+                                                                                                           "window":  true
+                                                                                                       }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "gradientMode":  "none",
+                                                                                             "lineWidth":  2,
+                                                                                             "spanNulls":  true
+                                                                                         },
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green"
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q50"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#1f78b4",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  3
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q10"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     6,
+                                                                                                                                     3
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q90"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#6a3d9a",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     6,
+                                                                                                                                     3
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q50"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(31,120,180,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q10"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(51,160,44,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q90"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(106,61,154,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "tp"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#ffd400",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  12
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q10",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q50",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q90",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "A",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_json?index=BANKNIFTY\u0026horizon_minutes=60\u0026mode=auto\u0026window=180\u0026k=20\u0026bucket_ms=60000\u0026calibrate=true\u0026expiry_tag=this_week\u0026offset=0\u0026align=${pf_align}\u0026profile=${profile}\u0026no_cache=true\u0026date_str=\u0026now_override_ms=${__to}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         },
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q10",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q50",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q90",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "PH",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_prediction_history?index=BANKNIFTY\u0026horizon_minutes=60\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000\u0026mode=full\u0026limit=600\u0026prefix=hist_\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         },
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "tp",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "TP",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/live_tp_series?index=BANKNIFTY\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "BANKNIFTY â Path Forecast Ribbon",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "plot_time"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "labelFields":  [
+
+                                                                                                     ],
+                                                                                     "timeField":  "plot_time",
+                                                                                     "valueFields":  [
+                                                                                                         "q10",
+                                                                                                         "q50",
+                                                                                                         "q90",
+                                                                                                         "hist_q10",
+                                                                                                         "hist_q50",
+                                                                                                         "hist_q90",
+                                                                                                         "tp"
+                                                                                                     ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "gradientMode":  "none",
+                                                                                             "lineWidth":  2,
+                                                                                             "spanNulls":  true
+                                                                                         },
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green"
+                                                                                                               }
+                                                                                                           ]
+                                                                                             }
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q50"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#1f78b4",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  3
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q10"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     6,
+                                                                                                                                     3
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "q90"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#6a3d9a",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.drawStyle",
+                                                                                                          "value":  "line"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     6,
+                                                                                                                                     3
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q50"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(31,120,180,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q10"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(51,160,44,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hist_q90"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "rgba(106,61,154,0.6)",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  1
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "dash":  [
+                                                                                                                                     2,
+                                                                                                                                     4
+                                                                                                                                 ]
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "tp"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#ffd400",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.fillOpacity",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  24
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q10",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q50",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "q90",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "A",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_forecast_json?index=SENSEX\u0026horizon_minutes=60\u0026mode=auto\u0026window=180\u0026k=20\u0026bucket_ms=60000\u0026calibrate=true\u0026expiry_tag=this_week\u0026offset=0\u0026align=${pf_align}\u0026profile=${profile}\u0026no_cache=true\u0026date_str=\u0026now_override_ms=${__to}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         },
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q10",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q50",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "hist_q90",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "PH",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/path_prediction_history?index=SENSEX\u0026horizon_minutes=60\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000\u0026mode=full\u0026limit=600\u0026prefix=hist_\u0026profile=${profile}",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         },
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "plot_time",
+                                                                                 "type":  "string"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "tp",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$",
+                                                                                  "root_is_not_first_line":  false
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "TP",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/ml/live_tp_series?index=SENSEX\u0026expiry_tag=this_week\u0026offset=0\u0026window_minutes=240\u0026bucket_ms=60000",
+                                                             "url_options":  {
+                                                                                 "data":  "",
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "SENSEX â Path Forecast Ribbon",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "plot_time"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "labelFields":  [
+
+                                                                                                     ],
+                                                                                     "timeField":  "plot_time",
+                                                                                     "valueFields":  [
+                                                                                                         "q10",
+                                                                                                         "q50",
+                                                                                                         "q90",
+                                                                                                         "hist_q10",
+                                                                                                         "hist_q50",
+                                                                                                         "hist_q90",
+                                                                                                         "tp"
+                                                                                                     ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "15s",
+                      "schemaVersion":  39,
+                      "style":  "dark",
+                      "tags":  [
+                                   "ml",
+                                   "path-forecast",
+                                   "ribbon",
+                                   "json",
+                                   "3up"
+                               ],
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "http://127.0.0.1:9500",
+                                                                          "value":  "http://127.0.0.1:9500"
+                                                                      },
+                                                          "hide":  0,
+                                                          "label":  "Base URL",
+                                                          "name":  "base_url",
+                                                          "query":  "http://127.0.0.1:9500,http://127.0.0.1:8003,http://127.0.0.1:9511",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "optimized",
+                                                                          "value":  "optimized"
+                                                                      },
+                                                          "hide":  0,
+                                                          "label":  "Profile",
+                                                          "name":  "profile",
+                                                          "query":  "optimized,base,since_open,wide_bands,retrieval_only,conservative,high_variance",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "future",
+                                                                          "value":  "future"
+                                                                      },
+                                                          "hide":  0,
+                                                          "label":  "Align",
+                                                          "name":  "pf_align",
+                                                          "query":  "future,trailing",
+                                                          "type":  "custom"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-2h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+                                         "refresh_intervals":  [
+                                                                   "5s",
+                                                                   "10s",
+                                                                   "30s",
+                                                                   "1m"
+                                                               ]
+                                     },
+                      "timezone":  "browser",
+                      "title":  "ML: Path Forecast â NIFTY/BN/SENSEX (3-up)",
+                      "uid":  "ff3dc4job5wqod",
+                      "version":  21
+                  }
+}

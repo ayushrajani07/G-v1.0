@@ -1,0 +1,426 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "g6-orchestrator-cycle-performance",
+                 "url":  "/d/ff42xcauvt3wgb/g6-orchestrator-cycle-performance",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-14T13:51:46+05:30",
+                 "updated":  "2025-11-14T14:30:38+05:30",
+                 "updatedBy":  "admin",
+                 "createdBy":  "admin",
+                 "version":  3,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  false,
+                 "provisionedExternalId":  "",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "annotations":  {
+                                          "list":  [
+                                                       {
+                                                           "builtIn":  1,
+                                                           "datasource":  {
+                                                                              "type":  "grafana",
+                                                                              "uid":  "-- Grafana --"
+                                                                          },
+                                                           "enable":  true,
+                                                           "hide":  true,
+                                                           "iconColor":  "rgba(0, 211, 255, 1)",
+                                                           "name":  "Annotations \u0026 Alerts",
+                                                           "type":  "dashboard"
+                                                       }
+                                                   ]
+                                      },
+                      "editable":  true,
+                      "fiscalYearStartMonth":  0,
+                      "graphTooltip":  0,
+                      "id":  235,
+                      "links":  [
+
+                                ],
+                      "liveNow":  false,
+                      "panels":  [
+                                     {
+                                         "collapsed":  false,
+                                         "gridPos":  {
+                                                         "h":  1,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  1,
+                                         "panels":  [
+
+                                                    ],
+                                         "title":  "Cycle Overview",
+                                         "type":  "row"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "unit":  "s"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  1
+                                                     },
+                                         "id":  2,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "desc"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "avg_over_time(g6_collection_cycle_time_seconds[5m])",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "T_cycle (avg 5m)",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "avg_over_time(g6_cycle_write_time_seconds_sum[5m]) / avg_over_time(g6_cycle_write_time_seconds_count[5m])",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "T_write (avg 5m)",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "Cycle Time (Total vs Write)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "unit":  "s"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  9
+                                                     },
+                                         "id":  3,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "stacking":  {
+                                                                          "group":  "A",
+                                                                          "mode":  "normal"
+                                                                      },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "desc"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "(avg_over_time(g6_cycle_fetch_time_seconds_sum[5m]) / avg_over_time(g6_cycle_fetch_time_seconds_count[5m])) or on() vector(0)",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "T_fetch (avg 5m)",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "(avg_over_time(g6_cycle_process_time_seconds_sum[5m]) / avg_over_time(g6_cycle_process_time_seconds_count[5m])) or on() vector(0)",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "T_process (avg 5m)",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "expr":  "(avg_over_time(g6_cycle_write_time_seconds_sum[5m]) / avg_over_time(g6_cycle_write_time_seconds_count[5m])) or on() vector(0)",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "T_write (avg 5m)",
+                                                             "refId":  "C"
+                                                         },
+                                                         {
+                                                             "expr":  "avg_over_time(g6_collection_cycle_time_seconds[5m]) - ((avg_over_time(g6_cycle_fetch_time_seconds_sum[5m]) / avg_over_time(g6_cycle_fetch_time_seconds_count[5m])) or on() vector(0) + (avg_over_time(g6_cycle_process_time_seconds_sum[5m]) / avg_over_time(g6_cycle_process_time_seconds_count[5m])) or on() vector(0) + (avg_over_time(g6_cycle_write_time_seconds_sum[5m]) / avg_over_time(g6_cycle_write_time_seconds_count[5m])) or on() vector(0))",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "T_misc (derived)",
+                                                             "refId":  "D"
+                                                         }
+                                                     ],
+                                         "title":  "Cycle Time Decomposition (Stacked)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "collapsed":  false,
+                                         "gridPos":  {
+                                                         "h":  1,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  17
+                                                     },
+                                         "id":  4,
+                                         "panels":  [
+
+                                                    ],
+                                         "title":  "CSV Writes \u0026 Throughput",
+                                         "type":  "row"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  18
+                                                     },
+                                         "id":  5,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "desc"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "avg_over_time(g6_cycle_writes_per_cycle[5m]) or on() vector(0)",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "writes/cycle (avg 5m)",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Writes per Cycle (CSV)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  0,
+                                                                              "unit":  "ops"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  18
+                                                     },
+                                         "id":  6,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "desc"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "avg_over_time(g6_options_processed_per_minute[5m])",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "options/min (avg 5m)",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Options Processed per Minute",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "collapsed":  false,
+                                         "gridPos":  {
+                                                         "h":  1,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  24
+                                                     },
+                                         "id":  7,
+                                         "panels":  [
+
+                                                    ],
+                                         "title":  "Cycle Health \u0026 Rates",
+                                         "type":  "row"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  25
+                                                     },
+                                         "id":  8,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "desc"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "avg_over_time(g6_cycles_per_hour[5m])",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "cycles/hour (avg 5m)",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "avg_over_time(g6_collection_success_rate_percent[5m])",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "collection_success_rate %",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "Cycles per Hour \u0026 Success Rate",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  0,
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  25
+                                                     },
+                                         "id":  9,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "desc"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "increase(g6_csv_write_errors_total[15m])",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "csv_write_errors (15m increase)",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "avg_over_time(g6_data_quality_score_percent[5m])",
+                                                             "intervalFactor":  1,
+                                                             "legendFormat":  "data_quality_score %",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "CSV Errors \u0026 Data Quality",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "schemaVersion":  38,
+                      "style":  "dark",
+                      "tags":  [
+                                   "g6",
+                                   "orchestrator",
+                                   "performance"
+                               ],
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+
+                                     },
+                      "timezone":  "",
+                      "title":  "G6 Orchestrator Cycle Performance",
+                      "uid":  "ff42xcauvt3wgb",
+                      "version":  3
+                  }
+}

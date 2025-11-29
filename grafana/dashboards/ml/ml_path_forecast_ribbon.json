@@ -1,0 +1,133 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_INFINITY",
+      "label": "Infinity",
+      "description": "yesoreyeram-infinity-datasource",
+      "type": "datasource",
+      "pluginId": "yesoreyeram-infinity-datasource",
+      "pluginName": "Infinity"
+    }
+  ],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.5.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "9.5.0" },
+    { "type": "datasource", "id": "yesoreyeram-infinity-datasource", "name": "Infinity", "version": "2.7.0" }
+  ],
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "ML Path Forecast – Ribbon (q10/q50/q90)",
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "gridPos": { "h": 15, "w": 24, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "lineWidth": 2, "spanNulls": true },
+          "thresholds": { "mode": "absolute", "steps": [ { "color": "green" } ] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "q50" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "#4477aa", "mode": "fixed" } },
+              { "id": "custom.drawStyle", "value": "line" },
+              { "id": "custom.fillOpacity", "value": 0 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "q10" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "rgba(68,119,170,0.35)", "mode": "fixed" } },
+              { "id": "custom.drawStyle", "value": "line" },
+              { "id": "custom.fillOpacity", "value": 12 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "q90" },
+            "properties": [
+              { "id": "color", "value": { "fixedColor": "rgba(68,119,170,0.35)", "mode": "fixed" } },
+              { "id": "custom.drawStyle", "value": "line" },
+              { "id": "custom.fillOpacity", "value": 12 }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "showLegend": true, "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "csv",
+          "source": "url",
+          "url": "${base_url}/api/ml/path_forecast?index=${index}&horizon_minutes=${horizon}&format=wide&mode=auto&calibrate=${calibrate}&no_cache=true",
+          "url_options": {
+            "method": "GET",
+            "data": "",
+            "params": [],
+            "headers": []
+          },
+          "csv_options": {
+            "delimiter": ",",
+            "skip_empty_lines": true,
+            "columns": [
+              { "selector": "time", "type": "timestamp" },
+              { "selector": "q10", "type": "number" },
+              { "selector": "q50", "type": "number" },
+              { "selector": "q90", "type": "number" }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["ml", "path-forecast", "ribbon"],
+  "templating": {
+    "list": [
+      {
+        "name": "base_url",
+        "type": "constant",
+        "query": "http://127.0.0.1:9500",
+        "label": "Base URL",
+        "hide": 0
+      },
+      {
+        "name": "index",
+        "type": "custom",
+        "query": "NIFTY,BANKNIFTY,SENSEX,FINNIFTY",
+        "label": "Index",
+        "current": { "text": "NIFTY", "value": "NIFTY" }
+      },
+      {
+        "name": "horizon",
+        "type": "custom",
+        "query": "30,60,390",
+        "label": "Horizon (min)",
+        "current": { "text": "60", "value": "60" }
+      },
+      {
+        "name": "calibrate",
+        "type": "custom",
+        "query": "true,false",
+        "label": "Calibrate",
+        "current": { "text": "true", "value": "true" }
+      }
+    ]
+  },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s","10s","30s","1m"] },
+  "timezone": "browser",
+  "title": "ML: Path Forecast Ribbon (Infinity CSV)",
+  "version": 1
+}

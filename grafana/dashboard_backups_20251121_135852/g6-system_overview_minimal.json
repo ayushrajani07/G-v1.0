@@ -1,0 +1,53 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "system-overview-minimal-misc",
+                 "url":  "/d/g6-system_overview_minimal/system-overview-minimal-misc",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T09:31:21+05:30",
+                 "updated":  "2025-11-20T10:34:04+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  2,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "system_overview_minimal.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "id":  273,
+                      "moved_from":  ".grafana/provisioning_baseline/dashboards_src/system_overview_minimal.json",
+                      "panels_count":  15,
+                      "tags":  [
+                                   "system",
+                                   "minimal",
+                                   "g6",
+                                   "generated",
+                                   "misc"
+                               ],
+                      "title":  "System Overview (Minimal / Misc)",
+                      "uid":  "g6-system_overview_minimal",
+                      "version":  2
+                  }
+}

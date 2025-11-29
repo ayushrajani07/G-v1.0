@@ -1,0 +1,484 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "id": "prometheus",
+      "name": "Prometheus",
+      "type": "prometheus",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "g6_meta": {
+    "description": "",
+    "families": [
+      "core"
+    ],
+    "spec_hash": "b1fb37bf991f1a94"
+  },
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "counter",
+        "metric": "g6_collection_cycles",
+        "panel_uuid": "41a107bcbe57c8d6",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1101072316,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_collection_cycles[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_collection_cycles Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "summary",
+        "metric": "g6_collection_duration_seconds",
+        "panel_uuid": "204efdb6135fdb44",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 542047670,
+      "targets": [
+        {
+          "expr": "g6_collection_duration_seconds",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_collection_duration_seconds (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "counter",
+        "metric": "g6_collection_errors",
+        "panel_uuid": "2e85b36eb7614915",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 780514158,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_collection_errors[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_collection_errors Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "counter",
+        "metric": "g6_config_deprecated_keys",
+        "panel_uuid": "7b69472d020f1a36",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 2070497069,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_config_deprecated_keys[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_config_deprecated_keys Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_index_atm_strike",
+        "panel_uuid": "0588cc2253806149",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 92851234,
+      "targets": [
+        {
+          "expr": "g6_index_atm_strike",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_index_atm_strike (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_index_price",
+        "panel_uuid": "999abf0f2dfb7e36",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 2577055503,
+      "targets": [
+        {
+          "expr": "g6_index_price",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_index_price (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_option_iv",
+        "panel_uuid": "b9715d16ea993588",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 3111214358,
+      "targets": [
+        {
+          "expr": "g6_option_iv",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_option_iv (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_option_oi",
+        "panel_uuid": "8d243e929933e126",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 2367962770,
+      "targets": [
+        {
+          "expr": "g6_option_oi",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_option_oi (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_option_price",
+        "panel_uuid": "16511b31dc451357",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 374414129,
+      "targets": [
+        {
+          "expr": "g6_option_price",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_option_price (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_option_volume",
+        "panel_uuid": "e5d2d9b192666b25",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 3855800753,
+      "targets": [
+        {
+          "expr": "g6_option_volume",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_option_volume (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_options_collected",
+        "panel_uuid": "40c59aa9baa7bc11",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 1086692009,
+      "targets": [
+        {
+          "expr": "g6_options_collected",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_options_collected (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_provider_mode",
+        "panel_uuid": "d049fe81476182de",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 3494510209,
+      "targets": [
+        {
+          "expr": "g6_provider_mode",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_provider_mode (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "core",
+        "kind": "gauge",
+        "metric": "g6_put_call_ratio",
+        "panel_uuid": "7a31c55ff995f315",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 48
+      },
+      "id": 2050082143,
+      "targets": [
+        {
+          "expr": "g6_put_call_ratio",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_put_call_ratio (auto)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "system",
+    "minimal",
+    "g6",
+    "generated"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "System Overview (Minimal)",
+  "uid": "g6-system_overview_minimal",
+  "version": 1
+}

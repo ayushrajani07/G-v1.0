@@ -1,0 +1,39 @@
+{
+  "title": "PF Meta Metrics (Example)",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Window (sanitized)",
+      "targets": [{
+        "expr": "pf_window_sanitized"
+      }],
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0}
+    },
+    {
+      "type": "stat",
+      "title": "Horizon (sanitized)",
+      "targets": [{
+        "expr": "pf_horizon_sanitized"
+      }],
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0}
+    },
+    {
+      "type": "histogram",
+      "title": "Alpha distribution",
+      "targets": [{
+        "expr": "histogram_quantile(0.5, sum by (le)(rate(pf_alpha_hist[15m])))"
+      }],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6}
+    },
+    {
+      "type": "histogram",
+      "title": "Candidate richness",
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum by (le)(rate(pf_candidate_richness[15m])))"
+      }],
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 14}
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}

@@ -1,9 +1,12 @@
-﻿{
+{
   "annotations": {
     "list": [
       {
         "builtIn": 1,
-        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -19,10 +22,15 @@
   "links": [],
   "panels": [
     {
-      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "palette-classic"},
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "drawStyle": "line",
             "showPoints": "always",
@@ -37,116 +45,276 @@
         },
         "overrides": [
           {
-            "matcher": {"id": "byFrameRefID", "options": "HGB"},
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "HGB"
+            },
             "properties": [
-              {"id": "displayName", "value": "sk_hgb_regressor (h=${horizon})"},
-              {"id": "color", "value": {"mode": "fixed", "fixedColor": "#00d1ff"}},
-              {"id": "custom.lineWidth", "value": 3},
-              {"id": "custom.showPoints", "value": "always"},
-              {"id": "custom.pointSize", "value": 4}
+              {
+                "id": "displayName",
+                "value": "sk_hgb_regressor (h=${horizon})"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#00d1ff"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 4
+              }
             ]
           },
           {
-            "matcher": {"id": "byFrameRefID", "options": "XGB"},
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "XGB"
+            },
             "properties": [
-              {"id": "displayName", "value": "xgb_regressor (h=${horizon})"},
-              {"id": "color", "value": {"mode": "fixed", "fixedColor": "#f2c744"}},
-              {"id": "custom.lineWidth", "value": 3},
-              {"id": "custom.showPoints", "value": "always"},
-              {"id": "custom.pointSize", "value": 4}
+              {
+                "id": "displayName",
+                "value": "xgb_regressor (h=${horizon})"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#f2c744"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 4
+              }
             ]
           },
           {
-            "matcher": {"id": "byFrameRefID", "options": "LSTM"},
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "LSTM"
+            },
             "properties": [
-              {"id": "displayName", "value": "torch_lstm_regressor (h=${horizon})"},
-              {"id": "color", "value": {"mode": "fixed", "fixedColor": "#a855f7"}},
-              {"id": "custom.lineWidth", "value": 3},
-              {"id": "custom.showPoints", "value": "always"},
-              {"id": "custom.pointSize", "value": 4}
+              {
+                "id": "displayName",
+                "value": "torch_lstm_regressor (h=${horizon})"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#a855f7"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 4
+              }
             ]
           },
           {
-            "matcher": {"id": "byName", "options": "ATM Premium"},
+            "matcher": {
+              "id": "byName",
+              "options": "ATM Premium"
+            },
             "properties": [
-              {"id": "displayName", "value": "ATM Premium (actual)"},
-              {"id": "color", "value": {"mode": "fixed", "fixedColor": "#33a02c"}},
-              {"id": "custom.axisPlacement", "value": "right"},
-              {"id": "custom.showPoints", "value": "never"},
-              {"id": "custom.lineWidth", "value": 2}
+              {
+                "id": "displayName",
+                "value": "ATM Premium (actual)"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#33a02c"
+                }
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
             ]
           }
         ]
       },
-      "gridPos": {"h": 18, "w": 24, "x": 0, "y": 0},
+      "gridPos": {
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "options": {
-        "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
-        "tooltip": {"mode": "multi", "sort": "none"}
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
       },
       "targets": [
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "HGB",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=sk_hgb_regressor",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=sk_hgb_regressor",
+          "url_options": {
+            "method": "GET"
+          }
         },
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "XGB",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=xgb_regressor",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=xgb_regressor",
+          "url_options": {
+            "method": "GET"
+          }
         },
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "LSTM",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=torch_lstm_regressor",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/ml/predictions?index=${index}&horizon=${horizon}&tail=${tail}&model=torch_lstm_regressor",
+          "url_options": {
+            "method": "GET"
+          }
         },
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "TP",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=${index}&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/live_csv?index=${index}&expiry_tag=this_week&offset=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url_options": {
+            "method": "GET"
+          }
         }
       ],
       "title": "All models (static)",
       "transformations": [
-        {"id": "convertFieldType", "options": {"conversions": [
-          {"targetField": "time", "destinationType": "time"},
-          {"targetField": "prediction", "destinationType": "number"},
-          {"targetField": "tp", "destinationType": "number"}
-        ]}},
-        {"id": "organize", "options": {
-          "renameByName": {"tp": "ATM Premium"},
-          "includeByName": {"time": true, "prediction": true, "ATM Premium": true}
-        }},
-        {"id": "sortBy", "options": {"fields": [{"field": "time", "desc": false}]}},
-        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time",
+                "destinationType": "time"
+              },
+              {
+                "targetField": "prediction",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "tp",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "tp": "ATM Premium"
+            },
+            "includeByName": {
+              "time": true,
+              "prediction": true,
+              "ATM Premium": true
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
       ],
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "palette-classic"},
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "drawStyle": "line",
             "showPoints": "never",
@@ -155,104 +323,394 @@
             "fillOpacity": 0,
             "spanNulls": true,
             "axisPlacement": "auto",
-            "axisLabel": "Î”TP (prediction âˆ’ tp) [pts]"
+            "axisLabel": "ΔTP (prediction − tp) [pts]"
           },
           "unit": "short"
         },
         "overrides": [
-          {"matcher": {"id": "byFrameRefID", "options": "HGBD"}, "properties": [{"id": "displayName", "value": "Î”TP (HGB)"}]},
-          {"matcher": {"id": "byFrameRefID", "options": "XGBD"}, "properties": [{"id": "displayName", "value": "Î”TP (XGB)"}]},
-          {"matcher": {"id": "byFrameRefID", "options": "LSTMD"}, "properties": [{"id": "displayName", "value": "Î”TP (LSTM)"}]}
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "HGBD"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ΔTP (HGB)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "XGBD"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ΔTP (XGB)"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "LSTMD"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ΔTP (LSTM)"
+              }
+            ]
+          }
         ]
       },
-      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 18},
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
       "id": 7,
-      "options": {"legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "none"}},
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
       "targets": [
-        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "HGBD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9510/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=sk_hgb_regressor", "url_options": {"method": "GET"}},
-        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "XGBD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9510/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=xgb_regressor", "url_options": {"method": "GET"}},
-        {"datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "parser": "backend", "refId": "LSTMD", "source": "url", "type": "csv", "url": "http://127.0.0.1:9510/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=torch_lstm_regressor", "url_options": {"method": "GET"}}
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "HGBD",
+          "source": "url",
+          "type": "csv",
+          "url": "http://${api_server}/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=sk_hgb_regressor",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "XGBD",
+          "source": "url",
+          "type": "csv",
+          "url": "http://${api_server}/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=xgb_regressor",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "LSTMD",
+          "source": "url",
+          "type": "csv",
+          "url": "http://${api_server}/api/ml/delta?index=${index}&horizon=${horizon}&tail=${tail}&model=torch_lstm_regressor",
+          "url_options": {
+            "method": "GET"
+          }
+        }
       ],
-      "title": "Î”TP (prediction âˆ’ tp)",
+      "title": "ΔTP (prediction − tp)",
       "transformations": [
-        {"id": "convertFieldType", "options": {"conversions": [
-          {"targetField": "time", "destinationType": "time"},
-          {"targetField": "delta", "destinationType": "number"}
-        ]}},
-        {"id": "organize", "options": {"includeByName": {"time": true, "delta": true}}},
-        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time",
+                "destinationType": "time"
+              },
+              {
+                "targetField": "delta",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "includeByName": {
+              "time": true,
+              "delta": true
+            }
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
       ],
       "type": "timeseries"
     },
     {
-      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-      "fieldConfig": {"defaults": {}, "overrides": []},
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 28},
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
       "id": 2,
-      "options": {"showHeader": true},
+      "options": {
+        "showHeader": true
+      },
       "targets": [
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "TxNoPivot",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&tail=${tail}",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/ml/predictions?index=${index}&tail=${tail}",
+          "url_options": {
+            "method": "GET"
+          }
         }
       ],
       "title": "Transformed (no pivot table)",
       "transformations": [
-        {"id": "convertFieldType", "options": {"conversions": [
-          {"targetField": "time", "destinationType": "time"},
-          {"targetField": "prediction", "destinationType": "number"}
-        ]}},
-        {"id": "sortBy", "options": {"fields": [{"field": "time", "desc": false}]}},
-        {"id": "organize", "options": {"excludeByName": {"model": true, "index": true, "horizon": true, "timestamp": true}}}
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time",
+                "destinationType": "time"
+              },
+              {
+                "targetField": "prediction",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "model": true,
+              "index": true,
+              "horizon": true,
+              "timestamp": true
+            }
+          }
+        }
       ],
       "type": "table"
     },
     {
-      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-      "fieldConfig": {"defaults": {}, "overrides": []},
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 36},
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
       "id": 9,
-      "options": {"showHeader": true},
+      "options": {
+        "showHeader": true
+      },
       "targets": [
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "DIAG",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:8003/api/ml/diagnostics?index=${index}&horizon=${horizon}&window_minutes=60&model=all",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/ml/diagnostics?index=${index}&horizon=${horizon}&window_minutes=60&model=all",
+          "url_options": {
+            "method": "GET"
+          }
         }
       ],
-      "title": "Î”TP diagnostics (last 60m)",
+      "title": "ΔTP diagnostics (last 60m)",
       "transformations": [],
       "type": "table"
     }
   ],
   "refresh": "15s",
   "schemaVersion": 39,
-  "tags": ["g6", "ml", "debug"],
+  "tags": [
+    "g6",
+    "ml",
+    "debug"
+  ],
   "templating": {
     "list": [
-      {"name": "index", "type": "custom", "label": "Index", "query": "NIFTY,BANKNIFTY,SENSEX,FINNIFTY", "current": {"selected": true, "text": "NIFTY", "value": "NIFTY"}},
-      {"name": "tail", "type": "custom", "label": "Tail", "query": "50,200,500,1200,2000", "current": {"selected": true, "text": "1200", "value": "1200"}},
-      {"name": "models", "type": "custom", "label": "Models (static)", "query": "sk_hgb_regressor,xgb_regressor,torch_lstm_regressor", "multi": true, "includeAll": false, "current": {"selected": true, "text": ["sk_hgb_regressor","xgb_regressor","torch_lstm_regressor"], "value": ["sk_hgb_regressor","xgb_regressor","torch_lstm_regressor"]}},
-      {"name": "horizon", "type": "custom", "label": "Horizon (bars)", "query": "1,2,4,8", "current": {"selected": true, "text": "1", "value": "1"}}
+      {
+        "current": {
+          "selected": true,
+          "text": "127.0.0.1:9500",
+          "value": "127.0.0.1:9500"
+        },
+        "description": "API Server endpoint (select based on which port your API is running on)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "API Server",
+        "multi": false,
+        "name": "api_server",
+        "options": [
+          {
+            "selected": true,
+            "text": "127.0.0.1:9500 (default)",
+            "value": "127.0.0.1:9500"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:9510 (alt)",
+            "value": "127.0.0.1:9510"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:8003 (dev)",
+            "value": "127.0.0.1:8003"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9500",
+            "value": "localhost:9500"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9510",
+            "value": "localhost:9510"
+          }
+        ],
+        "query": "127.0.0.1:9500,127.0.0.1:9510,127.0.0.1:8003,localhost:9500,localhost:9510",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "name": "index",
+        "type": "custom",
+        "label": "Index",
+        "query": "NIFTY,BANKNIFTY,SENSEX,FINNIFTY",
+        "current": {
+          "selected": true,
+          "text": "NIFTY",
+          "value": "NIFTY"
+        }
+      },
+      {
+        "name": "tail",
+        "type": "custom",
+        "label": "Tail",
+        "query": "50,200,500,1200,2000",
+        "current": {
+          "selected": true,
+          "text": "1200",
+          "value": "1200"
+        }
+      },
+      {
+        "name": "models",
+        "type": "custom",
+        "label": "Models (static)",
+        "query": "sk_hgb_regressor,xgb_regressor,torch_lstm_regressor",
+        "multi": true,
+        "includeAll": false,
+        "current": {
+          "selected": true,
+          "text": [
+            "sk_hgb_regressor",
+            "xgb_regressor",
+            "torch_lstm_regressor"
+          ],
+          "value": [
+            "sk_hgb_regressor",
+            "xgb_regressor",
+            "torch_lstm_regressor"
+          ]
+        }
+      },
+      {
+        "name": "horizon",
+        "type": "custom",
+        "label": "Horizon (bars)",
+        "query": "1,2,4,8",
+        "current": {
+          "selected": true,
+          "text": "1",
+          "value": "1"
+        }
+      }
     ]
   },
-  "time": {"from": "now-12h", "to": "now"},
-  "timepicker": {"refresh_intervals": ["15s", "30s", "1m", "2m", "5m"]},
+  "time": {
+    "from": "now-12h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "2m",
+      "5m"
+    ]
+  },
   "timezone": "Asia/Kolkata",
   "title": "ML Predictions (debug)",
   "uid": "g6-ml-debug",
   "version": 1,
   "weekStart": ""
 }
-

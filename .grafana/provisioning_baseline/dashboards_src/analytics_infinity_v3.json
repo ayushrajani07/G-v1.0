@@ -167,7 +167,7 @@
           "refId": "NS1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "alias": "NIFTY Index",
           "url_options": {
             "data": "",
@@ -187,7 +187,7 @@
           "refId": "NS2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "alias": "SENSEX Index",
           "url_options": {
             "data": "",
@@ -337,7 +337,7 @@
           "refId": "BF1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "alias": "BANKNIFTY Index",
           "url_options": {
             "data": "",
@@ -357,7 +357,7 @@
           "refId": "BF2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "alias": "FINNIFTY Index",
           "url_options": {
             "data": "",
@@ -508,7 +508,7 @@
           "refId": "A",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -527,7 +527,7 @@
           "refId": "B",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -662,7 +662,7 @@
           "refId": "C",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -681,7 +681,7 @@
           "refId": "D",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -828,7 +828,7 @@
           "refId": "A1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -847,7 +847,7 @@
           "refId": "B1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -981,7 +981,7 @@
           "refId": "A2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1000,7 +1000,7 @@
           "refId": "B2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1134,7 +1134,7 @@
           "refId": "A3",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1153,7 +1153,7 @@
           "refId": "B3",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1287,7 +1287,7 @@
           "refId": "A4",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1306,7 +1306,7 @@
           "refId": "B4",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1440,7 +1440,7 @@
           "refId": "A5",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1459,7 +1459,7 @@
           "refId": "B5",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1606,7 +1606,7 @@
           "refId": "C1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1625,7 +1625,7 @@
           "refId": "D1",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1759,7 +1759,7 @@
           "refId": "C2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1778,7 +1778,7 @@
           "refId": "D2",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1912,7 +1912,7 @@
           "refId": "C3",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -1931,7 +1931,7 @@
           "refId": "D3",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -2065,7 +2065,7 @@
           "refId": "C4",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -2084,7 +2084,7 @@
           "refId": "D4",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -2218,7 +2218,7 @@
           "refId": "C5",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -2237,7 +2237,7 @@
           "refId": "D5",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
           "url_options": {
             "data": "",
             "method": "GET"
@@ -2294,6 +2294,50 @@
   ],
   "templating": {
     "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "127.0.0.1:9500",
+          "value": "127.0.0.1:9500"
+        },
+        "description": "API Server endpoint (select based on which port your API is running on)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "API Server",
+        "multi": false,
+        "name": "api_server",
+        "options": [
+          {
+            "selected": true,
+            "text": "127.0.0.1:9500 (default)",
+            "value": "127.0.0.1:9500"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:9510 (alt)",
+            "value": "127.0.0.1:9510"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:8003 (dev)",
+            "value": "127.0.0.1:8003"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9500",
+            "value": "localhost:9500"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9510",
+            "value": "localhost:9510"
+          }
+        ],
+        "query": "127.0.0.1:9500,127.0.0.1:9510,127.0.0.1:8003,localhost:9500,localhost:9510",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
       {
         "current": {
           "text": "0",

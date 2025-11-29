@@ -34,9 +34,21 @@
         },
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
         {
           "expr": "g6_forecast_mae{index=~\"$index\",horizon=~\"$horizon\"}",
@@ -48,14 +60,32 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
       "fieldConfig": {
-        "defaults": { "custom": {}, "unit": "percent" },
+        "defaults": {
+          "custom": {},
+          "unit": "percent"
+        },
         "overrides": []
       },
-      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
       "id": 2,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
         {
           "expr": "g6_forecast_coverage_pct{index=~\"$index\",horizon=~\"$horizon\"}",
@@ -67,47 +97,117 @@
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "PROM" },
-      "fieldConfig": { "defaults": { "custom": {}, "unit": "short" }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 9 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
       "id": 3,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
-        { "expr": "g6_drift_alert_count{index=~\"$index\"}", "legendFormat": "drift {{index}}", "refId": "A" }
+        {
+          "expr": "g6_drift_alert_count{index=~\"$index\"}",
+          "legendFormat": "drift {{index}}",
+          "refId": "A"
+        }
       ],
       "title": "Drift Alerts (count)",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "prometheus", "uid": "PROM" },
-      "fieldConfig": { "defaults": { "custom": {}, "unit": "short" }, "overrides": [] },
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 9 },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
       "id": 4,
-      "options": { "legend": { "showLegend": true }, "tooltip": { "mode": "single" } },
+      "options": {
+        "legend": {
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
       "targets": [
-        { "expr": "g6_regime_alert_count{index=~\"$index\"}", "legendFormat": "regime {{index}}", "refId": "A" }
+        {
+          "expr": "g6_regime_alert_count{index=~\"$index\"}",
+          "legendFormat": "regime {{index}}",
+          "refId": "A"
+        }
       ],
       "title": "Regime Alerts (count)",
       "type": "timeseries"
     },
     {
-      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
-      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 17 },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      },
       "id": 5,
       "options": {
         "showHeader": true,
-        "footer": { "show": false, "fields": "*", "reducer": ["count"] }
+        "footer": {
+          "show": false,
+          "fields": "*",
+          "reducer": [
+            "count"
+          ]
+        }
       },
       "targets": [
         {
           "columns": [],
-          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "refId": "A",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9500/api/ml/ensemble/regime/breaches?index=${index_pick}",
-          "url_options": { "data": "", "method": "GET" },
+          "url": "http://${api_server}/api/ml/ensemble/regime/breaches?index=${index_pick}",
+          "url_options": {
+            "data": "",
+            "method": "GET"
+          },
           "filters": [],
           "global_query_id": "",
           "root_selector": ""
@@ -115,7 +215,16 @@
       ],
       "title": "Regime Breaches (${index_pick})",
       "transformations": [
-        { "id": "organize", "options": { "excludeByName": {}, "renameByName": { "coverage_window_pct": "coverage%", "norm_error_p90": "norm_p90" } } }
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "renameByName": {
+              "coverage_window_pct": "coverage%",
+              "norm_error_p90": "norm_p90"
+            }
+          }
+        }
       ],
       "type": "table"
     }
@@ -123,11 +232,63 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["g6", "ml", "ensemble"],
+  "tags": [
+    "g6",
+    "ml",
+    "ensemble"
+  ],
   "templating": {
     "list": [
       {
-        "current": { "selected": false, "text": "NIFTY|BANKNIFTY|SENSEX", "value": "NIFTY|BANKNIFTY|SENSEX" },
+        "current": {
+          "selected": true,
+          "text": "127.0.0.1:9500",
+          "value": "127.0.0.1:9500"
+        },
+        "description": "API Server endpoint (select based on which port your API is running on)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "API Server",
+        "multi": false,
+        "name": "api_server",
+        "options": [
+          {
+            "selected": true,
+            "text": "127.0.0.1:9500 (default)",
+            "value": "127.0.0.1:9500"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:9510 (alt)",
+            "value": "127.0.0.1:9510"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:8003 (dev)",
+            "value": "127.0.0.1:8003"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9500",
+            "value": "localhost:9500"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9510",
+            "value": "localhost:9510"
+          }
+        ],
+        "query": "127.0.0.1:9500,127.0.0.1:9510,127.0.0.1:8003,localhost:9500,localhost:9510",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "NIFTY|BANKNIFTY|SENSEX",
+          "value": "NIFTY|BANKNIFTY|SENSEX"
+        },
         "hide": 0,
         "label": "Index (regex)",
         "name": "index",
@@ -137,10 +298,17 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "PROM" }
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PROM"
+        }
       },
       {
-        "current": { "selected": false, "text": "NIFTY", "value": "NIFTY" },
+        "current": {
+          "selected": false,
+          "text": "NIFTY",
+          "value": "NIFTY"
+        },
         "hide": 0,
         "label": "Index (single)",
         "name": "index_pick",
@@ -150,10 +318,17 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "PROM" }
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PROM"
+        }
       },
       {
-        "current": { "selected": false, "text": "60|120", "value": "60|120" },
+        "current": {
+          "selected": false,
+          "text": "60|120",
+          "value": "60|120"
+        },
         "hide": 0,
         "label": "Horizon (regex)",
         "name": "horizon",
@@ -163,11 +338,17 @@
         "regex": "",
         "skipUrlSync": false,
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "PROM" }
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PROM"
+        }
       }
     ]
   },
-  "time": { "from": "now-7d", "to": "now" },
+  "time": {
+    "from": "now-7d",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "ML Ensemble: Rolling & Regime",

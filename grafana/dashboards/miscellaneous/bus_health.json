@@ -1,0 +1,280 @@
+{
+  "__inputs": [],
+  "__requires": [
+    {
+      "id": "prometheus",
+      "name": "Prometheus",
+      "type": "prometheus",
+      "version": "1.0.0"
+    }
+  ],
+  "annotations": {
+    "list": []
+  },
+  "g6_meta": {
+    "description": "",
+    "families": [
+      "panels_integrity"
+    ],
+    "spec_hash": "b1fb37bf991f1a94"
+  },
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "panels_integrity",
+        "kind": "counter",
+        "metric": "g6_panels_integrity_checks_total",
+        "panel_uuid": "66af14e453e6d972",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1722750180,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_panels_integrity_checks_total[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_panels_integrity_checks_total Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "panels_integrity",
+        "kind": "counter",
+        "metric": "g6_panels_integrity_failures_total",
+        "panel_uuid": "fb2c61f4958316cb",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4213989876,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_panels_integrity_failures_total[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_panels_integrity_failures_total Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "panels_integrity",
+        "kind": "gauge",
+        "metric": "g6_panels_integrity_last_elapsed_seconds",
+        "panel_uuid": "ea860bf774fd20a8",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3934653431,
+      "targets": [
+        {
+          "expr": "g6_panels_integrity_last_elapsed_seconds",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_panels_integrity_last_elapsed_seconds (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "panels_integrity",
+        "kind": "gauge",
+        "metric": "g6_panels_integrity_last_gap_seconds",
+        "panel_uuid": "3aa94ad7bf8775cf",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 984173271,
+      "targets": [
+        {
+          "expr": "g6_panels_integrity_last_gap_seconds",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_panels_integrity_last_gap_seconds (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "panels_integrity",
+        "kind": "gauge",
+        "metric": "g6_panels_integrity_last_success_age_seconds",
+        "panel_uuid": "5b6c1848069a94b6",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 1533810760,
+      "targets": [
+        {
+          "expr": "g6_panels_integrity_last_success_age_seconds",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_panels_integrity_last_success_age_seconds (auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "panels_integrity",
+        "kind": "counter",
+        "metric": "g6_panels_integrity_mismatches",
+        "panel_uuid": "906f285d87c8da6f",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 2423203933,
+      "targets": [
+        {
+          "expr": "sum(rate(g6_panels_integrity_mismatches[5m]))",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_panels_integrity_mismatches Rate (5m auto)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "g6_meta": {
+        "family": "panels_integrity",
+        "kind": "gauge",
+        "metric": "g6_panels_integrity_ok",
+        "panel_uuid": "727cadfc603ad900",
+        "source": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 1920773628,
+      "targets": [
+        {
+          "expr": "g6_panels_integrity_ok",
+          "refId": "A"
+        }
+      ],
+      "title": "g6_panels_integrity_ok (auto)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": [
+    "ops",
+    "health",
+    "g6",
+    "generated"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Bus Health",
+  "uid": "g6-bus_health",
+  "version": 1
+}

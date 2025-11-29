@@ -1,0 +1,196 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "overlays",
+                 "url":  "/d/g6-overlays/overlays",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-03T10:23:06+05:30",
+                 "updated":  "2025-10-29T13:33:03+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "admin",
+                 "version":  12,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "overlays_backup.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "editable":  true,
+                      "id":  175,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "fillOpacity":  0,
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never"
+                                                                                         },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "list",
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "none"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "refId":  "A",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=NIFTY\u0026expiry_tag=this_week\u0026offset=0",
+                                                             "url_options":  {
+                                                                                 "method":  "GET"
+                                                                             }
+                                                         },
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "refId":  "B",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=NIFTY\u0026expiry_tag=this_week\u0026offset=0",
+                                                             "url_options":  {
+                                                                                 "method":  "GET"
+                                                                             }
+                                                         },
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "refId":  "C",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=NIFTY\u0026expiry_tag=this_week\u0026offset=0",
+                                                             "url_options":  {
+                                                                                 "method":  "GET"
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "NIFTY",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "time"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "ce":  true,
+                                                                                                           "pe":  true,
+                                                                                                           "time_str":  true,
+                                                                                                           "ts":  true
+                                                                                                       },
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+                                                                                                          "avg_tp":  "Avg TP",
+                                                                                                          "index_price":  "Index Price",
+                                                                                                          "tp":  "TP"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "format":  "multi"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "15s",
+                      "schemaVersion":  39,
+                      "tags":  [
+                                   "g6",
+                                   "overlay"
+                               ],
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-12h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+                                         "refresh_intervals":  [
+                                                                   "15s",
+                                                                   "30s",
+                                                                   "1m",
+                                                                   "2m",
+                                                                   "5m"
+                                                               ]
+                                     },
+                      "timezone":  "Asia/Kolkata",
+                      "title":  "Overlays",
+                      "uid":  "g6-overlays",
+                      "version":  12
+                  }
+}

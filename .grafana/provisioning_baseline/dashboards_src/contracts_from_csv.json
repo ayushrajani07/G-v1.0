@@ -55,7 +55,7 @@
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-				 "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
 				 "json_options": {"root_is_array": true},
 				 "columns": [
 					 {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -77,7 +77,7 @@
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-				 "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_pcr=1",
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_pcr=1",
 				 "json_options": {"root_is_array": true},
 				 "columns": [
 						{"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -120,7 +120,7 @@
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-				 "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
 				 "json_options": {"root_is_array": true},
 				 "columns": [
 					 {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -168,7 +168,7 @@
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-				 "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
 				 "json_options": {"root_is_array": true},
 				 "columns": [
 					 {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -190,7 +190,7 @@
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-				 "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_pcr=1",
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_pcr=1",
 				 "json_options": {"root_is_array": true},
 				 "columns": [
 						{"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -207,7 +207,7 @@
 			"targets": [
 				{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 				 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-				 "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_pcr=1",
+				 "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_pcr=1",
 				 "json_options": {"root_is_array": true},
 				 "columns": [
 						{"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -250,7 +250,7 @@
 				"targets": [
 					{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 					 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-					 "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+					 "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
 					 "json_options": {"root_is_array": true},
 					 "columns": [
 						 {"selector": "time_str", "text": "time", "type": "timestamp"},
@@ -272,7 +272,7 @@
 				"targets": [
 					{"refId": "A", "type": "json", "source": "url", "format": "table", "method": "GET",
 					 "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
-					 "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_pcr=1",
+					 "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_pcr=1",
 					 "json_options": {"root_is_array": true},
 					 "columns": [
 						 {"selector": "time_str", "text": "time", "type": "timestamp"},

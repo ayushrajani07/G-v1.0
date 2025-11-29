@@ -1,0 +1,136 @@
+{
+  "title": "ML: Drift & Regime Analysis",
+  "uid": "ml-drift-regime-analysis",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "base_url",
+        "type": "custom",
+        "query": "http://127.0.0.1:9500",
+        "label": "Base URL",
+        "current": { "text": "http://127.0.0.1:9500", "value": "http://127.0.0.1:9500" },
+        "hide": 2
+      },
+      {
+        "name": "index",
+        "type": "custom",
+        "query": "NIFTY,BANKNIFTY,SENSEX",
+        "label": "Index",
+        "current": { "text": "NIFTY", "value": "NIFTY" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Regime Early Warning Score",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "g6_regime_early_warning_score{index=\"${index}\"}",
+          "legendFormat": "Horizon {{horizon}}m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Adaptive TTL (sec)",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "g6_forecast_adaptive_ttl_sec{index=\"${index}\"}",
+          "legendFormat": "Horizon {{horizon}}m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "green", "value": 30 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Drift Ratios (Short/Long)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/ensemble/metrics/compare?index=${index}&include_drift=1",
+          "url_options": { "method": "GET" },
+          "root_selector": "entries",
+          "columns": [
+            { "selector": "horizon", "text": "horizon", "type": "string" },
+            { "selector": "mae_drift_ratio", "text": "MAE Ratio", "type": "number" },
+            { "selector": "norm_error_drift_ratio", "text": "Norm Error Ratio", "type": "number" }
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1.3 },
+              { "color": "red", "value": 1.7 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "table",
+      "title": "Dynamic Thresholds Manifest",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "url": "${base_url}/api/ml/ensemble/regime/threshold_manifest?include_full=1",
+          "url_options": { "method": "GET" },
+          "root_selector": "thresholds",
+          "columns": [
+            { "selector": "horizon", "text": "Horizon", "type": "string" },
+            { "selector": "mae_drift_ratio_warn", "text": "MAE Warn", "type": "number" },
+            { "selector": "mae_drift_ratio_crit", "text": "MAE Crit", "type": "number" },
+            { "selector": "norm_drift_ratio_warn", "text": "Norm Warn", "type": "number" },
+            { "selector": "norm_drift_ratio_crit", "text": "Norm Crit", "type": "number" }
+          ]
+        }
+      ]
+    }
+  ]
+}

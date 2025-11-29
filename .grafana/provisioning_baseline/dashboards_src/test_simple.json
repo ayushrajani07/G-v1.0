@@ -1,0 +1,41 @@
+﻿{
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-6h"
+             },
+    "uid":  "g6-test-simple",
+    "title":  "G6 Test - Simple",
+    "timezone":  "browser",
+    "refresh":  "15s",
+    "schemaVersion":  39,
+    "editable":  true,
+    "panels":  [
+                   {
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  24,
+                                       "x":  0,
+                                       "h":  10
+                                   },
+                       "title":  "NIFTY Data Test",
+                       "id":  1,
+                       "type":  "table",
+                       "targets":  [
+                                       {
+                                           "source":  "url",
+                                           "json_options":  {
+                                                                "root_is_array":  true
+                                                            },
+                                           "refId":  "A",
+                                           "datasource":  {
+                                                              "type":  "yesoreyeram-infinity-datasource",
+                                                              "uid":  "INFINITY"
+                                                          },
+                                           "type":  "json",
+                                           "url":  "http://127.0.0.1:9500/api/live_csv?index=NIFTY\u0026expiry_tag=this_week\u0026offset=0\u0026limit=20",
+                                           "format":  "table"
+                                       }
+                                   ]
+                   }
+               ]
+}

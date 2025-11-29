@@ -1,0 +1,337 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "multi-pane-explorer-ultra",
+                 "url":  "/d/g6-multi_pane_explorer_ultra/multi-pane-explorer-ultra",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T09:31:21+05:30",
+                 "updated":  "2025-11-20T09:31:21+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "multi_pane_explorer_ultra.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "prometheus",
+                                             "name":  "Prometheus",
+                                             "type":  "prometheus",
+                                             "version":  "1.0.0"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "g6_meta":  {
+                                      "band_pct":  25,
+                                      "description":  "",
+                                      "explorer":  true,
+                                      "families":  [
+                                                       "core"
+                                                   ],
+                                      "spec_hash":  "b1fb37bf991f1a94",
+                                      "ultra":  true
+                                  },
+                      "id":  274,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "group":  "explorer",
+                                                         "panel_uuid":  "881e14ed750b0bdc",
+                                                         "source":  "explorer_template"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  2283672813,
+                                         "repeat":  "metric",
+                                         "repeatDirection":  "h",
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "$metric",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "sum(rate($metric[5m]))",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "expr":  "sum(rate($metric[30s])) and ($overlay == \u0027fast\u0027)",
+                                                             "refId":  "C"
+                                                         },
+                                                         {
+                                                             "expr":  "sum(rate($metric[15s])) and ($overlay == \u0027ultra\u0027)",
+                                                             "refId":  "D"
+                                                         },
+                                                         {
+                                                             "expr":  "avg_over_time($metric[5m])",
+                                                             "refId":  "E"
+                                                         }
+                                                     ],
+                                         "title":  "$metric raw \u0026 5m rate",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "group":  "explorer",
+                                                         "panel_uuid":  "37909e6fb49d97c4",
+                                                         "source":  "explorer_template"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  0
+                                                     },
+                                         "id":  932224623,
+                                         "repeat":  "metric",
+                                         "repeatDirection":  "h",
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum(rate($metric[1m]))",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "sum(rate($metric[5m]))",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "$metric rate 1m vs 5m",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byRegexp",
+                                                                                                   "options":  ".*D$"
+                                                                                               },
+                                                                                   "properties":  [
+
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "explorer_kind":  "histogram_summary",
+                                                         "group":  "explorer",
+                                                         "panel_uuid":  "47cf1ffe2366bd62",
+                                                         "source":  "explorer_template"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  8
+                                                     },
+                                         "id":  1204756478,
+                                         "repeat":  "metric_hist",
+                                         "repeatDirection":  "h",
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "$metric_hist:$q_5m",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "$metric_hist:$q_30m",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "expr":  "$metric_hist:$q_ratio_5m_30m",
+                                                             "refId":  "C"
+                                                         },
+                                                         {
+                                                             "expr":  "($metric_hist:$q_5m - $metric_hist:$q_30m) / clamp_min($metric_hist:$q_30m, 0.000001)",
+                                                             "refId":  "D"
+                                                         },
+                                                         {
+                                                             "expr":  "sum(rate($metric[1m])) / sum(rate($metric[5m]))",
+                                                             "refId":  "E"
+                                                         },
+                                                         {
+                                                             "expr":  "sum_over_time($metric[24h])",
+                                                             "refId":  "F"
+                                                         }
+                                                     ],
+                                         "title":  "Histogram Summary",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "explorer_kind":  "histogram_window",
+                                                         "group":  "explorer",
+                                                         "panel_uuid":  "f506307b07b16f15",
+                                                         "source":  "explorer_template"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  8
+                                                     },
+                                         "id":  4110823547,
+                                         "repeat":  "metric_hist",
+                                         "repeatDirection":  "h",
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "$q_5m",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "$q_30m",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "expr":  "$q_30m * (1 - 0.250000)",
+                                                             "refId":  "C"
+                                                         },
+                                                         {
+                                                             "expr":  "$q_30m * (1 + 0.250000)",
+                                                             "refId":  "D"
+                                                         }
+                                                     ],
+                                         "title":  "Histogram Window",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  39,
+                      "tags":  [
+                                   "explorer",
+                                   "ultra",
+                                   "g6",
+                                   "generated"
+                               ],
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "datasource":  {
+                                                                             "type":  "prometheus",
+                                                                             "uid":  "PROM"
+                                                                         },
+                                                          "label":  "Metric",
+                                                          "multi":  true,
+                                                          "name":  "metric",
+                                                          "query":  "label_values(up, job)",
+                                                          "type":  "query"
+                                                      },
+                                                      {
+                                                          "datasource":  {
+                                                                             "type":  "prometheus",
+                                                                             "uid":  "PROM"
+                                                                         },
+                                                          "label":  "Histogram Metric",
+                                                          "multi":  true,
+                                                          "name":  "metric_hist",
+                                                          "query":  "label_values(up, job)",
+                                                          "type":  "query"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "off",
+                                                                          "value":  "off"
+                                                                      },
+                                                          "label":  "Overlay",
+                                                          "name":  "overlay",
+                                                          "query":  "off,fast,ultra",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "p95",
+                                                                          "value":  "p95"
+                                                                      },
+                                                          "label":  "Quantile",
+                                                          "name":  "q",
+                                                          "query":  "p50,p90,p95,p99",
+                                                          "type":  "custom"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timezone":  "browser",
+                      "title":  "Multi-Pane Explorer (Ultra)",
+                      "uid":  "g6-multi_pane_explorer_ultra",
+                      "version":  1
+                  }
+}

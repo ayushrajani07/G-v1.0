@@ -1,0 +1,117 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Path Forecast Latency
+    folder: G6 ML
+    interval: 1m
+    rules:
+      - uid: pf_retrieval_p90_latency
+        title: PF Retrieval p90 Latency High
+        condition: E
+        data:
+          - refId: A
+            datasourceUid: ${DS_PROMETHEUS}
+            relativeTimeRange:
+              from: 900
+              to: 0
+            model:
+              datasource:
+                type: prometheus
+                uid: ${DS_PROMETHEUS}
+              expr: histogram_quantile(0.90, sum by (le) (rate(pf_retrieval_latency_ms_bucket[5m])))
+              refId: A
+              interval: ""
+              intervalMs: 1000
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: E
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              refId: E
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 500
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    type: last
+                    params: []
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: "Retrieval p90 latency high"
+          description: "p90 over last 5m > 500 ms"
+        labels:
+          severity: high
+          component: path_forecast
+          metric: retrieval_latency
+        isPaused: false
+
+      - uid: pf_composite_p90_latency
+        title: PF Composite p90 Latency High
+        condition: E
+        data:
+          - refId: A
+            datasourceUid: ${DS_PROMETHEUS}
+            relativeTimeRange:
+              from: 900
+              to: 0
+            model:
+              datasource:
+                type: prometheus
+                uid: ${DS_PROMETHEUS}
+              expr: histogram_quantile(0.90, sum by (le) (rate(pf_composite_latency_ms_bucket[5m])))
+              refId: A
+              interval: ""
+              intervalMs: 1000
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: E
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              expression: B
+              refId: E
+              conditions:
+                - evaluator:
+                    type: gt
+                    params:
+                      - 800
+                  operator:
+                    type: and
+                  query:
+                    params: []
+                  reducer:
+                    type: last
+                    params: []
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: "Composite p90 latency high"
+          description: "p90 over last 5m > 800 ms"
+        labels:
+          severity: high
+          component: path_forecast
+          metric: composite_latency
+        isPaused: false
+
+      # FUTURE: horizon-specific latency alerts once horizon label stability verified.

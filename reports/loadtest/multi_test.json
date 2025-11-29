@@ -1,0 +1,51 @@
+{
+  "generated_at": "2025-11-27 14:21:45 UTC",
+  "config": {
+    "base_url": "http://127.0.0.1:9500",
+    "indices": [
+      "NIFTY",
+      "BANKNIFTY",
+      "SENSEX"
+    ],
+    "qps": 10,
+    "duration": 30,
+    "horizon": 60
+  },
+  "total_requests": 300,
+  "elapsed_seconds": 30.00316858291626,
+  "aggregate": {
+    "latency_p50_ms": 12.298600002395688,
+    "latency_p95_ms": 46.53419999522157,
+    "error_rate_pct": 0.0,
+    "actual_qps": 9.99894391723744
+  },
+  "per_index": {
+    "NIFTY": {
+      "request_count": 100,
+      "error_count": 0,
+      "error_rate_pct": 0.0,
+      "latency_p50_ms": 12.382449996948708,
+      "latency_p95_ms": 46.53419999522157,
+      "cache_hit_ratio": 0.51,
+      "normalized_error_p90": 0.0
+    },
+    "BANKNIFTY": {
+      "request_count": 100,
+      "error_count": 0,
+      "error_rate_pct": 0.0,
+      "latency_p50_ms": 12.101850003091386,
+      "latency_p95_ms": 32.67570000025444,
+      "cache_hit_ratio": 0.51,
+      "normalized_error_p90": 0.0
+    },
+    "SENSEX": {
+      "request_count": 100,
+      "error_count": 0,
+      "error_rate_pct": 0.0,
+      "latency_p50_ms": 12.35850000375649,
+      "latency_p95_ms": 40.89310000563273,
+      "cache_hit_ratio": 0.52,
+      "normalized_error_p90": 0.0
+    }
+  }
+}

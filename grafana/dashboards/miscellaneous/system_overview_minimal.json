@@ -1,0 +1,6 @@
+{
+  "moved_from": ".grafana/provisioning_baseline/dashboards_src/system_overview_minimal.json",
+  "title": "System Overview (Minimal / Misc)",
+  "tags": ["system","minimal","g6","generated","misc"],
+  "panels_count": 15
+}

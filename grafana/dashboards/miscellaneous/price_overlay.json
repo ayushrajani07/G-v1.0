@@ -1,0 +1,93 @@
+{
+  "__inputs": [],
+  "__requires": [
+    { "id": "prometheus", "name": "Prometheus", "type": "prometheus", "version": "1.0.0" }
+  ],
+  "annotations": { "list": [] },
+  "g6_meta": {
+    "description": "Time-based price plots with dynamic overlays",
+    "families": ["market", "overlay"],
+    "explorer": false,
+    "enriched": true
+  },
+  "editable": true,
+  "schemaVersion": 38,
+  "style": "dark",
+  "title": "Price Overlay Explorer",
+  "uid": "g6-price_overlay",
+  "version": 1,
+  "time": { "from": "now-1h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "price_metric",
+        "type": "constant",
+        "label": "Price metric",
+        "query": "g6_price_last",
+        "current": { "selected": true, "text": "g6_price_last", "value": "g6_price_last" }
+      },
+      {
+        "name": "symbols",
+        "type": "query",
+        "label": "Symbols",
+        "datasource": { "type": "prometheus", "uid": "PROM" },
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "query": "label_values($price_metric, symbol)",
+        "regex": "",
+        "sort": 1,
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "allValue": ".*"
+      },
+      {
+        "name": "legend_fmt",
+        "type": "constant",
+        "label": "Legend",
+        "query": "{{symbol}}",
+        "current": { "text": "{{symbol}}", "value": "{{symbol}}" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Overlay: $price_metric by symbol",
+      "id": 1,
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "custom": { "lineWidth": 2 } },
+        "overrides": []
+      },
+      "gridPos": { "h": 13, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "none" }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (symbol) (avg_over_time($price_metric{symbol=~\"$symbols\"}[1m]))",
+          "legendFormat": "{{symbol}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Change % (5m)",
+      "id": 2,
+      "datasource": { "type": "prometheus", "uid": "PROM" },
+      "fieldConfig": { "defaults": { "unit": "percentunit" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 13 },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "refId": "B",
+          "expr": "100 * ( ( $price_metric{symbol=~\"$symbols\"} - $price_metric{symbol=~\"$symbols\"} offset 5m ) / clamp_min($price_metric{symbol=~\"$symbols\"} offset 5m, 0.0001) )",
+          "legendFormat": "{{symbol}}"
+        }
+      ]
+    }
+  ],
+  "timepicker": { "refresh_intervals": ["5s","10s","30s","1m","5m"], "refresh": "10s" }
+}

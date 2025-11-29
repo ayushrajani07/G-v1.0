@@ -1,0 +1,375 @@
+{
+  "title": "Ensemble Consensus & Disagreement (TP)",
+  "uid": "ml-ensemble-overview",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Consensus vs Champion p50",
+      "id": 1,
+      "description": "Mean consensus from ensemble compared against champion p50 (quantile or baseline model).",
+      "targets": [
+        {
+          "expr": "g6_ml_ensemble_consensus{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "consensus ($index,$horizon)",
+          "refId": "A"
+        },
+        {
+          "expr": "g6_ml_prediction_p50{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "p50 ($index,$horizon)",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] }
+    },
+    {
+      "type": "timeseries",
+      "title": "Model Disagreement (Std Dev)",
+      "id": 2,
+      "description": "Real-time standard deviation of member predictions.",
+      "targets": [
+        {
+          "expr": "g6_ml_ensemble_disagreement{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "disagreement std",
+          "refId": "A"
+        },
+        {
+          "expr": "ml:ensemble:disagreement_avg_15m{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "avg 15m",
+          "refId": "B"
+        },
+        {
+          "expr": "ml:ensemble:disagreement_p95_15m{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "p95 15m",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "unit": "none", "decimals": 2 },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Contributing Models (Last)",
+      "id": 3,
+      "targets": [
+        {
+          "expr": "g6_ml_ensemble_models_count{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "models",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "orange", "value": 2 },
+              { "color": "green", "value": 3 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Disagreement (Avg 15m)",
+      "id": 4,
+      "targets": [
+        {
+          "expr": "ml:ensemble:disagreement_avg_15m{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "avg15m",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 25 },
+              { "color": "red", "value": 40 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Consensus vs Raw Members (Snapshot Table)",
+      "id": 5,
+      "description": "CSV Infinity snapshot of ensemble rows for manual inspection (last N).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "type": "csv",
+          "source": "url",
+          "format": "table",
+          "url": "/api/ml/ensemble?index=$index&horizon=$horizon&tail=120",
+          "parser": "backend",
+          "url_options": { "method": "GET" },
+          "filters": []
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "Disagreement (p95 15m)",
+      "id": 6,
+      "targets": [
+        {
+          "expr": "ml:ensemble:disagreement_p95_15m{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "p95",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 30 },
+              { "color": "red", "value": 45 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "type": "state-timeline",
+      "title": "Disagreement by Horizon (timeline)",
+      "id": 7,
+      "description": "Per-horizon disagreement visualized over time; color encodes magnitude via thresholds.",
+      "targets": [
+        {
+          "expr": "g6_ml_ensemble_disagreement{index=\"$index\"}",
+          "legendFormat": "h{{horizon}}",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "legend": { "displayMode": "list" },
+        "rowHeight": 0.9,
+        "mergeValues": true,
+        "showValue": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 20 },
+              { "color": "red", "value": 40 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "table",
+      "title": "Model Weights (latest)",
+      "id": 8,
+      "description": "Latest inverse-RMSE weights from exporter (sidecar JSON via API).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "type": "csv",
+          "source": "url",
+          "format": "table",
+          "url": "/api/ml/ensemble/weights?index=$index&horizon=$horizon",
+          "parser": "backend",
+          "url_options": { "method": "GET" },
+          "filters": []
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Quarantine Events (recent)",
+      "id": 9,
+      "description": "Z-score based quarantine events filtered by horizon.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "type": "csv",
+          "source": "url",
+          "format": "table",
+          "url": "/api/ml/ensemble/quarantine_log?index=$index&horizon=$horizon&tail=200",
+          "parser": "backend",
+          "url_options": { "method": "GET" },
+          "filters": []
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none" }, "overrides": [] },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Recommended k (latest)",
+      "id": 10,
+      "description": "Auto-calibrated disagreement scaling k and effective coverage.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "type": "csv",
+          "source": "url",
+          "format": "table",
+          "url": "/api/ml/ensemble/k_calibration?index=$index&horizon=$horizon",
+          "parser": "backend",
+          "url_options": { "method": "GET" },
+          "filters": []
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 3 }, "overrides": [] },
+      "options": { "showHeader": true }
+  },
+    {
+      "type": "timeseries",
+      "title": "Effective Coverage (avg)",
+      "id": 14,
+      "description": "Average of effective coverage hit (1 if |consensus - tp| <= max(band_radius, applied_k*dis))",
+      "targets": [
+        {
+          "expr": "avg_over_time(g6_ml_ensemble_effective_hit{index=\"$index\",horizon=\"$horizon\"}[30m])",
+          "legendFormat": "effective_cov 30m",
+          "refId": "A"
+        },
+        {
+          "expr": "avg_over_time(g6_ml_ensemble_effective_hit{index=\"$index\",horizon=\"$horizon\"}[60m])",
+          "legendFormat": "effective_cov 60m",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit", "decimals": 2 }, "overrides": [] }
+    },
+  {
+      "type": "timeseries",
+      "title": "Applied k vs Raw/Smooth",
+      "id": 11,
+      "description": "Comparison of applied_k (with overrides) to raw recommended_k and k_smooth.",
+      "targets": [
+        {
+          "expr": "g6_ml_ensemble_applied_k{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "applied_k (source={{source}})",
+          "refId": "A"
+        },
+        {
+          "expr": "g6_ml_ensemble_applied_k{index=\"$index\",horizon=\"$horizon\",source=\"raw\"}",
+          "legendFormat": "raw_k",
+          "refId": "B"
+        },
+        {
+          "expr": "g6_ml_ensemble_applied_k{index=\"$index\",horizon=\"$horizon\",source=\"smooth\"}",
+          "legendFormat": "k_smooth",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 3 }, "overrides": [] }
+    },
+    {
+      "type": "timeseries",
+      "title": "Scaled Radius (applied_k * disagreement)",
+      "id": 12,
+      "description": "Real-time scaled band surrogate using applied_k * disagreement.",
+      "targets": [
+        {
+          "expr": "g6_ml_ensemble_scaled_radius{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "scaled_radius",
+          "refId": "A"
+        },
+        {
+          "expr": "g6_ml_ensemble_disagreement{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "disagreement",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 3 }, "overrides": [] }
+    },
+    {
+      "type": "table",
+      "title": "Applied k (current rows)",
+      "id": 13,
+      "description": "Latest applied_k entries from ensemble CSV.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "INFINITY" },
+          "type": "csv",
+          "source": "url",
+          "format": "table",
+          "url": "/api/ml/ensemble/k_applied?index=$index&horizon=$horizon&tail=20",
+          "parser": "backend",
+          "url_options": { "method": "GET" },
+          "filters": []
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "none", "decimals": 4 }, "overrides": [] },
+      "options": { "showHeader": true }
+  }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "index",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(g6_ml_prediction_p50, index)",
+        "refresh": 2
+      },
+      {
+        "name": "horizon",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(g6_ml_prediction_p50, horizon)",
+        "refresh": 2
+      }
+    ]
+  }
+}

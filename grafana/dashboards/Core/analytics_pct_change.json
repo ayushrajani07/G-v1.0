@@ -1,0 +1,287 @@
+{
+  "uid": "g6-analytics-pct",
+  "title": "Analytics - Index Prices",
+  "timezone": "Asia/Kolkata",
+  "editable": true,
+  "refresh": "30s",
+  "tags": ["g6", "analytics", "index"],
+  "time": {"from": "now-12h", "to": "now"},
+  "templating": {
+    "list": [
+      {"name": "offset", "type": "custom", "current": {"value": "0", "text": "0"}, "options": [{"value": "0", "text": "0"},{"value":"+0","text":"+0"}], "query": "0,+0"},
+      {"name": "expiry_ns", "type": "custom", "current": {"value": "this_month", "text": "this_month"}, "options": [{"value": "this_month", "text": "this_month"},{"value":"next_month","text":"next_month"}], "query": "this_month,next_month"},
+      {"name": "expiry_bf", "type": "custom", "current": {"value": "this_month", "text": "this_month"}, "options": [{"value": "this_month", "text": "this_month"},{"value":"next_month","text":"next_month"}], "query": "this_month,next_month"}
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "NIFTY + SENSEX â€“ Index Prices",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "short", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "calcs": []}, "tooltip": {"mode": "single", "sort": "none"}},
+      "targets": [
+        {"refId": "N1", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "S1", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+        {"id": "filterFieldsByName", "options": {"include": {"names": ["ts", "index_price"]}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi", "timeField": "ts"}}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "BANKNIFTY + FINNIFTY â€“ Index Prices",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "short", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "calcs": []}, "tooltip": {"mode": "single", "sort": "none"}},
+      "targets": [
+        {"refId": "B1", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "F1", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+        {"id": "filterFieldsByName", "options": {"include": {"names": ["ts", "index_price"]}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi", "timeField": "ts"}}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "NIFTY + SENSEX â€“ IV % Change (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "calcs": []}, "tooltip": {"mode": "single", "sort": "none"}},
+      "targets": [
+        {"refId": "N2", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_iv=1&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_greeks=0&include_volume=0&include_oi=0&include_pcr=0&pct=1&pct_fields=ce_iv,pe_iv&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "S2", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_iv=1&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_greeks=0&include_volume=0&include_oi=0&include_pcr=0&pct=1&pct_fields=ce_iv,pe_iv&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+        {"id": "organize", "options": {"excludeByName": {"ce_iv": true, "pe_iv": true, "time_str": true, "time_epoch_s": true, "time": true, "tp": true, "avg_tp": true, "index_price": true, "ce": true, "pe": true, "ce_vol": true, "pe_vol": true, "ce_oi": true, "pe_oi": true, "pcr": true}, "renameByName": {}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "BANKNIFTY + FINNIFTY â€“ IV % Change (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": []},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom", "calcs": []}, "tooltip": {"mode": "single", "sort": "none"}},
+      "targets": [
+        {"refId": "B2", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_iv=1&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_greeks=0&include_volume=0&include_oi=0&include_pcr=0&pct=1&pct_fields=ce_iv,pe_iv&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "F2", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_iv=1&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_greeks=0&include_volume=0&include_oi=0&include_pcr=0&pct=1&pct_fields=ce_iv,pe_iv&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+        {"id": "organize", "options": {"excludeByName": {"ce_iv": true, "pe_iv": true, "time_str": true, "time_epoch_s": true, "time": true, "tp": true, "avg_tp": true, "index_price": true, "ce": true, "pe": true, "ce_vol": true, "pe_vol": true, "ce_oi": true, "pe_oi": true, "pcr": true}, "renameByName": {}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "NIFTY + SENSEX â€“ Î” (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^N_DELTA ce_delta_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY CE Î” %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^N_DELTA pe_delta_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY PE Î” %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_DELTA ce_delta_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX CE Î” %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_DELTA pe_delta_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX PE Î” %"}]}
+      ]},
+      "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "N_DELTA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_delta,pe_delta&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "S_DELTA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_delta,pe_delta&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_delta": true, "pe_delta": true, "ce_theta": true, "pe_theta": true, "ce_gamma": true, "pe_gamma": true, "ce_vega": true, "pe_vega": true, "ce_rho": true, "pe_rho": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_delta_pct": "NIFTY CE Î” %", "pe_delta_pct": "NIFTY PE Î” %", "ce_delta_pct 1": "SENSEX CE Î” %", "pe_delta_pct 1": "SENSEX PE Î” %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "NIFTY + SENSEX â€“ Î˜ (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^N_THETA ce_theta_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY CE Î˜ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^N_THETA pe_theta_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY PE Î˜ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_THETA ce_theta_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX CE Î˜ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_THETA pe_theta_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX PE Î˜ %"}]}
+      ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "N_THETA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_theta,pe_theta&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "S_THETA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_theta,pe_theta&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_theta": true, "pe_theta": true, "ce_delta": true, "pe_delta": true, "ce_gamma": true, "pe_gamma": true, "ce_vega": true, "pe_vega": true, "ce_rho": true, "pe_rho": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_theta_pct": "NIFTY CE Î˜ %", "pe_theta_pct": "NIFTY PE Î˜ %", "ce_theta_pct 1": "SENSEX CE Î˜ %", "pe_theta_pct 1": "SENSEX PE Î˜ %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "NIFTY + SENSEX â€“ Î“ (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 4, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^N_GAMMA ce_gamma_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY CE Î“ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^N_GAMMA pe_gamma_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY PE Î“ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_GAMMA ce_gamma_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX CE Î“ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_GAMMA pe_gamma_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX PE Î“ %"}]}
+      ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "N_GAMMA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_gamma,pe_gamma&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "S_GAMMA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_gamma,pe_gamma&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_gamma": true, "pe_gamma": true, "ce_delta": true, "pe_delta": true, "ce_theta": true, "pe_theta": true, "ce_vega": true, "pe_vega": true, "ce_rho": true, "pe_rho": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_gamma_pct": "NIFTY CE Î“ %", "pe_gamma_pct": "NIFTY PE Î“ %", "ce_gamma_pct 1": "SENSEX CE Î“ %", "pe_gamma_pct 1": "SENSEX PE Î“ %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "NIFTY + SENSEX â€“ Vega (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 40},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^N_VEGA ce_vega_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY CE Vega %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^N_VEGA pe_vega_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY PE Vega %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_VEGA ce_vega_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX CE Vega %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_VEGA pe_vega_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX PE Vega %"}]}
+      ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "N_VEGA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_vega,pe_vega&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "S_VEGA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_vega,pe_vega&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_vega": true, "pe_vega": true, "ce_delta": true, "pe_delta": true, "ce_theta": true, "pe_theta": true, "ce_gamma": true, "pe_gamma": true, "ce_rho": true, "pe_rho": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_vega_pct": "NIFTY CE Vega %", "pe_vega_pct": "NIFTY PE Vega %", "ce_vega_pct 1": "SENSEX CE Vega %", "pe_vega_pct 1": "SENSEX PE Vega %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "NIFTY + SENSEX â€“ Rho (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 48},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^N_RHO ce_rho_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY CE Rho %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^N_RHO pe_rho_pct$"}, "properties": [{"id": "displayName", "value": "NIFTY PE Rho %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_RHO ce_rho_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX CE Rho %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^S_RHO pe_rho_pct$"}, "properties": [{"id": "displayName", "value": "SENSEX PE Rho %"}]}
+      ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "N_RHO", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_rho,pe_rho&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "S_RHO", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_rho,pe_rho&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_rho": true, "pe_rho": true, "ce_delta": true, "pe_delta": true, "ce_theta": true, "pe_theta": true, "ce_gamma": true, "pe_gamma": true, "ce_vega": true, "pe_vega": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_rho_pct": "NIFTY CE Rho %", "pe_rho_pct": "NIFTY PE Rho %", "ce_rho_pct 1": "SENSEX CE Rho %", "pe_rho_pct 1": "SENSEX PE Rho %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "BANKNIFTY + FINNIFTY â€“ Î” (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^B_DELTA ce_delta_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY CE Î” %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^B_DELTA pe_delta_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY PE Î” %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_DELTA ce_delta_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY CE Î” %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_DELTA pe_delta_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY PE Î” %"}]}
+      ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "B_DELTA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_delta,pe_delta&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "F_DELTA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_delta,pe_delta&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_delta": true, "pe_delta": true, "ce_theta": true, "pe_theta": true, "ce_gamma": true, "pe_gamma": true, "ce_vega": true, "pe_vega": true, "ce_rho": true, "pe_rho": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_delta_pct": "BANKNIFTY CE Î” %", "pe_delta_pct": "BANKNIFTY PE Î” %", "ce_delta_pct 1": "FINNIFTY CE Î” %", "pe_delta_pct 1": "FINNIFTY PE Î” %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "BANKNIFTY + FINNIFTY â€“ Î˜ (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^B_THETA ce_theta_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY CE Î˜ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^B_THETA pe_theta_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY PE Î˜ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_THETA ce_theta_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY CE Î˜ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_THETA pe_theta_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY PE Î˜ %"}]}
+      ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "B_THETA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_theta,pe_theta&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "F_THETA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_theta,pe_theta&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_theta": true, "pe_theta": true, "ce_delta": true, "pe_delta": true, "ce_gamma": true, "pe_gamma": true, "ce_vega": true, "pe_vega": true, "ce_rho": true, "pe_rho": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_theta_pct": "BANKNIFTY CE Î˜ %", "pe_theta_pct": "BANKNIFTY PE Î˜ %", "ce_theta_pct 1": "FINNIFTY CE Î˜ %", "pe_theta_pct 1": "FINNIFTY PE Î˜ %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "BANKNIFTY + FINNIFTY â€“ Î“ (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 4, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^B_GAMMA ce_gamma_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY CE Î“ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^B_GAMMA pe_gamma_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY PE Î“ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_GAMMA ce_gamma_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY CE Î“ %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_GAMMA pe_gamma_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY PE Î“ %"}]}
+      ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "B_GAMMA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_gamma,pe_gamma&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "F_GAMMA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_gamma,pe_gamma&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_gamma": true, "pe_gamma": true, "ce_delta": true, "pe_delta": true, "ce_theta": true, "pe_theta": true, "ce_vega": true, "pe_vega": true, "ce_rho": true, "pe_rho": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_gamma_pct": "BANKNIFTY CE Î“ %", "pe_gamma_pct": "BANKNIFTY PE Î“ %", "ce_gamma_pct 1": "FINNIFTY CE Î“ %", "pe_gamma_pct 1": "FINNIFTY PE Î“ %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "BANKNIFTY + FINNIFTY â€“ Vega (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 40},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 2, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^B_VEGA ce_vega_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY CE Vega %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^B_VEGA pe_vega_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY PE Vega %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_VEGA ce_vega_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY CE Vega %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_VEGA pe_vega_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY PE Vega %"}]}
+      ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "B_VEGA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_vega,pe_vega&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "F_VEGA", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_vega,pe_vega&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_vega": true, "pe_vega": true, "ce_delta": true, "pe_delta": true, "ce_theta": true, "pe_theta": true, "ce_gamma": true, "pe_gamma": true, "ce_rho": true, "pe_rho": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_vega_pct": "BANKNIFTY CE Vega %", "pe_vega_pct": "BANKNIFTY PE Vega %", "ce_vega_pct 1": "FINNIFTY CE Vega %", "pe_vega_pct 1": "FINNIFTY PE Vega %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    },
+    { "type": "timeseries", "title": "BANKNIFTY + FINNIFTY â€“ Rho (CE/PE)",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 48},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 4, "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 0, "showPoints": "never", "spanNulls": true}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": "^B_RHO ce_rho_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY CE Rho %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^B_RHO pe_rho_pct$"}, "properties": [{"id": "displayName", "value": "BANKNIFTY PE Rho %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_RHO ce_rho_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY CE Rho %"}]},
+        {"matcher": {"id": "byRegexp", "options": "^F_RHO pe_rho_pct$"}, "properties": [{"id": "displayName", "value": "FINNIFTY PE Rho %"}]}
+    ]},
+  "options": {"legend": {"displayMode": "list", "placement": "bottom"}, "tooltip": {"mode": "multi"}, "yAxis": {"scale": {"type": "linear"}}},
+      "targets": [
+        {"refId": "B_RHO", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_rho,pe_rho&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}},
+        {"refId": "F_RHO", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_greeks=1&pct=1&pct_fields=ce_rho,pe_rho&include_avg=0&include_ce=0&include_pe=0&include_index=0&include_iv=0&include_volume=0&include_oi=0&include_pcr=0&include_index=1&include_oi=1&include_volume=1&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+  {"id": "organize", "options": {"excludeByName": {"ce_rho": true, "pe_rho": true, "ce_delta": true, "pe_delta": true, "ce_theta": true, "pe_theta": true, "ce_gamma": true, "pe_gamma": true, "ce_vega": true, "pe_vega": true, "tp": true, "avg_tp": true, "time_str": true, "time_epoch_s": true, "time": true}, "renameByName": {"ce_rho_pct": "BANKNIFTY CE Rho %", "pe_rho_pct": "BANKNIFTY PE Rho %", "ce_rho_pct 1": "FINNIFTY CE Rho %", "pe_rho_pct 1": "FINNIFTY PE Rho %"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+      ]
+    }
+  ]
+}
+

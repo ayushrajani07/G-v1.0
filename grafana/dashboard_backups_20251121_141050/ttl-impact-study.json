@@ -1,0 +1,218 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "forecast-ttl-impact-study",
+                 "url":  "/d/ttl-impact-study/forecast-ttl-impact-study",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T09:31:22+05:30",
+                 "updated":  "2025-11-20T09:31:22+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "ttl_impact.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+                                       {
+                                           "description":  "Infinity datasource (HTTP / JSON).",
+                                           "label":  "Infinity",
+                                           "name":  "DS_INFINITY",
+                                           "pluginId":  "yesoreyeram-infinity-datasource",
+                                           "pluginName":  "Infinity",
+                                           "type":  "datasource"
+                                       }
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "grafana",
+                                             "name":  "Grafana",
+                                             "type":  "grafana",
+                                             "version":  "9.0.0"
+                                         },
+                                         {
+                                             "id":  "table",
+                                             "name":  "Table",
+                                             "type":  "panel"
+                                         },
+                                         {
+                                             "id":  "timeseries",
+                                             "name":  "Time series",
+                                             "type":  "panel"
+                                         },
+                                         {
+                                             "id":  "yesoreyeram-infinity-datasource",
+                                             "name":  "Infinity",
+                                             "type":  "datasource",
+                                             "version":  "2.6.0"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "id":  284,
+                      "panels":  [
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "hit_ratio"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "percent"
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "latency_ms_p95"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "ms"
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "latency_ms_p50"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "ms"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "id":  1,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "scenarios",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/ttl_study"
+                                                         }
+                                                     ],
+                                         "title":  "Scenario Summary",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "renameByName":  {
+                                                                                                          "latency_ms_p50":  "p50_ms",
+                                                                                                          "latency_ms_p95":  "p95_ms"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "ms"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  2,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "list"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "single"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "deltas_vs_baseline",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/ttl_study"
+                                                         }
+                                                     ],
+                                         "title":  "p95 Latency vs Baseline Delta",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  36,
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-1h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+                                         "refresh_intervals":  [
+                                                                   "30s",
+                                                                   "1m",
+                                                                   "5m",
+                                                                   "15m"
+                                                               ]
+                                     },
+                      "timezone":  "browser",
+                      "title":  "Forecast TTL Impact Study",
+                      "uid":  "ttl-impact-study",
+                      "version":  1
+                  }
+}

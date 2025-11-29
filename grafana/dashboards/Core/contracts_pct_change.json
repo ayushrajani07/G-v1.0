@@ -1,0 +1,105 @@
+{
+  "uid": "g6-contracts-pct",
+  "title": "Contracts - All Indices",
+  "timezone": "Asia/Kolkata",
+  "editable": true,
+  "refresh": "30s",
+  "tags": ["g6", "contracts", "pct"],
+  "time": {"from": "now-12h", "to": "now"},
+  "templating": {
+    "list": [
+      {"name": "offset", "type": "custom", "current": {"value": "0", "text": "0"}, "options": [{"value": "0", "text": "0"},{"value":"+0","text":"+0"}], "query": "0,+0"},
+      {"name": "expiry_ns", "type": "custom", "current": {"value": "this_month", "text": "this_month"}, "options": [{"value": "this_month", "text": "this_month"},{"value":"next_month","text":"next_month"}], "query": "this_month,next_month"},
+      {"name": "expiry_bn", "type": "custom", "current": {"value": "this_month", "text": "this_month"}, "options": [{"value": "this_month", "text": "this_month"},{"value":"next_month","text":"next_month"}], "query": "this_month,next_month"},
+      {"name": "expiry_fn", "type": "custom", "current": {"value": "this_month", "text": "this_month"}, "options": [{"value": "this_month", "text": "this_month"},{"value":"next_month","text":"next_month"}], "query": "this_month,next_month"},
+      {"name": "expiry_sx", "type": "custom", "current": {"value": "this_month", "text": "this_month"}, "options": [{"value": "this_month", "text": "this_month"},{"value":"next_month","text":"next_month"}], "query": "this_month,next_month"}
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "NIFTY Contracts",
+      "gridPos": {"h": 12, "w": 12, "x": 0, "y": 0},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "percent", "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never"}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": ".*(Index %|index_price_pct).*"},
+         "properties": [
+           {"id": "custom.axisPlacement", "value": "right"}
+         ]}
+      ]},
+      "targets": [
+  {"refId": "N_CON", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_index=1&include_volume=1&include_oi=1&include_pcr=0&from_ms=$__from&to_ms=$__to&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+        {"id": "filterFieldsByName", "options": {"include": {"names": ["ts", "index_price", "ce_vol", "pe_vol", "ce_oi", "pe_oi"]}}},
+        {"id": "organize", "options": {"excludeByName": {"time": true, "time_str": true}, "renameByName": {"index_price": "Index Price", "ce_vol": "CE Vol", "pe_vol": "PE Vol", "ce_oi": "CE OI", "pe_oi": "PE OI"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi", "timeField": "ts"}}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "BANKNIFTY Contracts",
+      "gridPos": {"h": 12, "w": 12, "x": 12, "y": 0},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "short", "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never"}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": ".*(Index|index_price).*"},
+         "properties": [
+           {"id": "custom.axisPlacement", "value": "right"}
+         ]}
+      ]},
+      "targets": [
+        {"refId": "BN_CON", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bn&offset=$offset&include_index=1&include_volume=1&include_oi=1&include_pcr=0&from_ms=$__from&to_ms=$__to&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+        {"id": "filterFieldsByName", "options": {"include": {"names": ["ts", "index_price", "ce_vol", "pe_vol", "ce_oi", "pe_oi"]}}},
+        {"id": "organize", "options": {"excludeByName": {"time": true, "time_str": true}, "renameByName": {"index_price": "Index Price", "ce_vol": "CE Vol", "pe_vol": "PE Vol", "ce_oi": "CE OI", "pe_oi": "PE OI"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi", "timeField": "ts"}}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "FINNIFTY Contracts",
+      "gridPos": {"h": 12, "w": 12, "x": 0, "y": 12},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "short", "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never"}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": ".*(Index|index_price).*"},
+         "properties": [
+           {"id": "custom.axisPlacement", "value": "right"}
+         ]}
+      ]},
+      "targets": [
+        {"refId": "FN_CON", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_fn&offset=$offset&include_index=1&include_volume=1&include_oi=1&include_pcr=0&from_ms=$__from&to_ms=$__to&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+        {"id": "filterFieldsByName", "options": {"include": {"names": ["ts", "index_price", "ce_vol", "pe_vol", "ce_oi", "pe_oi"]}}},
+        {"id": "organize", "options": {"excludeByName": {"time": true, "time_str": true}, "renameByName": {"index_price": "Index Price", "ce_vol": "CE Vol", "pe_vol": "PE Vol", "ce_oi": "CE OI", "pe_oi": "PE OI"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi", "timeField": "ts"}}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "SENSEX Contracts",
+      "gridPos": {"h": 12, "w": 12, "x": 12, "y": 12},
+      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "fieldConfig": {"defaults": {"unit": "short", "custom": {"drawStyle": "line", "lineWidth": 2, "fillOpacity": 0, "showPoints": "never"}}, "overrides": [
+        {"matcher": {"id": "byRegexp", "options": ".*(Index|index_price).*"},
+         "properties": [
+           {"id": "custom.axisPlacement", "value": "right"}
+         ]}
+      ]},
+      "targets": [
+        {"refId": "SX_CON", "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"}, "format": "table", "source": "url", "type": "json", "url": "http://127.0.0.1:9510/api/live_csv?index=SENSEX&expiry_tag=$expiry_sx&offset=$offset&include_index=1&include_volume=1&include_oi=1&include_pcr=0&from_ms=$__from&to_ms=$__to&include_pcr=1", "url_options": {"method": "GET"}}
+      ],
+      "transformations": [
+        {"id": "convertFieldType", "options": {"conversions": [{"targetField": "ts", "destinationType": "time", "dateFormat": "epoch_ms"}]}},
+        {"id": "filterFieldsByName", "options": {"include": {"names": ["ts", "index_price", "ce_vol", "pe_vol", "ce_oi", "pe_oi"]}}},
+        {"id": "organize", "options": {"excludeByName": {"time": true, "time_str": true}, "renameByName": {"index_price": "Index Price", "ce_vol": "CE Vol", "pe_vol": "PE Vol", "ce_oi": "CE OI", "pe_oi": "PE OI"}}},
+        {"id": "prepareTimeSeries", "options": {"format": "multi", "timeField": "ts"}}
+      ]
+    }
+  ]
+}
+

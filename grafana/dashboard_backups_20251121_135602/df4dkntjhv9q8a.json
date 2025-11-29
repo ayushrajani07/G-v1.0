@@ -1,0 +1,107 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "pf-meta-metrics-example",
+                 "url":  "/d/df4dkntjhv9q8a/pf-meta-metrics-example",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-17T13:28:49+05:30",
+                 "updated":  "2025-11-17T13:28:49+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "pf_meta_metrics_example.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "id":  250,
+                      "panels":  [
+                                     {
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_window_sanitized"
+                                                         }
+                                                     ],
+                                         "title":  "Window (sanitized)",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  6,
+                                                         "y":  0
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_horizon_sanitized"
+                                                         }
+                                                     ],
+                                         "title":  "Horizon (sanitized)",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  6
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "histogram_quantile(0.5, sum by (le)(rate(pf_alpha_hist[15m])))"
+                                                         }
+                                                     ],
+                                         "title":  "Alpha distribution",
+                                         "type":  "histogram"
+                                     },
+                                     {
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  14
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "histogram_quantile(0.95, sum by (le)(rate(pf_candidate_richness[15m])))"
+                                                         }
+                                                     ],
+                                         "title":  "Candidate richness",
+                                         "type":  "histogram"
+                                     }
+                                 ],
+                      "schemaVersion":  38,
+                      "title":  "PF Meta Metrics (Example)",
+                      "uid":  "df4dkntjhv9q8a",
+                      "version":  1
+                  }
+}

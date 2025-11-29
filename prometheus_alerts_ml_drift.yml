@@ -12,7 +12,7 @@ groups:
       pipeline: ensemble
     annotations:
       summary: "MAE drift warn for {{ $labels.index }} horizon {{ $labels.horizon }}"
-      description: "Short/long MAE ratio elevated (warn band). ratio={{ printf \"%.3f\" (g6_forecast_mae_drift_ratio{index=$labels.index,horizon=$labels.horizon}) }}"
+      description: "Short/long MAE ratio elevated (warn band). Check g6_forecast_mae_drift_ratio metric for {{ $labels.index }}/{{ $labels.horizon }}"
   - alert: G6MaeDriftCrit
     expr: g6_forecast_mae_drift_severity == 2
     for: 3m
@@ -22,7 +22,7 @@ groups:
       pipeline: ensemble
     annotations:
       summary: "MAE drift critical for {{ $labels.index }} horizon {{ $labels.horizon }}"
-      description: "Short/long MAE ratio exceeds critical threshold. ratio={{ printf \"%.3f\" (g6_forecast_mae_drift_ratio{index=$labels.index,horizon=$labels.horizon}) }}"
+      description: "Short/long MAE ratio exceeds critical threshold. Check g6_forecast_mae_drift_ratio metric for {{ $labels.index }}/{{ $labels.horizon }}"
 
   # ---------------- Normalized Error Drift Alerts ----------------
   - alert: G6NormErrorDriftWarn
@@ -34,7 +34,7 @@ groups:
       pipeline: ensemble
     annotations:
       summary: "Normalized error drift warn for {{ $labels.index }} horizon {{ $labels.horizon }}"
-      description: "Normalized short/long error ratio elevated. ratio={{ printf \"%.3f\" (g6_forecast_norm_error_drift_ratio{index=$labels.index,horizon=$labels.horizon}) }}"
+      description: "Normalized short/long error ratio elevated. Check g6_forecast_norm_error_drift_ratio metric for {{ $labels.index }}/{{ $labels.horizon }}"
   - alert: G6NormErrorDriftCrit
     expr: g6_forecast_norm_drift_severity == 2
     for: 3m
@@ -44,7 +44,7 @@ groups:
       pipeline: ensemble
     annotations:
       summary: "Normalized error drift critical for {{ $labels.index }} horizon {{ $labels.horizon }}"
-      description: "Normalized error drift ratio critical. ratio={{ printf \"%.3f\" (g6_forecast_norm_error_drift_ratio{index=$labels.index,horizon=$labels.horizon}) }}"
+      description: "Normalized error drift ratio critical. Check g6_forecast_norm_error_drift_ratio metric for {{ $labels.index }}/{{ $labels.horizon }}"
 
   # ---------------- Coverage Drift Alerts ----------------
   - alert: G6CoverageDriftWarn
@@ -56,7 +56,7 @@ groups:
       pipeline: ensemble
     annotations:
       summary: "Coverage drift warn for {{ $labels.index }} horizon {{ $labels.horizon }}"
-      description: "Coverage delta deteriorating. delta_pct={{ printf \"%.2f\" (g6_forecast_coverage_drift_delta_pct{index=$labels.index,horizon=$labels.horizon}) }}"
+      description: "Coverage delta deteriorating. Check g6_forecast_coverage_drift_delta_pct metric for {{ $labels.index }}/{{ $labels.horizon }}"
   - alert: G6CoverageDriftCrit
     expr: g6_forecast_coverage_drift_severity == 2
     for: 3m
@@ -66,7 +66,7 @@ groups:
       pipeline: ensemble
     annotations:
       summary: "Coverage drift critical for {{ $labels.index }} horizon {{ $labels.horizon }}"
-      description: "Coverage delta severe. delta_pct={{ printf \"%.2f\" (g6_forecast_coverage_drift_delta_pct{index=$labels.index,horizon=$labels.horizon}) }}"
+      description: "Coverage delta severe. Check g6_forecast_coverage_drift_delta_pct metric for {{ $labels.index }}/{{ $labels.horizon }}"
 
   # ---------------- Composite Drift Alerts ----------------
   - alert: G6AnyDriftWarn

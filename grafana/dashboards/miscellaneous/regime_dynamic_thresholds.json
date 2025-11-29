@@ -1,0 +1,5 @@
+{
+	"moved_from": "grafana/dashboards/regime_dynamic_thresholds.json",
+	"tags": ["regime","drift","dynamic-thresholds","misc"],
+	"title": "Regime Dynamic Thresholds (Misc)"
+}

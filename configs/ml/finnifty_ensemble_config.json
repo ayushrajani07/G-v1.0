@@ -1,0 +1,59 @@
+{
+  "ensemble_type": "hybrid_adaptive",
+  "index": "FINNIFTY",
+  "description": "Ensemble forecaster combining baseline, GBRT, and retrieval with adaptive weighting",
+  
+  "components": {
+    "baseline": {
+      "enabled": true,
+      "k_coefficient": 1.0,
+      "description": "Structural TP formula: k * underlying * iv * sqrt(T)"
+    },
+    "gbrt": {
+      "enabled": true,
+      "model_path": "models/finnifty_gbrt_quantile/model.joblib",
+      "description": "GBRT quantile regression for residual forecasting",
+      "feature_config": {
+        "use_lag_features": true,
+        "use_market_features": true,
+        "use_regime_features": true,
+        "exclude_features": []
+      }
+    },
+    "retrieval": {
+      "enabled": true,
+      "data_root": "data/historical",
+      "expiry_tag": "this_week",
+      "offset": "0",
+      "k": 20,
+      "window": 60,
+      "min_days": 3,
+      "distance_metric": "l2",
+      "weight_mode": null,
+      "use_ann": false,
+      "description": "K-NN retrieval forecaster using historical patterns"
+    },
+    "conformal": {
+      "enabled": true,
+      "target_coverage": 0.8,
+      "window": 600,
+      "min_radius": 0.0,
+      "description": "Conformal prediction for calibrated uncertainty bands"
+    }
+  },
+  
+  "weighting": {
+    "strategy": "confidence_adaptive",
+    "description": "Adaptive weighting based on confidence score",
+    "confidence_threshold": 0.7,
+    "min_candidates_threshold": 5,
+    "weights_high_confidence": {
+      "gbrt": 0.8,
+      "retrieval": 0.2
+    },
+    "weights_low_confidence": {
+      "gbrt": 0.5,
+      "retrieval": 0.5
+    }
+  }
+}

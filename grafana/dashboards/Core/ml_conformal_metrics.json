@@ -1,0 +1,82 @@
+{
+  "title": "ML Conformal Metrics",
+  "uid": "ml-conformal-metrics",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-3h", "to": "now" },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Conformal Radius",
+      "id": 1,
+      "targets": [
+        {
+          "expr": "g6_ml_conformal_radius{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "radius ($index,$horizon)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []}
+    },
+    {
+      "type": "timeseries",
+      "title": "Coverage Estimate",
+      "id": 2,
+      "targets": [
+        {
+          "expr": "g6_ml_conformal_coverage_estimate{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "coverage ($index,$horizon)",
+          "refId": "B"
+        },
+        {
+          "expr": "scalar($coverage_target)",
+          "legendFormat": "target",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": {"defaults": {"min": 0, "max": 1}, "overrides": []}
+    },
+    {
+      "type": "timeseries",
+      "title": "Band Width vs Prediction",
+      "id": 3,
+      "targets": [
+        {
+          "expr": "(g6_ml_conformal_radius{index=\"$index\",horizon=\"$horizon\"} * 2)",
+          "legendFormat": "band_width",
+          "refId": "A"
+        },
+        {
+          "expr": "g6_ml_prediction_p50{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "p50",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "none"}, "overrides": []}
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "index",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(g6_ml_prediction_p50, index)",
+        "refresh": 2
+      },
+      {
+        "name": "horizon",
+        "type": "query",
+        "datasource": "Prometheus",
+        "query": "label_values(g6_ml_prediction_p50, horizon)",
+        "refresh": 2
+      },
+      {
+        "name": "coverage_target",
+        "type": "constant",
+        "query": "0.8"
+      }
+    ]
+  }
+}

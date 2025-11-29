@@ -1,0 +1,15 @@
+# Provision Infinity datasource for Ensemble API panels
+# Requires plugin: yesoreyeram-infinity-datasource
+# If running Grafana via Docker, set env:
+#   GF_INSTALL_PLUGINS=yesoreyeram-infinity-datasource
+
+apiVersion: 1
+
+datasources:
+  - name: G6 Infinity
+    uid: infinity
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    isDefault: false
+    editable: true
+    jsonData: {}

@@ -1,0 +1,226 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Path Forecast Latency
+    folder: G6 ML
+    interval: 1m
+    rules:
+      - uid: pf_retrieval_p90_latency
+        title: PF Retrieval p90 Latency High
+        condition: E
+        data:
+          - refId: A
+            datasourceUid: PROM
+            relativeTimeRange: { from: 900, to: 0 }
+            model:
+              datasource: { type: prometheus, uid: PROM }
+              expr: histogram_quantile(0.90, sum by (le) (rate(pf_retrieval_latency_ms_bucket[5m])))
+              refId: A
+              interval: ""
+              intervalMs: 1000
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: E
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              refId: E
+              expression: B
+              conditions:
+                - type: query
+                  query: { params: [] }
+                  reducer: { type: last, params: [] }
+                  evaluator: { type: gt, params: [500, 0] }
+                  operator: { type: and }
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: 'Retrieval p90 latency high'
+          description: 'p90 over last 5m > 500 ms'
+        labels:
+          severity: high
+          component: path_forecast
+          metric: retrieval_latency
+        isPaused: false
+
+      - uid: pf_ann_prune_ratio_high
+        title: PF ANN Prune Ratio High (low pruning)
+        condition: E
+        data:
+          - refId: A
+            datasourceUid: PROM
+            relativeTimeRange: { from: 1800, to: 0 }
+            model:
+              datasource: { type: prometheus, uid: PROM }
+              expr: avg_over_time(pf_ann_prune_ratio[15m])
+              refId: A
+              interval: ""
+              intervalMs: 1000
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: E
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              refId: E
+              expression: B
+              conditions:
+                - type: query
+                  query: { params: [] }
+                  reducer: { type: last, params: [] }
+                  evaluator: { type: gt, params: [0.85, 0] }
+                  operator: { type: and }
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: 'ANN prune ratio high (low pruning)'
+          description: '15m avg prune ratio > 0.85 indicates weak pruning effectiveness.'
+        labels:
+          severity: medium
+          component: path_forecast
+          metric: ann_prune_ratio
+        isPaused: false
+
+      - uid: pf_prior_cache_hit_rate_low_warn
+        title: PF Prior Cache Hit Rate Low (warn)
+        condition: E
+        data:
+          - refId: A
+            datasourceUid: PROM
+            relativeTimeRange: { from: 3600, to: 0 }
+            model:
+              datasource: { type: prometheus, uid: PROM }
+              expr: avg_over_time(pf_composite_prior_cache_hit[15m])
+              refId: A
+              interval: ""
+              intervalMs: 1000
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: E
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              refId: E
+              expression: B
+              conditions:
+                - type: query
+                  query: { params: [] }
+                  reducer: { type: last, params: [] }
+                  evaluator: { type: lt, params: [0.5, 0] }
+                  operator: { type: and }
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: 'Prior cache hit rate low (warn)'
+          description: '15m avg prior cache hit < 50%.'
+        labels:
+          severity: high
+          component: path_forecast
+          metric: prior_cache_hit
+        isPaused: false
+
+      - uid: pf_prior_cache_hit_rate_low_crit
+        title: PF Prior Cache Hit Rate Low (critical)
+        condition: E
+        data:
+          - refId: A
+            datasourceUid: PROM
+            relativeTimeRange: { from: 3600, to: 0 }
+            model:
+              datasource: { type: prometheus, uid: PROM }
+              expr: avg_over_time(pf_composite_prior_cache_hit[15m])
+              refId: A
+              interval: ""
+              intervalMs: 1000
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: E
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              refId: E
+              expression: B
+              conditions:
+                - type: query
+                  query: { params: [] }
+                  reducer: { type: last, params: [] }
+                  evaluator: { type: lt, params: [0.2, 0] }
+                  operator: { type: and }
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: 'Prior cache hit rate critically low'
+          description: '15m avg prior cache hit < 20%.'
+        labels:
+          severity: critical
+          component: path_forecast
+          metric: prior_cache_hit
+        isPaused: false
+      - uid: pf_composite_p90_latency
+        title: PF Composite p90 Latency High
+        condition: E
+        data:
+          - refId: A
+            datasourceUid: PROM
+            relativeTimeRange: { from: 900, to: 0 }
+            model:
+              datasource: { type: prometheus, uid: PROM }
+              expr: histogram_quantile(0.90, sum by (le) (rate(pf_composite_latency_ms_bucket[5m])))
+              refId: A
+              interval: ""
+              intervalMs: 1000
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              type: reduce
+              expression: A
+              reducer: last
+              refId: B
+          - refId: E
+            datasourceUid: __expr__
+            model:
+              type: threshold
+              refId: E
+              expression: B
+              conditions:
+                - type: query
+                  query: { params: [] }
+                  reducer: { type: last, params: [] }
+                  evaluator: { type: gt, params: [800, 0] }
+                  operator: { type: and }
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: 'Composite p90 latency high'
+          description: 'p90 over last 5m > 800 ms'
+        labels:
+          severity: high
+          component: path_forecast
+          metric: composite_latency
+        isPaused: false

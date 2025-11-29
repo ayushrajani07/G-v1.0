@@ -1,0 +1,19 @@
+# Provision G6 Ensemble dashboard(s)
+# Ensure the path below contains ensemble_api.json.
+# For Docker, mount your repo folder to the same container path.
+
+apiVersion: 1
+
+providers:
+  - name: G6 Ensemble
+    orgId: 1
+    folder: G6
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      # Point this to the folder containing ensemble_api.json
+      # Example (Docker): -v C:\\path\\to\\repo\\grafana\\dashboards:/var/lib/grafana/dashboards/g6
+      path: /var/lib/grafana/dashboards/g6
+      recursive: true
+      allowUiUpdates: true

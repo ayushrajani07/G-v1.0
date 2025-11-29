@@ -1,5 +1,20 @@
-﻿{
-  "annotations": {"list": [{"builtIn": 1, "datasource": {"type": "grafana", "uid": "-- Grafana --"}, "enable": true, "hide": true, "iconColor": "rgba(0, 211, 255, 1)", "name": "Annotations & Alerts", "type": "dashboard"}]},
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -7,10 +22,15 @@
   "links": [],
   "panels": [
     {
-      "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "palette-classic"},
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "drawStyle": "line",
             "showPoints": "never",
@@ -24,122 +44,405 @@
         },
         "overrides": [
           {
-            "matcher": {"id": "byName", "options": "Index Price"},
+            "matcher": {
+              "id": "byName",
+              "options": "Index Price"
+            },
             "properties": [
-              {"id": "displayName", "value": "Index Price"},
-              {"id": "custom.axisPlacement", "value": "left"},
-              {"id": "custom.lineStyle", "value": {"dash": [10,10], "fill": "dash"}},
-              {"id": "custom.lineWidth", "value": 2}
+              {
+                "id": "displayName",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
             ]
           },
           {
-            "matcher": {"id": "byName", "options": "ATM Premium"},
+            "matcher": {
+              "id": "byName",
+              "options": "ATM Premium"
+            },
             "properties": [
-              {"id": "displayName", "value": "ATM Premium"},
-              {"id": "custom.axisPlacement", "value": "right"},
-              {"id": "custom.axisLabel", "value": "Premium"},
-              {"id": "custom.lineWidth", "value": 4}
+              {
+                "id": "displayName",
+                "value": "ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 4
+              }
             ]
           },
           {
-            "matcher": {"id": "byFrameRefID", "options": "HGB"},
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "HGB"
+            },
             "properties": [
-              {"id": "displayName", "value": "sk_hgb_regressor (h=${horizon})"},
-              {"id": "custom.axisPlacement", "value": "right"},
-              {"id": "custom.axisLabel", "value": "Predicted ATM Premium (pts)"},
-              {"id": "color", "value": {"mode": "fixed", "fixedColor": "#00d1ff"}},
-              {"id": "custom.lineWidth", "value": 3},
-              {"id": "custom.showPoints", "value": "always"},
-              {"id": "custom.pointSize", "value": 5}
+              {
+                "id": "displayName",
+                "value": "sk_hgb_regressor (h=${horizon})"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Predicted ATM Premium (pts)"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#00d1ff"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 5
+              }
             ]
           },
           {
-            "matcher": {"id": "byFrameRefID", "options": "XGB"},
+            "matcher": {
+              "id": "byFrameRefID",
+              "options": "XGB"
+            },
             "properties": [
-              {"id": "displayName", "value": "xgb_regressor (h=${horizon})"},
-              {"id": "custom.axisPlacement", "value": "right"},
-              {"id": "custom.axisLabel", "value": "Predicted ATM Premium (pts)"},
-              {"id": "color", "value": {"mode": "fixed", "fixedColor": "#f2c744"}},
-              {"id": "custom.lineWidth", "value": 3},
-              {"id": "custom.showPoints", "value": "always"},
-              {"id": "custom.pointSize", "value": 5}
+              {
+                "id": "displayName",
+                "value": "xgb_regressor (h=${horizon})"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Predicted ATM Premium (pts)"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#f2c744"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 5
+              }
             ]
           }
         ]
       },
-      "gridPos": {"h": 16, "w": 24, "x": 0, "y": 0},
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
       "options": {
-        "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
-        "tooltip": {"mode": "multi", "sort": "none"}
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
       },
       "targets": [
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "LiveCSV",
           "source": "url",
           "type": "json",
-          "url": "http://127.0.0.1:9510/api/live_csv?index=${index}&expiry_tag=${expiry}&offset=${offset}&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/live_csv?index=${index}&expiry_tag=${expiry}&offset=${offset}&include_index=1&include_oi=1&include_volume=1&include_pcr=1",
+          "url_options": {
+            "method": "GET"
+          }
         },
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "HGB",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&horizon=${horizon}&tail=1200&model=sk_hgb_regressor",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/ml/predictions?index=${index}&horizon=${horizon}&tail=1200&model=sk_hgb_regressor",
+          "url_options": {
+            "method": "GET"
+          }
         },
         {
-          "datasource": {"type": "yesoreyeram-infinity-datasource", "uid": "INFINITY"},
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
           "format": "table",
           "parser": "backend",
           "refId": "XGB",
           "source": "url",
           "type": "csv",
-          "url": "http://127.0.0.1:9510/api/ml/predictions?index=${index}&horizon=${horizon}&tail=1200&model=xgb_regressor",
-          "url_options": {"method": "GET"}
+          "url": "http://${api_server}/api/ml/predictions?index=${index}&horizon=${horizon}&tail=1200&model=xgb_regressor",
+          "url_options": {
+            "method": "GET"
+          }
         }
       ],
       "title": "${index} | ${expiry} | Offset: ${offset} | h=${horizon}",
       "transformations": [
-        {"id": "convertFieldType", "options": {"conversions": [
-          {"targetField": "time", "destinationType": "time"},
-          {"targetField": "prediction", "destinationType": "number"},
-          {"targetField": "index_price", "destinationType": "number"},
-          {"targetField": "tp", "destinationType": "number"}
-        ]}},
-        {"id": "organize", "options": {
-          "renameByName": {"index_price": "Index Price", "tp": "ATM Premium", "avg_tp": "ATM Premium"},
-          "includeByName": {"time": true, "Index Price": true, "ATM Premium": true, "prediction": true},
-          "indexByName": {"time": 0, "Index Price": 1, "ATM Premium": 2, "prediction": 3},
-          "excludeByName": {"ce": true, "pe": true, "pcr": true, "ce_oi": true, "ce_vol": true, "pe_oi": true, "pe_vol": true, "time_epoch_s": true, "time_str": true, "ts": true, "model": true, "index": true, "horizon": true, "time_ms": true, "timestamp": true}
-        }},
-        {"id": "sortBy", "options": {"fields": [{"field": "time", "desc": false}]}},
-        {"id": "prepareTimeSeries", "options": {"format": "multi"}}
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "targetField": "time",
+                "destinationType": "time"
+              },
+              {
+                "targetField": "prediction",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "index_price",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "tp",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "index_price": "Index Price",
+              "tp": "ATM Premium",
+              "avg_tp": "ATM Premium"
+            },
+            "includeByName": {
+              "time": true,
+              "Index Price": true,
+              "ATM Premium": true,
+              "prediction": true
+            },
+            "indexByName": {
+              "time": 0,
+              "Index Price": 1,
+              "ATM Premium": 2,
+              "prediction": 3
+            },
+            "excludeByName": {
+              "ce": true,
+              "pe": true,
+              "pcr": true,
+              "ce_oi": true,
+              "ce_vol": true,
+              "pe_oi": true,
+              "pe_vol": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "ts": true,
+              "model": true,
+              "index": true,
+              "horizon": true,
+              "time_ms": true,
+              "timestamp": true
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": [
+              {
+                "field": "time",
+                "desc": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
       ],
       "type": "timeseries"
     }
   ],
   "refresh": "15s",
   "schemaVersion": 39,
-  "tags": ["g6", "ml", "minimal"],
-  "templating": {"list": [
-    {"name": "index", "type": "custom", "label": "Index", "query": "NIFTY,BANKNIFTY,SENSEX,FINNIFTY", "current": {"selected": true, "text": "NIFTY", "value": "NIFTY"}},
-    {"name": "offset", "type": "custom", "label": "Offset", "query": "0,100,-100,200,-200,300,-300", "current": {"selected": true, "text": "0", "value": "0"}},
-    {"name": "expiry", "type": "custom", "label": "Expiry", "query": "this_week,next_week,this_month,next_month", "current": {"selected": true, "text": "this_week", "value": "this_week"}},
-    {"name": "horizon", "type": "custom", "label": "Horizon (bars)", "query": "1,2,4,8", "current": {"selected": true, "text": "1", "value": "1"}}
-  ]},
-  "time": {"from": "now-6h", "to": "now"},
-  "timepicker": {"refresh_intervals": ["15s", "30s", "1m", "2m", "5m"]},
+  "tags": [
+    "g6",
+    "ml",
+    "minimal"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "127.0.0.1:9500",
+          "value": "127.0.0.1:9500"
+        },
+        "description": "API Server endpoint (select based on which port your API is running on)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "API Server",
+        "multi": false,
+        "name": "api_server",
+        "options": [
+          {
+            "selected": true,
+            "text": "127.0.0.1:9500 (default)",
+            "value": "127.0.0.1:9500"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:9510 (alt)",
+            "value": "127.0.0.1:9510"
+          },
+          {
+            "selected": false,
+            "text": "127.0.0.1:8003 (dev)",
+            "value": "127.0.0.1:8003"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9500",
+            "value": "localhost:9500"
+          },
+          {
+            "selected": false,
+            "text": "localhost:9510",
+            "value": "localhost:9510"
+          }
+        ],
+        "query": "127.0.0.1:9500,127.0.0.1:9510,127.0.0.1:8003,localhost:9500,localhost:9510",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "name": "index",
+        "type": "custom",
+        "label": "Index",
+        "query": "NIFTY,BANKNIFTY,SENSEX,FINNIFTY",
+        "current": {
+          "selected": true,
+          "text": "NIFTY",
+          "value": "NIFTY"
+        }
+      },
+      {
+        "name": "offset",
+        "type": "custom",
+        "label": "Offset",
+        "query": "0,100,-100,200,-200,300,-300",
+        "current": {
+          "selected": true,
+          "text": "0",
+          "value": "0"
+        }
+      },
+      {
+        "name": "expiry",
+        "type": "custom",
+        "label": "Expiry",
+        "query": "this_week,next_week,this_month,next_month",
+        "current": {
+          "selected": true,
+          "text": "this_week",
+          "value": "this_week"
+        }
+      },
+      {
+        "name": "horizon",
+        "type": "custom",
+        "label": "Horizon (bars)",
+        "query": "1,2,4,8",
+        "current": {
+          "selected": true,
+          "text": "1",
+          "value": "1"
+        }
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "2m",
+      "5m"
+    ]
+  },
   "timezone": "Asia/Kolkata",
   "title": "ML Minimal: Index vs TP vs Model",
   "uid": "g6-ml-minimal",
   "version": 1,
   "weekStart": ""
 }
-

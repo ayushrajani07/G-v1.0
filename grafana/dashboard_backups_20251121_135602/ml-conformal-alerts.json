@@ -1,0 +1,181 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "ml-conformal-alert-overview",
+                 "url":  "/d/ml-conformal-alerts/ml-conformal-alert-overview",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-17T13:28:49+05:30",
+                 "updated":  "2025-11-17T13:28:49+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "ml_conformal_alert_overview.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "annotations":  {
+                                          "list":  [
+                                                       {
+                                                           "builtIn":  1,
+                                                           "type":  "dashboard"
+                                                       }
+                                                   ]
+                                      },
+                      "id":  248,
+                      "panels":  [
+                                     {
+                                         "datasource":  "Prometheus",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "unit":  "percentunit"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  1,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "ml:conformal:coverage_avg_5m",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Coverage Avg 5m",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  "Prometheus",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  2,
+                                                                              "unit":  "percentunit"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  2,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "ml:conformal:coverage_avg_15m",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Coverage Avg 15m",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  "Prometheus",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "max":  1,
+                                                                              "min":  0
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  3,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "ml:conformal:coverage_avg_5m",
+                                                             "legendFormat":  "cov_avg_5m",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "ml:conformal:coverage_avg_15m",
+                                                             "legendFormat":  "cov_avg_15m",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "expr":  "scalar(0.8)",
+                                                             "legendFormat":  "target",
+                                                             "refId":  "C"
+                                                         }
+                                                     ],
+                                         "title":  "Coverage Averages",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  "Prometheus",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  4,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "ml:conformal:band_width",
+                                                             "legendFormat":  "band_width",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Band Width",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  "Prometheus",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "decimals":  3,
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  5,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "ml:conformal:under_coverage_15m",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Under-Coverage 15m (Î vs 0.8)",
+                                         "type":  "stat"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  38,
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "title":  "ML Conformal Alert Overview",
+                      "uid":  "ml-conformal-alerts",
+                      "version":  1
+                  }
+}

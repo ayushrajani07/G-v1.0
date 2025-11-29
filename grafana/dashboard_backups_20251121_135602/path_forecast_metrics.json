@@ -1,0 +1,660 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "path-forecast-metrics",
+                 "url":  "/d/path_forecast_metrics/path-forecast-metrics",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-17T13:28:49+05:30",
+                 "updated":  "2025-11-17T13:28:49+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "path_forecast_metrics.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+                                       {
+                                           "description":  "Select Prometheus datasource",
+                                           "label":  "Prometheus",
+                                           "name":  "DS_PROMETHEUS",
+                                           "pluginId":  "prometheus",
+                                           "pluginName":  "Prometheus",
+                                           "type":  "datasource"
+                                       }
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "grafana",
+                                             "name":  "Grafana",
+                                             "type":  "grafana",
+                                             "version":  "11.2.0"
+                                         },
+                                         {
+                                             "id":  "prometheus",
+                                             "name":  "Prometheus",
+                                             "type":  "datasource",
+                                             "version":  "1.0.0"
+                                         },
+                                         {
+                                             "id":  "timeseries",
+                                             "name":  "Time series",
+                                             "type":  "panel",
+                                             "version":  ""
+                                         },
+                                         {
+                                             "id":  "stat",
+                                             "name":  "Stat",
+                                             "type":  "panel",
+                                             "version":  ""
+                                         },
+                                         {
+                                             "id":  "gauge",
+                                             "name":  "Gauge",
+                                             "type":  "panel",
+                                             "version":  ""
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+                                                       {
+                                                           "builtIn":  1,
+                                                           "datasource":  "-- Grafana --",
+                                                           "enable":  true,
+                                                           "hide":  true,
+                                                           "iconColor":  "rgba(0, 211, 255, 1)",
+                                                           "name":  "Annotations \u0026 Alerts",
+                                                           "type":  "dashboard"
+                                                       }
+                                                   ]
+                                      },
+                      "editable":  true,
+                      "gnetId":  null,
+                      "graphTooltip":  0,
+                      "id":  246,
+                      "links":  [
+
+                                ],
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "unit":  "ms"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  8,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  1,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "calcs":  [
+                                                                                      "last",
+                                                                                      "max",
+                                                                                      "mean"
+                                                                                  ],
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "histogram_quantile(0.50, sum by (le) (rate(pf_retrieval_latency_ms_bucket[5m])))",
+                                                             "legendFormat":  "p50",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "histogram_quantile(0.90, sum by (le) (rate(pf_retrieval_latency_ms_bucket[5m])))",
+                                                             "legendFormat":  "p90",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "expr":  "histogram_quantile(0.99, sum by (le) (rate(pf_retrieval_latency_ms_bucket[5m])))",
+                                                             "legendFormat":  "p99",
+                                                             "refId":  "C"
+                                                         }
+                                                     ],
+                                         "title":  "Retrieval Latency Quantiles (5m rate)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "unit":  "ms"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  8,
+                                                         "x":  8,
+                                                         "y":  0
+                                                     },
+                                         "id":  2,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "calcs":  [
+                                                                                      "last",
+                                                                                      "max",
+                                                                                      "mean"
+                                                                                  ],
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "histogram_quantile(0.50, sum by (le) (rate(pf_composite_latency_ms_bucket[5m])))",
+                                                             "legendFormat":  "p50",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "histogram_quantile(0.90, sum by (le) (rate(pf_composite_latency_ms_bucket[5m])))",
+                                                             "legendFormat":  "p90",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "expr":  "histogram_quantile(0.99, sum by (le) (rate(pf_composite_latency_ms_bucket[5m])))",
+                                                             "legendFormat":  "p99",
+                                                             "refId":  "C"
+                                                         }
+                                                     ],
+                                         "title":  "Composite Latency Quantiles (5m rate)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  4,
+                                                         "x":  16,
+                                                         "y":  0
+                                                     },
+                                         "id":  3,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_retrieval_candidates_total",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Candidate Days Retained",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "thresholds"
+                                                                                        },
+                                                                              "max":  1,
+                                                                              "min":  0,
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "red"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "yellow",
+                                                                                                                   "value":  0.5
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  0.7
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "percent"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  4,
+                                                         "x":  20,
+                                                         "y":  0
+                                                     },
+                                         "id":  4,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_ann_prune_ratio",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "ANN Prune Ratio",
+                                         "type":  "gauge"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "ms"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  0,
+                                                         "y":  8
+                                                     },
+                                         "id":  5,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_ann_build_ms",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "ANN Build Time (ms)",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "ms"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  6,
+                                                         "y":  8
+                                                     },
+                                         "id":  6,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_exact_scoring_ms",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Exact Scoring Time (ms)",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "ms"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  12,
+                                                         "y":  8
+                                                     },
+                                         "id":  7,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_quantile_agg_ms",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Quantile Aggregation Time (ms)",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  18,
+                                                         "y":  8
+                                                     },
+                                         "id":  8,
+                                         "options":  {
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "lastNotNull"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_composite_prior_cache_hit",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Prior Median Cache Hit (0/1)",
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  0,
+                                                         "y":  14
+                                                     },
+                                         "id":  9,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_composite_alpha",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Composite Blend Alpha",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  6,
+                                                         "x":  6,
+                                                         "y":  14
+                                                     },
+                                         "id":  10,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "pf_composite_prior_days",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "pf_composite_retained_days",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "Prior Days vs Retained Days",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  20
+                                                     },
+                                         "id":  11,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "avg_over_time(pf_composite_prior_cache_hit[15m])",
+                                                             "legendFormat":  "prior_cache_hit_rate_15m",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Prior Cache Hit Rate (15m avg)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "${DS_PROMETHEUS}"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "color":  {
+                                                                                            "mode":  "palette-classic"
+                                                                                        },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  6,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  20
+                                                     },
+                                         "id":  12,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "avg_over_time(pf_ann_prune_ratio[15m])",
+                                                             "legendFormat":  "ann_prune_ratio_15m",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "ANN Prune Ratio (15m avg)",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "15s",
+                      "schemaVersion":  36,
+                      "style":  "dark",
+                      "tags":  [
+                                   "g6",
+                                   "path_forecast",
+                                   "ml",
+                                   "metrics"
+                               ],
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-30m",
+                                   "to":  "now"
+                               },
+                      "timezone":  "Asia/Kolkata",
+                      "title":  "Path Forecast Metrics",
+                      "uid":  "path_forecast_metrics",
+                      "version":  1,
+                      "weekStart":  ""
+                  }
+}

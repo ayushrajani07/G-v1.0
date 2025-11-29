@@ -1,0 +1,21 @@
+{
+  "aggregate": {
+    "coverage_drop_crit": null,
+    "coverage_drop_warn": null,
+    "horizons_used": 0,
+    "mae_crit": null,
+    "mae_warn": null,
+    "norm_crit": null,
+    "norm_warn": null
+  },
+  "coverage_crit_low_pctl": 0.05,
+  "coverage_warn_low_pctl": 0.15,
+  "crit_pctl": 0.95,
+  "generated_at": "2025-11-28T15:11:57.503854Z",
+  "indices": [
+    "SENSEX"
+  ],
+  "min_count": 20,
+  "rows": [],
+  "warn_pctl": 0.85
+}

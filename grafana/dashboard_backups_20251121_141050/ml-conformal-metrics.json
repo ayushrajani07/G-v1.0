@@ -1,0 +1,146 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "ml-conformal-metrics",
+                 "url":  "/d/ml-conformal-metrics/ml-conformal-metrics",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-17T13:28:49+05:30",
+                 "updated":  "2025-11-17T13:28:49+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "ml_conformal_metrics.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "id":  249,
+                      "panels":  [
+                                     {
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  1,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_ml_conformal_radius{index=\"$index\",horizon=\"$horizon\"}",
+                                                             "legendFormat":  "radius ($index,$horizon)",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Conformal Radius",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "max":  1,
+                                                                              "min":  0
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  2,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_ml_conformal_coverage_estimate{index=\"$index\",horizon=\"$horizon\"}",
+                                                             "legendFormat":  "coverage ($index,$horizon)",
+                                                             "refId":  "B"
+                                                         },
+                                                         {
+                                                             "expr":  "scalar($coverage_target)",
+                                                             "legendFormat":  "target",
+                                                             "refId":  "C"
+                                                         }
+                                                     ],
+                                         "title":  "Coverage Estimate",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  3,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "(g6_ml_conformal_radius{index=\"$index\",horizon=\"$horizon\"} * 2)",
+                                                             "legendFormat":  "band_width",
+                                                             "refId":  "A"
+                                                         },
+                                                         {
+                                                             "expr":  "g6_ml_prediction_p50{index=\"$index\",horizon=\"$horizon\"}",
+                                                             "legendFormat":  "p50",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "Band Width vs Prediction",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  38,
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "datasource":  "Prometheus",
+                                                          "name":  "index",
+                                                          "query":  "label_values(g6_ml_prediction_p50, index)",
+                                                          "refresh":  2,
+                                                          "type":  "query"
+                                                      },
+                                                      {
+                                                          "datasource":  "Prometheus",
+                                                          "name":  "horizon",
+                                                          "query":  "label_values(g6_ml_prediction_p50, horizon)",
+                                                          "refresh":  2,
+                                                          "type":  "query"
+                                                      },
+                                                      {
+                                                          "name":  "coverage_target",
+                                                          "query":  "0.8",
+                                                          "type":  "constant"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-3h",
+                                   "to":  "now"
+                               },
+                      "title":  "ML Conformal Metrics",
+                      "uid":  "ml-conformal-metrics",
+                      "version":  1
+                  }
+}

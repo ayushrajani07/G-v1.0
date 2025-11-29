@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "description": "Dashboard visibility configuration for Grafana provisioning",
+  "version": "1.0",
+  "last_updated": "2025-11-17",
+  
+  "dashboards": {
+    "advisor_detail": {
+      "enabled": true,
+      "folder": "Core",
+      "description": "Detailed advisor metrics and health"
+    },
+    "advisor_unified_health": {
+      "enabled": true,
+      "folder": "Core",
+      "description": "Unified health dashboard for all advisors"
+    },
+    "analytics_pct_change": {
+      "enabled": true,
+      "folder": "Analytics",
+      "description": "Analytics percentage change visualization"
+    },
+    "contracts_pct_change": {
+      "enabled": true,
+      "folder": "Analytics",
+      "description": "Contracts percentage change tracking"
+    },
+    "path_forecast_metrics": {
+      "enabled": true,
+      "folder": "Forecasting",
+      "description": "Path forecasting performance metrics"
+    },
+    
+    "ml_conformal_alert_overview": {
+      "enabled": true,
+      "folder": "ML",
+      "description": "ML conformal prediction alerts overview",
+      "source_dir": "ml"
+    },
+    "ml_conformal_metrics": {
+      "enabled": true,
+      "folder": "ML",
+      "description": "ML conformal prediction metrics",
+      "source_dir": "ml"
+    },
+    "ml_ensemble_overview": {
+      "enabled": true,
+      "folder": "ML",
+      "description": "ML ensemble forecaster overview",
+      "source_dir": "ml"
+    },
+    "ml_ensemble_monitoring": {
+      "enabled": true,
+      "folder": "ML",
+      "description": "ML ensemble monitoring dashboard",
+      "note": "From Phase 4 - production monitoring"
+    },
+    "ml_hybrid_vs_quantile": {
+      "enabled": true,
+      "folder": "ML",
+      "description": "ML hybrid vs quantile comparison",
+      "source_dir": "ml"
+    },
+    "ml_move_signals": {
+      "enabled": true,
+      "folder": "ML",
+      "description": "ML move signals dashboard",
+      "source_dir": "ml"
+    },
+    "ml_move_trends": {
+      "enabled": true,
+      "folder": "ML",
+      "description": "ML move trends visualization",
+      "source_dir": "ml"
+    },
+    "ml_prediction_bands": {
+      "enabled": true,
+      "folder": "ML",
+      "description": "ML prediction bands and uncertainty",
+      "source_dir": "ml"
+    },
+    
+    "contracts_timeseries": {
+      "enabled": true,
+      "folder": "Generated",
+      "description": "Contracts time series data",
+      "source_dir": "generated"
+    },
+    "path_forecast_overview": {
+      "enabled": true,
+      "folder": "Generated",
+      "description": "Path forecasting overview",
+      "source_dir": "generated"
+    },
+    
+    "g6_essential_metrics": {
+      "enabled": false,
+      "folder": "Miscellaneous",
+      "description": "Essential metrics dashboard (duplicate)",
+      "source_dir": "miscellaneous",
+      "note": "Disabled - duplicate functionality"
+    },
+    "g6_health_check": {
+      "enabled": false,
+      "folder": "Miscellaneous",
+      "description": "Health check dashboard (duplicate)",
+      "source_dir": "miscellaneous",
+      "note": "Disabled - use advisor_unified_health instead"
+    },
+    "pf_meta_metrics_example": {
+      "enabled": false,
+      "folder": "Snippets",
+      "description": "Path forecast meta metrics example",
+      "source_dir": "snippets",
+      "note": "Code snippet/example - not a full dashboard"
+    }
+  },
+  
+  "folders": {
+    "Core": {
+      "description": "Core system health and advisor dashboards",
+      "priority": 1
+    },
+    "Analytics": {
+      "description": "Analytics and percentage change visualizations",
+      "priority": 2
+    },
+    "Forecasting": {
+      "description": "Path forecasting and prediction dashboards",
+      "priority": 3
+    },
+    "ML": {
+      "description": "Machine learning model dashboards",
+      "priority": 4
+    },
+    "Generated": {
+      "description": "Auto-generated system dashboards (created by gen_dashboards_modular.py from metrics_spec.yaml)",
+      "priority": 5,
+      "note": "DO NOT edit these JSON files manually - modify metrics spec and regenerate instead"
+    },
+    "Performance": {
+      "description": "System performance and orchestrator metrics",
+      "priority": 6
+    },
+    "Miscellaneous": {
+      "description": "Experimental and test dashboards",
+      "priority": 98
+    },
+    "Snippets": {
+      "description": "Dashboard code snippets and examples",
+      "priority": 99
+    }
+  },
+  
+  "settings": {
+    "base_path": "c:/Users/Asus/Desktop/g6_reorganized/grafana/dashboards",
+    "provisioning_path": "c:/Users/Asus/Desktop/g6_reorganized/provisioning/dashboards",
+    "archive_path": "c:/Users/Asus/Desktop/g6_reorganized/grafana/dashboards/.archive",
+    "auto_create_folders": true,
+    "editable": true,
+    "disable_deletion": false
+  },
+  
+  "archived": {
+    "_comment": "Dashboards that have been archived (moved to .archive directory)",
+    "_note": "Archived dashboards are preserved but not loaded by Grafana"
+  }
+}

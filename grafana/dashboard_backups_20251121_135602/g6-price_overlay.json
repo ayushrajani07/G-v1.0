@@ -1,0 +1,218 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "price-overlay-explorer",
+                 "url":  "/d/g6-price_overlay/price-overlay-explorer",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-17T14:34:45+05:30",
+                 "updated":  "2025-11-17T14:34:45+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "price_overlay.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "prometheus",
+                                             "name":  "Prometheus",
+                                             "type":  "prometheus",
+                                             "version":  "1.0.0"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "editable":  true,
+                      "g6_meta":  {
+                                      "description":  "Time-based price plots with dynamic overlays",
+                                      "enriched":  true,
+                                      "explorer":  false,
+                                      "families":  [
+                                                       "market",
+                                                       "overlay"
+                                                   ]
+                                  },
+                      "id":  257,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "lineWidth":  2
+                                                                                         },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  13,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  1,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi",
+                                                                         "sort":  "none"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum by (symbol) (avg_over_time($price_metric{symbol=~\"$symbols\"}[1m]))",
+                                                             "legendFormat":  "{{symbol}}",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "Overlay: $price_metric by symbol",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "percentunit"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  7,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  13
+                                                     },
+                                         "id":  2,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "100 * ( ( $price_metric{symbol=~\"$symbols\"} - $price_metric{symbol=~\"$symbols\"} offset 5m ) / clamp_min($price_metric{symbol=~\"$symbols\"} offset 5m, 0.0001) )",
+                                                             "legendFormat":  "{{symbol}}",
+                                                             "refId":  "B"
+                                                         }
+                                                     ],
+                                         "title":  "Change % (5m)",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "schemaVersion":  38,
+                      "style":  "dark",
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "current":  {
+                                                                          "selected":  true,
+                                                                          "text":  "g6_price_last",
+                                                                          "value":  "g6_price_last"
+                                                                      },
+                                                          "label":  "Price metric",
+                                                          "name":  "price_metric",
+                                                          "query":  "g6_price_last",
+                                                          "type":  "constant"
+                                                      },
+                                                      {
+                                                          "allValue":  ".*",
+                                                          "current":  {
+                                                                          "selected":  true,
+                                                                          "text":  "All",
+                                                                          "value":  "$__all"
+                                                                      },
+                                                          "datasource":  {
+                                                                             "type":  "prometheus",
+                                                                             "uid":  "PROM"
+                                                                         },
+                                                          "includeAll":  true,
+                                                          "label":  "Symbols",
+                                                          "multi":  true,
+                                                          "name":  "symbols",
+                                                          "query":  "label_values($price_metric, symbol)",
+                                                          "refresh":  2,
+                                                          "regex":  "",
+                                                          "sort":  1,
+                                                          "type":  "query"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "{{symbol}}",
+                                                                          "value":  "{{symbol}}"
+                                                                      },
+                                                          "label":  "Legend",
+                                                          "name":  "legend_fmt",
+                                                          "query":  "{{symbol}}",
+                                                          "type":  "constant"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-1h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+                                         "refresh":  "10s",
+                                         "refresh_intervals":  [
+                                                                   "5s",
+                                                                   "10s",
+                                                                   "30s",
+                                                                   "1m",
+                                                                   "5m"
+                                                               ]
+                                     },
+                      "title":  "Price Overlay Explorer",
+                      "uid":  "g6-price_overlay",
+                      "version":  1
+                  }
+}

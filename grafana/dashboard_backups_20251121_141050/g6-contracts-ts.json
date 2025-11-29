@@ -1,0 +1,1645 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "contracts-e28093-index-oi-volume-time-series",
+                 "url":  "/d/g6-contracts-ts/contracts-e28093-index-oi-volume-time-series",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-12T15:00:01+05:30",
+                 "updated":  "2025-11-10T16:02:45+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  2,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "contracts_timeseries.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "id":  232,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "lineStyle":  {
+                                                                                                               "mode":  "solid"
+                                                                                                           },
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never"
+                                                                                         }
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "index_price"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "hidden"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Index"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#f1c40f",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "Index"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "hidden"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Index"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#f1c40f",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "ce_vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "pe_vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "ce_oi"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "pe_oi"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "CE Vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "PE Vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "CE OI"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "PE OI"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  10,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "ts",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "index_price",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "ce_vol",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pe_vol",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "ce_oi",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pe_oi",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pcr",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$"
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "A",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/live_csv?index=NIFTY\u0026expiry_tag=${expiry}\u0026offset=${offset}",
+                                                             "url_options":  {
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+                                                                                                {
+                                                                                                    "key":  "tail",
+                                                                                                    "value":  "2000"
+                                                                                                },
+                                                                                                {
+                                                                                                    "key":  "cb",
+                                                                                                    "value":  "${__unixEpochMs}"
+                                                                                                }
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "NIFTY | ${expiry} | Offset ${offset}",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "ts"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "PCR":  true,
+                                                                                                           "time_epoch_s":  true,
+                                                                                                           "time_str":  true
+                                                                                                       },
+                                                                                     "renameByName":  {
+                                                                                                          "ce_oi":  "CE OI",
+                                                                                                          "ce_vol":  "CE Vol",
+                                                                                                          "index_price":  "Index",
+                                                                                                          "pcr":  "PCR",
+                                                                                                          "pe_oi":  "PE OI",
+                                                                                                          "pe_vol":  "PE Vol"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "format":  "multi"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "lineStyle":  {
+                                                                                                               "mode":  "solid"
+                                                                                                           },
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never"
+                                                                                         }
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "index_price"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "hidden"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Index"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#f1c40f",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "Index"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "hidden"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Index"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#f1c40f",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "ce_vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "pe_vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "ce_oi"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "pe_oi"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "CE Vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "PE Vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "CE OI"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "PE OI"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  10,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  10
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "ts",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "index_price",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "ce_vol",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pe_vol",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "ce_oi",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pe_oi",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pcr",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$"
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "A",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/live_csv?index=BANKNIFTY\u0026expiry_tag=${expiry}\u0026offset=${offset}",
+                                                             "url_options":  {
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+                                                                                                {
+                                                                                                    "key":  "tail",
+                                                                                                    "value":  "2000"
+                                                                                                },
+                                                                                                {
+                                                                                                    "key":  "cb",
+                                                                                                    "value":  "${__unixEpochMs}"
+                                                                                                }
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "BANKNIFTY | ${expiry} | Offset ${offset}",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "ts"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "PCR":  true,
+                                                                                                           "time_epoch_s":  true,
+                                                                                                           "time_str":  true
+                                                                                                       },
+                                                                                     "renameByName":  {
+                                                                                                          "ce_oi":  "CE OI",
+                                                                                                          "ce_vol":  "CE Vol",
+                                                                                                          "index_price":  "Index",
+                                                                                                          "pcr":  "PCR",
+                                                                                                          "pe_oi":  "PE OI",
+                                                                                                          "pe_vol":  "PE Vol"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "format":  "multi"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "lineStyle":  {
+                                                                                                               "mode":  "solid"
+                                                                                                           },
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never"
+                                                                                         }
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "index_price"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "hidden"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Index"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#f1c40f",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "Index"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "hidden"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Index"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#f1c40f",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "ce_vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "pe_vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "ce_oi"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "pe_oi"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "CE Vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "PE Vol"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "Vol"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "CE OI"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#e31a1c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "PE OI"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "color",
+                                                                                                          "value":  {
+                                                                                                                        "fixedColor":  "#33a02c",
+                                                                                                                        "mode":  "fixed"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "left"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.axisLabel",
+                                                                                                          "value":  "OI"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "short"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "decimals",
+                                                                                                          "value":  0
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineStyle",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "solid"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.lineWidth",
+                                                                                                          "value":  2
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  10,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  20
+                                                     },
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "placement":  "bottom",
+                                                                        "showLegend":  true
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+                                                                             {
+                                                                                 "selector":  "ts",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "index_price",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "ce_vol",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pe_vol",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "ce_oi",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pe_oi",
+                                                                                 "type":  "number"
+                                                                             },
+                                                                             {
+                                                                                 "selector":  "pcr",
+                                                                                 "type":  "number"
+                                                                             }
+                                                                         ],
+                                                             "format":  "table",
+                                                             "json_options":  {
+                                                                                  "root":  "$"
+                                                                              },
+                                                             "parser":  "backend",
+                                                             "refId":  "A",
+                                                             "root_selector":  "$",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "${base_url}/api/live_csv?index=FINNIFTY\u0026expiry_tag=${expiry}\u0026offset=${offset}",
+                                                             "url_options":  {
+                                                                                 "headers":  [
+
+                                                                                             ],
+                                                                                 "method":  "GET",
+                                                                                 "params":  [
+                                                                                                {
+                                                                                                    "key":  "tail",
+                                                                                                    "value":  "2000"
+                                                                                                },
+                                                                                                {
+                                                                                                    "key":  "cb",
+                                                                                                    "value":  "${__unixEpochMs}"
+                                                                                                }
+                                                                                            ]
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "FINNIFTY | ${expiry} | Offset ${offset}",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "ts"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "PCR":  true,
+                                                                                                           "time_epoch_s":  true,
+                                                                                                           "time_str":  true
+                                                                                                       },
+                                                                                     "renameByName":  {
+                                                                                                          "ce_oi":  "CE OI",
+                                                                                                          "ce_vol":  "CE Vol",
+                                                                                                          "index_price":  "Index",
+                                                                                                          "pcr":  "PCR",
+                                                                                                          "pe_oi":  "PE OI",
+                                                                                                          "pe_vol":  "PE Vol"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "format":  "multi"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "15s",
+                      "schemaVersion":  39,
+                      "tags":  [
+                                   "g6",
+                                   "contracts",
+                                   "oi",
+                                   "volume",
+                                   "index"
+                               ],
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "http://127.0.0.1:9500",
+                                                                          "value":  "http://127.0.0.1:9500"
+                                                                      },
+                                                          "label":  "Base URL",
+                                                          "name":  "base_url",
+                                                          "query":  "http://127.0.0.1:9500,http://127.0.0.1:8003",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "this_week",
+                                                                          "value":  "this_week"
+                                                                      },
+                                                          "label":  "Expiry",
+                                                          "name":  "expiry",
+                                                          "query":  "this_week,next_week,this_month",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "0",
+                                                                          "value":  "0"
+                                                                      },
+                                                          "label":  "Offset",
+                                                          "name":  "offset",
+                                                          "query":  "0,+100,-100,+200,-200",
+                                                          "type":  "custom"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-12h",
+                                   "to":  "now"
+                               },
+                      "timezone":  "Asia/Kolkata",
+                      "title":  "Contracts â Index / OI / Volume (Time Series)",
+                      "uid":  "g6-contracts-ts",
+                      "version":  2
+                  }
+}

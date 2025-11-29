@@ -1,0 +1,87 @@
+{
+  "uid": "g6-overlays-v11",
+  "title": "Overlays - All Indices (v11)",
+  "editable": true,
+  "schemaVersion": 39,
+  "refresh": "15s",
+  "tags": ["g6", "overlay", "live", "master"],
+  "time": {"from": "now-6h", "to": "now"},
+  "timezone": "Asia/Kolkata",
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "links": [],
+  "weekStart": "",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "templating": {
+    "list": [
+      {
+        "current": {"selected": false, "text": "0", "value": "0"},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Offset",
+        "multi": false,
+        "name": "offset",
+        "options": [
+          {"selected": true, "text": "0", "value": "0"},
+          {"selected": false, "text": "100", "value": "100"},
+          {"selected": false, "text": "-100", "value": "-100"},
+          {"selected": false, "text": "200", "value": "200"},
+          {"selected": false, "text": "-200", "value": "-200"},
+          {"selected": false, "text": "300", "value": "300"},
+          {"selected": false, "text": "-300", "value": "-300"}
+        ],
+        "query": "0,100,-100,200,-200,300,-300",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {"selected": false, "text": "this_week", "value": "this_week"},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Expiry (NIFTY/SENSEX)",
+        "multi": false,
+        "name": "expiry_ns",
+        "options": [
+          {"selected": true, "text": "this_week", "value": "this_week"},
+          {"selected": false, "text": "next_week", "value": "next_week"},
+          {"selected": false, "text": "this_month", "value": "this_month"},
+          {"selected": false, "text": "next_month", "value": "next_month"}
+        ],
+        "query": "this_week,next_week,this_month,next_month",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {"selected": false, "text": "this_month", "value": "this_month"},
+        "hide": 0,
+        "includeAll": false,
+        "label": "Expiry (BANKNIFTY/FINNIFTY)",
+        "multi": false,
+        "name": "expiry_bf",
+        "options": [
+          {"selected": true, "text": "this_month", "value": "this_month"},
+          {"selected": false, "text": "next_month", "value": "next_month"}
+        ],
+        "query": "this_month,next_month",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "panels": [],
+  "timepicker": {
+    "refresh_intervals": ["15s", "30s", "1m", "2m", "5m"]
+  }
+}

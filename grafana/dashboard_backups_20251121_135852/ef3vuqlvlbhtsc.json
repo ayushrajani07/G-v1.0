@@ -1,0 +1,45 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "ml",
+                 "url":  "/dashboards/f/ef3vuqlvlbhtsc/ml",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-12T14:17:39+05:30",
+                 "updated":  "2025-11-12T14:17:39+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  true,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  false,
+                 "provisionedExternalId":  "",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "id":  204,
+                      "schemaVersion":  17,
+                      "title":  "ML",
+                      "uid":  "ef3vuqlvlbhtsc",
+                      "version":  1
+                  }
+}

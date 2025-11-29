@@ -1,0 +1,158 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "adaptive-controller",
+                 "url":  "/d/g6-adaptive_controller/adaptive-controller",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T09:31:21+05:30",
+                 "updated":  "2025-11-18T14:51:02+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  3,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "adaptive_controller.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "prometheus",
+                                             "name":  "Prometheus",
+                                             "type":  "prometheus",
+                                             "version":  "1.0.0"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "g6_meta":  {
+                                      "description":  "",
+                                      "families":  [
+                                                       "adaptive_controller"
+                                                   ],
+                                      "spec_hash":  "b1fb37bf991f1a94"
+                                  },
+                      "id":  275,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "adaptive_controller",
+                                                         "kind":  "counter",
+                                                         "metric":  "g6_adaptive_controller_actions_total",
+                                                         "panel_uuid":  "939287806a702be7",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "id":  2475853696,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "sum(rate(g6_adaptive_controller_actions_total[5m]))",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_adaptive_controller_actions_total Rate (5m auto)",
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "prometheus",
+                                                            "uid":  "PROM"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "g6_meta":  {
+                                                         "family":  "adaptive_controller",
+                                                         "kind":  "gauge",
+                                                         "metric":  "g6_option_detail_mode",
+                                                         "panel_uuid":  "24b61b5b4fe55901",
+                                                         "source":  "auto"
+                                                     },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  0
+                                                     },
+                                         "id":  615914331,
+                                         "targets":  [
+                                                         {
+                                                             "expr":  "g6_option_detail_mode",
+                                                             "refId":  "A"
+                                                         }
+                                                     ],
+                                         "title":  "g6_option_detail_mode (auto)",
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  39,
+                      "tags":  [
+                                   "adaptive",
+                                   "g6",
+                                   "generated"
+                               ],
+                      "templating":  {
+                                         "list":  [
+
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timezone":  "browser",
+                      "title":  "Adaptive Controller",
+                      "uid":  "g6-adaptive_controller",
+                      "version":  3
+                  }
+}

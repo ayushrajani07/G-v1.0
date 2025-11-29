@@ -1,0 +1,940 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "regime-drift-threshold-manifest",
+                 "url":  "/d/regime-threshold-manifest/regime-drift-threshold-manifest",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T09:31:22+05:30",
+                 "updated":  "2025-11-20T09:31:22+05:30",
+                 "updatedBy":  "Anonymous",
+                 "createdBy":  "Anonymous",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  true,
+                 "provisionedExternalId":  "regime_threshold_manifest.json",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "__inputs":  [
+                                       {
+                                           "description":  "Infinity datasource (HTTP / JSON).",
+                                           "label":  "Infinity",
+                                           "name":  "DS_INFINITY",
+                                           "pluginId":  "yesoreyeram-infinity-datasource",
+                                           "pluginName":  "Infinity",
+                                           "type":  "datasource"
+                                       }
+                                   ],
+                      "__requires":  [
+                                         {
+                                             "id":  "grafana",
+                                             "name":  "Grafana",
+                                             "type":  "grafana",
+                                             "version":  "9.0.0"
+                                         },
+                                         {
+                                             "id":  "table",
+                                             "name":  "Table",
+                                             "type":  "panel"
+                                         },
+                                         {
+                                             "id":  "yesoreyeram-infinity-datasource",
+                                             "name":  "Infinity",
+                                             "type":  "datasource",
+                                             "version":  "2.6.0"
+                                         },
+                                         {
+                                             "id":  "heatmap",
+                                             "name":  "Heatmap",
+                                             "type":  "panel"
+                                         },
+                                         {
+                                             "id":  "timeseries",
+                                             "name":  "Time series",
+                                             "type":  "panel"
+                                         }
+                                     ],
+                      "annotations":  {
+                                          "list":  [
+
+                                                   ]
+                                      },
+                      "id":  285,
+                      "panels":  [
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "horizons_used"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "none"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "id":  6,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "list"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "single"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/threshold_manifest_history?limit=100"
+                                                         }
+                                                     ],
+                                         "title":  "Horizons Used Trend",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "thresholds":  true
+                                                                                                       },
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+                                                                                                          "horizons_used":  "horizons_used"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  1,
+                                         "maxDataPoints":  1,
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "last"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           },
+                                                         "textMode":  "value"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/threshold_manifest?include_full=1"
+                                                         }
+                                                     ],
+                                         "title":  "Promotion Status",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  [
+                                                                                                     "reason"
+                                                                                                 ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "percentage",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  null
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "yellow",
+                                                                                                                   "value":  5
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "orange",
+                                                                                                                   "value":  10
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "red",
+                                                                                                                   "value":  15
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "percent"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  5,
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "max"
+                                                                                         ],
+                                                                               "fields":  "relative_shift_pct",
+                                                                               "values":  false
+                                                                           },
+                                                         "textMode":  "value"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "relative_shifts",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/threshold_manifest?include_full=1"
+                                                         }
+                                                     ],
+                                         "title":  "Max Relative Shift (%)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  [
+                                                                                                     "relative_shift_pct"
+                                                                                                 ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "percent"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "key"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "none"
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "violation"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.cellOptions",
+                                                                                                          "value":  {
+                                                                                                                        "type":  "color-text"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "relative_shift_pct"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "percent"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "thresholds",
+                                                                                                          "value":  {
+                                                                                                                        "mode":  "percentage",
+                                                                                                                        "steps":  [
+                                                                                                                                      {
+                                                                                                                                          "color":  "green",
+                                                                                                                                          "value":  null
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "yellow",
+                                                                                                                                          "value":  5
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "orange",
+                                                                                                                                          "value":  10
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "color":  "red",
+                                                                                                                                          "value":  15
+                                                                                                                                      }
+                                                                                                                                  ]
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "custom.cellOptions",
+                                                                                                          "value":  {
+                                                                                                                        "type":  "gauge"
+                                                                                                                    }
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "id":  4,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "relative_shifts",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/threshold_manifest?include_full=1"
+                                                         }
+                                                     ],
+                                         "title":  "Relative Shifts (%)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+                                                                                                          "key":  "metric",
+                                                                                                          "relative_shift_pct":  "shift_%"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  2,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "thresholds",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/threshold_manifest?include_full=1"
+                                                         }
+                                                     ],
+                                         "title":  "Current Thresholds",
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  3,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/threshold_manifest?include_full=1"
+                                                         }
+                                                     ],
+                                         "title":  "Stability \u0026 Percentiles",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "thresholds":  true
+                                                                                                       }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "canary.backtest_penalty"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "unit",
+                                                                                                          "value":  "none"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "id":  7,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "single"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/autotune_canary_history?limit=200"
+                                                         }
+                                                     ],
+                                         "title":  "Canary Backtest Penalty Timeline",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+                                                                                                          "canary.backtest_penalty":  "backtest_penalty",
+                                                                                                          "ts":  "ts"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "thresholds":  {
+                                                                                                 "mode":  "absolute",
+                                                                                                 "steps":  [
+                                                                                                               {
+                                                                                                                   "color":  "green",
+                                                                                                                   "value":  0
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "yellow",
+                                                                                                                   "value":  0.05
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "orange",
+                                                                                                                   "value":  0.10
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "color":  "red",
+                                                                                                                   "value":  0.15
+                                                                                                               }
+                                                                                                           ]
+                                                                                             },
+                                                                              "unit":  "percent"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  8,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "show":  true
+                                                                    },
+                                                         "yBucketSize":  1
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/autotune_canary_history?limit=200"
+                                                         }
+                                                     ],
+                                         "title":  "Per-Horizon Canary Warn Violation Heatmap",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "extractFields",
+                                                                     "options":  {
+                                                                                     "format":  "json",
+                                                                                     "sourceField":  "canary.per_horizon"
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "labelsToFields",
+                                                                     "options":  {
+                                                                                     "valueLabel":  "warn_violation_rate"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "heatmap"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+
+                                                                           ]
+                                                         },
+                                         "id":  9,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/metrics/compare?index=${INDEX}\u0026horizon=${HORIZON}\u0026include_drift=1"
+                                                         }
+                                                     ],
+                                         "title":  "Metrics Compare (${INDEX}/${HORIZON})",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "decay_params":  false
+                                                                                                       }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "valid"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "mappings",
+                                                                                                          "value":  [
+                                                                                                                        {
+                                                                                                                            "options":  {
+                                                                                                                                            "match":  "true",
+                                                                                                                                            "result":  {
+                                                                                                                                                           "color":  "green",
+                                                                                                                                                           "text":  "VALID"
+                                                                                                                                                       }
+                                                                                                                                        },
+                                                                                                                            "type":  1
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "options":  {
+                                                                                                                                            "match":  "false",
+                                                                                                                                            "result":  {
+                                                                                                                                                           "color":  "red",
+                                                                                                                                                           "text":  "BROKEN"
+                                                                                                                                                       }
+                                                                                                                                        },
+                                                                                                                            "type":  1
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  4,
+                                                         "w":  6,
+                                                         "x":  0,
+                                                         "y":  22
+                                                     },
+                                         "id":  10,
+                                         "maxDataPoints":  1,
+                                         "options":  {
+                                                         "colorMode":  "value",
+                                                         "graphMode":  "none",
+                                                         "orientation":  "auto",
+                                                         "reduceOptions":  {
+                                                                               "calcs":  [
+                                                                                             "last"
+                                                                                         ],
+                                                                               "fields":  "",
+                                                                               "values":  false
+                                                                           },
+                                                         "textMode":  "value"
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/threshold_manifest_chain"
+                                                         }
+                                                     ],
+                                         "title":  "Manifest Chain Valid",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  [
+                                                                                                     "valid"
+                                                                                                 ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "stat"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "unit":  "none"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "signature_ok"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.cellOptions",
+                                                                                                          "value":  {
+                                                                                                                        "type":  "color-text"
+                                                                                                                    }
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "id":  "mappings",
+                                                                                                          "value":  [
+                                                                                                                        {
+                                                                                                                            "options":  {
+                                                                                                                                            "match":  "true",
+                                                                                                                                            "result":  {
+                                                                                                                                                           "color":  "green",
+                                                                                                                                                           "text":  "OK"
+                                                                                                                                                       }
+                                                                                                                                        },
+                                                                                                                            "type":  1
+                                                                                                                        },
+                                                                                                                        {
+                                                                                                                            "options":  {
+                                                                                                                                            "match":  "false",
+                                                                                                                                            "result":  {
+                                                                                                                                                           "color":  "red",
+                                                                                                                                                           "text":  "BAD"
+                                                                                                                                                       }
+                                                                                                                                        },
+                                                                                                                            "type":  1
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  8,
+                                                         "w":  24,
+                                                         "x":  0,
+                                                         "y":  26
+                                                     },
+                                         "id":  11,
+                                         "options":  {
+                                                         "showHeader":  true
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "chain",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/threshold_manifest_chain"
+                                                         }
+                                                     ],
+                                         "title":  "Manifest Chain (Head â Tail)",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "renameByName":  {
+                                                                                                          "file":  "file",
+                                                                                                          "signature_ok":  "signature"
+                                                                                                      }
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "table"
+                                     },
+                                     {
+                                         "datasource":  "${DS_INFINITY}",
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never",
+                                                                                             "spanNulls":  true
+                                                                                         },
+                                                                              "unit":  "percent"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "canary.warn_pctl"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "displayName",
+                                                                                                          "value":  "canary_warn"
+                                                                                                      }
+                                                                                                  ]
+                                                                               },
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byName",
+                                                                                                   "options":  "canary.crit_pctl"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "displayName",
+                                                                                                          "value":  "canary_crit"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "id":  10,
+                                         "options":  {
+                                                         "legend":  {
+                                                                        "displayMode":  "table",
+                                                                        "placement":  "bottom"
+                                                                    },
+                                                         "tooltip":  {
+                                                                         "mode":  "multi"
+                                                                     }
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "columns":  [
+
+                                                                         ],
+                                                             "datasource":  "${DS_INFINITY}",
+                                                             "format":  "table",
+                                                             "parser":  "backend",
+                                                             "root_selector":  "$",
+                                                             "transform":  "json",
+                                                             "type":  "json",
+                                                             "url":  "/api/ml/ensemble/regime/autotune_canary_history?limit=300"
+                                                         }
+                                                     ],
+                                         "title":  "Canary Percentile Trend",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "indexByName":  {
+
+                                                                                                     },
+                                                                                     "renameByName":  {
+                                                                                                          "canary.crit_pctl":  "canary.crit_pctl",
+                                                                                                          "canary.warn_pctl":  "canary.warn_pctl",
+                                                                                                          "ts":  "ts"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  [
+                                                                                                     "ts",
+                                                                                                     "canary.warn_pctl",
+                                                                                                     "canary.crit_pctl"
+                                                                                                 ]
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "schemaVersion":  36,
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "NIFTY",
+                                                                          "value":  "NIFTY"
+                                                                      },
+                                                          "label":  "Index",
+                                                          "name":  "INDEX",
+                                                          "query":  "NIFTY,BANKNIFTY,SENSEX",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "60",
+                                                                          "value":  "60"
+                                                                      },
+                                                          "label":  "Horizon (min)",
+                                                          "name":  "HORIZON",
+                                                          "query":  "15,30,60,120,240",
+                                                          "type":  "custom"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-6h",
+                                   "to":  "now"
+                               },
+                      "timepicker":  {
+                                         "refresh_intervals":  [
+                                                                   "30s",
+                                                                   "1m",
+                                                                   "5m",
+                                                                   "15m",
+                                                                   "1h"
+                                                               ]
+                                     },
+                      "timezone":  "browser",
+                      "title":  "Regime Drift Threshold Manifest",
+                      "uid":  "regime-threshold-manifest",
+                      "version":  1
+                  }
+}

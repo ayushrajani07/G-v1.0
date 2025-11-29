@@ -1,0 +1,1415 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 24,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV index_price|^index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Index"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV avg_tp|^avg_tp$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV tp(?! )$|^tp$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay avg_tp_ema|^avg_tp_ema$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium EMA"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay avg_tp_mean|^avg_tp_mean$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium Mean"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay tp_ema|^tp_ema$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium EMA"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay tp_mean|^tp_mean$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium Mean"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "LiveCSV",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "MasterOverlay",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/overlay?index=NIFTY&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "NIFTY | $expiry_ns | Offset: $offset",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "LiveCSV ce_oi": true,
+              "LiveCSV ce_vol": true,
+              "LiveCSV pcr": true,
+              "LiveCSV pe_oi": true,
+              "LiveCSV pe_vol": true,
+              "ce": true,
+              "ce_oi": true,
+              "ce_vol": true,
+              "pcr": true,
+              "pe": true,
+              "pe_oi": true,
+              "pe_vol": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "ts": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "avg_tp": "Avg TP (Live)",
+              "avg_tp_ema": "Avg TP EMA (Master)",
+              "avg_tp_mean": "Avg TP Mean (Master)",
+              "index_price": "Index Price",
+              "tp": "TP (Live)",
+              "tp_ema": "TP EMA (Master)",
+              "tp_mean": "TP Mean (Master)"
+            }
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV index_price|^index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Index"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV avg_tp|^avg_tp$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV tp(?! )$|^tp$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay avg_tp_ema|^avg_tp_ema$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium EMA"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay avg_tp_mean|^avg_tp_mean$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium Mean"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay tp_ema|^tp_ema$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium EMA"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay tp_mean|^tp_mean$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium Mean"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "LiveCSV",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "MasterOverlay",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/overlay?index=SENSEX&expiry_tag=$expiry_ns&offset=$offset",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "SENSEX | $expiry_ns | Offset: $offset",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "LiveCSV ce_oi": true,
+              "LiveCSV ce_vol": true,
+              "LiveCSV pcr": true,
+              "LiveCSV pe_oi": true,
+              "LiveCSV pe_vol": true,
+              "ce": true,
+              "ce_oi": true,
+              "ce_vol": true,
+              "pcr": true,
+              "pe": true,
+              "pe_oi": true,
+              "pe_vol": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "ts": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "avg_tp": "Avg TP (Live)",
+              "avg_tp_ema": "Avg TP EMA (Master)",
+              "avg_tp_mean": "Avg TP Mean (Master)",
+              "index_price": "Index Price",
+              "tp": "TP (Live)",
+              "tp_ema": "TP EMA (Master)",
+              "tp_mean": "TP Mean (Master)"
+            }
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisPlacement": "auto",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV index_price|^index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Index"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV avg_tp|^avg_tp$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV tp(?! )$|^tp$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay avg_tp_ema|^avg_tp_ema$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium EMA"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay avg_tp_mean|^avg_tp_mean$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium Mean"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay tp_ema|^tp_ema$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium EMA"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay tp_mean|^tp_mean$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium Mean"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "LiveCSV",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "MasterOverlay",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/overlay?index=BANKNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "BANKNIFTY | $expiry_bf | Offset: $offset",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "LiveCSV ce_oi": true,
+              "LiveCSV ce_vol": true,
+              "LiveCSV pcr": true,
+              "LiveCSV pe_oi": true,
+              "LiveCSV pe_vol": true,
+              "ce": true,
+              "ce_oi": true,
+              "ce_vol": true,
+              "pcr": true,
+              "pe": true,
+              "pe_oi": true,
+              "pe_vol": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "ts": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "avg_tp": "Avg TP (Live)",
+              "avg_tp_ema": "Avg TP EMA (Master)",
+              "avg_tp_mean": "Avg TP Mean (Master)",
+              "index_price": "Index Price",
+              "tp": "TP (Live)",
+              "tp_ema": "TP EMA (Master)",
+              "tp_mean": "TP Mean (Master)"
+            }
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "INFINITY"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "axisPlacement": "auto",
+            "fillOpacity": 0,
+            "gradientMode": "hue",
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV index_price|^index_price$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Index"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "left"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Index Price"
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "dash": [
+                    10,
+                    10
+                  ],
+                  "fill": "dash"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV avg_tp|^avg_tp$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "LiveCSV tp(?! )$|^tp$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 4
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay avg_tp_ema|^avg_tp_ema$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium EMA"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay avg_tp_mean|^avg_tp_mean$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Avg. ATM Premium Mean"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay tp_ema|^tp_ema$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium EMA"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "MasterOverlay tp_mean|^tp_mean$"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "ATM Premium Mean"
+              },
+              {
+                "id": "custom.axisPlacement",
+                "value": "right"
+              },
+              {
+                "id": "custom.axisLabel",
+                "value": "Premium"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "LiveCSV",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset&include_vol=false&include_oi=false&include_pcr=false",
+          "url_options": {
+            "method": "GET"
+          }
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "INFINITY"
+          },
+          "format": "table",
+          "parser": "backend",
+          "refId": "MasterOverlay",
+          "source": "url",
+          "type": "json",
+          "url": "http://127.0.0.1:9500/api/overlay?index=FINNIFTY&expiry_tag=$expiry_bf&offset=$offset",
+          "url_options": {
+            "method": "GET"
+          }
+        }
+      ],
+      "title": "FINNIFTY | $expiry_bf | Offset: $offset",
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "dateFormat": "epoch_ms",
+                "destinationType": "time",
+                "targetField": "time"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "LiveCSV ce_oi": true,
+              "LiveCSV ce_vol": true,
+              "LiveCSV pcr": true,
+              "LiveCSV pe_oi": true,
+              "LiveCSV pe_vol": true,
+              "ce": true,
+              "ce_oi": true,
+              "ce_vol": true,
+              "pcr": true,
+              "pe": true,
+              "pe_oi": true,
+              "pe_vol": true,
+              "time_epoch_s": true,
+              "time_str": true,
+              "ts": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "avg_tp": "Avg TP (Live)",
+              "avg_tp_ema": "Avg TP EMA (Master)",
+              "avg_tp_mean": "Avg TP Mean (Master)",
+              "index_price": "Index Price",
+              "tp": "TP (Live)",
+              "tp_ema": "TP EMA (Master)",
+              "tp_mean": "TP Mean (Master)"
+            }
+          }
+        },
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        }
+      ],
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "15s",
+  "schemaVersion": 39,
+  "tags": [
+    "g6",
+    "overlay",
+    "live",
+    "master"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "0",
+          "value": "0"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Offset",
+        "multi": false,
+        "name": "offset",
+        "options": [
+          {
+            "selected": true,
+            "text": "0",
+            "value": "0"
+          },
+          {
+            "selected": false,
+            "text": "100",
+            "value": "100"
+          },
+          {
+            "selected": false,
+            "text": "-100",
+            "value": "-100"
+          },
+          {
+            "selected": false,
+            "text": "200",
+            "value": "200"
+          },
+          {
+            "selected": false,
+            "text": "-200",
+            "value": "-200"
+          },
+          {
+            "selected": false,
+            "text": "300",
+            "value": "300"
+          },
+          {
+            "selected": false,
+            "text": "-300",
+            "value": "-300"
+          }
+        ],
+        "query": "0,100,-100,200,-200,300,-300",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "this_week",
+          "value": "this_week"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Expiry (NIFTY/SENSEX)",
+        "multi": false,
+        "name": "expiry_ns",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_week",
+            "value": "this_week"
+          },
+          {
+            "selected": false,
+            "text": "next_week",
+            "value": "next_week"
+          },
+          {
+            "selected": false,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_week,next_week,this_month,next_month",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "this_month",
+          "value": "this_month"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Expiry (BANKNIFTY/FINNIFTY)",
+        "multi": false,
+        "name": "expiry_bf",
+        "options": [
+          {
+            "selected": true,
+            "text": "this_month",
+            "value": "this_month"
+          },
+          {
+            "selected": false,
+            "text": "next_month",
+            "value": "next_month"
+          }
+        ],
+        "query": "this_month,next_month",
+        "skipUrlSync": false,
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "15s",
+      "30s",
+      "1m",
+      "2m",
+      "5m"
+    ]
+  },
+  "timezone": "Asia/Kolkata",
+  "title": "Overlays - All Indices",
+  "uid": "g6-overlays",
+  "version": 23,
+  "weekStart": ""
+}

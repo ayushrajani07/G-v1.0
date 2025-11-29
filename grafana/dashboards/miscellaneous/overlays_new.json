@@ -1,0 +1,42 @@
+{
+  "uid": "g6-overlays-new",
+  "title": "Overlays - All Indices (New)",
+  "editable": true,
+  "schemaVersion": 39,
+  "refresh": "15s",
+  "tags": ["g6", "overlay", "live", "master"],
+  "time": {"from": "now-12h", "to": "now"},
+  "timezone": "Asia/Kolkata",
+  "templating": {
+    "list": [
+      {
+        "name": "offset",
+        "type": "custom",
+        "label": "Offset",
+        "query": "0,100,-100,200,-200,300,-300",
+        "current": {"text": "0", "value": "0"},
+        "multi": false,
+        "includeAll": false
+      },
+      {
+        "name": "expiry_ns",
+        "type": "custom",
+        "label": "Expiry (NIFTY/SENSEX)",
+        "query": "this_week,next_week,this_month,next_month",
+        "current": {"text": "this_week", "value": "this_week"},
+        "multi": false,
+        "includeAll": false
+      },
+      {
+        "name": "expiry_bf",
+        "type": "custom",
+        "label": "Expiry (BANKNIFTY/FINNIFTY)",
+        "query": "this_month,next_month",
+        "current": {"text": "this_month", "value": "this_month"},
+        "multi": false,
+        "includeAll": false
+      }
+    ]
+  },
+  "panels": []
+}

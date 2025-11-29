@@ -1,0 +1,585 @@
+﻿{
+    "meta":  {
+                 "type":  "db",
+                 "canSave":  true,
+                 "canEdit":  true,
+                 "canAdmin":  true,
+                 "canStar":  true,
+                 "canDelete":  true,
+                 "slug":  "contracts-all-indicesqq",
+                 "url":  "/d/g6-contracts-pctQQ/contracts-all-indicesqq",
+                 "expires":  "0001-01-01T00:00:00Z",
+                 "created":  "2025-11-20T10:11:38+05:30",
+                 "updated":  "2025-11-20T10:11:38+05:30",
+                 "updatedBy":  "admin",
+                 "createdBy":  "admin",
+                 "version":  1,
+                 "hasAcl":  false,
+                 "isFolder":  false,
+                 "folderId":  0,
+                 "folderUid":  "",
+                 "folderTitle":  "General",
+                 "folderUrl":  "",
+                 "provisioned":  false,
+                 "provisionedExternalId":  "",
+                 "annotationsPermissions":  {
+                                                "dashboard":  {
+                                                                  "canAdd":  true,
+                                                                  "canEdit":  true,
+                                                                  "canDelete":  true
+                                                              },
+                                                "organization":  {
+                                                                     "canAdd":  true,
+                                                                     "canEdit":  true,
+                                                                     "canDelete":  true
+                                                                 }
+                                            }
+             },
+    "dashboard":  {
+                      "editable":  true,
+                      "id":  288,
+                      "panels":  [
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  0,
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never"
+                                                                                         },
+                                                                              "unit":  "percent"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byRegexp",
+                                                                                                   "options":  ".*(Index %|index_price_pct).*"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  0
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "refId":  "N_CON",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=NIFTY\u0026expiry_tag=$expiry_ns\u0026offset=$offset\u0026include_index=1\u0026include_vol=1\u0026include_oi=1\u0026include_pcr=0\u0026from_ms=$__from\u0026to_ms=$__to",
+                                                             "url_options":  {
+                                                                                 "method":  "GET"
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "NIFTY Contracts",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "ts"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  {
+                                                                                                     "names":  [
+                                                                                                                   "ts",
+                                                                                                                   "index_price",
+                                                                                                                   "ce_vol",
+                                                                                                                   "pe_vol",
+                                                                                                                   "ce_oi",
+                                                                                                                   "pe_oi"
+                                                                                                               ]
+                                                                                                 }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "time":  true,
+                                                                                                           "time_str":  true
+                                                                                                       },
+                                                                                     "renameByName":  {
+                                                                                                          "ce_oi":  "CE OI",
+                                                                                                          "ce_vol":  "CE Vol",
+                                                                                                          "index_price":  "Index Price",
+                                                                                                          "pe_oi":  "PE OI",
+                                                                                                          "pe_vol":  "PE Vol"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "format":  "multi",
+                                                                                     "timeField":  "ts"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  0,
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never"
+                                                                                         },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byRegexp",
+                                                                                                   "options":  ".*(Index|index_price).*"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  0
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "refId":  "BN_CON",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=BANKNIFTY\u0026expiry_tag=$expiry_bn\u0026offset=$offset\u0026include_index=1\u0026include_vol=1\u0026include_oi=1\u0026include_pcr=0\u0026from_ms=$__from\u0026to_ms=$__to",
+                                                             "url_options":  {
+                                                                                 "method":  "GET"
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "BANKNIFTY Contracts",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "ts"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  {
+                                                                                                     "names":  [
+                                                                                                                   "ts",
+                                                                                                                   "index_price",
+                                                                                                                   "ce_vol",
+                                                                                                                   "pe_vol",
+                                                                                                                   "ce_oi",
+                                                                                                                   "pe_oi"
+                                                                                                               ]
+                                                                                                 }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "time":  true,
+                                                                                                           "time_str":  true
+                                                                                                       },
+                                                                                     "renameByName":  {
+                                                                                                          "ce_oi":  "CE OI",
+                                                                                                          "ce_vol":  "CE Vol",
+                                                                                                          "index_price":  "Index Price",
+                                                                                                          "pe_oi":  "PE OI",
+                                                                                                          "pe_vol":  "PE Vol"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "format":  "multi",
+                                                                                     "timeField":  "ts"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  0,
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never"
+                                                                                         },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byRegexp",
+                                                                                                   "options":  ".*(Index|index_price).*"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  12,
+                                                         "x":  0,
+                                                         "y":  12
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "refId":  "FN_CON",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=FINNIFTY\u0026expiry_tag=$expiry_fn\u0026offset=$offset\u0026include_index=1\u0026include_vol=1\u0026include_oi=1\u0026include_pcr=0\u0026from_ms=$__from\u0026to_ms=$__to",
+                                                             "url_options":  {
+                                                                                 "method":  "GET"
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "FINNIFTY Contracts",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "ts"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  {
+                                                                                                     "names":  [
+                                                                                                                   "ts",
+                                                                                                                   "index_price",
+                                                                                                                   "ce_vol",
+                                                                                                                   "pe_vol",
+                                                                                                                   "ce_oi",
+                                                                                                                   "pe_oi"
+                                                                                                               ]
+                                                                                                 }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "time":  true,
+                                                                                                           "time_str":  true
+                                                                                                       },
+                                                                                     "renameByName":  {
+                                                                                                          "ce_oi":  "CE OI",
+                                                                                                          "ce_vol":  "CE Vol",
+                                                                                                          "index_price":  "Index Price",
+                                                                                                          "pe_oi":  "PE OI",
+                                                                                                          "pe_vol":  "PE Vol"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "format":  "multi",
+                                                                                     "timeField":  "ts"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     },
+                                     {
+                                         "datasource":  {
+                                                            "type":  "yesoreyeram-infinity-datasource",
+                                                            "uid":  "INFINITY"
+                                                        },
+                                         "fieldConfig":  {
+                                                             "defaults":  {
+                                                                              "custom":  {
+                                                                                             "drawStyle":  "line",
+                                                                                             "fillOpacity":  0,
+                                                                                             "lineWidth":  2,
+                                                                                             "showPoints":  "never"
+                                                                                         },
+                                                                              "unit":  "short"
+                                                                          },
+                                                             "overrides":  [
+                                                                               {
+                                                                                   "matcher":  {
+                                                                                                   "id":  "byRegexp",
+                                                                                                   "options":  ".*(Index|index_price).*"
+                                                                                               },
+                                                                                   "properties":  [
+                                                                                                      {
+                                                                                                          "id":  "custom.axisPlacement",
+                                                                                                          "value":  "right"
+                                                                                                      }
+                                                                                                  ]
+                                                                               }
+                                                                           ]
+                                                         },
+                                         "gridPos":  {
+                                                         "h":  12,
+                                                         "w":  12,
+                                                         "x":  12,
+                                                         "y":  12
+                                                     },
+                                         "targets":  [
+                                                         {
+                                                             "datasource":  {
+                                                                                "type":  "yesoreyeram-infinity-datasource",
+                                                                                "uid":  "INFINITY"
+                                                                            },
+                                                             "format":  "table",
+                                                             "refId":  "SX_CON",
+                                                             "source":  "url",
+                                                             "type":  "json",
+                                                             "url":  "http://127.0.0.1:9500/api/live_csv?index=SENSEX\u0026expiry_tag=$expiry_sx\u0026offset=$offset\u0026include_index=1\u0026include_vol=1\u0026include_oi=1\u0026include_pcr=0\u0026from_ms=$__from\u0026to_ms=$__to",
+                                                             "url_options":  {
+                                                                                 "method":  "GET"
+                                                                             }
+                                                         }
+                                                     ],
+                                         "title":  "SENSEX Contracts",
+                                         "transformations":  [
+                                                                 {
+                                                                     "id":  "convertFieldType",
+                                                                     "options":  {
+                                                                                     "conversions":  [
+                                                                                                         {
+                                                                                                             "dateFormat":  "epoch_ms",
+                                                                                                             "destinationType":  "time",
+                                                                                                             "targetField":  "ts"
+                                                                                                         }
+                                                                                                     ]
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "filterFieldsByName",
+                                                                     "options":  {
+                                                                                     "include":  {
+                                                                                                     "names":  [
+                                                                                                                   "ts",
+                                                                                                                   "index_price",
+                                                                                                                   "ce_vol",
+                                                                                                                   "pe_vol",
+                                                                                                                   "ce_oi",
+                                                                                                                   "pe_oi"
+                                                                                                               ]
+                                                                                                 }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "organize",
+                                                                     "options":  {
+                                                                                     "excludeByName":  {
+                                                                                                           "time":  true,
+                                                                                                           "time_str":  true
+                                                                                                       },
+                                                                                     "renameByName":  {
+                                                                                                          "ce_oi":  "CE OI",
+                                                                                                          "ce_vol":  "CE Vol",
+                                                                                                          "index_price":  "Index Price",
+                                                                                                          "pe_oi":  "PE OI",
+                                                                                                          "pe_vol":  "PE Vol"
+                                                                                                      }
+                                                                                 }
+                                                                 },
+                                                                 {
+                                                                     "id":  "prepareTimeSeries",
+                                                                     "options":  {
+                                                                                     "format":  "multi",
+                                                                                     "timeField":  "ts"
+                                                                                 }
+                                                                 }
+                                                             ],
+                                         "type":  "timeseries"
+                                     }
+                                 ],
+                      "refresh":  "30s",
+                      "tags":  [
+                                   "g6",
+                                   "contracts",
+                                   "pct"
+                               ],
+                      "templating":  {
+                                         "list":  [
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "0",
+                                                                          "value":  "0"
+                                                                      },
+                                                          "name":  "offset",
+                                                          "options":  [
+                                                                          {
+                                                                              "text":  "0",
+                                                                              "value":  "0"
+                                                                          },
+                                                                          {
+                                                                              "text":  "+0",
+                                                                              "value":  "+0"
+                                                                          }
+                                                                      ],
+                                                          "query":  "0,+0",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "this_month",
+                                                                          "value":  "this_month"
+                                                                      },
+                                                          "name":  "expiry_ns",
+                                                          "options":  [
+                                                                          {
+                                                                              "text":  "this_month",
+                                                                              "value":  "this_month"
+                                                                          },
+                                                                          {
+                                                                              "text":  "next_month",
+                                                                              "value":  "next_month"
+                                                                          }
+                                                                      ],
+                                                          "query":  "this_month,next_month",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "this_month",
+                                                                          "value":  "this_month"
+                                                                      },
+                                                          "name":  "expiry_bn",
+                                                          "options":  [
+                                                                          {
+                                                                              "text":  "this_month",
+                                                                              "value":  "this_month"
+                                                                          },
+                                                                          {
+                                                                              "text":  "next_month",
+                                                                              "value":  "next_month"
+                                                                          }
+                                                                      ],
+                                                          "query":  "this_month,next_month",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "this_month",
+                                                                          "value":  "this_month"
+                                                                      },
+                                                          "name":  "expiry_fn",
+                                                          "options":  [
+                                                                          {
+                                                                              "text":  "this_month",
+                                                                              "value":  "this_month"
+                                                                          },
+                                                                          {
+                                                                              "text":  "next_month",
+                                                                              "value":  "next_month"
+                                                                          }
+                                                                      ],
+                                                          "query":  "this_month,next_month",
+                                                          "type":  "custom"
+                                                      },
+                                                      {
+                                                          "current":  {
+                                                                          "text":  "this_month",
+                                                                          "value":  "this_month"
+                                                                      },
+                                                          "name":  "expiry_sx",
+                                                          "options":  [
+                                                                          {
+                                                                              "text":  "this_month",
+                                                                              "value":  "this_month"
+                                                                          },
+                                                                          {
+                                                                              "text":  "next_month",
+                                                                              "value":  "next_month"
+                                                                          }
+                                                                      ],
+                                                          "query":  "this_month,next_month",
+                                                          "type":  "custom"
+                                                      }
+                                                  ]
+                                     },
+                      "time":  {
+                                   "from":  "now-12h",
+                                   "to":  "now"
+                               },
+                      "timezone":  "Asia/Kolkata",
+                      "title":  "Contracts - All IndicesQQ",
+                      "uid":  "g6-contracts-pctQQ",
+                      "version":  1
+                  }
+}
