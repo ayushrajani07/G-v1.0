@@ -315,6 +315,9 @@ try:
     from src.monitoring.feedback import FeedbackLoop
     from src.monitoring.alerts import AlertEngine
     from src.streaming.ingest import StreamIngestor
+    # Config flags
+    ENABLE_STREAM_INGEST = EnvConfig.get_bool("ENABLE_STREAM_INGEST", True)
+    LIVE_MAE_ALERT_THRESHOLD = EnvConfig.get_float("LIVE_MAE_ALERT_THRESHOLD", 2.0)
 
     _feedback = FeedbackLoop()
     _alerts = AlertEngine(lambda name, payload: _logger.info("alert", extra={"name": name, **payload}))
@@ -332,12 +335,13 @@ try:
                     set_live_mae(metrics["mae"])  # best-effort
                 except Exception:
                     pass
-                _alerts.maybe_alert("live-mae", {"live_mae": metrics["mae"]}, {"live_mae": 2.0})
+                _alerts.maybe_alert("live-mae", {"live_mae": metrics["mae"]}, {"live_mae": LIVE_MAE_ALERT_THRESHOLD})
             except Exception:
                 pass
 
-    _ingestor = StreamIngestor(_emit_item)
-    _ingestor.start()
+    _ingestor = StreamIngestor(_emit_item) if ENABLE_STREAM_INGEST else None
+    if _ingestor is not None:
+        _ingestor.start()
     try:
         app.state.ingestor = _ingestor
     except Exception:
