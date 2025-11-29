@@ -45,7 +45,12 @@ async def sse_live_mae(request: Request, interval_ms: int = 1000) -> StreamingRe
 
 
 @router.get("/live")
-async def sse_live(request: Request, interval_ms: int = 1000) -> StreamingResponse:
+async def sse_live(
+    request: Request,
+    interval_ms: int = 1000,
+    index: str = "NIFTY",
+    window: int = 30,
+) -> StreamingResponse:
     """Consolidated SSE stream: emits live_mae and drift placeholders.
 
     Future: add real drift signals when implemented; for now emits stub fields.
@@ -77,15 +82,16 @@ async def sse_live(request: Request, interval_ms: int = 1000) -> StreamingRespon
                     drift_payload = {"status": "unknown"}
                     if mon is not None:
                         # Use long-term accuracy as a proxy for drift score
-                        acc = mon.get_long_term_accuracy(index="NIFTY", window=30)
+                        acc = mon.get_long_term_accuracy(index=index, window=window)
                         drift_payload.update({
                             "status": "ok",
                             "mae": acc.get("mae", None),
                             "mape": acc.get("mape", None),
-                            "window": 30
+                            "window": window,
+                            "index": index,
                         })
                         # Optionally include recent history sample
-                        hist = mon.load_history(index="NIFTY", limit=1)
+                        hist = mon.load_history(index=index, limit=1)
                         if hist:
                             drift_payload["last"] = hist[0]
                     yield _format_sse_event("drift", drift_payload)
