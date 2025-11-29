@@ -324,6 +324,12 @@ try:
             try:
                 _feedback.observe(float(y_true), float(y_pred))
                 metrics = _feedback.get_metrics()
+                # Export live MAE to Prometheus (if enabled)
+                try:
+                    from .prom_metrics import set_live_mae
+                    set_live_mae(metrics["mae"])  # best-effort
+                except Exception:
+                    pass
                 _alerts.maybe_alert("live-mae", {"live_mae": metrics["mae"]}, {"live_mae": 2.0})
             except Exception:
                 pass

@@ -61,6 +61,7 @@ _MANIFEST_CHAIN_VALID: Any = None
 _MANIFEST_CHAIN_LENGTH: Any = None
 _FEATURE_PSI: Any = None
 _FEATURE_KS: Any = None
+_LIVE_MAE: Any = None
 
 
 def _is_enabled() -> bool:
@@ -249,6 +250,12 @@ def _init_metrics() -> bool:
             "g6_feature_ks",
             "Kolmogorov-Smirnov statistic for feature vs baseline",
             labelnames=["index", "feature"],
+            registry=_REGISTRY,
+        )
+        # Live streaming MAE (no labels; global view)
+        _LIVE_MAE = Gauge(
+            "g6_live_mae",
+            "Live mean absolute error from streaming feedback",
             registry=_REGISTRY,
         )
         # Optional histograms for percentile analysis; buckets configurable via env vars
@@ -656,6 +663,7 @@ __all__ = [
     "set_forecast_adaptive_ttl",
     "set_ttl_study_metrics",
     "collect_metrics",
+    "set_live_mae",
 ]
 
 def set_forecast_adaptive_ttl(index: str, horizon: int, ttl_sec: float) -> None:
@@ -664,5 +672,14 @@ def set_forecast_adaptive_ttl(index: str, horizon: int, ttl_sec: float) -> None:
         return
     try:
         _FORECAST_ADAPTIVE_TTL.labels(index=index, horizon=horizon).set(ttl_sec)
+    except Exception:
+        pass
+
+def set_live_mae(value: float) -> None:
+    """Set the global live MAE gauge for streaming feedback."""
+    if not _init_metrics() or _LIVE_MAE is None:
+        return
+    try:
+        _LIVE_MAE.set(value)
     except Exception:
         pass
