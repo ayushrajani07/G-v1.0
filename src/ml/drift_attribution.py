@@ -32,6 +32,8 @@ except Exception:  # pragma: no cover
         return _DummyEngine()
 from src.ml.quality_targets import get_quality_targets
 from src.ml.drift_persist import persist_attribution
+from src.ml.drift_cause import classify_drift
+from src.ml.metrics import push_drift_cause
 
 try:
     from prometheus_client import REGISTRY  # type: ignore
@@ -74,6 +76,8 @@ def compute_drift_components(index: str, horizon: int) -> Dict[str, Any]:
     # Retrain signal smoothed
     retrain_signal = _extract_metric_value('g6_ml_retrain_signal:smooth_5m')
     improve_target = qt.mae_p95_improve_pct
+    # Tail burn acceleration metric if available
+    tail_burn_accel = _extract_metric_value('g6_ml_residual_tail_burn:accel')
     attribution = {
         'index': index_u,
         'horizon': horizon,
@@ -81,14 +85,22 @@ def compute_drift_components(index: str, horizon: int) -> Dict[str, Any]:
         'tail_ratio': tail_ratio,
         'trend_ratio': trend_ratio,
         'burn_rate': burn_rate,
+        'tail_burn_accel': tail_burn_accel,
         'weight_divergence': weight_divergence,
         'regime_class': regime_class,
         'retrain_signal': retrain_signal,
         'improve_target_pct': improve_target,
         'tail_ratio_vs_target_gap': round(tail_ratio - (1 - improve_target/100), 6)
     }
+    # Classify drift cause
+    cause = classify_drift(attribution)
+    attribution['drift_cause'] = cause
     try:
         persist_attribution(attribution)
+    except Exception:
+        pass
+    try:
+        push_drift_cause(index_u, horizon, cause)
     except Exception:
         pass
     return attribution

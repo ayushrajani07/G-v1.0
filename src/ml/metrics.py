@@ -30,12 +30,14 @@ _G_RESIDUAL_P95_DECAY = None
 _G_TARGET_MAE_P95_IMPROVE_PCT = None
 _G_TARGET_WEIGHT_STDDEV_MAX = None
 _G_TARGET_REGIME_ALERT_MINUTES = None
+_G_DRIFT_CAUSE = None
+_G_TAIL_BURN_ACCEL = None
 
 _DEF_LABELS = ("index", "horizon")
 
 
 def _ensure():
-    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY, _G_TARGET_MAE_P95_IMPROVE_PCT, _G_TARGET_WEIGHT_STDDEV_MAX, _G_TARGET_REGIME_ALERT_MINUTES
+    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY, _G_TARGET_MAE_P95_IMPROVE_PCT, _G_TARGET_WEIGHT_STDDEV_MAX, _G_TARGET_REGIME_ALERT_MINUTES, _G_DRIFT_CAUSE, _G_TAIL_BURN_ACCEL
     if _ENABLED is not None:
         return _ENABLED
     if os.environ.get("ENABLE_ML_QUALITY_METRICS", "").strip() == "":
@@ -83,6 +85,16 @@ def _ensure():
             "Target minutes threshold for regime alerting",
             labelnames=[],
         )
+        _G_DRIFT_CAUSE = Gauge(
+            "g6_ml_drift_cause",
+            "Drift root cause indicator (one-hot per cause value)",
+            labelnames=["cause", *_DEF_LABELS],
+        )
+        _G_TAIL_BURN_ACCEL = Gauge(
+            "g6_ml_tail_burn_accel",
+            "Tail burn acceleration (short-long minus 15m avg)",
+            labelnames=list(_DEF_LABELS),
+        )
         _ENABLED = True
     except Exception as e:
         _LOG.debug(f"Prometheus client unavailable: {e}")
@@ -107,6 +119,10 @@ def push_forecast_metrics(index: str, horizon: int, weights: Dict[str, float], r
             _G_RESIDUAL_P95.labels(index=idx, horizon=h).set(residual_p95)
         if residual_p95_decay is not None and _G_RESIDUAL_P95_DECAY is not None:
             _G_RESIDUAL_P95_DECAY.labels(index=idx, horizon=h).set(residual_p95_decay)
+        # Optional tail burn acceleration metric (caller may precompute and attach)
+        accel = weights.get("__tail_burn_accel__")  # sentinel key for accel value
+        if accel is not None and _G_TAIL_BURN_ACCEL is not None:
+            _G_TAIL_BURN_ACCEL.labels(index=idx, horizon=h).set(float(accel))
     except Exception as e:
         _LOG.debug(f"Failed to push ML quality metrics: {e}")
 
@@ -124,3 +140,17 @@ def push_quality_targets(qt) -> None:
             _G_TARGET_REGIME_ALERT_MINUTES.set(qt.regime_alert_minutes)
     except Exception as e:
         _LOG.debug(f"Failed to push quality target gauges: {e}")
+
+def push_drift_cause(index: str, horizon: int, cause: str) -> None:
+    if not _ensure():
+        return
+    try:
+        idx = index.upper(); h = int(horizon)
+        # One-hot: set 1 for provided cause, 0 for others (stable, data, model, regime, mixed)
+        causes = ["stable","data","model","regime","mixed"]
+        for c in causes:
+            val = 1 if c == cause else 0
+            if _G_DRIFT_CAUSE is not None:
+                _G_DRIFT_CAUSE.labels(cause=c, index=idx, horizon=h).set(val)
+    except Exception as e:
+        _LOG.debug(f"Failed to push drift cause gauge: {e}")
