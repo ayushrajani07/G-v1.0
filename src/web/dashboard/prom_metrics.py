@@ -62,6 +62,7 @@ _MANIFEST_CHAIN_LENGTH: Any = None
 _FEATURE_PSI: Any = None
 _FEATURE_KS: Any = None
 _LIVE_MAE: Any = None
+_LIVE_MAE_ALERTS: Any = None
 
 
 def _is_enabled() -> bool:
@@ -256,6 +257,11 @@ def _init_metrics() -> bool:
         _LIVE_MAE = Gauge(
             "g6_live_mae",
             "Live mean absolute error from streaming feedback",
+            registry=_REGISTRY,
+        )
+        _LIVE_MAE_ALERTS = Counter(
+            "g6_live_mae_alerts_total",
+            "Total number of live MAE alerts triggered",
             registry=_REGISTRY,
         )
         # Optional histograms for percentile analysis; buckets configurable via env vars
@@ -664,6 +670,7 @@ __all__ = [
     "set_ttl_study_metrics",
     "collect_metrics",
     "set_live_mae",
+    "inc_live_mae_alerts",
 ]
 
 def set_forecast_adaptive_ttl(index: str, horizon: int, ttl_sec: float) -> None:
@@ -681,5 +688,14 @@ def set_live_mae(value: float) -> None:
         return
     try:
         _LIVE_MAE.set(value)
+    except Exception:
+        pass
+
+def inc_live_mae_alerts() -> None:
+    """Increment counter for live MAE alerts."""
+    if not _init_metrics() or _LIVE_MAE_ALERTS is None:
+        return
+    try:
+        _LIVE_MAE_ALERTS.inc()
     except Exception:
         pass

@@ -331,11 +331,16 @@ try:
                 metrics = _feedback.get_metrics()
                 # Export live MAE to Prometheus (if enabled)
                 try:
-                    from .prom_metrics import set_live_mae
+                    from .prom_metrics import set_live_mae, inc_live_mae_alerts
                     set_live_mae(metrics["mae"])  # best-effort
                 except Exception:
                     pass
                 _alerts.maybe_alert("live-mae", {"live_mae": metrics["mae"]}, {"live_mae": LIVE_MAE_ALERT_THRESHOLD})
+                try:
+                    if float(metrics["mae"]) >= float(LIVE_MAE_ALERT_THRESHOLD):
+                        inc_live_mae_alerts()
+                except Exception:
+                    pass
             except Exception:
                 pass
 
@@ -344,6 +349,7 @@ try:
         _ingestor.start()
     try:
         app.state.ingestor = _ingestor
+        app.state.feedback = _feedback
     except Exception:
         pass
 except Exception:
