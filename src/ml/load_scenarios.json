@@ -1,0 +1,25 @@
+{
+  "scenarios": [
+    {
+      "name": "baseline_dual_index_light",
+      "indices": ["NIFTY", "BANKNIFTY"],
+      "horizons": [15, 30, 60],
+      "concurrency": 4,
+      "duration_seconds": 60
+    },
+    {
+      "name": "peak_hour_mix",
+      "indices": ["NIFTY", "BANKNIFTY"],
+      "horizons": [15, 30, 60, 120],
+      "concurrency": 12,
+      "duration_seconds": 120
+    },
+    {
+      "name": "stress_high_concurrency",
+      "indices": ["NIFTY", "BANKNIFTY"],
+      "horizons": [15, 30, 60, 120],
+      "concurrency": 32,
+      "duration_seconds": 90
+    }
+  ]
+}
