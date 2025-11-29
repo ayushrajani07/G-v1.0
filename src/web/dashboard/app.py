@@ -45,6 +45,7 @@ from .routes.ml import router as ml_router
 from .routes.drift import router as drift_router
 from .routes.stream import router as stream_router
 from .routes.metrics import router as metrics_router
+from .routes.sse import router as sse_router
 try:
     # Advisor router provides universal advisor endpoints
     from .routes.advisor import router as advisor_router
@@ -309,6 +310,7 @@ app.include_router(ml_router)
 app.include_router(drift_router)
 app.include_router(stream_router)
 app.include_router(metrics_router)
+app.include_router(sse_router)
 # Phase 20 (stub): minimal streaming/feedback wiring
 try:
     from typing import Dict, Any
