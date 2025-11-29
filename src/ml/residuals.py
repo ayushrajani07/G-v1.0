@@ -26,7 +26,7 @@ class ResidualStats:
     avg: float
     p95: float
     p95_decay: float = 0.0
-    trend_ratio: float
+    trend_ratio: float = 1.0
 
 _LOG = logging.getLogger("ml.residuals")
 _RESIDUAL_FILE_ENV = "ML_RESIDUAL_HISTORY_FILE"
