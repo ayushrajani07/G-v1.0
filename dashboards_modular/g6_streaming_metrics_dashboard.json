@@ -143,11 +143,30 @@
       "maxPerRow": 2
     },
     {
+      "id": 8,
+      "type": "graph",
+      "title": "Norm Error Drift Ratio",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "expr": "g6_forecast_norm_error_drift_ratio{index=\"$index\",horizon=\"$horizon\"}",
+          "legendFormat": "Norm Drift {{index}} {{horizon}}",
+          "refId": "A"
+        }
+      ],
+      "lines": true,
+      "linewidth": 2,
+      "nullPointMode": "null",
+      "repeat": "horizon",
+      "maxPerRow": 2
+    },
+    {
       "id": 7,
       "type": "stat",
       "title": "Drift Last Status",
       "datasource": { "type": "prometheus", "uid": "${DS_PROM}" },
-      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 24 },
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 24 },
       "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
       "targets": [ { "expr": "g6_drift_status{index=\"$index\",horizon=\"$horizon\"}", "refId": "A" } ],
       "repeat": "horizon",
