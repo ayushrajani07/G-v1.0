@@ -683,6 +683,59 @@ def create_app(config_dir: Path | None = None) -> Flask:
         except Exception as e:
             _LOG.error(f"Config diff error: {e}", exc_info=True)
             return jsonify({'error': 'Internal server error'}), 500
+
+    @app.route('/api/ml/ensemble/drift_stream', methods=['GET'])
+    def drift_stream() -> Response:
+        """Server-Sent Events stream of drift attribution for realtime sparklines.
+
+        Query params:
+        - index: required
+        - horizon: optional (default 60)
+        - interval_ms: optional poll interval (default 2000)
+        - max_events: optional cap (default 0 = unlimited)
+        Response: text/event-stream with events named 'drift' containing JSON attribution snapshot.
+        """
+        index = request.args.get('index','').upper()
+        if not index:
+            return Response(json.dumps({'error':'index parameter required'}), status=400, mimetype='application/json')
+        try:
+            horizon = int(request.args.get('horizon', 60))
+        except Exception:
+            horizon = 60
+        try:
+            interval_ms = int(request.args.get('interval_ms', 2000))
+        except Exception:
+            interval_ms = 2000
+        try:
+            max_events = int(request.args.get('max_events', 0))
+        except Exception:
+            max_events = 0
+        if interval_ms < 250:
+            interval_ms = 250  # safety floor
+
+        def _event_gen():
+            from src.ml.drift_attribution import compute_drift_components
+            sent = 0
+            while True:
+                try:
+                    comp = compute_drift_components(index, horizon)
+                    payload = json.dumps(comp, separators=(',',':'))
+                    yield f"event: drift\ndata: {payload}\n\n"
+                except Exception as e:  # emit error event then close
+                    err = json.dumps({'error': str(e)})
+                    yield f"event: error\ndata: {err}\n\n"
+                    break
+                sent += 1
+                if max_events and sent >= max_events:
+                    yield "event: end\ndata: {}\n\n"
+                    break
+                time.sleep(interval_ms/1000.0)
+        headers = {
+            'Cache-Control': 'no-cache',
+            'Content-Type': 'text/event-stream',
+            'X-Accel-Buffering': 'no'
+        }
+        return Response(_event_gen(), headers=headers)
     
     _app = app
     return app
