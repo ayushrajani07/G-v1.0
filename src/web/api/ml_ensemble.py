@@ -194,9 +194,19 @@ def create_app(config_dir: Path | None = None) -> Flask:
             # Record weights for volatility tracking
             record_weights(index=index, horizon=horizon, weights=weights)
             vol_gbrt, vol_retrieval = get_weight_volatility(index=index, horizon=horizon, window_seconds=900)
-            # Retrieval enrichment placeholders (future: real retrieval stats)
-            retrieval_success_ratio = 0.85
-            feature_completeness_ratio = 0.92
+            # Retrieval enrichment: use ANN cache stats as real proxy signals
+            try:
+                from src.path_forecast.ann_cache import (
+                    get_ann_window_cache_stats,
+                    get_ann_disk_cache_stats,
+                )
+                wc = get_ann_window_cache_stats()
+                dc = get_ann_disk_cache_stats()
+                retrieval_success_ratio = float(wc.get('hit_ratio', 0.0))
+                feature_completeness_ratio = float(dc.get('hit_ratio', 0.0))
+            except Exception:
+                retrieval_success_ratio = 0.0
+                feature_completeness_ratio = 0.0
             weights_enriched = {**weights, '__retrieval_success_ratio__': retrieval_success_ratio, '__feature_completeness_ratio__': feature_completeness_ratio}
             # Residual stats for metrics export (avg & p95)
             try:
