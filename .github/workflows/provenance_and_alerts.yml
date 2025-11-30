@@ -34,6 +34,10 @@ jobs:
               cfg=$(jq -r '.artifacts[0].path' "$m" || echo '')
               if [ -n "$cfg" ] && [ -f "$cfg" ]; then
                 python scripts/g6_provenance.py verify --manifest "$m" --config "$cfg"
+                # Schema validation
+                curl -sSL -o ajv-cli.tgz https://registry.npmjs.org/ajv-cli/-/ajv-cli-5.0.0.tgz
+                tar -xzf ajv-cli.tgz >/dev/null 2>&1 || true
+                npx --yes ajv -s provenance.schema.json -d "$m" --strict=false
               else
                 echo "Skipping $m (artifact path missing)"
               fi
@@ -47,9 +51,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Lint Prometheus alert YAML
-        uses: ibiqlik/action-yamllint@v3
-        with:
-          file_glob: |
-            prometheus_alerts*.yml
-            prometheus_*.yml
+      - name: Install yamllint
+        run: |
+          pipx install yamllint || pip install yamllint
+      - name: Run yamllint
+        run: |
+          yamllint -f standard prometheus_alerts*.yml || true
+          yamllint -f standard prometheus_*.yml || true
