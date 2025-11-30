@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "config_index": "NIFTY",
+  "config_hash": "<sha256-of-canonical-config>",
+  "signing": { "algorithm": "HMAC-SHA256", "key_id": "default" },
+  "timestamp_utc": "2025-11-30T12:00:00Z",
+  "actor": { "name": "Example User", "email": "user@example.invalid" },
+  "dependencies": [
+    { "name": "weights_model", "version": "2025.11.1", "hash": "<sha256>" }
+  ],
+  "artifacts": [
+    { "path": "configs/ml/nifty_ensemble_config.json", "hash": "<sha256>" }
+  ],
+  "previous_hash": "<sha256-prev-manifest>",
+  "notes": "Initial manifest scaffold"
+}

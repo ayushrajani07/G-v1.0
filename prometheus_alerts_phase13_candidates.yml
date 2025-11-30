@@ -1,0 +1,67 @@
+# Delegation Pack A: Metrics & Alert Rules (Phase 13 candidates)
+# Scope: Latency anomaly, drift attribution, retrieval enrichment
+# Note: This is a candidate bundle for review; wire into main chain post-approval.
+
+groups:
+- name: g6_phase13_latency_anomaly
+  rules:
+  - alert: G6ApiLatencyAnomalyHigh
+    expr: g6_ml_api_latency_anomaly > 3
+    for: 3m
+    labels:
+      severity: warning
+      service: ml_ensemble_api
+    annotations:
+      summary: "High latency anomaly detected (z-score > 3)"
+      description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, score {{ $value }}"
+  - alert: G6ApiLatencyAnomalySevere
+    expr: g6_ml_api_latency_anomaly > 5
+    for: 2m
+    labels:
+      severity: critical
+      service: ml_ensemble_api
+    annotations:
+      summary: "Severe latency anomaly (z-score > 5)"
+      description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, score {{ $value }}"
+
+- name: g6_phase13_retrieval_enrichment
+  rules:
+  - alert: G6RetrievalSuccessDegradation
+    expr: g6_ml_retrieval_success_ratio < 0.6
+    for: 5m
+    labels:
+      severity: warning
+      service: ml_ensemble_api
+    annotations:
+      summary: "Retrieval success ratio degraded"
+      description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, success_ratio {{ $value }}"
+  - alert: G6FeatureCompletenessLow
+    expr: g6_ml_feature_completeness_ratio < 0.5
+    for: 10m
+    labels:
+      severity: warning
+      service: ml_ensemble_api
+    annotations:
+      summary: "Feature completeness ratio low"
+      description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, completeness {{ $value }}"
+
+- name: g6_phase13_drift_components
+  rules:
+  - alert: G6TailBurnAccelerationSpike
+    expr: g6_ml_tail_burn_accel > 10
+    for: 5m
+    labels:
+      severity: warning
+      service: ml_ensemble_api
+    annotations:
+      summary: "Tail burn acceleration spike"
+      description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, accel {{ $value }}"
+  - alert: G6WeightsDivergenceHigh
+    expr: abs(g6_ml_weight{component="gbrt"} - g6_ml_weight{component="retrieval"}) > 0.4
+    for: 10m
+    labels:
+      severity: info
+      service: ml_ensemble_api
+    annotations:
+      summary: "GBRT vs retrieval weights divergence high"
+      description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}"
