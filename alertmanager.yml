@@ -7,12 +7,30 @@ route:
   group_wait: 10s
   group_interval: 2m
   repeat_interval: 3h
+  mute_time_intervals:
+    - market_open_first_10m
+  routes:
+    - matchers:
+        - severity="warning"
+        - service=~"ml_ensemble_(api|engine)"
+      receiver: 'log'
+      mute_time_intervals:
+        - market_open_first_10m
 
 receivers:
   - name: 'log'
     webhook_configs:
       - url: 'http://localhost:30555/devnull'
         send_resolved: true
+
+time_intervals:
+  - name: market_open_first_10m
+    time_intervals:
+      - days_of_week: ["monday","tuesday","wednesday","thursday","friday"]
+        times:
+          - start_time: "09:15"
+            end_time: "09:25"
+        location: "Asia/Kolkata"
 
 # Optional example email (commented)
 #receivers:
