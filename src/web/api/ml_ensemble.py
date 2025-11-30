@@ -26,7 +26,7 @@ from threading import BoundedSemaphore
 from src.ml.quality_targets import get_quality_targets
 from src.ml.weighting_engine import get_weighting_engine
 from src.ml.residuals import get_residual_trend, record_residual, get_residual_stats
-from src.ml.metrics import push_forecast_metrics, push_quality_targets
+from src.ml.metrics import push_forecast_metrics, push_quality_targets, push_latency_metrics
 from src.ml.config_versioning import record_config, latest_diff
 from src.ml.config_integrity import sign_config, latest_signature
 from src.ml.regime import audit_regime
@@ -45,6 +45,8 @@ _configs: Dict[str, EnsembleConfig] = {}
 # Backpressure semaphore (configurable via env FORECAST_MAX_CONCURRENCY)
 _forecast_semaphore: BoundedSemaphore | None = None
 _forecast_rejections: int = 0
+_latency_buffers: Dict[str, list[float]] = {}
+_LAT_BUF_MAX = 200
 
 
 @dataclass
@@ -231,6 +233,24 @@ def create_app(config_dir: Path | None = None) -> Flask:
             divergence = abs(weights['gbrt'] - weights['retrieval'])
             regime_audit = audit_regime(index=index, horizon=horizon, residual_trend=residual_trend, weight_volatility_gbrt=weight_volatility_gbrt, weight_volatility_retrieval=weight_volatility_retrieval, divergence=divergence)
 
+            # latency + anomaly detection
+            latency_ms = round((time.time() - start_time) * 1000, 2)
+            key = f"{index}|{horizon}"
+            buf = _latency_buffers.setdefault(key, [])
+            buf.append(latency_ms)
+            if len(buf) > _LAT_BUF_MAX:
+                del buf[:len(buf)-_LAT_BUF_MAX]
+            anomaly_score = 0.0
+            if len(buf) >= 20:
+                import statistics
+                mu = statistics.mean(buf)
+                sd = statistics.pstdev(buf) or 1.0
+                anomaly_score = (latency_ms - mu) / sd
+            try:
+                push_latency_metrics(index=index, horizon=horizon, latency_ms=latency_ms, anomaly_score=anomaly_score)
+            except Exception:
+                pass
+
             metadata = {
                 'latency_ms': round((time.time() - start_time) * 1000, 2),
                 'components_used': ['baseline', 'gbrt', 'retrieval', 'conformal'],
@@ -238,6 +258,7 @@ def create_app(config_dir: Path | None = None) -> Flask:
                 'residual_trend': residual_trend,
                 'regime_stability': regime_stability
             }
+            metadata['latency_anomaly_score'] = anomaly_score
             metadata['retrieval_success_ratio'] = retrieval_success_ratio
             metadata['feature_completeness_ratio'] = feature_completeness_ratio
             

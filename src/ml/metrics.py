@@ -34,12 +34,14 @@ _G_DRIFT_CAUSE = None
 _G_TAIL_BURN_ACCEL = None
 _G_RETRIEVAL_SUCCESS_RATIO = None
 _G_FEATURE_COMPLETENESS_RATIO = None
+_G_API_LATENCY_MS = None
+_G_API_LATENCY_ANOMALY = None
 
 _DEF_LABELS = ("index", "horizon")
 
 
 def _ensure():
-    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY, _G_TARGET_MAE_P95_IMPROVE_PCT, _G_TARGET_WEIGHT_STDDEV_MAX, _G_TARGET_REGIME_ALERT_MINUTES, _G_DRIFT_CAUSE, _G_TAIL_BURN_ACCEL, _G_RETRIEVAL_SUCCESS_RATIO, _G_FEATURE_COMPLETENESS_RATIO
+    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY, _G_TARGET_MAE_P95_IMPROVE_PCT, _G_TARGET_WEIGHT_STDDEV_MAX, _G_TARGET_REGIME_ALERT_MINUTES, _G_DRIFT_CAUSE, _G_TAIL_BURN_ACCEL, _G_RETRIEVAL_SUCCESS_RATIO, _G_FEATURE_COMPLETENESS_RATIO, _G_API_LATENCY_MS, _G_API_LATENCY_ANOMALY
     if _ENABLED is not None:
         return _ENABLED
     if os.environ.get("ENABLE_ML_QUALITY_METRICS", "").strip() == "":
@@ -107,6 +109,16 @@ def _ensure():
             "Feature completeness ratio (available features / expected)",
             labelnames=list(_DEF_LABELS),
         )
+        _G_API_LATENCY_MS = Gauge(
+            "g6_ml_api_latency_ms",
+            "Forecast API measured latency (ms)",
+            labelnames=list(_DEF_LABELS),
+        )
+        _G_API_LATENCY_ANOMALY = Gauge(
+            "g6_ml_api_latency_anomaly",
+            "Latency anomaly score (rolling z-score)",
+            labelnames=list(_DEF_LABELS),
+        )
         _ENABLED = True
     except Exception as e:
         _LOG.debug(f"Prometheus client unavailable: {e}")
@@ -144,6 +156,18 @@ def push_forecast_metrics(index: str, horizon: int, weights: Dict[str, float], r
             _G_FEATURE_COMPLETENESS_RATIO.labels(index=idx, horizon=h).set(float(fc))
     except Exception as e:
         _LOG.debug(f"Failed to push ML quality metrics: {e}")
+
+def push_latency_metrics(index: str, horizon: int, latency_ms: float, anomaly_score: float | None = None) -> None:
+    if not _ensure():
+        return
+    try:
+        idx = index.upper(); h = int(horizon)
+        if _G_API_LATENCY_MS is not None:
+            _G_API_LATENCY_MS.labels(index=idx, horizon=h).set(float(latency_ms))
+        if anomaly_score is not None and _G_API_LATENCY_ANOMALY is not None:
+            _G_API_LATENCY_ANOMALY.labels(index=idx, horizon=h).set(float(anomaly_score))
+    except Exception as e:
+        _LOG.debug(f"Failed to push latency metrics: {e}")
 
 
 def push_quality_targets(qt) -> None:
