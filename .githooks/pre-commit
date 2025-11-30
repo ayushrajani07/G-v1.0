@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-commit] Running provenance manifest verification..."
+
+CHANGED=$(git diff --cached --name-only)
+NEEDS_VERIFY=0
+
+for f in $CHANGED; do
+  case "$f" in
+    configs/ml/*)
+      NEEDS_VERIFY=1
+      ;;
+    provenance_*.json)
+      NEEDS_VERIFY=1
+      ;;
+  esac
+done
+
+if [ "$NEEDS_VERIFY" -eq 1 ]; then
+  if [ -x "scripts/g6_provenance.py" ]; then
+    echo "[pre-commit] Verifying manifests for changed configs..."
+    for m in provenance_*.json; do
+      [ -f "$m" ] || continue
+      cfg=$(jq -r '.artifacts[0].path' "$m" || echo '')
+      if [ -n "$cfg" ] && [ -f "$cfg" ]; then
+        python scripts/g6_provenance.py verify --manifest "$m" --config "$cfg" || {
+          echo "[pre-commit] Verification failed for $m against $cfg"; exit 1; }
+      fi
+    done
+  else
+    echo "[pre-commit] scripts/g6_provenance.py not found; skipping"
+  fi
+fi
+
+echo "[pre-commit] Done."
