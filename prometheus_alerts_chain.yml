@@ -41,6 +41,24 @@ groups:
         annotations:
           summary: "Feature completeness ratio low"
           description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, completeness {{ $value }}"
+      - alert: G6TailBurnAccelerationHigh
+        expr: g6_ml_tail_burn_accel > 3
+        for: 5m
+        labels:
+          severity: warning
+          service: ml_ensemble_engine
+        annotations:
+          summary: "Tail burn acceleration elevated"
+          description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, accel {{ $value }}"
+      - alert: G6WeightsDivergenceSpike
+        expr: g6_ml_weights_divergence > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          service: ml_ensemble_engine
+        annotations:
+          summary: "Weights divergence spike"
+          description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, divergence {{ $value }}"
   - name: g6_phase13_alerts_include
     rules:
       # Delegation Pack A candidates (imported logical group)
