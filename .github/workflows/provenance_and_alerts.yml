@@ -1,0 +1,55 @@
+name: Provenance Verification & Alert Lint
+
+on:
+  pull_request:
+    paths:
+      - 'configs/ml/**'
+      - 'prometheus_*.yml'
+      - 'prometheus_alerts_*.yml'
+      - 'scripts/g6_provenance.py'
+      - 'PROVENANCE_SCHEMA.md'
+
+jobs:
+  provenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps (none)
+        run: |
+          python -V
+      - name: Verify provenance manifests
+        env:
+          CONFIG_SIGNING_KEY: ${{ secrets.CONFIG_SIGNING_KEY }}
+        run: |
+          set -e
+          # Verify any manifest alongside configs; skip if none
+          if ls provenance_*.json 1> /dev/null 2>&1; then
+            for m in provenance_*.json; do
+              idx=$(jq -r '.config_index' "$m" || echo UNKNOWN)
+              cfg=$(jq -r '.artifacts[0].path' "$m" || echo '')
+              if [ -n "$cfg" ] && [ -f "$cfg" ]; then
+                python scripts/g6_provenance.py verify --manifest "$m" --config "$cfg"
+              else
+                echo "Skipping $m (artifact path missing)"
+              fi
+            done
+          else
+            echo "No provenance_* manifests present; skipping"
+          fi
+
+  alert-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Lint Prometheus alert YAML
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_glob: |
+            prometheus_alerts*.yml
+            prometheus_*.yml
