@@ -31,8 +31,14 @@ High‑throughput, modular options market data collection & analytics platform f
 - PRs touching configs/manifests trigger provenance verification and YAML linting (`.github/workflows/provenance_and_alerts.yml`).
 - Secrets: set `CONFIG_SIGNING_KEY` in repository secrets for HMAC signature verification.
 
+### Git Hooks
+- Enable pre-commit manifest verification:
+  - `git config core.hooksPath .githooks`
+  - `chmod +x .githooks/pre-commit`
+
 ### Roadmap
 - See `ROADMAP_PHASES.md` for Phase 13–16 plan, delegation tracks, and acceptance criteria.
+ - Phase 13 summary: `docs/PHASE13_CONSOLIDATION.md`
 ### Terminology
 **Important distinction:**
 - **Strike** = A unique strike price level (e.g., 24500, 24550)
