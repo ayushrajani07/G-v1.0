@@ -32,12 +32,14 @@ _G_TARGET_WEIGHT_STDDEV_MAX = None
 _G_TARGET_REGIME_ALERT_MINUTES = None
 _G_DRIFT_CAUSE = None
 _G_TAIL_BURN_ACCEL = None
+_G_RETRIEVAL_SUCCESS_RATIO = None
+_G_FEATURE_COMPLETENESS_RATIO = None
 
 _DEF_LABELS = ("index", "horizon")
 
 
 def _ensure():
-    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY, _G_TARGET_MAE_P95_IMPROVE_PCT, _G_TARGET_WEIGHT_STDDEV_MAX, _G_TARGET_REGIME_ALERT_MINUTES, _G_DRIFT_CAUSE, _G_TAIL_BURN_ACCEL
+    global _ENABLED, _G_WEIGHT, _G_RESIDUAL_TREND, _G_RESIDUAL_AVG, _G_RESIDUAL_P95, _G_RESIDUAL_P95_DECAY, _G_TARGET_MAE_P95_IMPROVE_PCT, _G_TARGET_WEIGHT_STDDEV_MAX, _G_TARGET_REGIME_ALERT_MINUTES, _G_DRIFT_CAUSE, _G_TAIL_BURN_ACCEL, _G_RETRIEVAL_SUCCESS_RATIO, _G_FEATURE_COMPLETENESS_RATIO
     if _ENABLED is not None:
         return _ENABLED
     if os.environ.get("ENABLE_ML_QUALITY_METRICS", "").strip() == "":
@@ -95,6 +97,16 @@ def _ensure():
             "Tail burn acceleration (short-long minus 15m avg)",
             labelnames=list(_DEF_LABELS),
         )
+        _G_RETRIEVAL_SUCCESS_RATIO = Gauge(
+            "g6_ml_retrieval_success_ratio",
+            "Retrieval success ratio (high-quality matches / total)",
+            labelnames=list(_DEF_LABELS),
+        )
+        _G_FEATURE_COMPLETENESS_RATIO = Gauge(
+            "g6_ml_feature_completeness_ratio",
+            "Feature completeness ratio (available features / expected)",
+            labelnames=list(_DEF_LABELS),
+        )
         _ENABLED = True
     except Exception as e:
         _LOG.debug(f"Prometheus client unavailable: {e}")
@@ -123,6 +135,13 @@ def push_forecast_metrics(index: str, horizon: int, weights: Dict[str, float], r
         accel = weights.get("__tail_burn_accel__")  # sentinel key for accel value
         if accel is not None and _G_TAIL_BURN_ACCEL is not None:
             _G_TAIL_BURN_ACCEL.labels(index=idx, horizon=h).set(float(accel))
+        # Retrieval enrichment: allow caller to pass ratios via sentinel keys
+        rs = weights.get("__retrieval_success_ratio__")
+        fc = weights.get("__feature_completeness_ratio__")
+        if rs is not None and _G_RETRIEVAL_SUCCESS_RATIO is not None:
+            _G_RETRIEVAL_SUCCESS_RATIO.labels(index=idx, horizon=h).set(float(rs))
+        if fc is not None and _G_FEATURE_COMPLETENESS_RATIO is not None:
+            _G_FEATURE_COMPLETENESS_RATIO.labels(index=idx, horizon=h).set(float(fc))
     except Exception as e:
         _LOG.debug(f"Failed to push ML quality metrics: {e}")
 
