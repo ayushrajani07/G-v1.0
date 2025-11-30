@@ -9,13 +9,19 @@ route:
   repeat_interval: 3h
   mute_time_intervals:
     - market_open_first_10m
+    - market_close_last_10m
   routes:
+    - matchers:
+        - severity="critical"
+      receiver: 'log'
+      continue: true
     - matchers:
         - severity="warning"
         - service=~"ml_ensemble_(api|engine)"
       receiver: 'log'
       mute_time_intervals:
         - market_open_first_10m
+        - market_close_last_10m
 
 receivers:
   - name: 'log'
@@ -30,6 +36,13 @@ time_intervals:
         times:
           - start_time: "09:15"
             end_time: "09:25"
+        location: "Asia/Kolkata"
+  - name: market_close_last_10m
+    time_intervals:
+      - days_of_week: ["monday","tuesday","wednesday","thursday","friday"]
+        times:
+          - start_time: "15:25"
+            end_time: "15:35"
         location: "Asia/Kolkata"
 
 # Optional example email (commented)
