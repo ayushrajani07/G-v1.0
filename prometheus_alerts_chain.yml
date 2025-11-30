@@ -12,6 +12,26 @@ groups:
           description: |
             Chain-of-trust validation failed for drift manifests.
             Investigate metrics/drift_manifests for tampering or write errors.
+  - name: g6_phase13_alerts_active
+    rules:
+      - alert: G6ApiLatencyAnomalySevere
+        expr: g6_ml_api_latency_anomaly > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: ml_ensemble_api
+        annotations:
+          summary: "Severe latency anomaly (z-score > 5)"
+          description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, score {{ $value }}"
+      - alert: G6RetrievalSuccessDegradation
+        expr: g6_ml_retrieval_success_ratio < 0.6
+        for: 5m
+        labels:
+          severity: warning
+          service: ml_ensemble_api
+        annotations:
+          summary: "Retrieval success ratio degraded"
+          description: "Index {{ $labels.index }}, horizon {{ $labels.horizon }}, success_ratio {{ $value }}"
   - name: g6_phase13_alerts_include
     rules:
       # Delegation Pack A candidates (imported logical group)

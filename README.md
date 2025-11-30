@@ -19,6 +19,20 @@ High‑throughput, modular options market data collection & analytics platform f
 - Aggregated per‑index overview snapshot (PCR + expiry completeness masks) every cycle
 - Extensible, group‑gated Prometheus metrics & integrity‑verified panel artifacts
 
+### Provenance Workflow
+- Generate manifest:
+  - `python scripts/g6_provenance.py generate --index NIFTY --config configs/ml/nifty_ensemble_config.json --out provenance_NIFTY.json`
+- Verify manifest:
+  - `python scripts/g6_provenance.py verify --manifest provenance_NIFTY.json --config configs/ml/nifty_ensemble_config.json`
+- Schema validation (optional):
+  - `npx --yes ajv -s provenance.schema.json -d provenance_NIFTY.json --strict=false`
+
+### CI Checks
+- PRs touching configs/manifests trigger provenance verification and YAML linting (`.github/workflows/provenance_and_alerts.yml`).
+- Secrets: set `CONFIG_SIGNING_KEY` in repository secrets for HMAC signature verification.
+
+### Roadmap
+- See `ROADMAP_PHASES.md` for Phase 13–16 plan, delegation tracks, and acceptance criteria.
 ### Terminology
 **Important distinction:**
 - **Strike** = A unique strike price level (e.g., 24500, 24550)
