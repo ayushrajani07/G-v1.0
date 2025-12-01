@@ -163,6 +163,67 @@
           "refId": "A"
         }
       ]
+    },
+    {
+      "type": "row",
+      "title": "Per-Index Overview",
+      "gridPos": { "x": 0, "y": 16, "w": 24, "h": 1 },
+      "repeat": "index",
+      "collapsed": false,
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "Latency Anomaly ($index)",
+          "gridPos": { "x": 0, "y": 17, "w": 12, "h": 6 },
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "g6_ml_api_latency_anomaly{index=\"$index\", horizon=\"$horizon\"}",
+              "legendFormat": "{{horizon}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Completeness ($index)",
+          "gridPos": { "x": 12, "y": 17, "w": 12, "h": 6 },
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "g6_ml_feature_completeness_ratio{index=\"$index\", horizon=\"$horizon\"}",
+              "legendFormat": "{{horizon}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Tail-Burn ($index)",
+          "gridPos": { "x": 0, "y": 23, "w": 12, "h": 6 },
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "g6_ml_tail_burn_accel{index=\"$index\", horizon=\"$horizon\"}",
+              "legendFormat": "{{horizon}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "type": "timeseries",
+          "title": "Weights Div ($index)",
+          "gridPos": { "x": 12, "y": 23, "w": 12, "h": 6 },
+          "datasource": "Prometheus",
+          "targets": [
+            {
+              "expr": "g6_ml_weights_divergence{index=\"$index\", horizon=\"$horizon\"}",
+              "legendFormat": "{{horizon}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
