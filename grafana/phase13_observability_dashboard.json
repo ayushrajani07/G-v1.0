@@ -52,6 +52,12 @@
         "definition": "label_values(g6_ml_api_latency_anomaly, horizon)",
         "refresh": 2,
         "hide": 0
+      },
+      {
+        "name": "am_url",
+        "type": "constant",
+        "query": "http://localhost:9093",
+        "hide": 0
       }
     ]
   },
@@ -70,7 +76,8 @@
               { "color": "yellow", "value": 3 },
               { "color": "red", "value": 5 }
             ]
-          }
+              "expr": "ALERTS{alertname=\"G6FeatureCompletenessLow\", alertstate=\"firing\"}",
+              "text": "View in Alertmanager: $am_url/#/alerts?active"
         }
       },
       "targets": [
@@ -78,7 +85,8 @@
           "expr": "g6_ml_api_latency_anomaly{index=\"$index\", horizon=\"$horizon\"}",
           "legendFormat": "{{index}} {{horizon}}",
           "refId": "A"
-        }
+              "expr": "ALERTS{alertname=\"G6TailBurnAccelerationHigh\", alertstate=\"firing\"}",
+              "text": "View in Alertmanager: $am_url/#/alerts?active"
       ]
     },
     {
@@ -86,7 +94,8 @@
       "title": "Feature Completeness Ratio",
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "datasource": "Prometheus",
-      "fieldConfig": {
+              "expr": "ALERTS{alertname=\"G6WeightsDivergenceSpike\", alertstate=\"firing\"}",
+              "text": "View in Alertmanager: $am_url/#/alerts?active"
         "defaults": {
           "min": 0,
           "max": 1,
