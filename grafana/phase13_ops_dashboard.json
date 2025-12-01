@@ -175,9 +175,32 @@
     },
     {"type":"row","title":"Auto-Tune Suggestions","gridPos":{"x":0,"y":15,"w":24,"h":1}},
     {
+      "type": "stat",
+      "title": ">20% Change vs Current Thresholds",
+      "gridPos": {"x":0,"y":16,"w":6,"h":6},
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "sum( (g6_ml_autotune_suggestion{dimension=\"latency_z_yellow\"} / 3 > 1.2) or (g6_ml_autotune_suggestion{dimension=\"latency_z_yellow\"} / 3 < 0.8) )
+                + sum( (g6_ml_autotune_suggestion{dimension=\"latency_z_red\"} / 5 > 1.2) or (g6_ml_autotune_suggestion{dimension=\"latency_z_red\"} / 5 < 0.8) )
+                + sum( (g6_ml_autotune_suggestion{dimension=\"tail_burn_yellow\"} / 2 > 1.2) or (g6_ml_autotune_suggestion{dimension=\"tail_burn_yellow\"} / 2 < 0.8) )
+                + sum( (g6_ml_autotune_suggestion{dimension=\"tail_burn_red\"} / 3 > 1.2) or (g6_ml_autotune_suggestion{dimension=\"tail_burn_red\"} / 3 < 0.8) )
+                + sum( (g6_ml_autotune_suggestion{dimension=\"weights_div_yellow\"} / 0.1 > 1.2) or (g6_ml_autotune_suggestion{dimension=\"weights_div_yellow\"} / 0.1 < 0.8) )
+                + sum( (g6_ml_autotune_suggestion{dimension=\"weights_div_red\"} / 0.2 > 1.2) or (g6_ml_autotune_suggestion{dimension=\"weights_div_red\"} / 0.2 < 0.8) )
+                + sum( (g6_ml_autotune_suggestion{dimension=\"completeness_yellow\"} / 0.5 > 1.2) or (g6_ml_autotune_suggestion{dimension=\"completeness_yellow\"} / 0.5 < 0.8) )
+                + sum( (g6_ml_autotune_suggestion{dimension=\"completeness_green\"} / 0.8 > 1.2) or (g6_ml_autotune_suggestion{dimension=\"completeness_green\"} / 0.8 < 0.8) )",
+        "legendFormat": "changes",
+        "refId": "A",
+        "instant": true
+      }],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":3}
+      ]}}},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}}
+    },
+    {
       "type": "table",
       "title": "48h Suggested Thresholds",
-      "gridPos": {"x":0,"y":16,"w":24,"h":6},
+      "gridPos": {"x":6,"y":16,"w":18,"h":6},
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {"custom": {"cellOptions": {"type": "auto"}}},
