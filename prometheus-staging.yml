@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - prometheus_rules_ml.yml
+  - prometheus_rules_ml_autotune.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ["localhost:9093"]
+
+scrape_configs:
+  - job_name: g6-app
+    static_configs:
+      - targets: ["localhost:9090"]

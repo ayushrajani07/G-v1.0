@@ -148,6 +148,46 @@
       "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
         {"color":"green","value":null},{"color":"yellow","value":0.1},{"color":"red","value":0.2}
       ]}}}
+    },
+    {"type":"row","title":"Per-Horizon Alerts","gridPos":{"x":0,"y":11,"w":24,"h":1}},
+    {
+      "type": "stat",
+      "title": "Horizon: $horizon | Active Alerts",
+      "gridPos": {"x":0,"y":12,"w":6,"h":4},
+      "repeat": "horizon",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "count(ALERTS{alertstate=\"firing\", horizon=\"$horizon\"})",
+        "legendFormat": "alerts",
+        "refId": "A",
+        "instant": true
+      }],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":3}
+      ]}}}
+    },
+    {"type":"row","title":"Degraded Only","gridPos":{"x":0,"y":16,"w":24,"h":1}},
+    {
+      "type": "stat",
+      "title": "Index: $index | Degraded",
+      "gridPos": {"x":0,"y":17,"w":6,"h":4},
+      "repeat": "index",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "(
+          max_over_time(g6_ml_api_latency_anomaly{index=\"$index\", horizon=\"$horizon\"}[15m]) > 3
+          or min_over_time(g6_ml_feature_completeness_ratio{index=\"$index\", horizon=\"$horizon\"}[15m]) < 0.5
+          or max_over_time(g6_ml_tail_burn_accel{index=\"$index\", horizon=\"$horizon\"}[15m]) > 2
+          or max_over_time(g6_ml_weights_divergence{index=\"$index\", horizon=\"$horizon\"}[15m]) > 0.1
+        )",
+        "legendFormat": "degraded",
+        "refId": "A",
+        "instant": true
+      }],
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}},
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"red","value":1}
+      ]}}}
     }
     ,
     {
@@ -197,10 +237,10 @@
       ]}}},
       "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}}
     },
-    {
+    ,{
       "type": "table",
       "title": "48h Suggested Thresholds",
-      "gridPos": {"x":6,"y":16,"w":18,"h":6},
+      "gridPos": {"x":6,"y":17,"w":18,"h":6},
       "datasource": "Prometheus",
       "fieldConfig": {
         "defaults": {"custom": {"cellOptions": {"type": "auto"}}},

@@ -55,12 +55,23 @@ High‑throughput, modular options market data collection & analytics platform f
 - Panels:
   - Per-index tiles: latency z, feature completeness, tail-burn accel, weights divergence.
   - Active alerts per index with click-through to Alertmanager.
+  - Per-horizon alert counts for coverage.
   - Auto-Tune table: lists `g6_ml_autotune_suggestion` dimensions and values, colored by type.
   - Retune indicator: counts dimensions where suggestions differ >20% from current baselines.
 - Workflow:
   1) Run staging with `prometheus_rules_ml_autotune.yml` for ~48h.
   2) Use the Auto-Tune table and retune indicator to propose new thresholds.
   3) Update alert rules (`prometheus_alerts_ml*.yml`) and dashboard thresholds; promote after staging soak.
+
+### Staging Prometheus Include
+- Use `prometheus-staging.yml` to include `prometheus_rules_ml_autotune.yml` only in staging.
+- Example launch:
+  - Windows PowerShell:
+    - `prometheus.exe --config.file prometheus-staging.yml`
+  - Linux/macOS:
+    - `./prometheus --config.file prometheus-staging.yml`
+
+For CI validation, run `scripts/validate_prom_configs.ps1` or `promtool check` if available.
 ### Terminology
 **Important distinction:**
 - **Strike** = A unique strike price level (e.g., 24500, 24550)
