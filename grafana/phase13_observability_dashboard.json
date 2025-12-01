@@ -7,6 +7,34 @@
   "version": 1,
   "refresh": "10s",
   "time": { "from": "now-6h", "to": "now" },
+  "annotations": {
+    "list": [
+      {
+        "name": "Completeness Low",
+        "type": "dashboard",
+        "datasource": "Prometheus",
+        "enable": true,
+        "iconColor": "red",
+        "expr": "ALERTS{alertname=\"G6FeatureCompletenessLow\", alertstate=\"firing\"}"
+      },
+      {
+        "name": "Tail-Burn Accel High",
+        "type": "dashboard",
+        "datasource": "Prometheus",
+        "enable": true,
+        "iconColor": "orange",
+        "expr": "ALERTS{alertname=\"G6TailBurnAccelerationHigh\", alertstate=\"firing\"}"
+      },
+      {
+        "name": "Weights Divergence Spike",
+        "type": "dashboard",
+        "datasource": "Prometheus",
+        "enable": true,
+        "iconColor": "yellow",
+        "expr": "ALERTS{alertname=\"G6WeightsDivergenceSpike\", alertstate=\"firing\"}"
+      }
+    ]
+  },
   "templating": {
     "list": [
       {
