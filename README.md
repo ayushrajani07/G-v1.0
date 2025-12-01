@@ -39,6 +39,10 @@ High‑throughput, modular options market data collection & analytics platform f
 ### Roadmap
 - See `ROADMAP_PHASES.md` for Phase 13–16 plan, delegation tracks, and acceptance criteria.
  - Phase 13 summary: `docs/PHASE13_CONSOLIDATION.md`
+
+### Grafana
+- Import dashboard: `grafana/phase13_observability_dashboard.json`
+- Assumes datasource named `Prometheus`; variables `index` and `horizon` populated from metric labels.
 ### Terminology
 **Important distinction:**
 - **Strike** = A unique strike price level (e.g., 24500, 24550)

@@ -1,0 +1,87 @@
+{
+  "id": null,
+  "uid": "g6-phase13",
+  "title": "G6 Phase 13 Observability",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "index",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(g6_ml_api_latency_anomaly, index)",
+        "refresh": 2,
+        "hide": 0
+      },
+      {
+        "name": "horizon",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(g6_ml_api_latency_anomaly, horizon)",
+        "refresh": 2,
+        "hide": 0
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Latency Anomaly (z-score)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "g6_ml_api_latency_anomaly{index=\"$index\", horizon=\"$horizon\"}",
+          "legendFormat": "{{index}} {{horizon}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Feature Completeness Ratio",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {"min": 0, "max": 1}
+      },
+      "targets": [
+        {
+          "expr": "g6_ml_feature_completeness_ratio{index=\"$index\", horizon=\"$horizon\"}",
+          "legendFormat": "{{index}} {{horizon}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tail Burn Acceleration",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "g6_ml_tail_burn_accel{index=\"$index\", horizon=\"$horizon\"}",
+          "legendFormat": "{{index}} {{horizon}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Weights Divergence",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "g6_ml_weights_divergence{index=\"$index\", horizon=\"$horizon\"}",
+          "legendFormat": "{{index}} {{horizon}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
