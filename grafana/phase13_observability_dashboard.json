@@ -33,6 +33,18 @@
       "title": "Latency Anomaly (z-score)",
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      },
       "targets": [
         {
           "expr": "g6_ml_api_latency_anomaly{index=\"$index\", horizon=\"$horizon\"}",
@@ -47,7 +59,35 @@
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "datasource": "Prometheus",
       "fieldConfig": {
-        "defaults": {"min": 0, "max": 1}
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "green", "value": 0.8 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "range",
+              "options": { "from": 0, "to": 0.5 },
+              "text": "Low"
+            },
+            {
+              "type": "range",
+              "options": { "from": 0.5, "to": 0.8 },
+              "text": "Degraded"
+            },
+            {
+              "type": "range",
+              "options": { "from": 0.8, "to": 1 },
+              "text": "Healthy"
+            }
+          ]
+        }
       },
       "targets": [
         {
@@ -62,6 +102,18 @@
       "title": "Tail Burn Acceleration",
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 2 },
+              { "color": "red", "value": 3 }
+            ]
+          }
+        }
+      },
       "targets": [
         {
           "expr": "g6_ml_tail_burn_accel{index=\"$index\", horizon=\"$horizon\"}",
@@ -75,6 +127,35 @@
       "title": "Weights Divergence",
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red", "value": 0.2 }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "range",
+              "options": { "from": 0, "to": 0.1 },
+              "text": "Stable"
+            },
+            {
+              "type": "range",
+              "options": { "from": 0.1, "to": 0.2 },
+              "text": "Shifting"
+            },
+            {
+              "type": "range",
+              "options": { "from": 0.2, "to": 1 },
+              "text": "Diverging"
+            }
+          ]
+        }
+      },
       "targets": [
         {
           "expr": "g6_ml_weights_divergence{index=\"$index\", horizon=\"$horizon\"}",
