@@ -1,0 +1,155 @@
+{
+  "id": null,
+  "uid": "g6-ops-v1",
+  "title": "G6 Ops: Drift & Health",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "templating": {"list": [
+    {"name": "am_url", "type": "constant", "query": "http://localhost:9093"},
+    {"name": "horizon", "type": "query", "datasource": "Prometheus", "definition": "label_values(g6_ml_api_latency_anomaly, horizon)", "refresh": 2}
+  ]},
+  "panels": [
+    {
+      "type": "row",
+      "title": "Overview",
+      "gridPos": {"x":0,"y":0,"w":24,"h":1}
+    },
+    {
+      "type": "stat",
+      "title": "Latency Anomaly (max z)",
+      "gridPos": {"x":0,"y":1,"w":6,"h":5},
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "max by(index) (g6_ml_api_latency_anomaly{horizon=\"$horizon\"})",
+        "legendFormat": "{{index}}",
+        "refId": "A",
+        "instant": true
+      }],
+      "options": {"reduceOptions": {"calcs": ["max"], "values": false}},
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":3},{"color":"red","value":5}
+      ]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Feature Completeness (min)",
+      "gridPos": {"x":6,"y":1,"w":6,"h":5},
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "min by(index) (g6_ml_feature_completeness_ratio{horizon=\"$horizon\"})",
+        "legendFormat": "{{index}}",
+        "refId": "A",
+        "instant": true
+      }],
+      "options": {"reduceOptions": {"calcs": ["min"], "values": false}},
+      "fieldConfig": {"defaults": {"min":0, "max":1, "thresholds": {"mode": "absolute", "steps": [
+        {"color":"red","value":null},{"color":"yellow","value":0.5},{"color":"green","value":0.8}
+      ]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Tail-Burn Accel (max)",
+      "gridPos": {"x":12,"y":1,"w":6,"h":5},
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "max by(index) (g6_ml_tail_burn_accel{horizon=\"$horizon\"})",
+        "legendFormat": "{{index}}",
+        "refId": "A",
+        "instant": true
+      }],
+      "options": {"reduceOptions": {"calcs": ["max"], "values": false}},
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":2},{"color":"red","value":3}
+      ]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Weights Divergence (max)",
+      "gridPos": {"x":18,"y":1,"w":6,"h":5},
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "max by(index) (g6_ml_weights_divergence{horizon=\"$horizon\"})",
+        "legendFormat": "{{index}}",
+        "refId": "A",
+        "instant": true
+      }],
+      "options": {"reduceOptions": {"calcs": ["max"], "values": false}},
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":0.1},{"color":"red","value":0.2}
+      ]}}}
+    },
+
+    {"type":"row","title":"Per-Index Tiles","gridPos":{"x":0,"y":6,"w":24,"h":1}},
+    {
+      "type": "stat",
+      "title": "Index: $index | Latency z",
+      "gridPos": {"x":0,"y":7,"w":6,"h":4},
+      "repeat": "index",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "max_over_time(g6_ml_api_latency_anomaly{index=\"$index\", horizon=\"$horizon\"}[15m])",
+        "legendFormat": "z",
+        "refId": "A",
+        "instant": true
+      }],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":3},{"color":"red","value":5}
+      ]}}},
+      "options": {"orientation": "auto"}
+    },
+    {
+      "type": "stat",
+      "title": "Index: $index | Completeness",
+      "gridPos": {"x":6,"y":7,"w":6,"h":4},
+      "repeat": "index",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "min_over_time(g6_ml_feature_completeness_ratio{index=\"$index\", horizon=\"$horizon\"}[15m])",
+        "legendFormat": "ratio",
+        "refId": "A",
+        "instant": true
+      }],
+      "fieldConfig": {"defaults": {"min":0,"max":1,"thresholds": {"mode": "absolute", "steps": [
+        {"color":"red","value":null},{"color":"yellow","value":0.5},{"color":"green","value":0.8}
+      ]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Index: $index | Tail-Burn",
+      "gridPos": {"x":12,"y":7,"w":6,"h":4},
+      "repeat": "index",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "max_over_time(g6_ml_tail_burn_accel{index=\"$index\", horizon=\"$horizon\"}[15m])",
+        "legendFormat": "accel",
+        "refId": "A",
+        "instant": true
+      }],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":2},{"color":"red","value":3}
+      ]}}}
+    },
+    {
+      "type": "stat",
+      "title": "Index: $index | Weights Div",
+      "gridPos": {"x":18,"y":7,"w":6,"h":4},
+      "repeat": "index",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "max_over_time(g6_ml_weights_divergence{index=\"$index\", horizon=\"$horizon\"}[15m])",
+        "legendFormat": "div",
+        "refId": "A",
+        "instant": true
+      }],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":0.1},{"color":"red","value":0.2}
+      ]}}}
+    }
+  ],
+  "annotations": {"list": [
+    {"name":"Ops Alerts","type":"dashboard","datasource":"Prometheus","enable":true,"iconColor":"red","expr":"ALERTS{alertstate=\"firing\"}"}
+  ]}
+}

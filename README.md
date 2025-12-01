@@ -43,6 +43,7 @@ High‑throughput, modular options market data collection & analytics platform f
 ### Grafana
 - Import dashboard: `grafana/phase13_observability_dashboard.json`
 - Assumes datasource named `Prometheus`; variables `index` and `horizon` populated from metric labels.
+- Ops variant: `grafana/phase13_ops_dashboard.json` — compact per-index tiles with alert badges.
 ### Terminology
 **Important distinction:**
 - **Strike** = A unique strike price level (e.g., 24500, 24550)
