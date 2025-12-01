@@ -44,6 +44,10 @@ High‑throughput, modular options market data collection & analytics platform f
 - Import dashboard: `grafana/phase13_observability_dashboard.json`
 - Assumes datasource named `Prometheus`; variables `index` and `horizon` populated from metric labels.
 - Ops variant: `grafana/phase13_ops_dashboard.json` — compact per-index tiles with alert badges.
+
+### Staging Auto-Tune
+- Load `prometheus_rules_ml_autotune.yml` in staging Prometheus only.
+- After ~48h, review `docs/AUTOTUNE_GUIDE.md` to update thresholds in alerts and dashboards.
 ### Terminology
 **Important distinction:**
 - **Strike** = A unique strike price level (e.g., 24500, 24550)

@@ -1,0 +1,71 @@
+groups:
+  - name: g6-ml-autotune-staging
+    interval: 1m
+    rules:
+      # Rolling baselines collected only in staging; used to propose thresholds
+      - record: g6_ml_latency_z_p95_48h
+        expr: percentile_over_time(0.95, g6_ml_api_latency_anomaly[48h])
+
+      - record: g6_ml_tail_burn_p95_48h
+        expr: percentile_over_time(0.95, g6_ml_tail_burn_accel[48h])
+
+      - record: g6_ml_weights_div_p95_48h
+        expr: percentile_over_time(0.95, g6_ml_weights_divergence[48h])
+
+      - record: g6_ml_completeness_p05_48h
+        expr: percentile_over_time(0.05, g6_ml_feature_completeness_ratio[48h])
+
+      # Suggested thresholds based on telemetry (rounded for readability)
+      - record: g6_ml_suggest_latency_alert_yellow
+        expr: round(g6_ml_latency_z_p95_48h, 1)
+      - record: g6_ml_suggest_latency_alert_red
+        expr: round(g6_ml_latency_z_p95_48h * 1.6, 1)
+
+      - record: g6_ml_suggest_tail_burn_yellow
+        expr: round(g6_ml_tail_burn_p95_48h, 1)
+      - record: g6_ml_suggest_tail_burn_red
+        expr: round(g6_ml_tail_burn_p95_48h * 1.4, 1)
+
+      - record: g6_ml_suggest_weights_div_yellow
+        expr: round(g6_ml_weights_div_p95_48h, 3)
+      - record: g6_ml_suggest_weights_div_red
+        expr: round(g6_ml_weights_div_p95_48h * 1.5, 3)
+
+      - record: g6_ml_suggest_completeness_yellow
+        expr: round(g6_ml_completeness_p05_48h + 0.2, 2)
+      - record: g6_ml_suggest_completeness_green
+        expr: round(g6_ml_completeness_p05_48h + 0.35, 2)
+
+      # Export suggestion as a simple info metric for dashboards/docs
+      - record: g6_ml_autotune_suggestion
+        labels:
+          dimension: "latency_z_yellow"
+        expr: g6_ml_suggest_latency_alert_yellow
+      - record: g6_ml_autotune_suggestion
+        labels:
+          dimension: "latency_z_red"
+        expr: g6_ml_suggest_latency_alert_red
+      - record: g6_ml_autotune_suggestion
+        labels:
+          dimension: "tail_burn_yellow"
+        expr: g6_ml_suggest_tail_burn_yellow
+      - record: g6_ml_autotune_suggestion
+        labels:
+          dimension: "tail_burn_red"
+        expr: g6_ml_suggest_tail_burn_red
+      - record: g6_ml_autotune_suggestion
+        labels:
+          dimension: "weights_div_yellow"
+        expr: g6_ml_suggest_weights_div_yellow
+      - record: g6_ml_autotune_suggestion
+        labels:
+          dimension: "weights_div_red"
+        expr: g6_ml_suggest_weights_div_red
+      - record: g6_ml_autotune_suggestion
+        labels:
+          dimension: "completeness_yellow"
+        expr: g6_ml_suggest_completeness_yellow
+      - record: g6_ml_autotune_suggestion
+        labels:
+          dimension: "completeness_green"
+        expr: g6_ml_suggest_completeness_green
