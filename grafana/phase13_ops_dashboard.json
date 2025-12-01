@@ -172,9 +172,35 @@
           "targetBlank": true
         }
       ]
+    },
+    {"type":"row","title":"Auto-Tune Suggestions","gridPos":{"x":0,"y":15,"w":24,"h":1}},
+    {
+      "type": "table",
+      "title": "48h Suggested Thresholds",
+      "gridPos": {"x":0,"y":16,"w":24,"h":6},
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "g6_ml_autotune_suggestion",
+        "legendFormat": "{{dimension}}",
+        "refId": "A",
+        "instant": true
+      }],
+      "transformations": [
+        {"id": "organize", "options": {"excludeByName": {"Time": true}, "indexByName": {}}},
+        {"id": "groupBy", "options": {"fields": {
+          "Labels dimension": {"aggregations": ["lastNotNull"], "operation": "groupBy"},
+          "Value": {"aggregations": ["lastNotNull"], "operation": "aggregate"}
+        }}}
+      ],
+      "options": {"showHeader": true}
     }
   ],
+  "links": [],
   "annotations": {"list": [
     {"name":"Ops Alerts","type":"dashboard","datasource":"Prometheus","enable":true,"iconColor":"red","expr":"ALERTS{alertstate=\"firing\"}"}
-  ]}
+  ]},
+  "panels": [
+    
+  ],
+  "panels2": []
 }
