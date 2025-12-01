@@ -9,6 +9,7 @@
   "time": { "from": "now-1h", "to": "now" },
   "templating": {"list": [
     {"name": "am_url", "type": "constant", "query": "http://localhost:9093"},
+    {"name": "index", "type": "query", "datasource": "Prometheus", "definition": "label_values(g6_ml_api_latency_anomaly, index)", "refresh": 2},
     {"name": "horizon", "type": "query", "datasource": "Prometheus", "definition": "label_values(g6_ml_api_latency_anomaly, horizon)", "refresh": 2}
   ]},
   "panels": [
@@ -147,6 +148,30 @@
       "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
         {"color":"green","value":null},{"color":"yellow","value":0.1},{"color":"red","value":0.2}
       ]}}}
+    }
+    ,
+    {
+      "type": "stat",
+      "title": "Index: $index | Active Alerts",
+      "gridPos": {"x":0,"y":11,"w":6,"h":4},
+      "repeat": "index",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "count(ALERTS{alertstate=\"firing\", index=\"$index\"})",
+        "legendFormat": "alerts",
+        "refId": "A",
+        "instant": true
+      }],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":3}
+      ]}}},
+      "links": [
+        {
+          "title": "Open Alertmanager",
+          "url": "$am_url/#/alerts?active&q=alertname%3D~G6.*%20index%3D$index",
+          "targetBlank": true
+        }
+      ]
     }
   ],
   "annotations": {"list": [
