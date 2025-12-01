@@ -23,6 +23,16 @@
       "title": "Latency Anomaly (max z)",
       "gridPos": {"x":0,"y":1,"w":6,"h":5},
       "datasource": "Prometheus",
+      "templating": {"list": [
+        {"type": "constant", "name": "latency_yellow", "hide": 0, "label": "Latency Yellow", "query": "3"},
+        {"type": "constant", "name": "latency_red", "hide": 0, "label": "Latency Red", "query": "5"},
+        {"type": "constant", "name": "tailburn_yellow", "hide": 0, "label": "Tail-Burn Yellow", "query": "2"},
+        {"type": "constant", "name": "tailburn_red", "hide": 0, "label": "Tail-Burn Red", "query": "3"},
+        {"type": "constant", "name": "weights_yellow", "hide": 0, "label": "Weights Div Yellow", "query": "0.1"},
+        {"type": "constant", "name": "weights_red", "hide": 0, "label": "Weights Div Red", "query": "0.2"},
+        {"type": "constant", "name": "complete_yellow", "hide": 0, "label": "Completeness Yellow", "query": "0.5"},
+        {"type": "constant", "name": "complete_green", "hide": 0, "label": "Completeness Green", "query": "0.8"}
+      ]},
       "targets": [{
         "expr": "max by(index) (g6_ml_api_latency_anomaly{horizon=\"$horizon\"})",
         "legendFormat": "{{index}}",
@@ -288,8 +298,8 @@
               {"id": "custom.cellOptions", "value": {"type": "gradient"}},
               {"id": "thresholds", "value": {"mode": "absolute", "steps": [
                 {"color": "green", "value": null},
-                {"color": "yellow", "value": 3},
-                {"color": "red", "value": 5}
+                {"color": "yellow", "value": "$latency_yellow"},
+                {"color": "red", "value": "$latency_red"}
               ]}}
             ]
           },
@@ -299,8 +309,8 @@
               {"id": "custom.cellOptions", "value": {"type": "gradient"}},
               {"id": "thresholds", "value": {"mode": "absolute", "steps": [
                 {"color": "green", "value": null},
-                {"color": "yellow", "value": 2},
-                {"color": "red", "value": 3}
+                {"color": "yellow", "value": "$tailburn_yellow"},
+                {"color": "red", "value": "$tailburn_red"}
               ]}}
             ]
           },
@@ -310,8 +320,8 @@
               {"id": "custom.cellOptions", "value": {"type": "gradient"}},
               {"id": "thresholds", "value": {"mode": "absolute", "steps": [
                 {"color": "green", "value": null},
-                {"color": "yellow", "value": 0.1},
-                {"color": "red", "value": 0.2}
+                {"color": "yellow", "value": "$weights_yellow"},
+                {"color": "red", "value": "$weights_red"}
               ]}}
             ]
           },
@@ -321,8 +331,8 @@
               {"id": "custom.cellOptions", "value": {"type": "gradient"}},
               {"id": "thresholds", "value": {"mode": "absolute", "steps": [
                 {"color": "red", "value": null},
-                {"color": "yellow", "value": 0.5},
-                {"color": "green", "value": 0.8}
+                {"color": "yellow", "value": "$complete_yellow"},
+                {"color": "green", "value": "$complete_green"}
               ]}}
             ]
           }
@@ -347,7 +357,7 @@
   "links": [],
   "annotations": {"list": [
     {"name":"Ops Alerts","type":"dashboard","datasource":"Prometheus","enable":true,"iconColor":"red","expr":"ALERTS{alertstate=\"firing\"}","builtIn":1,"icon":"bolt","links":[
-      {"title":"Alertmanager: alertname","url":"$am_url/#/alerts?active&q=alertname%3D~$__alertName","targetBlank":true}
+      {"title":"Alertmanager: alertname","url":"$am_url/#/alerts?active&q=alertname%3D~$__alertName%20index%3D~$index%20horizon%3D~$horizon","targetBlank":true}
     ]}
   ]},
   "panels": [

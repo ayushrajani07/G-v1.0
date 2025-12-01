@@ -14,14 +14,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache promtool
+        uses: actions/cache@v4
+        with:
+          path: promtool-cache
+          key: promtool-${{ runner.os }}-2.54.1
+
       - name: Install promtool
         run: |
           sudo apt-get update
           sudo apt-get install -y wget tar
           VER=2.54.1
-          wget https://github.com/prometheus/prometheus/releases/download/v${VER}/prometheus-${VER}.linux-amd64.tar.gz
-          tar xzf prometheus-${VER}.linux-amd64.tar.gz
-          echo "${{ github.workspace }}/prometheus-${VER}.linux-amd64" >> $GITHUB_PATH
+          mkdir -p promtool-cache
+          if [ ! -d "promtool-cache/prometheus-${VER}.linux-amd64" ]; then \
+            wget https://github.com/prometheus/prometheus/releases/download/v${VER}/prometheus-${VER}.linux-amd64.tar.gz; \
+            tar xzf prometheus-${VER}.linux-amd64.tar.gz; \
+            mv prometheus-${VER}.linux-amd64 promtool-cache/; \
+          fi
+          echo "${{ github.workspace }}/promtool-cache/prometheus-${VER}.linux-amd64" >> $GITHUB_PATH
 
       - name: Check Prometheus config
         run: |
