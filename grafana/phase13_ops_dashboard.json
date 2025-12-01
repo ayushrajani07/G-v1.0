@@ -179,6 +179,55 @@
       "title": "48h Suggested Thresholds",
       "gridPos": {"x":0,"y":16,"w":24,"h":6},
       "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {"custom": {"cellOptions": {"type": "auto"}}},
+        "overrides": [
+          {
+            "matcher": {"id": "byRegexp", "options": ".*latency.*|.*latency_z.*"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "gradient"}},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 3},
+                {"color": "red", "value": 5}
+              ]}}
+            ]
+          },
+          {
+            "matcher": {"id": "byRegexp", "options": ".*tail_burn.*"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "gradient"}},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 2},
+                {"color": "red", "value": 3}
+              ]}}
+            ]
+          },
+          {
+            "matcher": {"id": "byRegexp", "options": ".*weights_div.*|.*weights.*"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "gradient"}},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 0.1},
+                {"color": "red", "value": 0.2}
+              ]}}
+            ]
+          },
+          {
+            "matcher": {"id": "byRegexp", "options": ".*completeness.*"},
+            "properties": [
+              {"id": "custom.cellOptions", "value": {"type": "gradient"}},
+              {"id": "thresholds", "value": {"mode": "absolute", "steps": [
+                {"color": "red", "value": null},
+                {"color": "yellow", "value": 0.5},
+                {"color": "green", "value": 0.8}
+              ]}}
+            ]
+          }
+        ]
+      },
       "targets": [{
         "expr": "g6_ml_autotune_suggestion",
         "legendFormat": "{{dimension}}",
