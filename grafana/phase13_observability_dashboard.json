@@ -225,5 +225,48 @@
         }
       ]
     }
+    ,
+    {
+      "type": "table",
+      "title": "Current Status (Index + Horizon)",
+      "gridPos": { "x": 0, "y": 30, "w": 24, "h": 8 },
+      "datasource": "Prometheus",
+      "transformations": [
+        { "id": "merge", "options": {} },
+        { "id": "groupBy", "options": { "fields": {
+          "Labels index": { "aggregations": ["lastNotNull"], "operation": "groupBy" },
+          "Labels horizon": { "aggregations": ["lastNotNull"], "operation": "groupBy" }
+        } } }
+      ],
+      "targets": [
+        {
+          "expr": "g6_ml_api_latency_anomaly",
+          "legendFormat": "latency_anomaly",
+          "refId": "A",
+          "instant": true
+        },
+        {
+          "expr": "g6_ml_feature_completeness_ratio",
+          "legendFormat": "feature_completeness",
+          "refId": "B",
+          "instant": true
+        },
+        {
+          "expr": "g6_ml_tail_burn_accel",
+          "legendFormat": "tail_burn_accel",
+          "refId": "C",
+          "instant": true
+        },
+        {
+          "expr": "g6_ml_weights_divergence",
+          "legendFormat": "weights_divergence",
+          "refId": "D",
+          "instant": true
+        }
+      ],
+      "options": {
+        "showHeader": true
+      }
+    }
   ]
 }
