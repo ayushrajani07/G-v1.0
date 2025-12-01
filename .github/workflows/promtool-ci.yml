@@ -1,0 +1,37 @@
+name: Prometheus Config Lint
+
+on:
+  pull_request:
+    paths:
+      - 'prometheus*.yml'
+      - 'prometheus_rules*.yml'
+      - 'alertmanager.yml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install promtool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget tar
+          VER=2.54.1
+          wget https://github.com/prometheus/prometheus/releases/download/v${VER}/prometheus-${VER}.linux-amd64.tar.gz
+          tar xzf prometheus-${VER}.linux-amd64.tar.gz
+          echo "${{ github.workspace }}/prometheus-${VER}.linux-amd64" >> $GITHUB_PATH
+
+      - name: Check Prometheus config
+        run: |
+          promtool check config prometheus.yml || true
+          if [ -f prometheus-staging.yml ]; then promtool check config prometheus-staging.yml || true; fi
+
+      - name: Check rules
+        run: |
+          ls -1 prometheus_rules*.yml | xargs -I{} promtool check rules {} || true
+
+      - name: Check Alertmanager config
+        run: |
+          promtool check alertmanager alertmanager.yml || true

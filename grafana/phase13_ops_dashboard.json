@@ -149,6 +149,23 @@
         {"color":"green","value":null},{"color":"yellow","value":0.1},{"color":"red","value":0.2}
       ]}}}
     },
+    {
+      "type": "timeseries",
+      "title": "Latency Z (24h) per Index",
+      "gridPos": {"x":0,"y":11,"w":24,"h":4},
+      "repeat": "index",
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "g6_ml_api_latency_anomaly{index=\"$index\", horizon=\"$horizon\"}",
+        "legendFormat": "{{index}}",
+        "refId": "A",
+        "instant": false
+      }],
+      "options": {"legend": {"showLegend": false}, "tooltip": {"mode": "single"}},
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
+        {"color":"green","value":null},{"color":"yellow","value":3},{"color":"red","value":5}
+      ]}}}
+    },
     {"type":"row","title":"Per-Horizon Alerts","gridPos":{"x":0,"y":11,"w":24,"h":1}},
     {
       "type": "stat",
@@ -188,6 +205,26 @@
       "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [
         {"color":"green","value":null},{"color":"red","value":1}
       ]}}}
+    }
+    ,
+    {
+      "type": "table",
+      "title": "Top 10 Degraded Indices (last 15m)",
+      "gridPos": {"x":6,"y":17,"w":18,"h":6},
+      "datasource": "Prometheus",
+      "targets": [{
+        "expr": "topk(10, (
+          max_over_time(g6_ml_api_latency_anomaly{horizon=\"$horizon\"}[15m]))
+          + (1 - min_over_time(g6_ml_feature_completeness_ratio{horizon=\"$horizon\"}[15m]))
+          + max_over_time(g6_ml_tail_burn_accel{horizon=\"$horizon\"}[15m])
+          + max_over_time(g6_ml_weights_divergence{horizon=\"$horizon\"}[15m])
+        ))",
+        "legendFormat": "{{index}}",
+        "refId": "A",
+        "instant": true
+      }],
+      "transformations": [{"id":"organize","options":{"excludeByName":{"Time":true}}}],
+      "options": {"showHeader": true}
     }
     ,
     {
@@ -309,7 +346,9 @@
   ],
   "links": [],
   "annotations": {"list": [
-    {"name":"Ops Alerts","type":"dashboard","datasource":"Prometheus","enable":true,"iconColor":"red","expr":"ALERTS{alertstate=\"firing\"}"}
+    {"name":"Ops Alerts","type":"dashboard","datasource":"Prometheus","enable":true,"iconColor":"red","expr":"ALERTS{alertstate=\"firing\"}","builtIn":1,"icon":"bolt","links":[
+      {"title":"Alertmanager: alertname","url":"$am_url/#/alerts?active&q=alertname%3D~$__alertName","targetBlank":true}
+    ]}
   ]},
   "panels": [
     
