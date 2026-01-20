@@ -423,9 +423,9 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                 body = json.dumps(snap_dict).encode('utf-8')
                 self._set_headers(200)
                 self.wfile.write(body)
-            except (json.JSONEncodeError, TypeError, OSError, IOError):
+            except (TypeError, OverflowError, OSError, IOError):
                 # Handle JSON encoding or I/O failures
-                logger.exception('catalog_http: snapshots_serve_failed'}
+                logger.exception('catalog_http: snapshots_serve_failed')
                 self._set_headers(500)
                 self.wfile.write(b'{"error":"snapshots_serve_failed"}')
             return
@@ -791,7 +791,10 @@ def start_http_server_in_thread() -> None:
     if rebuild_flag:
         try:
             shutdown_http_server()
-        except (AttributeError, OSError, RuntimeError):\n            # Handle shutdown failures during rebuild\n            pass\n    # Auto reload if adaptive trend window changed (test isolation convenience)
+        except (AttributeError, OSError, RuntimeError):
+            # Handle shutdown failures during rebuild
+            pass
+    # Auto reload if adaptive trend window changed (test isolation convenience)
     try:
         _tw = getattr(severity, '_trend_window', None)
         _val: Any = _tw() if callable(_tw) else None

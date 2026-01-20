@@ -63,7 +63,7 @@ except (ImportError, AttributeError):  # pragma: no cover
     load_config_fn = None
 try:
     from src.unified_main import load_config as _legacy_load_config_import
-except (ImportError, AttributeError):
+except (ImportError, AttributeError, RuntimeError):
     # Handle missing module or function
     _legacy_load_config_import = None  # type: ignore
 
