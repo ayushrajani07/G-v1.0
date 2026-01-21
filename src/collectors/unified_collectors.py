@@ -871,6 +871,7 @@ def run_unified_collectors(
     index_params: dict[str, Any],
     providers: Any,
     csv_sink: Any,
+    influx_sink: Any = None,
     metrics: Any = None,
     *,
     compute_greeks: bool = False,
@@ -904,6 +905,22 @@ def run_unified_collectors(
         iv_max_iterations / iv_min / iv_max / iv_precision : (future use)
         Forthcoming IV solver tuning knobs; currently captured for forward compatibility.
     """
+    # Backward compatibility:
+    # - Older callers used (index_params, providers, csv_sink, influx_sink, metrics=...)
+    # - Newer callers use (index_params, providers, csv_sink, metrics)
+    # This module no longer uses influx_sink, so treat the 4th positional arg as metrics
+    # when the 5th arg is not provided.
+    if metrics is None and influx_sink is not None:
+        try:
+            # Heuristic: a metrics registry typically has 'raw' or common metric attrs
+            # (avoid importing metrics modules here to prevent circular deps).
+            if hasattr(influx_sink, 'raw') or hasattr(influx_sink, 'cycle_time_seconds') or hasattr(influx_sink, 'registry'):
+                metrics = influx_sink
+                influx_sink = None
+        except Exception:
+            # If introspection fails, keep original values.
+            pass
+
     # Phase 0 pipeline prep: create a shared CollectorSettings instance (used by expiry_processor).
     _collector_settings = None
     try:
@@ -956,7 +973,7 @@ def run_unified_collectors(
     _trace("cycle_start", indices=list(index_params.keys()), compute_greeks=compute_greeks, estimate_iv=estimate_iv)
     _init_cycle_metrics(metrics)
     start_cycle_wall = time.time(); cycle_start_ts = utc_now()
-    ctx = CycleContext(index_params=index_params, providers=providers, csv_sink=csv_sink, metrics=metrics, start_wall=start_cycle_wall, start_ts=cycle_start_ts)
+    ctx = CycleContext(index_params=index_params, providers=providers, csv_sink=csv_sink, influx_sink=influx_sink, metrics=metrics, start_wall=start_cycle_wall, start_ts=cycle_start_ts)
     # Bootstrap phase: elapsed time from cycle start to just before first heavy timed phase ('init_greeks').
     # We record it explicitly to capture upfront configuration, imports, and light validation overhead.
     ctx.record('bootstrap', 0.0)  # initialize key; will update below once we know elapsed

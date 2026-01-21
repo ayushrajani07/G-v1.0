@@ -160,6 +160,28 @@ def kite_auth_validation(ctx) -> None:
         acquired = False
     if acquired:
         logger.info("[startup] Kite access token acquired/refreshed successfully")
+        # Ensure the already-constructed provider instance (if any) picks up the new token.
+        try:
+            from src.provider.config import get_provider_config  # type: ignore
+            cfg = get_provider_config(refresh=True)
+        except Exception:
+            cfg = None
+        try:
+            from src.broker.kite.auth import update_credentials_auth  # type: ignore
+        except Exception:
+            update_credentials_auth = None  # type: ignore
+        try:
+            providers = getattr(ctx, 'providers', None)
+            primary = getattr(providers, 'primary_provider', None) if providers is not None else None
+            if cfg is not None and primary is not None and update_credentials_auth is not None:
+                update_credentials_auth(
+                    primary,
+                    api_key=getattr(cfg, 'api_key', None),
+                    access_token=getattr(cfg, 'access_token', None),
+                    rebuild=True,
+                )
+        except Exception:
+            logger.debug("[startup] provider credential refresh after token acquisition failed", exc_info=True)
     else:
         logger.warning("[startup] Automated Kite token acquisition failed or skipped (headless/manual needed)")
         logger.warning("[startup] Run: python -m src.tools.token_manager  (for guided refresh flows)")

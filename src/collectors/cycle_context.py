@@ -25,7 +25,8 @@ class CycleContext:
     index_params: dict[str, Any]
     providers: Any
     csv_sink: Any
-    metrics: Any | None
+    influx_sink: Any = None
+    metrics: Any | None = None
     start_wall: float = field(default_factory=time.time)
     start_ts: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
     phase_times: dict[str, float] = field(default_factory=dict)

@@ -207,7 +207,9 @@ try:  # pragma: no cover - import guard
     from .kite_provider import KiteProvider
     register_provider(
         'kite',
-    lambda: KiteProvider.from_provider_config(get_provider_config()),
+        # IMPORTANT: do NOT capture ProviderConfig at import time.
+        # Tokens may be refreshed during runtime; always read a fresh snapshot.
+        lambda: KiteProvider.from_provider_config(get_provider_config(refresh=True)),
         default=True,
         eager=False,
         capabilities={
