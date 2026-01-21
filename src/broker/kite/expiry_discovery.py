@@ -19,14 +19,52 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Optional imports for late import elimination (Batch 35)
-try:
-    from src.broker.kite_provider import INDEX_MAPPING, POOL_FOR, _is_auth_error
-except ImportError:
-    INDEX_MAPPING = {}  # type: ignore
-    POOL_FOR = {}  # type: ignore
-    def _is_auth_error(e: BaseException) -> bool:  # fallback heuristic
-        return 'auth' in str(e).lower() or 'token' in str(e).lower()
+# NOTE: Do NOT import INDEX_MAPPING/POOL_FOR from kite_provider at module import time.
+# kite_provider imports this module early during its own initialization, which can
+# result in partially initialized symbols and an empty mapping.
+# We resolve these lazily at runtime to avoid circular-import fallout.
+
+_DEFAULT_INDEX_MAPPING: dict[str, tuple[str, str]] = {
+    "NIFTY": ("NSE", "NIFTY 50"),
+    "BANKNIFTY": ("NSE", "NIFTY BANK"),
+    "FINNIFTY": ("NSE", "NIFTY FIN SERVICE"),
+    "MIDCPNIFTY": ("NSE", "NIFTY MIDCAP SELECT"),
+    "SENSEX": ("BSE", "SENSEX"),
+}
+
+_DEFAULT_POOL_FOR: dict[str, str] = {
+    "NIFTY": "NFO",
+    "BANKNIFTY": "NFO",
+    "FINNIFTY": "NFO",
+    "MIDCPNIFTY": "NFO",
+    "SENSEX": "BFO",
+}
+
+
+def _runtime_index_mapping() -> dict[str, tuple[str, str]]:
+    try:
+        from src.broker import kite_provider as _kp  # type: ignore
+        m = getattr(_kp, 'INDEX_MAPPING', None)
+        if isinstance(m, dict) and m:
+            return m
+    except Exception:
+        pass
+    return _DEFAULT_INDEX_MAPPING
+
+
+def _runtime_pool_for() -> dict[str, str]:
+    try:
+        from src.broker import kite_provider as _kp  # type: ignore
+        p = getattr(_kp, 'POOL_FOR', None)
+        if isinstance(p, dict) and p:
+            return p
+    except Exception:
+        pass
+    return _DEFAULT_POOL_FOR
+
+
+def _is_auth_error(e: BaseException) -> bool:  # fallback heuristic
+    return 'auth' in str(e).lower() or 'token' in str(e).lower()
 
 try:
     from src.error_handling import handle_data_collection_error
@@ -35,7 +73,8 @@ except ImportError:
 
 
 def get_atm_strike(provider, index_symbol: str) -> int:
-    ltp_data = provider.get_ltp([INDEX_MAPPING.get(index_symbol, ("NSE", index_symbol))])
+    index_mapping = _runtime_index_mapping()
+    ltp_data = provider.get_ltp([index_mapping.get(index_symbol, ("NSE", index_symbol))])
     if isinstance(ltp_data, dict):
         for v in ltp_data.values():
             if isinstance(v, dict):
@@ -55,7 +94,8 @@ def get_expiry_dates(provider, index_symbol: str) -> list[_dt.date]:
         if cache:
             return cache
         atm = get_atm_strike(provider, index_symbol)
-        exch = POOL_FOR.get(index_symbol, "NFO")
+        pool_for = _runtime_pool_for()
+        exch = pool_for.get(index_symbol, "NFO")
         instruments = provider.get_instruments(exch)
         today = _dt.date.today()
         opts = [
