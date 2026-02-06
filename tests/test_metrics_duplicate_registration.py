@@ -1,10 +1,9 @@
-import os, pytest
+import pytest
 from src.metrics import MetricsRegistry
 from src.metrics import isolated_metrics_registry  # facade import (legacy deep import deprecated)
 
-
-@pytest.mark.skipif(os.getenv('G6_EGRESS_FROZEN','').lower() in {'1','true','yes','on'}, reason='panel diff egress frozen')
-def test_duplicate_registration_returns_same_collector():
+def test_duplicate_registration_returns_same_collector(monkeypatch):
+    monkeypatch.delenv('G6_EGRESS_FROZEN', raising=False)
     # Use isolated registry to avoid interference with global default collector set
     with isolated_metrics_registry() as reg:
     # First registration via maybe_register through group_registry already happened for panel_diff metrics.

@@ -2,8 +2,6 @@ import json
 import pytest
 from src.schema.runtime_status_validator import validate_runtime_status
 
-pytestmark = pytest.mark.optional
-
 def test_runtime_status_schema_valid(run_mock_cycle):
     status = run_mock_cycle(cycles=2, interval=2)
     # Basic assurance we received a dict-like structure

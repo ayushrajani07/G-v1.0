@@ -260,7 +260,7 @@ python scripts/compare_metrics.py baselines/pre-phase1.json
 **Risk Assessment:**
 ```bash
 # 1. Find all code using legacy loop
-grep -r "G6_ENABLE_LEGACY_LOOP" . --include="*.py" --include="*.sh"
+grep -r "LEGACY_LOOP" . --include="*.py" --include="*.sh"
 grep -r "collection_loop" src --include="*.py"
 
 # 2. Identify external scripts/automation using it
@@ -288,12 +288,12 @@ python scripts/compare_loop_features.py --legacy --new
 
 ```python
 # PROBLEM: External script uses removed flag
-# OLD: export G6_ENABLE_LEGACY_LOOP=1; python -m src.unified_main
+# OLD: export <legacy loop gating flag>=1; python -m src.unified_main
 
 # MITIGATION: Add deprecation shim (temporary)
-if os.getenv("G6_ENABLE_LEGACY_LOOP"):
+if os.getenv("LEGACY_LOOP"):
     logger.warning(
-        "G6_ENABLE_LEGACY_LOOP is deprecated and ignored. "
+        "Legacy loop gating flag is deprecated and ignored. "
         "Using new orchestrator loop. "
         "Update your scripts to remove this flag."
     )
@@ -308,7 +308,7 @@ if os.getenv("G6_ENABLE_LEGACY_LOOP"):
 # Delete collection_loop() from src/unified_main.py
 
 # 2. Remove flag handling
-grep -r "G6_ENABLE_LEGACY_LOOP" src --include="*.py"
+grep -r "LEGACY_LOOP" src --include="*.py"
 # Delete all references
 
 # 3. Remove related tests
@@ -325,11 +325,11 @@ rm tests/test_deprecation_legacy_loop.py
 # Delete warning message for old flag
 
 # 2. Remove from .env.example
-grep -v "G6_ENABLE_LEGACY_LOOP" .env.example > .env.example.new
+grep -v "LEGACY_LOOP" .env.example > .env.example.new
 mv .env.example.new .env.example
 
 # 3. Update CHANGELOG.md
-echo "- BREAKING: Removed legacy collection loop (G6_ENABLE_LEGACY_LOOP)" >> CHANGELOG.md
+echo "- BREAKING: Removed legacy collection loop (legacy loop gating flags)" >> CHANGELOG.md
 ```
 
 #### 🔄 Rollback Procedure
@@ -346,7 +346,7 @@ git revert <commit-hash>
 git push
 
 # 3. Re-enable legacy loop in production
-export G6_ENABLE_LEGACY_LOOP=1
+export <legacy loop gating flag>=1
 systemctl restart g6-collector
 
 # VALIDATION:
@@ -420,7 +420,7 @@ rm src/storage/csv_writer_old.py  # If created backup
 git rm src/storage/csv_writer_helper.py  # If fully replaced
 
 # 2. Remove feature flags
-grep -r "G6_USE_CSVIO_FACADE" . --include="*.py"
+grep -r "CSVIO" . --include="*.py"
 # Delete all flag checks
 
 # 3. Update all imports
@@ -468,8 +468,7 @@ python scripts/validate_csv_integrity.py --dir data/g6_data --since 2025-11-15
 tar -xzf backup_csv_20251115.tar.gz -C /tmp/
 cp /tmp/data/g6_data/NIFTY/corrupted_file.csv data/g6_data/NIFTY/
 
-# 4. Re-enable with old code path
-export G6_USE_CSVIO_FACADE=0  # Use legacy path
+# 4. Re-enable writes (CSVIO path is always-on)
 export G6_DISABLE_CSV_WRITES=0
 systemctl restart g6-collector
 

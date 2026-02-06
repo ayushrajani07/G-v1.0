@@ -1,31 +1,39 @@
 from __future__ import annotations
 
-import json
+from collections.abc import Mapping, Sequence
+import contextlib
 import logging
 import os
-import sys
-import uuid
-from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
-from typing import Any, Protocol, cast
-from pathlib import Path
-from src.utils.csv_cache import read_json_cached
-
-from src.metrics.protocols import CounterLike
 
 # Hoisted trivial stdlib imports used within functions
-import shutil as _sh
-import time as _time
-import time as _t
-import datetime as _dt
+import sys
+from typing import Any
+import uuid
+
+from src.utils.output_components import (
+    JsonLike,
+    JsonlSink,
+    LoggingSink,
+    MemorySink,
+    OutputEvent,
+    OutputSink,
+    PanelFileSink,
+    RichSink,
+    StdoutSink,
+)
+from src.utils.output_components.panels_txn_fallback import (
+    fallback_cleanup_after_abort,
+    fallback_copy_and_cleanup_after_commit,
+)
 
 try:
     # Prefer central env adapter for consistency
-    from src.collectors.env_adapter import get_bool as _env_get_bool
-    from src.collectors.env_adapter import get_float as _env_get_float
-    from src.collectors.env_adapter import get_int as _env_get_int
-    from src.collectors.env_adapter import get_str as _env_get_str  # type: ignore
+    from src.collectors.env_adapter import (
+        get_bool as _env_get_bool,
+        get_float as _env_get_float,
+        get_int as _env_get_int,
+        get_str as _env_get_str,  # type: ignore
+    )
 except Exception:  # pragma: no cover
     # Safe fallbacks if adapter not available early in import graph
     def _env_get_str(name: str, default: str = "") -> str:
@@ -88,199 +96,6 @@ try:
 except ImportError:
     PANEL_SCHEMA_VERSION = None  # type: ignore
 
-
-# ------------------------------
-# Data model
-# ------------------------------
-
-JsonLike = None | str | int | float | bool | Sequence["JsonLike"] | Mapping[str, "JsonLike"]
-
-
-@dataclass
-class OutputEvent:
-    timestamp: str
-    level: str
-    message: str
-    scope: str | None = None
-    tags: list[str] | Mapping[str, str] | None = None
-    data: JsonLike | None = None
-    # Allow attaching arbitrary extras without breaking sinks
-    extra: Mapping[str, Any] | None = None
-
-    @staticmethod
-    def now_iso() -> str:
-        return datetime.now(UTC).isoformat().replace("+00:00", "Z")
-
-
-# ------------------------------
-# Public atomic-write helpers (Windows-safe)
-# ------------------------------
-
-def atomic_replace(src_path: str, dst_path: str, retries: int = 20, delay: float = 0.05) -> None:
-    """Atomically replace dst with src, retrying on Windows file-lock errors.
-
-    Test Fast Path:
-      If env G6_TEST_FAST_IO=1 is set, drastically reduce retries & delay to
-      avoid long stalls under CI / local Windows where pervasive file locking
-      (AV / indexers) is not expected or acceptable for tests. Optional trace
-      logging when G6_TEST_FAST_IO_TRACE=1.
-    """
-    # time imported at module level as _time
-
-    fast = _env_get_bool("G6_TEST_FAST_IO", False)
-    if fast:
-        # Keep a couple quick retries to tolerate a transient race but cap total wait ~<20ms.
-        retries = min(retries, 3)
-        delay = min(delay, 0.005)
-    trace = fast and _env_get_bool("G6_TEST_FAST_IO_TRACE", False)
-
-    for attempt in range(max(1, int(retries))):
-        try:
-            os.replace(src_path, dst_path)
-            if trace:
-                _log = logging.getLogger(__name__)
-                if _log.hasHandlers():
-                    _log.debug("[fast-io] atomic_replace success attempt=%s dst=%s", attempt+1, dst_path)
-                else:
-                    print(f"[fast-io] atomic_replace success attempt={attempt+1} dst={dst_path}")
-            return
-        except (PermissionError, OSError) as e:  # noqa: PERF203 fine here
-            if attempt + 1 >= retries:
-                break
-            if trace:
-                _log = logging.getLogger(__name__)
-                if _log.hasHandlers():
-                    _log.debug("[fast-io] atomic_replace retry attempt=%s err=%s dst=%s", attempt+1, e, dst_path)
-                else:
-                    print(f"[fast-io] atomic_replace retry attempt={attempt+1} err={e} dst={dst_path}")
-            _time.sleep(delay)
-    # Last attempt (raise if fails)
-    os.replace(src_path, dst_path)
-
-
-def atomic_write_json(
-    dst_path: str,
-    payload: dict[str, Any],
-    *,
-    ensure_ascii: bool = False,
-    indent: int = 2,
-    retries: int = 20,
-    delay: float = 0.05,
-) -> None:
-    """Write JSON to a file atomically, with fsync and Windows-safe retry replace.
-
-    - Writes to <dst>.tmp, flushes and fsyncs, then replaces dst.
-    - Creates parent directories when missing.
-    """
-    # Ensure directory exists
-    try:
-        os.makedirs(os.path.dirname(dst_path) or ".", exist_ok=True)
-    except Exception:
-        pass
-    fast = _env_get_bool("G6_TEST_FAST_IO", False)
-    tmp = dst_path + ".tmp"
-    try:
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(payload, f, ensure_ascii=ensure_ascii, default=str, indent=indent)
-            try:
-                f.flush()
-                os.fsync(f.fileno())
-            except Exception:
-                pass
-    except Exception as e:
-        try:
-            from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
-            get_error_handler().handle_error(
-                e,
-                category=ErrorCategory.FILE_IO,
-                severity=ErrorSeverity.LOW,
-                component='output',
-                function_name='atomic_write_json',
-                message='atomic_write_json_failed',
-                context={'path': dst_path}
-            )
-        except Exception:
-            pass
-        return
-    # Propagate possibly reduced retries/delay in fast mode
-    if fast:
-        retries = min(retries, 3)
-        delay = min(delay, 0.005)
-    atomic_replace(tmp, dst_path, retries=retries, delay=delay)
-
-
-# ------------------------------
-# Sink protocol and implementations
-# ------------------------------
-
-class OutputSink(Protocol):
-    def emit(self, event: OutputEvent) -> None:  # pragma: no cover - protocol
-        ...
-
-
-class StdoutSink:
-    def __init__(self, stream: Any = sys.stdout) -> None:
-        self._stream = stream
-
-    def emit(self, event: OutputEvent) -> None:
-        # Compact human string with optional JSON payload
-        # Ensure level token is uppercased for visibility and tests
-        base = f"[{event.level.upper()}] {event.message}"
-        if event.scope:
-            base = f"({event.scope}) " + base
-        if event.tags:
-            base += f" tags={event.tags}"
-        if event.data is not None:
-            try:
-                payload = json.dumps(event.data, ensure_ascii=False, default=str)
-            except Exception:
-                payload = str(event.data)
-            base += f" data={payload}"
-        # Write directly to the configured stream to avoid global print() suppression hooks
-        try:
-            self._stream.write(base + "\n")
-        except Exception:
-            # Fallback to print if stream.write unavailable
-            print(base, file=self._stream)
-        # Best-effort flush for custom streams (e.g., StringIO) to ensure immediate visibility in tests
-        try:
-            flush = getattr(self._stream, 'flush', None)
-            if callable(flush):
-                flush()
-        except Exception:
-            pass
-
-
-class LoggingSink:
-    def __init__(self, logger: logging.Logger | None = None) -> None:
-        self._logger = logger or logging.getLogger("g6")
-        # If no handlers are configured, default to a basic stream handler
-        if not self._logger.handlers:
-            logging.basicConfig(level=logging.INFO)
-
-    def emit(self, event: OutputEvent) -> None:
-        lvl_map = {
-            "debug": logging.DEBUG,
-            "info": logging.INFO,
-            "success": logging.INFO,
-            "warning": logging.WARNING,
-            "warn": logging.WARNING,
-            "error": logging.ERROR,
-            "critical": logging.CRITICAL,
-        }
-        lvl = lvl_map.get(event.level.lower(), logging.INFO)
-        msg = event.message
-        extra = {
-            "scope": event.scope,
-            "tags": event.tags,
-            "data": event.data,
-            **(event.extra or {}),
-        }
-        try:
-            self._logger.log(lvl, msg, extra=extra)
-        except Exception:
-            # Fallback without extras if logger is strict
-            self._logger.log(lvl, msg)
 
 # ---------------
 # Colorizing Filter (applies to standard logging handlers not using Rich)
@@ -355,683 +170,6 @@ def _install_color_filter():  # pragma: no cover (runtime cosmetic)
         pass
 
 
-class RichSink:
-    def __init__(self, console: Any | None = None) -> None:
-        if console is not None:
-            self._console = console
-        elif _rich_console is not None:
-            try:
-                self._console = _rich_console.Console()
-            except Exception:  # pragma: no cover
-                self._console = None
-        else:
-            self._console = None
-
-    def emit(self, event: OutputEvent) -> None:
-        if not self._console:
-            return  # rich not available -> no-op
-        style = {
-            "debug": "dim",
-            "info": "",
-            "success": "green",
-            "warning": "yellow",
-            "warn": "yellow",
-            "error": "red",
-            "critical": "bold red",
-        }.get(event.level.lower(), "")
-        payload = ""
-        if event.data is not None:
-            try:
-                payload = json.dumps(event.data, ensure_ascii=False, default=str)
-            except Exception:
-                payload = str(event.data)
-            payload = f"\n[data]\n{payload}"
-        tags = f" tags={event.tags}" if event.tags else ""
-        scope = f"({event.scope}) " if event.scope else ""
-        self._console.print(f"{scope}[{style}]{event.level.upper()}[/] {event.message}{tags}{payload}")
-
-
-class JsonlSink:
-    def __init__(self, path: str) -> None:
-        self._path = path
-        # Ensure directory exists lazily on first write
-
-    def emit(self, event: OutputEvent) -> None:
-        rec = asdict(event)
-        try:
-            line = json.dumps(rec, ensure_ascii=False, default=str)
-        except Exception:
-            # As last resort, stringify data
-            rec["data"] = str(event.data)
-            line = json.dumps(rec, ensure_ascii=False, default=str)
-        # Open per write to avoid file handle lifetime/locking issues
-        with open(self._path, "a", encoding="utf-8") as f:
-            f.write(line + "\n")
-
-
-class MemorySink:
-    def __init__(self) -> None:
-        self.events: list[OutputEvent] = []
-
-    def emit(self, event: OutputEvent) -> None:
-        self.events.append(event)
-
-
-class PanelFileSink:
-    """Writes per-panel JSON files for the summarizer to consume later.
-
-    Enabled by adding 'panels' to G6_OUTPUT_SINKS.
-    Config:
-      - G6_PANELS_DIR: base directory to write panel files (default: data/panels)
-      - G6_PANELS_INCLUDE: CSV of panel names to include (upper/lower ignored). If empty => allow all.
-      - G6_PANELS_ATOMIC: true/false, atomic replace writes (default true)
-    Usage via router.panel_update(panel, data, kind=optional)
-    """
-    def __init__(self, base_dir: str, include: Iterable[str] | None = None, atomic: bool = True) -> None:
-        self._base_dir = base_dir
-        self._include = {s.strip().lower() for s in include} if include else None
-        self._atomic = bool(atomic)
-        # Control meta emission (default on)
-        self._always_meta = _env_get_bool("G6_PANELS_ALWAYS_META", True)
-        # Optional schema wrapper gate (v1 wrapper adds version + emitted_at and nests legacy payload under 'panel')
-        self._schema_wrapper = _env_get_bool("G6_PANELS_SCHEMA_WRAPPER", False)
-        # Transaction staging directory (per-txn subfolders)
-        self._txn_root = os.path.join(self._base_dir, ".txn")
-        # Ensure base dir exists early to make commit meta writes reliable
-        try:
-            os.makedirs(self._base_dir, exist_ok=True)
-        except Exception:
-            pass
-
-    def _mark_health(self, ok: bool) -> None:
-        """Optional graded health for panels file sink (env-gated)."""
-        try:
-            if not is_truthy_env('G6_HEALTH_COMPONENTS'):
-                return
-            if not health_runtime or not HealthLevel or not HealthState:
-                return  # Health tracking unavailable
-            if ok:
-                health_runtime.set_component('panels_sink', HealthLevel.HEALTHY, HealthState.HEALTHY)
-            else:
-                health_runtime.set_component('panels_sink', HealthLevel.WARNING, HealthState.WARNING)
-        except Exception:
-            pass
-
-    def close(self) -> None:  # pragma: no cover - simple cleanup
-        # Best-effort: remove any empty staging directories to avoid test contamination
-        try:
-            if os.path.isdir(self._txn_root) and not os.listdir(self._txn_root):
-                _sh.rmtree(self._txn_root, ignore_errors=True)
-        except Exception:
-            pass
-
-    def _allowed(self, panel: str) -> bool:
-        return True if self._include is None else (panel.lower() in self._include)
-
-    @staticmethod
-    def _atomic_replace(src_path: str, dst_path: str, retries: int = 20, delay: float = 0.05) -> None:
-        # Delegate to public helper for consistency
-        atomic_replace(src_path, dst_path, retries=retries, delay=delay)
-
-    def _write_json_atomic(self, dst: str, payload: dict[str, Any]) -> None:
-        # Ensure directory exists
-        try:
-            os.makedirs(os.path.dirname(dst), exist_ok=True)
-        except Exception:
-            pass
-        tmp = dst + ".tmp"
-        try:
-            with open(tmp, "w", encoding="utf-8") as f:
-                # Optional pretty vs compact JSON to balance readability vs size
-                try:
-                    pretty = _env_get_bool("G6_PANELS_PRETTY_JSON", True)
-                except Exception:
-                    pretty = True
-                if pretty:
-                    json.dump(payload, f, ensure_ascii=False, default=str, indent=2)
-                else:
-                    json.dump(payload, f, ensure_ascii=False, default=str, separators=(",", ":"))
-                try:
-                    f.flush()
-                    os.fsync(f.fileno())
-                except Exception:
-                    pass
-        except Exception as e:
-            try:
-                from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
-                get_error_handler().handle_error(
-                    e,
-                    category=ErrorCategory.FILE_IO,
-                    severity=ErrorSeverity.LOW,
-                    component='output',
-                    function_name='PanelFileSink._write_json_atomic',
-                    message='panel_json_write_failed',
-                    context={'path': dst}
-                )
-            except Exception:
-                pass
-            return
-        if self._atomic:
-            self._atomic_replace(tmp, dst)
-        else:
-            # Best-effort non-atomic replace
-            os.replace(tmp, dst)
-
-    def _txn_dir(self, txn_id: str) -> str:
-        return os.path.join(self._txn_root, str(txn_id))
-
-    def _txn_dst(self, txn_id: str, panel_s: str) -> str:
-        return os.path.join(self._txn_dir(txn_id), f"{panel_s}.json")
-
-    def emit(self, event: OutputEvent) -> None:
-        # Only handle events produced by router.panel_update (extra has _panel)
-        extra = event.extra or {}
-        # Transaction control path
-        txn_id = None
-        txn_action = None
-        try:
-            if isinstance(extra, dict):
-                txn_id = extra.get("_txn_id")
-                txn_action = extra.get("_txn_action")
-        except Exception:
-            txn_id = None
-            txn_action = None
-        if txn_action in ("commit", "abort") and txn_id:
-            # Handle commit/abort for a staged transaction
-            try:
-                if txn_action == "commit":
-                    stage_dir = self._txn_dir(str(txn_id))
-                    committed: list[str] = []
-                    diag_env = _env_get_str("G6_PANELS_TXN_DEBUG", "")
-                    # Optional auto-debug now gated by explicit env to avoid default noise in CI
-                    if (
-                        not diag_env
-                        and _env_get_str('PYTEST_CURRENT_TEST', '')
-                        and is_truthy_env('G6_PANELS_TXN_AUTO_DEBUG')
-                    ):
-                        diag_env = '1'
-                    diag = diag_env not in ("","0","false","no","off")
-                    if diag:
-                            try:
-                                _present = os.path.isdir(stage_dir)
-                                _contents = os.listdir(stage_dir) if _present else 'NA'
-                                _log = logging.getLogger(__name__)
-                                if _log.hasHandlers():
-                                    _log.debug(
-                                        "[panels-txn-debug] commit_start id=%s stage_dir=%s present=%s contents=%s",
-                                        txn_id,
-                                        stage_dir,
-                                        _present,
-                                        _contents,
-                                    )
-                                else:
-                                    print(
-                                        f"[panels-txn-debug] commit_start id={txn_id} "
-                                        f"stage_dir={stage_dir} present={_present} contents={_contents}"
-                                    )
-                            except Exception:
-                                pass
-                    if os.path.isdir(stage_dir):
-                        # Robust copy strategy instead of move to tolerate transient Windows locks.
-                        for name in list(os.listdir(stage_dir)):
-                            if not name.endswith('.json'):
-                                continue
-                            src = os.path.join(stage_dir, name)
-                            dst = os.path.join(self._base_dir, name)
-                            try:
-                                os.makedirs(self._base_dir, exist_ok=True)
-                            except Exception:
-                                pass
-                            try:
-                                # Copy contents (do not remove staging yet) so a later retry path can still read.
-                                # Use streaming copy to avoid loading entire file into memory and improve Windows robustness.
-                                try:
-                                    _sh.copyfile(src, dst + '.tmpcopy')
-                                except Exception:
-                                    # Fallback to buffered copy
-                                    try:
-                                        with open(src, 'rb') as _rf, open(dst + '.tmpcopy', 'wb') as _wf:
-                                            _sh.copyfileobj(_rf, _wf, length=1024 * 1024)
-                                    except Exception:
-                                        # Last resort: simple read/write
-                                        with open(src, 'rb') as _rf, open(dst + '.tmpcopy', 'wb') as _wf:
-                                            _wf.write(_rf.read())
-                                # Atomic-ish replace of final target
-                                try:
-                                    if os.path.exists(dst):
-                                        os.remove(dst)
-                                except Exception:
-                                    pass
-                                try:
-                                    os.replace(dst + '.tmpcopy', dst)
-                                except Exception:
-                                    # Last resort: simple copy if replace failed
-                                    try:
-                                        _sh.copyfile(src, dst)
-                                    except Exception:
-                                        pass
-                                committed.append(name[:-5])
-                            except Exception:
-                                # Best-effort: leave uncommitted; fallback below may still rescue
-                                try:
-                                    if os.path.exists(dst + '.tmpcopy'):
-                                        os.remove(dst + '.tmpcopy')
-                                except Exception:
-                                    pass
-                    else:
-                        # Staging missing unexpectedly; emit debug trace if enabled
-                        if is_truthy_env('G6_PANELS_TXN_DEBUG'):
-                            _log = logging.getLogger(__name__)
-                            if _log.hasHandlers():
-                                _log.debug(
-                                    "[panels-txn-debug] commit stage_dir_missing id=%s dir=%s",
-                                    txn_id,
-                                    stage_dir,
-                                )
-                            else:
-                                print(f"[panels-txn-debug] commit stage_dir_missing id={txn_id} dir={stage_dir}")
-                    # Secondary safety: if nothing committed but stage exists, attempt relaxed copy
-                    if not committed and os.path.isdir(stage_dir):
-                        try:
-                            for name in os.listdir(stage_dir):
-                                if not name.endswith('.json'):
-                                    continue
-                                src = os.path.join(stage_dir, name)
-                                dst = os.path.join(self._base_dir, name)
-                                try:
-                                    _sh.copyfile(src, dst)
-                                    committed.append(name[:-5])
-                                except Exception:
-                                    # Buffered fallback
-                                    try:
-                                        with open(src, 'rb') as _rf, open(dst, 'wb') as _wf:
-                                            _sh.copyfileobj(_rf, _wf, length=1024 * 1024)
-                                        committed.append(name[:-5])
-                                    except Exception:
-                                        pass
-                        except Exception:
-                            pass
-                    # Final verification:
-                    # If after attempts some staged files still not present in base,
-                    # try one last rescue copy.
-                    try:
-                        if os.path.isdir(stage_dir):
-                            for name in os.listdir(stage_dir):
-                                if not name.endswith('.json'):
-                                    continue
-                                dst = os.path.join(self._base_dir, name)
-                                if not os.path.exists(dst):
-                                    src = os.path.join(stage_dir, name)
-                                    try:
-                                        _sh.copyfile(src, dst)
-                                        if name[:-5] not in committed:
-                                            committed.append(name[:-5])
-                                        if diag:
-                                            _log = logging.getLogger(__name__)
-                                            if _log.hasHandlers():
-                                                _log.debug(
-                                                    "[panels-txn-debug] final_rescue_copied name=%s id=%s",
-                                                    name,
-                                                    txn_id,
-                                                )
-                                            else:
-                                                print(f"[panels-txn-debug] final_rescue_copied name={name} id={txn_id}")
-                                    except Exception:
-                                        # Buffered fallback
-                                        try:
-                                            with open(src, 'rb') as _rf, open(dst, 'wb') as _wf:
-                                                _sh.copyfileobj(_rf, _wf, length=1024 * 1024)
-                                            if name[:-5] not in committed:
-                                                committed.append(name[:-5])
-                                            if diag:
-                                                _log = logging.getLogger(__name__)
-                                                if _log.hasHandlers():
-                                                    _log.debug(
-                                                        "[panels-txn-debug] final_rescue_copied name=%s id=%s",
-                                                        name,
-                                                        txn_id,
-                                                    )
-                                                else:
-                                                    print(f"[panels-txn-debug] final_rescue_copied name={name} id={txn_id}")
-                                        except Exception:
-                                            if diag:
-                                                _log = logging.getLogger(__name__)
-                                                if _log.hasHandlers():
-                                                    _log.debug(
-                                                        "[panels-txn-debug] final_rescue_failed name=%s id=%s",
-                                                        name,
-                                                        txn_id,
-                                                    )
-                                                else:
-                                                    print(f"[panels-txn-debug] final_rescue_failed name={name} id={txn_id}")
-                                            pass
-                    except Exception:
-                        pass
-                    if diag:
-                        try:
-                            _base_contents = os.listdir(self._base_dir) if os.path.isdir(self._base_dir) else 'NA'
-                            _log = logging.getLogger(__name__)
-                            if _log.hasHandlers():
-                                _log.debug(
-                                    "[panels-txn-debug] commit_end id=%s committed=%s base_contents=%s",
-                                    txn_id,
-                                    committed,
-                                    _base_contents,
-                                )
-                            else:
-                                print(
-                                    f"[panels-txn-debug] commit_end id={txn_id} committed={committed} "
-                                    f"base_contents={_base_contents}"
-                                )
-                        except Exception:
-                            pass
-                    # Write/refresh meta with last transaction info (if enabled)
-                    if self._always_meta:
-                        try:
-                            meta_path = os.path.join(self._base_dir, ".meta.json")
-                            meta_payload = {
-                                "last_txn_id": str(txn_id),
-                                "committed_at": event.timestamp,
-                                "panels": committed,
-                            }
-                            self._write_json_atomic(meta_path, meta_payload)
-                        except Exception:
-                            pass
-                    # Cleanup staging dir
-                    try:
-                        if os.path.isdir(self._txn_dir(str(txn_id))):
-                            _sh.rmtree(self._txn_dir(str(txn_id)), ignore_errors=True)
-                            # If deletion silently failed (Windows handle race), retry once after short sleep
-                            if os.path.isdir(self._txn_dir(str(txn_id))):
-                                _t.sleep(0.05)
-                                try:
-                                    _sh.rmtree(self._txn_dir(str(txn_id)), ignore_errors=True)
-                                except Exception:
-                                    pass
-                        # If root .txn dir now empty remove it (helps abort test expectation)
-                        try:
-                            if os.path.isdir(self._txn_root) and not os.listdir(self._txn_root):
-                                _sh.rmtree(self._txn_root, ignore_errors=True)
-                        except Exception:
-                            pass
-                    except Exception:
-                        pass
-                    # Mark healthy on successful commit (best-effort)
-                    self._mark_health(True)
-                    # Metrics: commit counter
-                    try:
-                        if not get_metrics_singleton:
-                            pass  # Metrics unavailable
-                        else:
-                            m = get_metrics_singleton()
-                            if m:
-                                h = getattr(m, 'panels_txn_commits', None)
-                                if h is not None:
-                                    cast(CounterLike, h).inc()
-                    except Exception:
-                        pass
-                else:
-                    # Abort -> delete staging dir
-                    diag = is_truthy_env('G6_PANELS_TXN_DEBUG')
-                    if diag:
-                        try:
-                            _txn_path = self._txn_dir(str(txn_id))
-                            _exists = os.path.isdir(_txn_path)
-                            print(
-                                f"[panels-txn-debug] abort_start id={txn_id} path={_txn_path} exists={_exists}"
-                            )
-                        except Exception:
-                            pass
-                    try:
-                        txn_path = self._txn_dir(str(txn_id))
-                        _sh.rmtree(txn_path, ignore_errors=True)
-                        # Retry window with exponential backoff (short) to accommodate Windows handles
-                        if os.path.isdir(txn_path):
-                            for _i in range(3):
-                                _t.sleep(0.02 * (2 ** _i))
-                                if not os.path.isdir(txn_path):
-                                    break
-                                _sh.rmtree(txn_path, ignore_errors=True)
-                        # Remove root if empty
-                        try:
-                            if os.path.isdir(self._txn_root) and not os.listdir(self._txn_root):
-                                _sh.rmtree(self._txn_root, ignore_errors=True)
-                        except Exception:
-                            pass
-                    except Exception:
-                        pass
-                    if diag:
-                        try:
-                            _txn_exists = os.path.isdir(self._txn_dir(str(txn_id)))
-                            _root_exists = os.path.isdir(self._txn_root)
-                            _root_contents = os.listdir(self._txn_root) if _root_exists else 'NA'
-                            print(
-                                f"[panels-txn-debug] abort_end id={txn_id} txn_exists={_txn_exists} "
-                                f"root_exists={_root_exists} root_contents={_root_contents}"
-                            )
-                        except Exception:
-                            pass
-                    # Mark degraded on abort
-                    self._mark_health(False)
-                    # Metrics: abort counter
-                    try:
-                        if not get_metrics_singleton:
-                            pass  # Metrics unavailable
-                        else:
-                            m = get_metrics_singleton()
-                            if m:
-                                h = getattr(m, 'panels_txn_aborts', None)
-                                if h is not None:
-                                    cast(CounterLike, h).inc()
-                    except Exception:
-                        pass
-                return
-            except Exception as e:
-                # Fallback rescue: if commit failed, attempt best-effort copy then cleanup
-                try:
-                    if txn_action == 'commit':
-                        stage_dir = self._txn_dir(str(txn_id))
-                        if os.path.isdir(stage_dir):
-                            for name in os.listdir(stage_dir):
-                                if not name.endswith('.json'):
-                                    continue
-                                src = os.path.join(stage_dir, name)
-                                dst = os.path.join(self._base_dir, name)
-                                try:
-                                    os.makedirs(self._base_dir, exist_ok=True)
-                                    _sh.copyfile(src, dst)
-                                except Exception:
-                                    # Buffered fallback
-                                    try:
-                                        with open(src, 'rb') as _rf, open(dst, 'wb') as _wf:
-                                            _sh.copyfileobj(_rf, _wf, length=1024 * 1024)
-                                    except Exception:
-                                        pass
-                            # Attempt meta write
-                            if self._always_meta:
-                                try:
-                                    meta_path = os.path.join(self._base_dir, '.meta.json')
-                                    meta_payload = {
-                                        "last_txn_id": str(txn_id),
-                                        "committed_at": event.timestamp,
-                                        "panels": [],
-                                    }
-                                    self._write_json_atomic(meta_path, meta_payload)
-                                except Exception:
-                                    pass
-                            # Cleanup staging dir
-                            try:
-                                _sh.rmtree(stage_dir, ignore_errors=True)
-                            except Exception:
-                                pass
-                except Exception:
-                    pass
-                if is_truthy_env('G6_PANELS_TXN_DEBUG'):
-                    try:
-                        print(f"[panels-txn-debug] commit_exception id={txn_id} err={e}")
-                    except Exception:
-                        pass
-                return
-
-        panel = extra.get("_panel") if isinstance(extra, dict) else None
-        if not panel:
-            return
-        panel_s = str(panel)
-        if not self._allowed(panel_s):
-            return
-        mode = str(extra.get("_mode") or "update").lower()
-        cap = extra.get("_cap")
-        try:
-            cap_n = int(cap) if cap is not None else None
-        except Exception:
-            cap_n = None
-        # Destination: live or transaction staging
-        in_txn = bool(txn_id)
-        if in_txn:
-            dst = self._txn_dst(str(txn_id), panel_s)
-        else:
-            try:
-                os.makedirs(self._base_dir, exist_ok=True)
-            except Exception:
-                pass
-            dst = os.path.join(self._base_dir, f"{panel_s}.json")
-        try:
-            # Load previous for append/extend
-            prev_data = None
-            if mode in ("append", "extend"):
-                # Prefer staged file if present
-                if os.path.exists(dst):
-                    try:
-                        prev_obj = read_json_cached(Path(dst))
-                        if isinstance(prev_obj, dict):
-                            if "data" in prev_obj:
-                                prev_data = prev_obj.get("data")
-                            elif "panel" in prev_obj and isinstance(prev_obj.get("panel"), dict):  # wrapped schema
-                                prev_data = prev_obj["panel"].get("data")  # type: ignore[index]
-                    except Exception:
-                        prev_data = None
-                # If in a transaction and no stage file, seed from live file
-                if prev_data is None and in_txn:
-                    live = os.path.join(self._base_dir, f"{panel_s}.json")
-                    if os.path.exists(live):
-                        try:
-                            prev_obj2 = read_json_cached(Path(live))
-                            if isinstance(prev_obj2, dict):
-                                if "data" in prev_obj2:
-                                    prev_data = prev_obj2.get("data")
-                                elif "panel" in prev_obj2 and isinstance(prev_obj2.get("panel"), dict):
-                                    prev_data = prev_obj2["panel"].get("data")  # type: ignore[index]
-                        except Exception:
-                            prev_data = None
-
-            new_data = event.data
-            if mode == "append":
-                items = []
-                if isinstance(prev_data, list):
-                    items = list(prev_data)
-                elif isinstance(prev_data, dict):
-                    prev_items = prev_data.get("items")
-                    if isinstance(prev_items, list):
-                        items = list(prev_items)
-                items.append(new_data)
-                if cap_n is not None and cap_n > 0:
-                    items = items[-cap_n:]
-                new_data = items
-            elif mode == "extend":
-                items = []
-                if isinstance(prev_data, list):
-                    items = list(prev_data)
-                elif isinstance(prev_data, dict):
-                    prev_items = prev_data.get("items")
-                    if isinstance(prev_items, list):
-                        items = list(prev_items)
-                if isinstance(new_data, list):
-                    items.extend(new_data)
-                else:
-                    items.append(new_data)
-                if cap_n is not None and cap_n > 0:
-                    items = items[-cap_n:]
-                new_data = items
-
-            legacy_payload = {
-                "panel": panel_s,
-                "updated_at": event.timestamp,
-                "kind": extra.get("_kind"),
-                "data": new_data,
-            }
-            if self._schema_wrapper:
-                try:
-                    ts_val = event.timestamp
-                    if isinstance(ts_val, str):
-                        try:
-                            ts_val = float(ts_val)
-                        except Exception:
-                            ts_val = None
-                    if isinstance(ts_val, (int, float)):
-                        iso_ts = (
-                            _dt.datetime.fromtimestamp(float(ts_val), _dt.UTC)
-                            .isoformat()
-                            .replace('+00:00', 'Z')
-                        )
-                    else:
-                        iso_ts = None
-                except Exception:
-                    iso_ts = None  # best-effort
-                # Import version constant lazily to avoid import cycles
-                if not PANEL_SCHEMA_VERSION:
-                    _PANEL_SCHEMA_VERSION = 1  # default if missing
-                else:
-                    _PANEL_SCHEMA_VERSION = PANEL_SCHEMA_VERSION
-                payload = {
-                    # Keep legacy 'version' for backward compatibility (deprecated)
-                    "version": _PANEL_SCHEMA_VERSION,
-                    # New explicit schema version (authoritative)
-                    "schema_version": _PANEL_SCHEMA_VERSION,
-                    "emitted_at": iso_ts or event.timestamp,
-                    "panel": legacy_payload,
-                }
-            else:
-                payload = legacy_payload
-
-            self._write_json_atomic(dst, payload)
-            # Mark healthy on successful write
-            self._mark_health(True)
-            # Metrics: best-effort increment
-            try:
-                if not get_metrics_singleton:
-                    pass  # Metrics unavailable
-                else:
-                    m = get_metrics_singleton()
-                    if m:
-                        h_writes = getattr(m, 'panels_writes', None)
-                        if h_writes is not None:
-                            cast(CounterLike, h_writes).inc()
-                        h_updates = getattr(m, 'panels_updates_total', None)
-                        if h_updates is not None:
-                            try:
-                                cast(CounterLike, h_updates).labels(mode=mode).inc()
-                            except Exception:
-                                pass
-            except Exception:
-                pass
-        except Exception:
-            # Swallow sink exceptions
-            # Degraded on failure
-            self._mark_health(False)
-            # Metrics: best-effort error increment
-            try:
-                if not get_metrics_singleton:
-                    pass  # Metrics unavailable
-                else:
-                    m = get_metrics_singleton()
-                    if m:
-                        h_err = getattr(m, 'panels_write_errors', None)
-                        if h_err is not None:
-                            cast(CounterLike, h_err).inc()
-            except Exception:
-                pass
-
-
 # ------------------------------
 # Router
 # ------------------------------
@@ -1100,10 +238,8 @@ class OutputRouter:
                 s.emit(evt)
             except Exception:
                 # Sinks should not break others
-                try:
+                with contextlib.suppress(Exception):
                     logging.getLogger("g6").exception("Output sink failed: %s", type(s).__name__)
-                except Exception:
-                    pass
 
     # Convenience level methods
     def debug(self, msg: str, **kw: Any) -> None: self.emit(msg, level="debug", **kw)
@@ -1135,10 +271,8 @@ class OutputRouter:
                 # Only sinks that care (e.g., PanelFileSink) will act
                 s.emit(evt)
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     logging.getLogger("g6").exception("Output sink failed: %s", type(s).__name__)
-                except Exception:
-                    pass
 
     def panel_append(self, panel: str, item: JsonLike, *, cap: int = 100, kind: str | None = None) -> None:
         extra_base: dict[str, Any] = {"_panel": panel, "_mode": "append", "_cap": cap}
@@ -1159,10 +293,8 @@ class OutputRouter:
             try:
                 s.emit(evt)
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     logging.getLogger("g6").exception("Output sink failed: %s", type(s).__name__)
-                except Exception:
-                    pass
 
     def panel_extend(self, panel: str, items: Sequence[JsonLike], *, cap: int = 100, kind: str | None = None) -> None:
         extra_base: dict[str, Any] = {"_panel": panel, "_mode": "extend", "_cap": cap}
@@ -1183,10 +315,8 @@ class OutputRouter:
             try:
                 s.emit(evt)
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     logging.getLogger("g6").exception("Output sink failed: %s", type(s).__name__)
-                except Exception:
-                    pass
 
     # ---------------
     # Panel transactions
@@ -1232,87 +362,16 @@ class OutputRouter:
         def __exit__(self, exc_type, exc, tb) -> None:
             if exc_type is None:
                 self.commit()
-                # Fallback verification: if staging directory still exists (commit failed silently), attempt direct copy
-                try:
-                    base_dir = _env_get_str('G6_PANELS_DIR', os.path.join('data','panels'))
-                    stage_dir = os.path.join(base_dir, '.txn', self._txn_id)
-                    if os.path.isdir(stage_dir):
-                        for name in os.listdir(stage_dir):
-                            if name.endswith('.json'):
-                                src = os.path.join(stage_dir, name)
-                                dst = os.path.join(base_dir, name)
-                                try:
-                                    os.makedirs(base_dir, exist_ok=True)
-                                    _sh.copyfile(src, dst)
-                                except Exception:
-                                    # Buffered fallback
-                                    try:
-                                        with open(src, 'rb') as _rf, open(dst, 'wb') as _wf:
-                                            _sh.copyfileobj(_rf, _wf, length=1024 * 1024)
-                                    except Exception:
-                                        pass
-                        # Attempt meta write if primary loop panel present
-                        try:
-                            meta_path = os.path.join(base_dir, '.meta.json')
-                            if not os.path.exists(meta_path):
-                                _panels = [
-                                    p[:-5]
-                                    for p in os.listdir(stage_dir)
-                                    if p.endswith('.json')
-                                ]
-                                meta_payload = {
-                                    "last_txn_id": self._txn_id,
-                                    "committed_at": OutputEvent.now_iso(),
-                                    "panels": _panels,
-                                }
-                                try:
-                                    with open(meta_path, 'w', encoding='utf-8') as _mf:
-                                        json.dump(meta_payload, _mf)
-                                except Exception as me:
-                                    try:
-                                        from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity
-                                        get_error_handler().handle_error(
-                                            me,
-                                            category=ErrorCategory.FILE_IO,
-                                            severity=ErrorSeverity.LOW,
-                                            component='output',
-                                            function_name='PanelsTransaction.__exit__',
-                                            message='panel_meta_write_failed',
-                                            context={'path': meta_path}
-                                        )
-                                    except Exception:
-                                        pass
-                        except Exception:
-                            pass
-                        # Aggressive cleanup of individual txn dir and prune root if empty
-                        try:
-                            _sh.rmtree(stage_dir, ignore_errors=True)
-                            if os.path.isdir(stage_dir):  # retry briefly
-                                _t.sleep(0.05)
-                                _sh.rmtree(stage_dir, ignore_errors=True)
-                            root_dir = os.path.join(base_dir, '.txn')
-                            if os.path.isdir(root_dir) and not os.listdir(root_dir):
-                                _sh.rmtree(root_dir, ignore_errors=True)
-                        except Exception:
-                            pass
-                except Exception:
-                    pass
+                base_dir = _env_get_str('G6_PANELS_DIR', os.path.join('data','panels'))
+                fallback_copy_and_cleanup_after_commit(
+                    base_dir,
+                    txn_id=self._txn_id,
+                    committed_at=OutputEvent.now_iso(),
+                )
             else:
                 self.abort()
-                # Abort fallback cleanup if directory persists
-                try:
-                    base_dir = _env_get_str('G6_PANELS_DIR', os.path.join('data','panels'))
-                    stage_dir = os.path.join(base_dir, '.txn', self._txn_id)
-                    if os.path.isdir(stage_dir):
-                        _sh.rmtree(stage_dir, ignore_errors=True)
-                        if os.path.isdir(stage_dir):
-                            _t.sleep(0.05)
-                            _sh.rmtree(stage_dir, ignore_errors=True)
-                    root_dir = os.path.join(base_dir, '.txn')
-                    if os.path.isdir(root_dir) and not os.listdir(root_dir):
-                        _sh.rmtree(root_dir, ignore_errors=True)
-                except Exception:
-                    pass
+                base_dir = _env_get_str('G6_PANELS_DIR', os.path.join('data','panels'))
+                fallback_cleanup_after_abort(base_dir, txn_id=self._txn_id)
 
     def begin_panels_txn(self, txn_id: str | None = None) -> OutputRouter.PanelsTransaction:
         """Begin a panels transaction. Use as a context manager:
@@ -1372,10 +431,8 @@ def _build_from_env() -> OutputRouter:
         # Always have at least a stdout sink
         sinks.append(StdoutSink())
     # Install colorizing filter (safe no-op if mode disabled or Rich active)
-    try:
+    with contextlib.suppress(Exception):
         _install_color_filter()
-    except Exception:
-        pass
     return OutputRouter(sinks=sinks, min_level=min_level)
 
 
@@ -1383,9 +440,7 @@ def get_output(reset: bool = False) -> OutputRouter:
     global _router_singleton
     if reset or _router_singleton is None:
         if _router_singleton is not None and reset:
-            try:
+            with contextlib.suppress(Exception):
                 _router_singleton.close()
-            except Exception:
-                pass
         _router_singleton = _build_from_env()
     return _router_singleton

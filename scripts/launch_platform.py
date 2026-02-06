@@ -35,13 +35,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+from src.utils.logging_utils import setup_logging
+
 try:
     from src.orchestrator.startup_sequence import kite_auth_validation as _kite_auth_validation_import  # type: ignore
 except ImportError:
     _kite_auth_validation_import = None  # type: ignore
 
-LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s: %(message)s"
-logging.basicConfig(level=os.environ.get("G6_LOG_LEVEL", "INFO"), format=LOG_FORMAT)
 logger = logging.getLogger("launch_platform")
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
@@ -172,26 +172,15 @@ def run_orchestrator(args: argparse.Namespace) -> int:
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     ensure_env(args)
-    # Adjust runtime logging levels for quiet mode after env applied
-    if os.environ.get("G6_QUIET_MODE") == "1":
-        # Raise root level to WARNING; selectively allow cycle summary logger if needed
-        logging.getLogger().setLevel(logging.WARNING)
-        # Collector cycle summary uses logger.info; introduce lightweight filter to allow specific patterns
-        class _CycleSummaryFilter(logging.Filter):
-            def filter(self, record: logging.LogRecord) -> bool:  # pragma: no cover (simple predicate)
-                msg = record.getMessage()
-                if "CYCLE" in msg or "cycle" in msg.lower():
-                    return True
-                return record.levelno >= logging.WARNING
-        logging.getLogger().addFilter(_CycleSummaryFilter())
-        # Secondary filter: drop any remaining TRACE lines that slipped through (defense-in-depth)
-        class _NoTraceFilter(logging.Filter):
-            def filter(self, record: logging.LogRecord) -> bool:  # pragma: no cover
-                m = record.getMessage()
-                if m.startswith("TRACE ") or " TRACE " in m:
-                    return False
-                return True
-        logging.getLogger().addFilter(_NoTraceFilter())
+
+    # Unified logging (minimal console by default + console noise suppression).
+    try:
+        level = os.environ.get('G6_LOG_LEVEL', 'INFO')
+        log_file = os.environ.get('G6_LOG_FILE', 'logs/g6_platform.log')
+        setup_logging(level=level, log_file=log_file)
+    except Exception:
+        # Keep launcher resilient; downstream scripts may still configure logging.
+        pass
 
     # Bring up Observability Stack via PowerShell (Windows) and enforce mandatory services
     try:

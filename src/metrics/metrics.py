@@ -189,7 +189,9 @@ class MetricsRegistry:
         try:
             from .registration import maybe_register as _mr  # type: ignore
             return _mr(self, group, attr, metric_cls, name, documentation, labels, **ctor_kwargs)
-        except Exception as e:  # pragma: no cover - defensive
+        except BaseException as e:  # pragma: no cover - defensive
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             if strict:
                 raise
             try:
@@ -202,6 +204,20 @@ class MetricsRegistry:
     def __init__(self):
         """Initialize metrics."""
         _trace_simple = _is_truthy_env('G6_METRICS_INIT_SIMPLE_TRACE')
+
+        # -----------------------------------------------------------------
+        # Derived-metrics rolling state (required by src.metrics.derived).
+        # NOTE: These fields existed historically; without them mark_cycle()
+        # becomes a no-op and collection_success_rate stays at the default.
+        # -----------------------------------------------------------------
+        self._cycle_total = 0
+        self._cycle_success = 0
+        self._ema_cycle_time = None  # exponential moving average (seconds)
+        self._ema_alpha = 0.2
+        self._last_cycle_options = 0
+        self._last_cycle_option_seconds = 0.0
+        self._per_index_last_cycle_options = {}
+
         # Optional lightweight init profiling (phase timing) controlled by env G6_METRICS_PROFILE_INIT=1
         _prof_enabled = _is_truthy_env('G6_METRICS_PROFILE_INIT')
         if _prof_enabled:
@@ -287,7 +303,9 @@ class MetricsRegistry:
             _pt('group_gating_ok', groups=len(CONTROLLED_GROUPS))
             if _prof_enabled:
                 _prof_mark('group_gating', _prof_t)
-        except Exception as _e:
+        except BaseException as _e:
+            if isinstance(_e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             # Fallback uses canonical exported copy to avoid duplicated literal.
             try:
                 from .gating import CONTROLLED_GROUPS_FALLBACK as _CGF  # type: ignore
@@ -343,7 +361,9 @@ class MetricsRegistry:
             _pt('spec_registration_ok', count=scount)
             if _prof_enabled:
                 _prof_mark('spec_registration', _prof_t)
-        except Exception as _e:  # pragma: no cover
+        except BaseException as _e:  # pragma: no cover
+            if isinstance(_e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             _end(ok=False, error=str(_e))
             _pt('spec_registration_fail', error=str(_e))
             try:
@@ -596,7 +616,9 @@ class MetricsRegistry:
         try:
             from .index_aggregate import init_index_aggregate_metrics as _idx  # type: ignore
             _idx(self); _end()
-        except Exception as _e:
+        except BaseException as _e:
+            if isinstance(_e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             _end(ok=False, error=str(_e))
         _pt('index_aggregate_done')
         # If index aggregate path failed to create metric_group_state (e.g., import error), create it directly now
@@ -656,13 +678,17 @@ class MetricsRegistry:
         try:
             from .performance import init_performance_metrics as _perf  # type: ignore
             _perf(self); _end()
-        except Exception as _e:
+        except BaseException as _e:
+            if isinstance(_e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             _end(ok=False, error=str(_e))
         _end = _step('api_metrics')
         try:
             from .api_call import init_api_call_metrics as _init_api  # type: ignore
             _init_api(self); _end()
-        except Exception as _e:
+        except BaseException as _e:
+            if isinstance(_e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             _end(ok=False, error=str(_e))
         # Early fallback for API metrics if init_api_call_metrics path failed (ensures presence before pruning)
         try:
@@ -1678,7 +1704,7 @@ def isolated_metrics_registry():  # pragma: no cover - thin helper, exercised in
         # Clear everything created during isolation
         try:
             current = dict(getattr(REGISTRY, '_names_to_collectors', {}))  # type: ignore[attr-defined]
-            for name, collector in current.items():
+            for collector in current.values():
                 try:
                     REGISTRY.unregister(collector)  # type: ignore[arg-type]
                 except (ValueError, KeyError):

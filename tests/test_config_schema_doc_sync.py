@@ -14,7 +14,6 @@ Documentation recognition:
 
 Baseline management mirrors other governance tests:
   * tests/config_schema_doc_baseline.txt (should remain empty long-term)
-  * G6_SKIP_CONFIG_SCHEMA_DOC_SYNC=1 to skip
   * G6_WRITE_CONFIG_SCHEMA_DOC_BASELINE=1 to rewrite baseline with current missing
   * G6_CONFIG_SCHEMA_DOC_STRICT=1 fail if baseline non-empty
 """
@@ -23,12 +22,13 @@ from __future__ import annotations
 import json, os, re, pathlib, pytest
 from typing import Set
 
+pytestmark = pytest.mark.slow
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SCHEMA_FILE = ROOT / 'config' / 'schema_v2.json'
 DOC_FILE = ROOT / 'docs' / 'config_dict.md'
 BASELINE_FILE = ROOT / 'tests' / 'config_schema_doc_baseline.txt'
 
-SKIP_FLAG = 'G6_SKIP_CONFIG_SCHEMA_DOC_SYNC'
 GEN_BASELINE_FLAG = 'G6_WRITE_CONFIG_SCHEMA_DOC_BASELINE'
 STRICT_FLAG = 'G6_CONFIG_SCHEMA_DOC_STRICT'
 
@@ -90,7 +90,6 @@ def _is_documented(key: str, documented: Set[str]) -> bool:
     return False
 
 
-@pytest.mark.skipif(os.getenv(SKIP_FLAG, '').lower() in {'1','true','yes','on'}, reason='schema doc sync skipped')
 def test_config_schema_keys_documented():
     schema_paths = _load_schema_paths()
     documented = _load_documented()

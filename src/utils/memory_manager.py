@@ -12,11 +12,12 @@ Non-invasive: safe no-ops if psutil unavailable or nothing registered.
 """
 from __future__ import annotations
 
-import gc
-import logging
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
+import gc
+import logging
+import os
+import time
 from typing import Any
 
 try:
@@ -26,9 +27,16 @@ except Exception:  # pragma: no cover
 
 # Optional imports
 try:
-    from src.collectors.env_adapter import get_bool as _env_get_bool
-    from src.collectors.env_adapter import get_float as _env_get_float  # type: ignore
-except ImportError:
+    from src.config.env_config import EnvConfig
+except Exception:  # pragma: no cover
+    EnvConfig = None  # type: ignore
+
+try:
+    from src.collectors.env_adapter import (
+        get_bool as _env_get_bool,
+        get_float as _env_get_float,
+    )
+except Exception:  # pragma: no cover
     _env_get_bool = None  # type: ignore
     _env_get_float = None  # type: ignore
 
@@ -51,6 +59,55 @@ class RegisteredCache:
 class MemoryManager:
     """Singleton-style manager with minimal state and hooks."""
 
+    @staticmethod
+    def _get_env_float(name: str, default: float) -> float:
+        if EnvConfig is not None:
+            try:
+                return float(EnvConfig.get_float(name, default))
+            except (TypeError, ValueError):
+                return default
+        if _env_get_float is not None:
+            try:
+                return float(_env_get_float(name, default))
+            except (TypeError, ValueError):
+                return default
+        v = os.getenv(name)
+        if v is None or str(v).strip() == "":
+            return default
+        try:
+            return float(str(v).strip())
+        except (TypeError, ValueError):
+            return default
+
+    @staticmethod
+    def _get_env_bool(name: str, default: bool = False) -> bool:
+        if EnvConfig is not None:
+            try:
+                return bool(EnvConfig.get_bool(name, default))
+            except (TypeError, ValueError):
+                return default
+        if _env_get_bool is not None:
+            try:
+                return bool(_env_get_bool(name, default))
+            except (TypeError, ValueError):
+                return default
+        v = os.getenv(name)
+        if v is None:
+            return default
+        try:
+            return str(v).strip().lower() in {"1", "true", "yes", "on", "y"}
+        except Exception:
+            return default
+
+    @staticmethod
+    def _safe_handle(handler: Any, exc: Exception, **context: Any) -> None:
+        if handler is None:
+            return
+        try:
+            handler(exc, component="utils.memory_manager", context=context)
+        except Exception:
+            return
+
     def __init__(self) -> None:
         self._proc = psutil.Process() if psutil else None
         self._last_gc_ts: float | None = None
@@ -59,35 +116,17 @@ class MemoryManager:
         self._peak_rss_mb: float | None = None
         self._registered: dict[str, RegisteredCache] = {}
         # cadence knobs
-        import os
-        if _env_get_bool is None or _env_get_float is None:
-            def _env_get_float_fallback(name: str, default: float) -> float:
-                try:
-                    v = os.getenv(name)
-                    if v is None or str(v).strip() == "":
-                        return default
-                    return float(str(v).strip())
-                except Exception:
-                    return default
-            def _env_get_bool_fallback(name: str, default: bool = False) -> bool:
-                try:
-                    v = os.getenv(name)
-                    if v is None:
-                        return default
-                    return str(v).strip().lower() in {"1","true","yes","on","y"}
-                except Exception:
-                    return default
-            _env_get_float_local = _env_get_float_fallback
-            _env_get_bool_local = _env_get_bool_fallback
-        else:
-            _env_get_float_local = _env_get_float
-            _env_get_bool_local = _env_get_bool
-        self._gc_interval_sec = _env_get_float_local('G6_MEMORY_GC_INTERVAL_SEC', 30.0)
+        self._gc_interval_sec = self._get_env_float("G6_MEMORY_GC_INTERVAL_SEC", 30.0)
         # default True if env missing (legacy behavior)
-        self._minor_gc_each_cycle = _env_get_bool_local('G6_MEMORY_MINOR_GC_EACH_CYCLE', True)
+        self._minor_gc_each_cycle = self._get_env_bool("G6_MEMORY_MINOR_GC_EACH_CYCLE", True)
 
     # -------- Registration ---------
-    def register_cache(self, name: str, purge_fn: Callable[[], Any] | None = None, size_fn: Callable[[], int] | None = None) -> None:
+    def register_cache(
+        self,
+        name: str,
+        purge_fn: Callable[[], Any] | None = None,
+        size_fn: Callable[[], int] | None = None,
+    ) -> None:
         """Register a cache/buffer with an optional purge callback and size getter."""
         self._registered[name] = RegisteredCache(name=name, purge_fn=purge_fn, size_fn=size_fn)
 
@@ -114,11 +153,7 @@ class MemoryManager:
                 try:
                     gc.collect(0)
                 except Exception:
-                    try:
-                        if handle_data_error is not None:
-                            handle_data_error(Exception("minor_gc_failed"), component="utils.memory_manager", context={"phase": "minor_gc"})
-                    except Exception:
-                        pass
+                    self._safe_handle(handle_data_error, Exception("minor_gc_failed"), phase="minor_gc")
             if do_full:
                 try:
                     # Collect all generations; track objects collected
@@ -126,11 +161,7 @@ class MemoryManager:
                     self._gc_collections_total += int(collected)
                     self._last_gc_ts = now
                 except Exception:
-                    try:
-                        if handle_data_error is not None:
-                            handle_data_error(Exception("full_gc_failed"), component="utils.memory_manager", context={"phase": "full_gc"})
-                    except Exception:
-                        pass
+                    self._safe_handle(handle_data_error, Exception("full_gc_failed"), phase="full_gc")
         finally:
             self._last_gc_duration_ms = (time.perf_counter() - t0) * 1000.0
         # Update RSS and peaks
@@ -142,20 +173,20 @@ class MemoryManager:
                     self._peak_rss_mb = rss_mb
             except Exception:
                 rss_mb = None
-                try:
-                    if handle_data_error is not None:
-                        handle_data_error(Exception("rss_query_failed"), component="utils.memory_manager", context={"phase": "post_cycle"})
-                except Exception:
-                    pass
+                self._safe_handle(handle_data_error, Exception("rss_query_failed"), phase="post_cycle")
         # Metrics (best-effort)
         try:
-            if metrics and hasattr(metrics, 'memory_usage_mb'):
-                if rss_mb is not None:
-                    metrics.memory_usage_mb.set(rss_mb)
+            if metrics and hasattr(metrics, "memory_usage_mb") and rss_mb is not None:
+                metrics.memory_usage_mb.set(rss_mb)
         except Exception:
             try:
                 if handle_data_collection_error is not None:
-                    handle_data_collection_error(Exception("metrics_update_failed"), component="utils.memory_manager", data_type="memory_usage", context={"phase": "post_cycle"})
+                    handle_data_collection_error(
+                        Exception("metrics_update_failed"),
+                        component="utils.memory_manager",
+                        data_type="memory_usage",
+                        context={"phase": "post_cycle"},
+                    )
             except Exception:
                 pass
 
@@ -176,7 +207,12 @@ class MemoryManager:
                 logger.warning("Cache purge failed (%s): %s", name, e)
                 try:
                     if handle_data_collection_error is not None:
-                        handle_data_collection_error(e, component="utils.memory_manager", data_type="cache_purge", context={"cache": name, "reason": reason})
+                        handle_data_collection_error(
+                            e,
+                            component="utils.memory_manager",
+                            data_type="cache_purge",
+                            context={"cache": name, "reason": reason},
+                        )
                 except Exception:
                     pass
         try:
@@ -184,11 +220,7 @@ class MemoryManager:
             self._gc_collections_total += 1
             self._last_gc_ts = time.time()
         except Exception:
-            try:
-                if handle_data_error is not None:
-                    handle_data_error(Exception("emergency_gc_failed"), component="utils.memory_manager", context={"phase": "emergency"})
-            except Exception:
-                pass
+            self._safe_handle(handle_data_error, Exception("emergency_gc_failed"), phase="emergency")
         # update rss snapshot post-purge
         if self._proc is not None:
             try:
@@ -196,11 +228,7 @@ class MemoryManager:
                 if self._peak_rss_mb is None or rss_mb > self._peak_rss_mb:
                     self._peak_rss_mb = rss_mb
             except Exception:
-                try:
-                    if handle_data_error is not None:
-                        handle_data_error(Exception("rss_query_failed"), component="utils.memory_manager", context={"phase": "emergency"})
-                except Exception:
-                    pass
+                self._safe_handle(handle_data_error, Exception("rss_query_failed"), phase="emergency")
         return attempted
 
     # -------- Introspection --------

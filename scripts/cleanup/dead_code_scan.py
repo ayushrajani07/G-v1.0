@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import importlib.util
 import json
 import os
 import pathlib
@@ -36,7 +37,7 @@ REPORT_MD = ROOT / "docs" / "dead_code.md"
 
 VULTURE_MODULES = ["src", "scripts"]
 VULTURE_EXCLUDE = ["archive", "tests", "data", "venv", ".venv"]
-DEFAULT_MIN_CONFIDENCE = 30  # lowered from 60 to surface more candidates
+DEFAULT_MIN_CONFIDENCE = 60
 
 @dataclass
 class DeadItem:
@@ -51,26 +52,79 @@ class Summary(TypedDict):
     by_type: dict[str, int]
 
 def run_vulture(min_conf: int) -> list[DeadItem]:
-    cmd = [sys.executable, "-m", "vulture", *VULTURE_MODULES, "--min-confidence", str(min_conf)]
-    for ex in VULTURE_EXCLUDE:
-        cmd += ["--exclude", ex]
+    if importlib.util.find_spec("vulture") is None:
+        raise RuntimeError(
+            "vulture is not installed. Install dev dependencies (see requirements.txt) or run: pip install vulture"
+        )
+    # NOTE: vulture uses a non-zero exit code when findings exist, so we cannot
+    # treat returncode!=0 as an invocation failure. Instead, we detect true
+    # tool/syntax errors by scanning output for known fatal markers.
+    cmd = [
+        sys.executable,
+        "-m",
+        "vulture",
+        *VULTURE_MODULES,
+        "--min-confidence",
+        str(min_conf),
+        "--exclude",
+        ",".join(VULTURE_EXCLUDE),
+    ]
     try:
         proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
     except Exception as e:  # pragma: no cover
-        print("[dead-code] vulture invocation failed", e, file=sys.stderr)
-        return []
+        raise RuntimeError(f"vulture invocation failed: {e}") from e
+
+    combined = f"{proc.stdout or ''}\n{proc.stderr or ''}".strip()
+    fatal_markers = (
+        "Traceback (most recent call last)",
+        "SyntaxError",
+        "IndentationError",
+        "unexpected character",
+        "No module named",
+        "ModuleNotFoundError",
+        "error:",
+        "usage:",
+    )
+    if any(m in combined for m in fatal_markers) and "unused" not in combined:
+        raise RuntimeError(f"vulture failed (exit={proc.returncode}): {combined}")
+
     items: list[DeadItem] = []
-    pattern = re.compile(r"^(?P<file>.+?):(?P<line>\d+): (?P<type>.+?) '(?P<name>.+?)' is unused")
-    for line in proc.stdout.splitlines():
-        m = pattern.match(line.strip())
+
+    # Vulture output formats vary by version and terminal width.
+    # Common format:
+    #   path.py:123: unused variable 'x' (60% confidence)
+    # Sometimes the "path.py:123:" prefix is printed on its own line and the
+    # "unused ..." message is on the next line (wrapped output).
+    raw_lines = [ln.rstrip() for ln in proc.stdout.splitlines() if ln.strip()]
+    merged: list[str] = []
+    pending_prefix: str | None = None
+    for ln in raw_lines:
+        if re.match(r"^.+?:\d+:$", ln.strip()):
+            pending_prefix = ln.strip()
+            continue
+        if pending_prefix and ln.lstrip().startswith("unused "):
+            merged.append(f"{pending_prefix} {ln.strip()}")
+            pending_prefix = None
+            continue
+        pending_prefix = None
+        merged.append(ln.strip())
+
+    pattern = re.compile(
+        r"^(?P<file>.+?):(?P<line>\d+):\s+unused\s+(?P<type>[^']+?)\s+'(?P<name>[^']+)'\s+\((?P<conf>\d+)%\s+confidence\)\s*$"
+    )
+    for line in merged:
+        m = pattern.match(line)
         if not m:
             continue
-        items.append(DeadItem(
-            name=m.group('name'),
-            typ=m.group('type'),
-            filename=os.path.relpath(m.group('file'), ROOT),
-            lineno=int(m.group('line')),
-        ))
+        items.append(
+            DeadItem(
+                name=m.group("name"),
+                typ=m.group("type").strip(),
+                filename=os.path.relpath(m.group("file"), ROOT),
+                lineno=int(m.group("line")),
+                confidence=int(m.group("conf")),
+            )
+        )
     return items
 
 def build_import_graph() -> set[str]:
@@ -153,10 +207,14 @@ def write_report(findings: list[DeadItem], new_items: list[DeadItem], allowlist_
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--update-baseline', action='store_true', help='Overwrite allowlist with current findings')
-    ap.add_argument('--min-confidence', type=int, default=DEFAULT_MIN_CONFIDENCE, help='Vulture minimum confidence (default 30)')
+    ap.add_argument('--min-confidence', type=int, default=DEFAULT_MIN_CONFIDENCE, help='Vulture minimum confidence (default 60)')
     ap.add_argument('--exploratory', action='store_true', help='Also emit ultra-low (0) confidence exploratory report (non-blocking)')
     args = ap.parse_args(argv)
-    vulture_items = run_vulture(args.min_confidence)
+    try:
+        vulture_items = run_vulture(args.min_confidence)
+    except Exception as e:
+        print(f"[dead-code] Internal error: {e}", file=sys.stderr)
+        return 2
     allowlist = load_allowlist()
     allowlist_keys = set(allowlist.keys())
     def key(i: DeadItem) -> str:
@@ -180,7 +238,11 @@ def main(argv: list[str] | None = None) -> int:
         exit_code = 0
 
     if args.exploratory:
-        exploratory_items = run_vulture(0)
+        try:
+            exploratory_items = run_vulture(0)
+        except Exception as e:
+            print(f"[dead-code] Exploratory scan failed: {e}", file=sys.stderr)
+            return exit_code
         extra_path = REPORT_JSON.parent / 'dead_code_exploratory.json'
         extra_path.write_text(json.dumps({'total': len(exploratory_items), 'items': [i.__dict__ for i in exploratory_items]}, indent=2), encoding='utf-8')
         print(f"[dead-code] Exploratory report written: {extra_path}")

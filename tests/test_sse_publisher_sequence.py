@@ -1,11 +1,6 @@
-import os
-from scripts.summary.plugins.sse import SSEPublisher
-from scripts.summary.plugins.base import SummarySnapshot
-from scripts.summary.domain import build_domain_snapshot
+from __future__ import annotations
 
-# Force enable SSE for the test runtime
-os.environ['G6_SSE_ENABLED'] = '1'
-os.environ['G6_SSE_HEARTBEAT_CYCLES'] = '2'  # faster heartbeat for test
+import os
 
 BASE_STATUS = {
     "app": {"version": "1.0"},
@@ -14,21 +9,31 @@ BASE_STATUS = {
 }
 
 
-def make_snapshot(status: dict, cycle: int) -> SummarySnapshot:
-    return SummarySnapshot(
-        status=status,
-        derived={},
-        panels={},
-        ts_read=0.0,
-        ts_built=0.0,
-        cycle=cycle,
-        errors=[],
-        model=None,
-        domain=build_domain_snapshot(status, ts_read=0.0),
-    )
+def test_sse_sequence_hello_full_update_heartbeat(monkeypatch):
+    # Force enable SSE for the test runtime
+    monkeypatch.setenv('G6_SSE_ENABLED', '1')
+    monkeypatch.setenv('G6_SSE_HEARTBEAT_CYCLES', '2')  # faster heartbeat for test
 
+    import importlib
+    from scripts.summary.plugins import sse as sse_mod
+    sse_mod = importlib.reload(sse_mod)
+    SSEPublisher = sse_mod.SSEPublisher
+    from scripts.summary.plugins.base import SummarySnapshot
+    from scripts.summary.domain import build_domain_snapshot
 
-def test_sse_sequence_hello_full_update_heartbeat():
+    def make_snapshot(status: dict, cycle: int) -> SummarySnapshot:
+        return SummarySnapshot(
+            status=status,
+            derived={},
+            panels={},
+            ts_read=0.0,
+            ts_built=0.0,
+            cycle=cycle,
+            errors=[],
+            model=None,
+            domain=build_domain_snapshot(status, ts_read=0.0),
+        )
+
     pub = SSEPublisher(diff=True)
     pub.setup({})
 

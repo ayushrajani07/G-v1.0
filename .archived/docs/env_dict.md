@@ -35,7 +35,6 @@ The following environment variables were referenced historically but are now dep
  - G6_BENCH_TREND_DEBUG – bool – off – Emit internal recomputation debug lines for benchmark trend tooling (diagnostic noise).
 
 ### Catalog & HTTP Hot Reload
- - G6_CATALOG_HTTP_FORCE_RELOAD – bool – off – On next catalog HTTP access triggers controlled server restart (hot reload) for testing.
 
 ### Summary / SSE Streaming & Security (New Section)
 Authoritative documentation for summary Server-Sent Events (SSE) streaming hardening & tuning variables. These were added during SSE security & performance phases and are required for release readiness gating.

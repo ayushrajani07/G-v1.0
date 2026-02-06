@@ -74,7 +74,10 @@ def perform_preventive_validation(
             index_price or 0.0,
             config=None,
         )
-    except Exception as e:  # pragma: no cover (defensive)
+    except BaseException as e:  # pragma: no cover (defensive)
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         logger.debug("preventive validator raised: %s", e, exc_info=True)
         return enriched_data, {"ok": False, "issues": ["validator_exception"], "error": str(e)}
 

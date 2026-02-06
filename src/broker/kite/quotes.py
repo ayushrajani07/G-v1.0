@@ -33,6 +33,13 @@ from .types import QuoteTD
 from src.broker.kite.synthetic import synth_ltp_for_pairs, build_synthetic_quotes
 from src.error_handling import handle_provider_error
 from src.config.env_config import EnvConfig
+from src.provider.errors import (
+    ProviderAuthError,
+    ProviderFatalError,
+    ProviderRecoverableError,
+    ProviderTimeoutError,
+    classify_provider_exception,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +120,7 @@ def _quality_guard_ltps(raw: Any) -> Any:
         if not raw:
             raise ValueError('empty_ltp_response')
         all_zero = True
-        for _k, _v in raw.items():
+        for _v in raw.values():
             if isinstance(_v, dict):
                 lp = _v.get('last_price')
                 if isinstance(lp, (int, float)) and lp and lp > 0:
@@ -170,8 +177,33 @@ def _synthetic_ltp(provider, instruments: Iterable[InstrumentLike]) -> dict[str,
         return data
 
 
+def _synthetic_fallback_enabled() -> bool:
+    """Whether provider helpers may fabricate synthetic responses.
+
+    Default is enabled to preserve existing behavior in mock/no-API environments.
+    Disable by setting `G6_PROVIDER_SYNTHETIC_FALLBACK=0` to surface real failures.
+    """
+    try:
+        return EnvConfig.get_bool('G6_PROVIDER_SYNTHETIC_FALLBACK', True)
+    except Exception:  # pragma: no cover
+        return True
+
+
+def _raise_provider_error(e: BaseException) -> None:
+    """Classify and raise a typed Provider* error, preserving exception chaining."""
+    err_cls = classify_provider_exception(e)
+    if err_cls is ProviderAuthError:
+        raise ProviderAuthError(str(e)) from e
+    if err_cls is ProviderTimeoutError:
+        raise ProviderTimeoutError(str(e)) from e
+    if err_cls is ProviderRecoverableError:
+        raise ProviderRecoverableError(str(e)) from e
+    raise ProviderFatalError(str(e)) from e
+
+
 def get_ltp(provider: ProviderLike | Any, instruments: Iterable[InstrumentLike]) -> dict[str, Any]:
     """Return last traded prices (dict) for requested instruments (parity preserved)."""
+    allow_synth = _synthetic_fallback_enabled()
     try:
         try:
             provider.maybe_refresh_token_proactively()
@@ -180,13 +212,14 @@ def get_ltp(provider: ProviderLike | Any, instruments: Iterable[InstrumentLike])
         if getattr(provider, '_auth_failed', False):
             raise RuntimeError('kite_auth_failed')
         kite = getattr(provider, 'kite', None)
+        if kite is None and not allow_synth:
+            raise ProviderRecoverableError('kite_client_unavailable')
         if kite is not None:
             formatted = _normalize_instruments(instruments)
             if formatted:
                 # Get rate limiter if available
                 limiter = None
                 if build_default_rate_limiter:
-                    from src.config.env_config import EnvConfig
                     if EnvConfig.get_bool('G6_KITE_LIMITER', False):
                         limiter = getattr(provider, '_g6_ltp_rate_limiter', None)
                         if limiter is None:
@@ -242,6 +275,8 @@ def get_ltp(provider: ProviderLike | Any, instruments: Iterable[InstrumentLike])
             handle_provider_error(e, component='kite_provider.get_ltp')
         except Exception:
             pass
+        if not allow_synth:
+            _raise_provider_error(e)
     return _synthetic_ltp(provider, instruments)
 
 
@@ -251,6 +286,7 @@ def get_quote(provider: ProviderLike | Any, instruments: Iterable[InstrumentLike
     Format mirrors provider.get_quote: dict keyed by EXCH:SYMBOL with at least
     'last_price' and 'ohlc'.
     """
+    allow_synth = _synthetic_fallback_enabled()
     try:
         if getattr(provider, '_auth_failed', False):
             raise RuntimeError('kite_auth_failed')
@@ -259,6 +295,8 @@ def get_quote(provider: ProviderLike | Any, instruments: Iterable[InstrumentLike
         real = fetch_real_quotes(provider, instruments)
         if real is not None:
             return real
+        if not allow_synth:
+            raise ProviderRecoverableError('kite_client_unavailable')
     except Exception as e:
         skip_real_ltp = False
         if _is_auth_error(e) or str(e) == 'kite_auth_failed':
@@ -284,6 +322,8 @@ def get_quote(provider: ProviderLike | Any, instruments: Iterable[InstrumentLike
             handle_provider_error(e, component='kite_provider.get_quote')
         except Exception:
             pass
+        if not allow_synth:
+            _raise_provider_error(e)
 
     # Fallback -> build synthetic quotes from LTP
     if 'skip_real_ltp' in locals() and skip_real_ltp:

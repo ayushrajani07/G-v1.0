@@ -17,10 +17,13 @@ from __future__ import annotations
 
 import datetime as _dt
 import logging
+import os
+import sys
 import time
 from collections.abc import Callable
 from typing import Any
 
+from src.config.env_config import EnvConfig
 from src.utils.env_flags import is_truthy_env  # type: ignore
 
 from .gating_types import ProviderLike
@@ -47,6 +50,81 @@ except (ImportError, AttributeError):  # pragma: no cover
         return False
 
 logger = logging.getLogger(__name__)
+
+
+_MARKET_PROMPT_DONE: bool = False
+
+
+def _maybe_prompt_force_open(*, log_prefix: str = "[gating]") -> bool:
+    """If enabled and interactive, prompt user to force-open when market is closed.
+
+    Returns True if user chose to force-open (and env was updated), else False.
+    Prompt is shown at most once per process.
+    """
+    global _MARKET_PROMPT_DONE
+    if _MARKET_PROMPT_DONE:
+        return False
+    try:
+        if not is_truthy_env('G6_MARKET_GATE_INTERACTIVE_PROMPT'):
+            return False
+    except (AttributeError, TypeError, KeyError, ValueError):
+        return False
+
+    # Only prompt on a real terminal.
+    try:
+        if not (sys.stdin and sys.stdin.isatty() and sys.stdout and sys.stdout.isatty()):
+            return False
+    except (AttributeError, OSError):
+        return False
+
+    # Only offer prompt outside normal market hours:
+    # - Weekends
+    # - Weekdays after market close (15:30 IST)
+    # Do NOT prompt in the morning/pre-open window.
+    try:
+        now_utc = _dt.datetime.now(_dt.UTC)
+        ist_now = now_utc + _dt.timedelta(hours=5, minutes=30)
+        if ist_now.weekday() >= 5:
+            pass  # weekend -> allow prompt
+        else:
+            if ist_now.time() < _dt.time(15, 30, 0):
+                return False
+    except (AttributeError, TypeError, ValueError, OSError, OverflowError):
+        return False
+
+    # Avoid interactive prompts during tests.
+    if os.getenv('PYTEST_CURRENT_TEST'):
+        return False
+
+    _MARKET_PROMPT_DONE = True
+    try:
+        next_open = get_next_market_open()
+        wait_minutes = (next_open - _dt.datetime.now(_dt.UTC)).total_seconds() / 60.0
+    except (AttributeError, TypeError, ValueError, OSError, OverflowError):
+        next_open = None
+        wait_minutes = None
+
+    msg = "Market is closed"
+    if next_open is not None:
+        msg += f". Next open: {next_open}"
+    if wait_minutes is not None:
+        msg += f" (in {wait_minutes:.1f} minutes)"
+    msg += ".\nForce-open and run anyway? [y/N]: "
+
+    try:
+        ans = input(msg).strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        logger.info("%s Interactive market prompt cancelled; continuing with normal gating", log_prefix)
+        return False
+    if ans in ("y", "yes"):
+        os.environ['G6_FORCE_MARKET_OPEN'] = '1'
+        try:
+            EnvConfig.clear_cache()
+        except (AttributeError, TypeError, RuntimeError):
+            pass
+        logger.warning("%s Market gate override accepted interactively: G6_FORCE_MARKET_OPEN=1", log_prefix)
+        return True
+    return False
 
 
 def wait_for_market_open(market_type: str = "equity", session_type: str = "regular", check_interval: int = 10,
@@ -136,6 +214,22 @@ def should_skip_cycle_market_hours(only_during_market_hours: bool, *, log_prefix
     except (AttributeError, TypeError, KeyError):
         # Handle environment variable access failures
         pass
+
+    # Conditional override: if the next market open is far away, allow cycles to run.
+    # This is useful for offline/dev operations while keeping normal behavior near market open.
+    try:
+        raw = os.getenv('G6_FORCE_MARKET_OPEN_IF_NEXT_OPEN_GT_MINUTES', '').strip()
+        threshold_minutes = float(raw) if raw else 0.0
+    except (ValueError, TypeError):
+        threshold_minutes = 0.0
+    if threshold_minutes > 0:
+        try:
+            next_open = get_next_market_open()
+            wait_minutes = (next_open - _dt.datetime.now(_dt.UTC)).total_seconds() / 60.0
+            if wait_minutes > threshold_minutes:
+                return False
+        except (AttributeError, TypeError, ValueError, OSError, OverflowError):  # pragma: no cover
+            pass
     # Weekend mode support removed: collection always suppressed outside market hours based solely on is_market_open.
 
     try:
@@ -145,6 +239,15 @@ def should_skip_cycle_market_hours(only_during_market_hours: bool, *, log_prefix
         open_now = True
     if open_now:
         return False
+
+    # Optional interactive override (terminal prompt).
+    try:
+        if _maybe_prompt_force_open(log_prefix=log_prefix):
+            return False
+    except BaseException as e:  # pragma: no cover
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
+        pass
     # If we are in the broader premarket init window (08:00–09:15 IST) allow cycles whose callers
     # will internally gate expensive collection until regular session. We log at debug for clarity.
     try:

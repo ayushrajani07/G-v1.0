@@ -7,7 +7,10 @@ import time
 try:
     # Prefer absolute import to avoid relative package depth issues blocking router registration
     from src.advisor.core import AdvisorContext, build_default_engine  # type: ignore
-except Exception:  # fallback to relative (legacy) if absolute fails
+except BaseException as e:  # fallback to relative (legacy) if absolute fails
+    import asyncio
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+        raise
     from ....advisor.core import AdvisorContext, build_default_engine  # type: ignore
 
 router = APIRouter()
@@ -91,7 +94,7 @@ async def api_ml_universal_advisor_generated_at_age_minutes(
             from datetime import datetime, timezone
             dt = datetime.fromisoformat(ts_iso.replace('Z','+00:00'))
             age_minutes = (datetime.now(timezone.utc) - dt).total_seconds() / 60.0
-    except Exception:
+    except (TypeError, ValueError):
         age_minutes = None
     # Update Prometheus gauge (advisor_age_minutes) if available and age computed
     try:
@@ -100,6 +103,9 @@ async def api_ml_universal_advisor_generated_at_age_minutes(
             _reg = get_metrics_singleton()
             if _reg is not None and hasattr(_reg, 'advisor_age_minutes'):
                 _reg.advisor_age_minutes.set(age_minutes)  # type: ignore[attr-defined]
-    except Exception:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         pass
     return JSONResponse({'age_minutes': age_minutes, 'generated_at': ts_iso, 'indices': idxs})

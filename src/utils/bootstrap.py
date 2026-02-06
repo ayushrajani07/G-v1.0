@@ -20,6 +20,7 @@ from typing import Any
 from pathlib import Path
 from src.utils.csv_cache import read_json_cached
 
+from src.config.env_config import EnvConfig
 from src.config.config_wrapper import ConfigWrapper
 from src.config.loader import ConfigError, load_and_process_config
 from src.health import AlertManager, HealthLevel, HealthMetricsExporter, HealthServer, HealthState
@@ -196,7 +197,7 @@ def bootstrap(
             if enable_alerts:
                 alerts_cfg = dict(config.get('health', {}).get('alerts', {}))  # type: ignore[index]
                 # Allow overriding state directory via env
-                state_dir_env = os.environ.get('G6_ALERTS_STATE_DIR')
+                state_dir_env = EnvConfig.get_str('G6_ALERTS_STATE_DIR', '').strip()
                 if state_dir_env:
                     alerts_cfg['state_directory'] = state_dir_env
                 alerts_manager = AlertManager.get_instance()

@@ -3,15 +3,9 @@ import logging
 import os
 from datetime import datetime
 
-import pytest
-
 from src.storage.csv_batcher import CsvBatcher
 
-
-@pytest.mark.parametrize("facade_on", [True, False])
-def test_csv_batcher_header_and_rows(tmp_path, monkeypatch, facade_on):
-    # Toggle facade via env
-    monkeypatch.setenv("G6_USE_CSVIO_FACADE", "1" if facade_on else "0")
+def test_csv_batcher_header_and_rows(tmp_path, monkeypatch):
     monkeypatch.setenv("G6_CSVIO_BACKEND", "filesystem")
 
     logger = logging.getLogger("test.csv_batcher")

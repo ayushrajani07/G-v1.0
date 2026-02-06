@@ -6,6 +6,7 @@ from typing import Any, Iterable, Optional
 
 from .backends import filesystem as fs_backend
 from .backends import atomic_fs as atomic_backend
+from src.config.env_config import EnvConfig
 
 
 class CsvWriteError(Exception):
@@ -28,7 +29,7 @@ def _select_backend(preferred: str | None = None) -> str:
     - Explicit preferred parameter when provided
     - Default 'filesystem'
     """
-    env_val = str(os.environ.get("G6_CSVIO_BACKEND", "")).strip().lower()
+    env_val = EnvConfig.get_str("G6_CSVIO_BACKEND", "").strip().lower()
     if env_val in {"filesystem", "fs"}:
         return "filesystem"
     if env_val in {"atomic", "atomic_fs", "atomic-fs"}:

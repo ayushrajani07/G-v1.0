@@ -69,7 +69,7 @@ Status: Initiated
 
 ## Phase A Concrete Tasks
 - Create `src/path_forecast/common.py` with: `extract_tp`, `row_time_ms`, `effective_window_since_open`, `build_recent_window`, `build_bucketed_realized`.
-- Refactor `path_forecast.py` to use utilities instead of local duplicates; keep external API stable.
+- Refactor the dashboard router (`src/web/dashboard/routes/path_forecast/` package; formerly `path_forecast.py`) to use utilities instead of local duplicates; keep external API stable.
 - Refactor `retrieval.py` and `composite.py` to use `extract_tp` for TP series extraction.
 - Remove or delegate old helper functions; mark deprecation where necessary.
 - Add docstrings & type hints for shared utilities.

@@ -81,12 +81,11 @@ def strip_ansi(s: str) -> str:
     return _ANSI_RE.sub('', s)
 
 def build_section(title: str, lines: Iterable[str], inner_width: int) -> list[str]:
-    out = []
+    out = list()
     title_disp = f" {title.upper()} "
     bar = title_disp + SEP * max(0, inner_width - len(title_disp))
     out.append(colorize(bar, FG_MAGENTA, bold=True))
-    for ln in lines:
-        out.append(ln)
+    out.extend(lines)
     return out
 
 def build_startup_panel(*, version: str, indices: Iterable[str], interval: int, concise: bool,
@@ -107,12 +106,8 @@ def build_startup_panel(*, version: str, indices: Iterable[str], interval: int, 
     prov_line = f"Provider: {status_token(provider_readiness)}"
     core_lines.append(prov_line)
 
-    comp_lines = []
-    for name, status in components.items():
-        comp_lines.append(f"{name}: {status_token(status)}")
-    chk_lines = []
-    for name, status in checks.items():
-        chk_lines.append(f"{name}: {status_token(status)}")
+    comp_lines = [f"{name}: {status_token(status)}" for name, status in components.items()]
+    chk_lines = [f"{name}: {status_token(status)}" for name, status in checks.items()]
 
     metrics_lines: list[str] = []
     if metrics_meta:
@@ -151,8 +146,7 @@ def build_startup_panel(*, version: str, indices: Iterable[str], interval: int, 
     top = BORDER_TL + BORDER_H * (clean_width + 2) + BORDER_TR
     bottom = BORDER_BL + BORDER_H * (clean_width + 2) + BORDER_BR
     boxed = [top]
-    for r in rendered:
-        boxed.append(f"{BORDER_V} {pad(r, clean_width)} {BORDER_V}")
+    boxed.extend(f"{BORDER_V} {pad(r, clean_width)} {BORDER_V}" for r in rendered)
     boxed.append(bottom)
     panel = '\n'.join(boxed)
     if _needs_ascii_fallback():

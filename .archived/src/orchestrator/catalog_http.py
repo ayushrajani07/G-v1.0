@@ -122,9 +122,7 @@ def _hot_reload_if_requested(headers: Any = None, path: str | None = None) -> bo
         trigger = False
         if os.getenv('G6_CATALOG_HTTP_HOTRELOAD') not in (None, '', '0', 'false', 'False'):
             trigger = True
-        # Backward-compatible: honor FORCE_RELOAD as a hot-reload trigger too
-        if os.getenv('G6_CATALOG_HTTP_FORCE_RELOAD') not in (None, '', '0', 'false', 'False'):
-            trigger = True
+        # NOTE: archived - force-reload trigger removed
         try:
             if headers:
                 hv = headers.get('X-G6-HotReload')
@@ -903,7 +901,7 @@ class _CatalogHandler(BaseHTTPRequestHandler):
             # the HTTP handler thread on CI or constrained environments.
             try:
                 import sys as _sys
-                if os.getenv('PYTEST_CURRENT_TEST') or 'pytest' in _sys.modules or is_truthy_env('G6_CATALOG_HTTP_FORCE_RELOAD'):
+                if os.getenv('PYTEST_CURRENT_TEST') or 'pytest' in _sys.modules:
                     try:
                         tw_env = os.getenv('G6_ADAPTIVE_SEVERITY_TREND_WINDOW')
                         win = int(tw_env) if tw_env not in (None, '') else 5
@@ -1070,21 +1068,7 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                         _THEME_CACHE_TS = now
                 # Force env window regardless of source (cached or fresh)
                 payload = _force_window_env(payload)
-                # If test requested a forced reload (test sets G6_CATALOG_HTTP_FORCE_RELOAD=1),
-                # ensure warn_ratio is non-zero when window>0 to avoid timing races.
-                try:
-                    if os.getenv('G6_CATALOG_HTTP_FORCE_RELOAD') and isinstance(payload, dict):
-                        trx = payload.get('trend')
-                        if isinstance(trx, dict):
-                            w = trx.get('window')
-                            wv = int(w) if w is not None else 0
-                            if wv > 0:
-                                trx['warn_ratio'] = 1.0
-                                payload['trend'] = trx
-                                # Mark header later via a side channel (custom field)
-                                payload['_deterministic_warn_ratio'] = True
-                except Exception:
-                    pass
+                # NOTE: archived - force-reload deterministic payload removed
                 # Final safety: if we have snapshots, ensure window reflects at least their count
                 try:
                     if isinstance(payload, dict):
@@ -1256,11 +1240,10 @@ def shutdown_http_server(timeout: float = 2.0) -> None:
 def start_http_server_in_thread() -> None:
     """Start (or reload) catalog HTTP server in background thread.
 
-    Set G6_CATALOG_HTTP_FORCE_RELOAD=1 to force a shutdown + restart (used in tests
-    when code updated mid-session). Safe to call multiple times.
+    Safe to call multiple times.
     """
     # Use registry-backed getters/setters to avoid module reload desync
-    # Honor explicit disable; but allow tests that set FORCE_RELOAD to request a start
+    # Honor explicit disable
     if is_truthy_env('G6_CATALOG_HTTP_DISABLE'):
         # If disable flag set, ensure any existing server is shut down and return
         try:
@@ -1269,13 +1252,7 @@ def start_http_server_in_thread() -> None:
             pass
         logger.info("catalog_http: disabled via G6_CATALOG_HTTP_DISABLE")
         return
-    force_reload = is_truthy_env('G6_CATALOG_HTTP_FORCE_RELOAD')
-    # If server not globally enabled but force_reload requested (common in tests), treat as enabled
-    if not is_truthy_env('G6_CATALOG_HTTP') and force_reload:
-        try:
-            os.environ['G6_CATALOG_HTTP'] = '1'
-        except Exception:
-            pass
+    force_reload = False
     rebuild_flag = is_truthy_env('G6_CATALOG_HTTP_REBUILD')
     if rebuild_flag:
         force_reload = True
@@ -1391,7 +1368,7 @@ def start_http_server_in_thread() -> None:
             httpd._g6_generation = _GENERATION
         except Exception:
             pass
-        logger.info("catalog_http: serving on %s:%s (gen=%s rebuild=%s force_reload=%s)", host, port, _GENERATION, rebuild_flag, force_reload)
+        logger.info("catalog_http: serving on %s:%s (gen=%s rebuild=%s)", host, port, _GENERATION, rebuild_flag)
         try:
             httpd.serve_forever(poll_interval=0.5)
         except Exception:

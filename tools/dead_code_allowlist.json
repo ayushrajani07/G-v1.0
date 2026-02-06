@@ -1,1 +1,2096 @@
-{}
+{
+  "scripts\\auto_resolve_stack.py:check_hostname:64": {
+    "type": "attribute"
+  },
+  "scripts\\auto_resolve_stack.py:verify_mode:65": {
+    "type": "attribute"
+  },
+  "scripts\\batch_migrate_imports.py:original_content:77": {
+    "type": "variable"
+  },
+  "scripts\\check_env_doc_governance.py:TEST_FILE:15": {
+    "type": "variable"
+  },
+  "scripts\\cleanup\\dead_code_scan.py:src_segment:155": {
+    "type": "variable"
+  },
+  "scripts\\cleanup\\gen_inventory.py:PYTHON_ROOTS:23": {
+    "type": "variable"
+  },
+  "scripts\\coverage_hotspots.py:lines_covered:56": {
+    "type": "variable"
+  },
+  "scripts\\dashboard_diff.py:sha256_changed:46": {
+    "type": "variable"
+  },
+  "scripts\\dashboard_diff.py:title_change:44": {
+    "type": "variable"
+  },
+  "scripts\\dashboard_diff.py:uid_change:45": {
+    "type": "variable"
+  },
+  "scripts\\dev\\metrics_info.py:ROOT_ADDED:22": {
+    "type": "variable"
+  },
+  "scripts\\dev\\metrics_info.py:ROOT_ADDED:28": {
+    "type": "variable"
+  },
+  "scripts\\dev_tasks.py:cmd_format:61": {
+    "type": "function"
+  },
+  "scripts\\dev_tasks.py:cmd_lint:49": {
+    "type": "function"
+  },
+  "scripts\\dev_tasks.py:cmd_quick_cycle:86": {
+    "type": "function"
+  },
+  "scripts\\dev_tasks.py:cmd_secrets_scan:96": {
+    "type": "function"
+  },
+  "scripts\\dev_tasks.py:cmd_test:78": {
+    "type": "function"
+  },
+  "scripts\\dev_tasks.py:cmd_typecheck:68": {
+    "type": "function"
+  },
+  "scripts\\dev_tasks.py:cmd_update_secrets_baseline:102": {
+    "type": "function"
+  },
+  "scripts\\dev_tools.py:enable_cache_stats:346": {
+    "type": "attribute"
+  },
+  "scripts\\external_vix_collector.py:do_GET:50": {
+    "type": "method"
+  },
+  "scripts\\gen_dashboards_modular_recovery.py:MANIFEST_PATH:24": {
+    "type": "variable"
+  },
+  "scripts\\gen_metrics.py:fam2:69": {
+    "type": "variable"
+  },
+  "scripts\\gen_recording_rules.py:hash_spec_text:63": {
+    "type": "function"
+  },
+  "scripts\\metrics_drift_check.py:spec_obj:104": {
+    "type": "variable"
+  },
+  "scripts\\ml\\backfill_bands_from_live.py:essential:39": {
+    "type": "variable"
+  },
+  "scripts\\ml\\check_grid_status.py:evalp:37": {
+    "type": "variable"
+  },
+  "scripts\\ml\\ensemble_consensus_exporter.py:stable_cycles:240": {
+    "type": "variable"
+  },
+  "scripts\\ml\\move_predict_exporter.py:iteration_count:136": {
+    "type": "variable"
+  },
+  "scripts\\ml\\move_predict_exporter.py:iteration_count:201": {
+    "type": "variable"
+  },
+  "scripts\\ml\\path_forecast_grid_eval.py:_row_tp:121": {
+    "type": "function"
+  },
+  "scripts\\ml\\quantile_predict_exporter.py:g_residual_errors:176": {
+    "type": "variable"
+  },
+  "scripts\\ml\\quantile_predict_exporter.py:g_residual_errors:187": {
+    "type": "variable"
+  },
+  "scripts\\monitor_status.py:load_status:32": {
+    "type": "function"
+  },
+  "scripts\\plot_weekday_overlays.py:max_columns:138": {
+    "type": "variable"
+  },
+  "scripts\\plot_weekday_overlays.py:tab_id:451": {
+    "type": "variable"
+  },
+  "scripts\\pr_checklist.py:ChecklistFailure:41": {
+    "type": "class"
+  },
+  "scripts\\profile_unified_cycle.py:set_field_coverage:146": {
+    "type": "method"
+  },
+  "scripts\\profile_unified_cycle.py:write_points:206": {
+    "type": "method"
+  },
+  "scripts\\profile_unified_cycle.py:writes:174": {
+    "type": "attribute"
+  },
+  "scripts\\profile_unified_cycle.py:writes:180": {
+    "type": "attribute"
+  },
+  "scripts\\repair_csv_alignment.py:idx_index:71": {
+    "type": "variable"
+  },
+  "scripts\\repair_csv_alignment.py:idx_index:73": {
+    "type": "variable"
+  },
+  "scripts\\run_orchestrator_loop.py:_apply_presentation_logging:343": {
+    "type": "function"
+  },
+  "scripts\\summary\\app.py:counters2:624": {
+    "type": "variable"
+  },
+  "scripts\\summary\\bench_cycle.py:updates_per_cycle_avg:79": {
+    "type": "variable"
+  },
+  "scripts\\summary\\bench_sse.py:last_event_at:64": {
+    "type": "variable"
+  },
+  "scripts\\summary\\bench_sse.py:last_event_at:70": {
+    "type": "attribute"
+  },
+  "scripts\\summary\\bridge_detection.py:create_sentinel:41": {
+    "type": "function"
+  },
+  "scripts\\summary\\bridge_detection.py:legacy_bridge_active:49": {
+    "type": "function"
+  },
+  "scripts\\summary\\config.py:resync_port:34": {
+    "type": "variable"
+  },
+  "scripts\\summary\\config.py:rewrite_active:27": {
+    "type": "variable"
+  },
+  "scripts\\summary\\config.py:sse_heartbeat_cycles:29": {
+    "type": "variable"
+  },
+  "scripts\\summary\\derive.py:derive_provider:243": {
+    "type": "function"
+  },
+  "scripts\\summary\\env_config.py:describe:390": {
+    "type": "method"
+  },
+  "scripts\\summary\\http_resync.py:do_GET:35": {
+    "type": "method"
+  },
+  "scripts\\summary\\http_resync.py:server_version:29": {
+    "type": "variable"
+  },
+  "scripts\\summary\\http_resync.py:sys_version:30": {
+    "type": "variable"
+  },
+  "scripts\\summary\\metrics_server.py:describe:85": {
+    "type": "method"
+  },
+  "scripts\\summary\\metrics_server.py:do_GET:113": {
+    "type": "method"
+  },
+  "scripts\\summary\\metrics_server.py:server_version:107": {
+    "type": "variable"
+  },
+  "scripts\\summary\\metrics_server.py:sys_version:108": {
+    "type": "variable"
+  },
+  "scripts\\summary\\panels\\header.py:app_title:11": {
+    "type": "variable"
+  },
+  "scripts\\summary\\panels\\monitoring.py:_calculate_collection_lag:67": {
+    "type": "function"
+  },
+  "scripts\\summary\\panels\\monitoring.py:enhanced_monitoring_panel:598": {
+    "type": "function"
+  },
+  "scripts\\summary\\panels\\monitoring.py:performance_metrics_panel:339": {
+    "type": "function"
+  },
+  "scripts\\summary\\panels\\monitoring.py:pressure_desc:106": {
+    "type": "variable"
+  },
+  "scripts\\summary\\panels\\storage.py:sinks_panel:12": {
+    "type": "function"
+  },
+  "scripts\\summary\\panels\\system.py:health_panel:11": {
+    "type": "function"
+  },
+  "scripts\\summary\\plugins\\base.py:clear_conflict:724": {
+    "type": "method"
+  },
+  "scripts\\summary\\plugins\\base.py:mark_conflict:716": {
+    "type": "method"
+  },
+  "scripts\\summary\\plugins\\sse.py:domain_rebuilds:341": {
+    "type": "property"
+  },
+  "scripts\\summary\\plugins\\stream_gater.py:_env_truthy:52": {
+    "type": "function"
+  },
+  "scripts\\summary\\snapshot_builder.py:_get_alerts_dedup_metric:537": {
+    "type": "function"
+  },
+  "scripts\\summary\\snapshot_builder.py:_get_internal_metric_objects:533": {
+    "type": "function"
+  },
+  "scripts\\summary\\snapshot_builder.py:_reset_metrics_for_tests:526": {
+    "type": "function"
+  },
+  "scripts\\summary\\snapshot_builder.py:dq_percent:58": {
+    "type": "variable"
+  },
+  "scripts\\summary\\snapshot_builder.py:raw_status_present:79": {
+    "type": "variable"
+  },
+  "scripts\\summary\\sse_http.py:do_GET:261": {
+    "type": "method"
+  },
+  "scripts\\summary\\sse_http.py:server_version:233": {
+    "type": "variable"
+  },
+  "scripts\\summary\\sse_http.py:sys_version:234": {
+    "type": "variable"
+  },
+  "scripts\\summary\\sse_state.py:request_full:169": {
+    "type": "method"
+  },
+  "scripts\\summary\\summary_metrics.py:_reset_in_memory:184": {
+    "type": "function"
+  },
+  "scripts\\summary\\unified_http.py:_last_json_body:182": {
+    "type": "attribute"
+  },
+  "scripts\\summary\\unified_http.py:allow_reuse_address:68": {
+    "type": "attribute"
+  },
+  "scripts\\summary\\unified_http.py:do_GET:189": {
+    "type": "method"
+  },
+  "scripts\\summary\\unified_http.py:server_version:77": {
+    "type": "variable"
+  },
+  "scripts\\summary\\unified_http.py:sys_version:78": {
+    "type": "variable"
+  },
+  "scripts\\validate_metrics_spec.py:SEVERITY_ORDER:39": {
+    "type": "variable"
+  },
+  "src\\adaptive\\alerts.py:_bucket_util_streak:215": {
+    "type": "attribute"
+  },
+  "src\\adaptive\\severity.py:reset_for_hot_reload:722": {
+    "type": "function"
+  },
+  "src\\advisor\\core.py:risk_level:44": {
+    "type": "variable"
+  },
+  "src\\analytics\\market_breadth.py:MarketBreadthAnalytics:4": {
+    "type": "class"
+  },
+  "src\\analytics\\market_breadth.py:analyze:5": {
+    "type": "method"
+  },
+  "src\\analytics\\option_chain.py:OptionChainAnalytics:27": {
+    "type": "class"
+  },
+  "src\\analytics\\option_chain.py:calculate_max_pain:229": {
+    "type": "method"
+  },
+  "src\\analytics\\option_chain.py:calculate_pcr:167": {
+    "type": "method"
+  },
+  "src\\analytics\\option_chain.py:calculate_support_resistance:305": {
+    "type": "method"
+  },
+  "src\\analytics\\participant.py:analyze_cash_flows:20": {
+    "type": "function"
+  },
+  "src\\analytics\\participant.py:analyze_participant_flows:5": {
+    "type": "function"
+  },
+  "src\\analytics\\redis_cache.py:get_info:241": {
+    "type": "method"
+  },
+  "src\\analytics\\redis_cache.py:get_metric:200": {
+    "type": "method"
+  },
+  "src\\analytics\\redis_cache.py:get_options_chain:220": {
+    "type": "method"
+  },
+  "src\\analytics\\redis_cache.py:get_overview_snapshot:210": {
+    "type": "method"
+  },
+  "src\\analytics\\redis_cache.py:health_check:272": {
+    "type": "method"
+  },
+  "src\\analytics\\redis_cache.py:set_metric:195": {
+    "type": "method"
+  },
+  "src\\analytics\\redis_cache.py:set_options_chain:215": {
+    "type": "method"
+  },
+  "src\\analytics\\redis_cache.py:set_overview_snapshot:205": {
+    "type": "method"
+  },
+  "src\\analytics\\spread_builder.py:SpreadBuilder:81": {
+    "type": "class"
+  },
+  "src\\analytics\\spread_builder.py:add_leg:49": {
+    "type": "method"
+  },
+  "src\\analytics\\spread_builder.py:butterfly:253": {
+    "type": "method"
+  },
+  "src\\analytics\\spread_builder.py:iron_condor:202": {
+    "type": "method"
+  },
+  "src\\analytics\\spread_builder.py:long_straddle:93": {
+    "type": "method"
+  },
+  "src\\analytics\\spread_builder.py:long_strangle:163": {
+    "type": "method"
+  },
+  "src\\analytics\\spread_builder.py:max_loss:75": {
+    "type": "property"
+  },
+  "src\\analytics\\spread_builder.py:max_profit:69": {
+    "type": "property"
+  },
+  "src\\analytics\\spread_builder.py:short_straddle:128": {
+    "type": "method"
+  },
+  "src\\broker\\circuit_breaker.py:get_all_stats:272": {
+    "type": "method"
+  },
+  "src\\broker\\circuit_breaker.py:reset_all:281": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\auth.py:last_error:45": {
+    "type": "attribute"
+  },
+  "src\\broker\\kite\\auth.py:last_error:48": {
+    "type": "attribute"
+  },
+  "src\\broker\\kite\\auth.py:record_error:47": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\auth.py:refresh_attempts:44": {
+    "type": "attribute"
+  },
+  "src\\broker\\kite\\client.py:create_kite_client:56": {
+    "type": "function"
+  },
+  "src\\broker\\kite\\http_pool.py:default_socket_options:65": {
+    "type": "attribute"
+  },
+  "src\\broker\\kite\\http_pool.py:patch_kite_connect_session:99": {
+    "type": "function"
+  },
+  "src\\broker\\kite\\options.py:FilterRuntime:106": {
+    "type": "class"
+  },
+  "src\\broker\\kite\\options.py:_get_root_cached:317": {
+    "type": "function"
+  },
+  "src\\broker\\kite\\options.py:prefilter_rejects:674": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\provider_events.py:mark_success:201": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\rate_limit.py:cooldown_active:110": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\rate_limiter_helpers.py:last_log_ts:28": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\rate_limiter_helpers.py:last_quote_log_ts:29": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\state.py:daily_universe:30": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\state.py:daily_universe_loaded_date:31": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\state.py:invalidate_expiries:60": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\state.py:invalidate_instruments:52": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\state.py:record_option_cache_hit:46": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\state.py:record_option_cache_miss:49": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\state.py:reset_option_cache_if_new_day:39": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\state.py:reset_synthetic_counters:66": {
+    "type": "method"
+  },
+  "src\\broker\\kite\\types.py:average_price:33": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\types.py:exchange_token:47": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\types.py:lot_size:43": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\types.py:segment:17": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\types.py:segment:46": {
+    "type": "variable"
+  },
+  "src\\broker\\kite\\types.py:tick_size:45": {
+    "type": "variable"
+  },
+  "src\\broker\\kite_instruments.py:load_instruments:11": {
+    "type": "function"
+  },
+  "src\\broker\\kite_provider.py:_provider_config:240": {
+    "type": "attribute"
+  },
+  "src\\broker\\kite_provider.py:last_quotes_synthetic_flag:538": {
+    "type": "property"
+  },
+  "src\\broker\\kite_provider.py:last_quotes_were_synthetic:482": {
+    "type": "method"
+  },
+  "src\\broker\\kite_provider.py:pop_synthetic_quote_usage:479": {
+    "type": "method"
+  },
+  "src\\broker\\models.py:QuoteSnapshot:15": {
+    "type": "class"
+  },
+  "src\\broker\\models.py:average_price:27": {
+    "type": "variable"
+  },
+  "src\\broker\\models.py:day_change:26": {
+    "type": "variable"
+  },
+  "src\\broker\\models.py:instrument_token:19": {
+    "type": "variable"
+  },
+  "src\\broker\\models.py:instrument_token:9": {
+    "type": "variable"
+  },
+  "src\\broker\\models.py:net_change:25": {
+    "type": "variable"
+  },
+  "src\\broker\\models.py:oi_open:23": {
+    "type": "variable"
+  },
+  "src\\broker\\models.py:segment:10": {
+    "type": "variable"
+  },
+  "src\\broker\\models.py:symbol_display:18": {
+    "type": "variable"
+  },
+  "src\\broker\\provider_registry.py:provider_supports:198": {
+    "type": "function"
+  },
+  "src\\bus\\in_memory_bus.py:head_id:114": {
+    "type": "method"
+  },
+  "src\\bus\\in_memory_bus.py:tail_id:118": {
+    "type": "method"
+  },
+  "src\\collector\\cycle_env_settings.py:daily_header_every_cycle:45": {
+    "type": "variable"
+  },
+  "src\\collector\\cycle_env_settings.py:disable_pretty_cycle:53": {
+    "type": "variable"
+  },
+  "src\\collector\\cycle_env_settings.py:disable_repeat_banners:46": {
+    "type": "variable"
+  },
+  "src\\collector\\cycle_env_settings.py:enable_data_quality:50": {
+    "type": "variable"
+  },
+  "src\\collector\\cycle_env_settings.py:refactor_debug:42": {
+    "type": "variable"
+  },
+  "src\\collector\\cycle_env_settings.py:stale_abort_cycles:59": {
+    "type": "variable"
+  },
+  "src\\collector\\cycle_env_settings.py:stale_write_mode:58": {
+    "type": "variable"
+  },
+  "src\\collectors\\cycle_context.py:as_tags:172": {
+    "type": "method"
+  },
+  "src\\collectors\\cycle_context.py:single:61": {
+    "type": "variable"
+  },
+  "src\\collectors\\cycle_context.py:single:65": {
+    "type": "variable"
+  },
+  "src\\collectors\\helpers\\validation.py:perform_preventive_validation:42": {
+    "type": "function"
+  },
+  "src\\collectors\\modules\\benchmark_bridge.py:AnomalyDetector:55": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\context.py:get_index:26": {
+    "type": "method"
+  },
+  "src\\collectors\\modules\\coverage_eval.py:strike_coverage_avg:35": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\expiry_helpers.py:_get_expiry_service:130": {
+    "type": "function"
+  },
+  "src\\collectors\\modules\\expiry_processor.py:_coerce_mapping:168": {
+    "type": "function"
+  },
+  "src\\collectors\\modules\\expiry_processor.py:legacy_kwargs:280": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\expiry_types.py:strikes_requested:19": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\greeks_compute.py:index_price_is_nan:106": {
+    "type": "function"
+  },
+  "src\\collectors\\modules\\index_processor.py:TimePhaseCtx:108": {
+    "type": "class"
+  },
+  "src\\collectors\\modules\\index_processor.py:human_block:91": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\index_processor.py:indices_struct_entry:92": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\index_processor.py:overall_fails:95": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\index_processor.py:overall_legs:94": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\index_processor.py:summary_rows_entry:93": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\persist_flow.py:TraceFn:44": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\pipeline.py:expiry_stats:425": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\pipeline.py:strikes_meta:452": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\pipeline.py:strikes_meta:459": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\pipeline.py:synthetic_used_flag:462": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\snapshot_core.py:indices_processed:37": {
+    "type": "variable"
+  },
+  "src\\collectors\\modules\\status_finalize.py:ComputeReasonTotals:25": {
+    "type": "variable"
+  },
+  "src\\collectors\\parity_harness.py:_stable_sorted_symbols:24": {
+    "type": "function"
+  },
+  "src\\collectors\\parity_harness.py:struct:31": {
+    "type": "variable"
+  },
+  "src\\collectors\\pipeline\\error_records.py:outcome_token:28": {
+    "type": "variable"
+  },
+  "src\\collectors\\pipeline\\executor.py:final_if_known:692": {
+    "type": "variable"
+  },
+  "src\\collectors\\pipeline\\logging_schema.py:get_phase_logger:195": {
+    "type": "function"
+  },
+  "src\\collectors\\pipeline\\parity.py:get_parity_average:430": {
+    "type": "function"
+  },
+  "src\\collectors\\pipeline\\parity.py:strike_cov_variance:67": {
+    "type": "variable"
+  },
+  "src\\collectors\\pipeline\\parity.py:strike_coverage_avg:65": {
+    "type": "variable"
+  },
+  "src\\collectors\\pipeline\\parity.py:strike_shape:66": {
+    "type": "variable"
+  },
+  "src\\collectors\\pipeline\\phases.py:_FetchInstrumentsLike:45": {
+    "type": "class"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:stage:231": {
+    "type": "attribute"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:stage:237": {
+    "type": "attribute"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:stage:279": {
+    "type": "attribute"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:stage:282": {
+    "type": "attribute"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:stage:324": {
+    "type": "attribute"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:stage:326": {
+    "type": "attribute"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:stage:43": {
+    "type": "variable"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:start_cycle:121": {
+    "type": "method"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:submit_work:145": {
+    "type": "method"
+  },
+  "src\\collectors\\pipeline\\staged_executor.py:wait_for_completion:174": {
+    "type": "method"
+  },
+  "src\\collectors\\providers_interface.py:_ensure_provider_metrics:645": {
+    "type": "function"
+  },
+  "src\\collectors\\providers_interface.py:_record_api_call:649": {
+    "type": "function"
+  },
+  "src\\collectors\\snapshot_collectors.py:build_domain_models:80": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:PipelineReturn:39": {
+    "type": "class"
+  },
+  "src\\collectors\\types.py:elapsed_s:35": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:field_coverage_avg:37": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:have_raw:42": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:indices_processed:41": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:partial_reason_group_order:50": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:partial_reason_groups:48": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:partial_reason_order:49": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:snapshot_count:44": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:strike_coverage_avg:36": {
+    "type": "variable"
+  },
+  "src\\collectors\\types.py:synthetic_quotes:24": {
+    "type": "variable"
+  },
+  "src\\collectors\\unified_collectors.py:_ExpiryResult:289": {
+    "type": "class"
+  },
+  "src\\collectors\\unified_collectors.py:_persist_and_metrics:583": {
+    "type": "function"
+  },
+  "src\\collectors\\unified_collectors.py:_synthetic_metric_pop:588": {
+    "type": "function"
+  },
+  "src\\collectors\\unified_collectors.py:collector_ctx:1000": {
+    "type": "attribute"
+  },
+  "src\\collectors\\unified_collectors.py:empty_consec:342": {
+    "type": "variable"
+  },
+  "src\\collectors\\unified_collectors.py:empty_consec:353": {
+    "type": "variable"
+  },
+  "src\\collectors\\unified_collectors.py:field_coverage_avg:355": {
+    "type": "variable"
+  },
+  "src\\collectors\\unified_collectors.py:human_row:305": {
+    "type": "attribute"
+  },
+  "src\\collectors\\unified_collectors.py:refactor_debug:1008": {
+    "type": "variable"
+  },
+  "src\\collectors\\unified_collectors.py:stale_abort_evaluated:1546": {
+    "type": "variable"
+  },
+  "src\\collectors\\unified_collectors.py:strike_coverage_avg:354": {
+    "type": "variable"
+  },
+  "src\\column_store\\pipeline.py:install_failure_hook:120": {
+    "type": "method"
+  },
+  "src\\column_store\\pipeline.py:low_watermark_rows:64": {
+    "type": "variable"
+  },
+  "src\\config\\config_wrapper.py:collection_interval:201": {
+    "type": "method"
+  },
+  "src\\config\\config_wrapper.py:influx_config:213": {
+    "type": "method"
+  },
+  "src\\config\\config_wrapper.py:influx_enabled:210": {
+    "type": "method"
+  },
+  "src\\config\\config_wrapper.py:raw_dict:225": {
+    "type": "method"
+  },
+  "src\\config\\env_config.py:get_list:161": {
+    "type": "method"
+  },
+  "src\\config\\env_config.py:require:236": {
+    "type": "method"
+  },
+  "src\\config\\env_loader.py:found_any:107": {
+    "type": "variable"
+  },
+  "src\\config\\env_loader.py:found_any:112": {
+    "type": "variable"
+  },
+  "src\\config\\env_registry.py:apply_to_config:63": {
+    "type": "method"
+  },
+  "src\\config\\migrations.py:_to_v1_0:50": {
+    "type": "function"
+  },
+  "src\\config\\migrations.py:_to_v1_1:58": {
+    "type": "function"
+  },
+  "src\\config\\migrations.py:_to_v1_2:73": {
+    "type": "function"
+  },
+  "src\\config\\migrations.py:_to_v1_3:103": {
+    "type": "function"
+  },
+  "src\\console\\ws_service.py:get_status:106": {
+    "type": "function"
+  },
+  "src\\console\\ws_service.py:ws_status:117": {
+    "type": "function"
+  },
+  "src\\domain\\models.py:from_quote:83": {
+    "type": "method"
+  },
+  "src\\error_handling.py:ANALYTICS:43": {
+    "type": "variable"
+  },
+  "src\\error_handling.py:BACKUP:49": {
+    "type": "variable"
+  },
+  "src\\error_handling.py:CSV_WRITE:48": {
+    "type": "variable"
+  },
+  "src\\error_handling.py:DATABASE:47": {
+    "type": "variable"
+  },
+  "src\\error_handling.py:INITIALIZATION:53": {
+    "type": "variable"
+  },
+  "src\\error_handling.py:MEMORY:55": {
+    "type": "variable"
+  },
+  "src\\error_handling.py:RICH_MARKUP:60": {
+    "type": "variable"
+  },
+  "src\\error_handling.py:TRANSFORMATION:42": {
+    "type": "variable"
+  },
+  "src\\error_handling.py:clear_errors:354": {
+    "type": "method"
+  },
+  "src\\error_handling.py:export_errors:362": {
+    "type": "method"
+  },
+  "src\\error_handling.py:safe_execute:521": {
+    "type": "function"
+  },
+  "src\\errors\\error_routing.py:register_error:69": {
+    "type": "function"
+  },
+  "src\\errors\\error_routing.py:unregister_error:73": {
+    "type": "function"
+  },
+  "src\\events\\adaptive_degrade.py:_last_enter_ts:80": {
+    "type": "attribute"
+  },
+  "src\\events\\adaptive_degrade.py:_last_exit_ts:148": {
+    "type": "attribute"
+  },
+  "src\\events\\adaptive_degrade.py:_last_exit_ts:86": {
+    "type": "attribute"
+  },
+  "src\\events\\adaptive_degrade.py:reentry_cooldown_seconds:55": {
+    "type": "variable"
+  },
+  "src\\events\\event_bus.py:RegisterFunc:73": {
+    "type": "variable"
+  },
+  "src\\events\\event_bus.py:_m_events_full_recovery:647": {
+    "type": "attribute"
+  },
+  "src\\events\\event_bus.py:_m_events_full_recovery:689": {
+    "type": "attribute"
+  },
+  "src\\filters\\junk_filter.py:log_debug:86": {
+    "type": "variable"
+  },
+  "src\\health\\alerts\\alert_manager.py:acknowledge:317": {
+    "type": "method"
+  },
+  "src\\health\\alerts\\alert_manager.py:get_active_alerts:311": {
+    "type": "method"
+  },
+  "src\\health\\alerts\\alert_manager.py:get_alert_history:314": {
+    "type": "method"
+  },
+  "src\\health\\api_server.py:do_GET:76": {
+    "type": "method"
+  },
+  "src\\health\\models.py:last_check:52": {
+    "type": "variable"
+  },
+  "src\\health\\models.py:last_check:65": {
+    "type": "variable"
+  },
+  "src\\health\\monitor.py:get_health_status:276": {
+    "type": "method"
+  },
+  "src\\health\\monitor.py:is_healthy:285": {
+    "type": "method"
+  },
+  "src\\health\\prom_exporter.py:bulk_set_components:61": {
+    "type": "method"
+  },
+  "src\\interfaces\\error_handler_protocol.py:API:19": {
+    "type": "variable"
+  },
+  "src\\interfaces\\error_handler_protocol.py:PROVIDER:21": {
+    "type": "variable"
+  },
+  "src\\interfaces\\error_handler_protocol.py:VALIDATION:23": {
+    "type": "variable"
+  },
+  "src\\interfaces\\metrics_protocol.py:MetricsRegistryProtocol:97": {
+    "type": "class"
+  },
+  "src\\interfaces\\metrics_protocol.py:get_metric:118": {
+    "type": "method"
+  },
+  "src\\interfaces\\metrics_protocol.py:register_counter:106": {
+    "type": "method"
+  },
+  "src\\interfaces\\metrics_protocol.py:register_gauge:110": {
+    "type": "method"
+  },
+  "src\\interfaces\\provider_protocol.py:from_date:69": {
+    "type": "variable"
+  },
+  "src\\interfaces\\provider_protocol.py:get_historical_data:66": {
+    "type": "method"
+  },
+  "src\\interfaces\\provider_protocol.py:get_quotes:42": {
+    "type": "method"
+  },
+  "src\\interfaces\\provider_protocol.py:is_connected:87": {
+    "type": "property"
+  },
+  "src\\metrics\\__init__.py:_G6_METRICS_FACADE_IMPORT:184": {
+    "type": "attribute"
+  },
+  "src\\metrics\\__init__.py:_reset_metrics_summary_state:567": {
+    "type": "function"
+  },
+  "src\\metrics\\__init__.py:dump_metrics:216": {
+    "type": "function"
+  },
+  "src\\metrics\\circuit_metrics.py:_state_g:23": {
+    "type": "attribute"
+  },
+  "src\\metrics\\cycle_phase_timing.py:exc_val:137": {
+    "type": "variable"
+  },
+  "src\\metrics\\emission_batcher.py:_last_activity:174": {
+    "type": "attribute"
+  },
+  "src\\metrics\\emission_batcher.py:_last_activity:93": {
+    "type": "attribute"
+  },
+  "src\\metrics\\emission_batcher.py:_max_wait:92": {
+    "type": "attribute"
+  },
+  "src\\metrics\\emitter.py:_GaugeLike:39": {
+    "type": "class"
+  },
+  "src\\metrics\\emitter.py:_final_flush:176": {
+    "type": "function"
+  },
+  "src\\metrics\\fault_budget.py:cycle_fault_budget_breaches_window:208": {
+    "type": "attribute"
+  },
+  "src\\metrics\\fault_budget.py:cycle_fault_budget_consumed_percent:212": {
+    "type": "attribute"
+  },
+  "src\\metrics\\fault_budget.py:cycle_fault_budget_remaining:206": {
+    "type": "attribute"
+  },
+  "src\\metrics\\fault_budget.py:cycle_fault_budget_window_seconds:210": {
+    "type": "attribute"
+  },
+  "src\\metrics\\gating.py:_disabled_groups_raw:131": {
+    "type": "attribute"
+  },
+  "src\\metrics\\gating.py:_enabled_groups_raw:130": {
+    "type": "attribute"
+  },
+  "src\\metrics\\metrics.py:_disabled_groups_raw:276": {
+    "type": "attribute"
+  },
+  "src\\metrics\\metrics.py:_enabled_groups_raw:275": {
+    "type": "attribute"
+  },
+  "src\\metrics\\metrics.py:build_time:1624": {
+    "type": "variable"
+  },
+  "src\\metrics\\metrics.py:get_metric_groups:1087": {
+    "type": "method"
+  },
+  "src\\metrics\\metrics.py:set_provider_mode:1523": {
+    "type": "function"
+  },
+  "src\\metrics\\performance.py:index_data_quality_score:31": {
+    "type": "attribute"
+  },
+  "src\\orchestrator\\catalog_http.py:FORCED_WINDOW:143": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\catalog_http.py:_g6_generation:705": {
+    "type": "attribute"
+  },
+  "src\\orchestrator\\catalog_http.py:_hot_reload_if_requested:119": {
+    "type": "function"
+  },
+  "src\\orchestrator\\catalog_http.py:allow_reuse_address:102": {
+    "type": "attribute"
+  },
+  "src\\orchestrator\\catalog_http.py:do_GET:195": {
+    "type": "method"
+  },
+  "src\\orchestrator\\catalog_http.py:server_version:148": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:DATABASE:372": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:ErrorCategoryT:360": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:ErrorCategoryT:379": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:ErrorCategoryT:60": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:ErrorSeverityT:361": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:ErrorSeverityT:380": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:ErrorSeverityT:61": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:INITIALIZATION:370": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:get_error_handler_fn:359": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:get_error_handler_fn:378": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\components.py:get_error_handler_fn:59": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\context.py:cardinality_last_toggle:40": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\context.py:per_option_metrics_disabled:38": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\context.py:runtime_config:19": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\context.py:runtime_status_file:30": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\cycle.py:_g6_index:352": {
+    "type": "attribute"
+  },
+  "src\\orchestrator\\parity_harness.py:use_enhanced:111": {
+    "type": "variable"
+  },
+  "src\\orchestrator\\status_writer.py:_ec_mod_f:45": {
+    "type": "class"
+  },
+  "src\\orchestrator\\status_writer.py:_es_mod_f:48": {
+    "type": "class"
+  },
+  "src\\orchestrator\\status_writer.py:_geh_mod_f:40": {
+    "type": "function"
+  },
+  "src\\panels\\factory.py:build_indices_stream_items:209": {
+    "type": "function"
+  },
+  "src\\panels\\factory.py:build_panels:372": {
+    "type": "function"
+  },
+  "src\\panels\\models.py:HealthPanel:32": {
+    "type": "class"
+  },
+  "src\\panels\\models.py:time_hms:52": {
+    "type": "variable"
+  },
+  "src\\panels\\validate.py:validate_directory:107": {
+    "type": "function"
+  },
+  "src\\path_forecast\\config_structs.py:from_modular:90": {
+    "type": "method"
+  },
+  "src\\path_forecast\\config_structs.py:legacy_dict:110": {
+    "type": "method"
+  },
+  "src\\provider\\diagnostics.py:emit_once:13": {
+    "type": "method"
+  },
+  "src\\provider\\expiries.py:fabricate_if_needed:168": {
+    "type": "method"
+  },
+  "src\\provider\\facade.py:LEGACY_IMPORT:26": {
+    "type": "variable"
+  },
+  "src\\provider\\facade.py:_ensure_core:32": {
+    "type": "function"
+  },
+  "src\\provider\\instruments.py:get_or_fetch:50": {
+    "type": "method"
+  },
+  "src\\provider\\instruments.py:load_all:43": {
+    "type": "method"
+  },
+  "src\\provider\\metrics_adapter.py:RecordingMetrics:22": {
+    "type": "class"
+  },
+  "src\\provider\\metrics_adapter.py:set_metrics_sink:34": {
+    "type": "function"
+  },
+  "src\\runtime\\runtime_flags.py:_is_true:15": {
+    "type": "function"
+  },
+  "src\\runtime\\runtime_flags.py:enable_backward_fallback:26": {
+    "type": "variable"
+  },
+  "src\\runtime\\runtime_flags.py:enable_forward_fallback:25": {
+    "type": "variable"
+  },
+  "src\\runtime\\runtime_flags.py:prefilter_disabled:29": {
+    "type": "variable"
+  },
+  "src\\storage\\csv_aggregator.py:inject_last_prices:302": {
+    "type": "method"
+  },
+  "src\\storage\\csv_batcher.py:clear_all_batches:212": {
+    "type": "method"
+  },
+  "src\\storage\\csv_batcher.py:csv_writer:226": {
+    "type": "variable"
+  },
+  "src\\storage\\csv_batcher.py:flush_all_batches:226": {
+    "type": "method"
+  },
+  "src\\storage\\csv_batcher.py:get_batch_count:201": {
+    "type": "method"
+  },
+  "src\\storage\\csv_expiry.py:CsvExpiryResolver:16": {
+    "type": "class"
+  },
+  "src\\storage\\csv_expiry.py:advise_missing_expiries:171": {
+    "type": "method"
+  },
+  "src\\storage\\csv_expiry.py:handle_expiry_misclassification:242": {
+    "type": "method"
+  },
+  "src\\storage\\csv_expiry.py:resolve_expiry_context:46": {
+    "type": "method"
+  },
+  "src\\storage\\csv_metrics.py:record_aggregation_update:132": {
+    "type": "method"
+  },
+  "src\\storage\\csv_metrics.py:record_batch_flush:110": {
+    "type": "method"
+  },
+  "src\\storage\\csv_metrics.py:record_duplicate_suppressed:115": {
+    "type": "method"
+  },
+  "src\\storage\\csv_metrics.py:record_junk_filtered:119": {
+    "type": "method"
+  },
+  "src\\storage\\csv_metrics.py:record_overview_write:128": {
+    "type": "method"
+  },
+  "src\\storage\\csv_metrics.py:record_quarantine_write:123": {
+    "type": "method"
+  },
+  "src\\storage\\csv_metrics.py:record_row_written:106": {
+    "type": "method"
+  },
+  "src\\storage\\csv_metrics.py:update_expiry_daily_stats:89": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_align_rows_for_existing_file:2568": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_build_misclass_quarantine_record:2725": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_build_return_metrics:2681": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_clean_for_json:384": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_compute_change_metrics:2708": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_compute_day_width:2650": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_compute_pcr:2536": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_init_batch_state_if_needed:2696": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_is_expiry_disallowed:2617": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_is_preopen_and_quarantine:2791": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_nearest_price_for_type:2856": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_reorder_time_columns:2771": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_resolve_index_price:2629": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_resolve_vix:2663": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:_update_open_prices:2578": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:read_option_data:2127": {
+    "type": "method"
+  },
+  "src\\storage\\csv_sink.py:read_options_overview:2078": {
+    "type": "method"
+  },
+  "src\\storage\\csv_utils.py:compute_atm_strike:83": {
+    "type": "function"
+  },
+  "src\\storage\\csv_utils.py:compute_day_width:189": {
+    "type": "function"
+  },
+  "src\\storage\\csv_utils.py:format_date_key:146": {
+    "type": "function"
+  },
+  "src\\storage\\csv_utils.py:group_by_strike:40": {
+    "type": "function"
+  },
+  "src\\storage\\csv_utils.py:parse_offset_label:167": {
+    "type": "function"
+  },
+  "src\\storage\\csv_validator.py:check_duplicate:282": {
+    "type": "method"
+  },
+  "src\\storage\\csv_validator.py:maybe_skip_as_junk:128": {
+    "type": "method"
+  },
+  "src\\storage\\csv_validator.py:prune_mixed_expiry:331": {
+    "type": "method"
+  },
+  "src\\storage\\csv_validator.py:validate_schema:43": {
+    "type": "method"
+  },
+  "src\\storage\\csv_writer.py:get_file_mtime:99": {
+    "type": "method"
+  },
+  "src\\storage\\csv_writer.py:list_files_in_dir:117": {
+    "type": "method"
+  },
+  "src\\storage\\parquet_sink.py:_get_partition_path:184": {
+    "type": "method"
+  },
+  "src\\storage\\parquet_sink.py:read_options_data:269": {
+    "type": "method"
+  },
+  "src\\storage\\path_generator.py:CSVPathGenerator:13": {
+    "type": "class"
+  },
+  "src\\storage\\path_generator.py:debug_file_path:29": {
+    "type": "method"
+  },
+  "src\\storage\\path_generator.py:option_file_path:23": {
+    "type": "method"
+  },
+  "src\\storage\\path_generator.py:overview_file_path:39": {
+    "type": "method"
+  },
+  "src\\storage\\retention.py:start_retention_worker:123": {
+    "type": "function"
+  },
+  "src\\streaming\\bus.py:StreamCallback:33": {
+    "type": "variable"
+  },
+  "src\\summary\\curated_layout.py:render:510": {
+    "type": "method"
+  },
+  "src\\summary\\metrics_processor.py:api_errors:85": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:atm_strike_current:98": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:avg_batch_size:80": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:avg_processing_time:95": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:batch_processing_time:81": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:cache_evictions:76": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:cache_memory_mb:75": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:cache_size_items:74": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:export_metrics_dict:697": {
+    "type": "method"
+  },
+  "src\\summary\\metrics_processor.py:get_collection_metrics:652": {
+    "type": "method"
+  },
+  "src\\summary\\metrics_processor.py:get_storage_metrics:663": {
+    "type": "method"
+  },
+  "src\\summary\\metrics_processor.py:influxdb_connection_status:119": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:influxdb_query_performance:120": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:metric_mappings:153": {
+    "type": "attribute"
+  },
+  "src\\summary\\metrics_processor.py:network_errors:86": {
+    "type": "variable"
+  },
+  "src\\summary\\metrics_processor.py:volatility_current:99": {
+    "type": "variable"
+  },
+  "src\\summary\\model.py:iv_repr:35": {
+    "type": "variable"
+  },
+  "src\\summary\\model.py:last_update_epoch:31": {
+    "type": "variable"
+  },
+  "src\\summary\\model.py:options_last_cycle:33": {
+    "type": "variable"
+  },
+  "src\\summary\\model.py:success_rate_percent:32": {
+    "type": "variable"
+  },
+  "src\\summary\\publisher.py:publish_cycle_panels:66": {
+    "type": "function"
+  },
+  "src\\summary\\unified\\model.py:alerts_by_type:286": {
+    "type": "attribute"
+  },
+  "src\\summary\\unified\\model.py:alerts_by_type:64": {
+    "type": "variable"
+  },
+  "src\\summary\\unified\\model.py:next_run_in_sec:176": {
+    "type": "attribute"
+  },
+  "src\\summary\\unified\\model.py:next_run_in_sec:51": {
+    "type": "variable"
+  },
+  "src\\summary\\unified\\model.py:raw_ref:115": {
+    "type": "attribute"
+  },
+  "src\\summary\\unified\\model.py:raw_ref:335": {
+    "type": "attribute"
+  },
+  "src\\summary\\unified\\model.py:raw_ref:82": {
+    "type": "variable"
+  },
+  "src\\summary\\unified\\snapshot.py:__getattr__:17": {
+    "type": "function"
+  },
+  "src\\summary\\unified\\sse_client.py:generation:108": {
+    "type": "method"
+  },
+  "src\\tools\\run_with_real_api.py:env_loaded:39": {
+    "type": "variable"
+  },
+  "src\\tools\\run_with_real_api.py:env_loaded:41": {
+    "type": "variable"
+  },
+  "src\\tools\\token_manager.py:callback_route:371": {
+    "type": "function"
+  },
+  "src\\tools\\token_manager.py:favicon_route:380": {
+    "type": "function"
+  },
+  "src\\tools\\token_manager.py:root_route:375": {
+    "type": "function"
+  },
+  "src\\tools\\token_manager.py:success_route:365": {
+    "type": "function"
+  },
+  "src\\tools\\token_manager.py:userName:95": {
+    "type": "variable"
+  },
+  "src\\tools\\token_providers\\kite.py:_cb:106": {
+    "type": "function"
+  },
+  "src\\types\\dashboard_types.py:FooterPanel:80": {
+    "type": "class"
+  },
+  "src\\types\\dashboard_types.py:IndicesStreamPanel:72": {
+    "type": "class"
+  },
+  "src\\types\\dashboard_types.py:MemorySnapshot:84": {
+    "type": "class"
+  },
+  "src\\types\\dashboard_types.py:StoragePanel:76": {
+    "type": "class"
+  },
+  "src\\types\\dashboard_types.py:ago:68": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:cycle_attempts:29": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:disk_mb:44": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:errors_total:43": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:files_total:40": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:files_total:54": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:gc_collections_total:87": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:gc_last_duration_ms:88": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:last_backup_unixtime:55": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:last_collection:109": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:last_err_ts:148": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:last_err_type:149": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:legs_cycles:145": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:legs_total:144": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:overall_success:36": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:peak_rss_mb:86": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:points_delta:48": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:points_total:47": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:query_latency_ms:51": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:records_delta:42": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:records_total:41": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:size_mb:57": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:succ_avg:27": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:succ_cycles:147": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:succ_life:28": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:succ_total:146": {
+    "type": "variable"
+  },
+  "src\\types\\dashboard_types.py:write_success_pct:49": {
+    "type": "variable"
+  },
+  "src\\ui_enhanced\\alerts_hub.py:push:16": {
+    "type": "method"
+  },
+  "src\\ui_enhanced\\color.py:underline:50": {
+    "type": "variable"
+  },
+  "src\\ui_enhanced\\live_panel.py:market_data:18": {
+    "type": "variable"
+  },
+  "src\\ui_enhanced\\market_status.py:render_line:20": {
+    "type": "method"
+  },
+  "src\\unified_main.py:__getattr__:24": {
+    "type": "function"
+  },
+  "src\\utils\\error_utils.py:try_with_central_handler:14": {
+    "type": "function"
+  },
+  "src\\utils\\expiry_service.py:select_expiries:211": {
+    "type": "function"
+  },
+  "src\\utils\\file_watch_events.py:unsubscribe:36": {
+    "type": "method"
+  },
+  "src\\utils\\logging_utils.py:_g6_close_logging_handlers:311": {
+    "type": "function"
+  },
+  "src\\utils\\market_hours.py:adjust_expiry_for_holiday:248": {
+    "type": "function"
+  },
+  "src\\utils\\memory_manager.py:register_cache:124": {
+    "type": "method"
+  },
+  "src\\utils\\memory_manager.py:with_memory_cleanup:270": {
+    "type": "function"
+  },
+  "src\\utils\\memory_pressure.py:drop_per_option_metrics:332": {
+    "type": "method"
+  },
+  "src\\utils\\memory_pressure.py:effective_strike_window:260": {
+    "type": "method"
+  },
+  "src\\utils\\memory_pressure.py:last_actions:101": {
+    "type": "attribute"
+  },
+  "src\\utils\\memory_pressure.py:last_actions:192": {
+    "type": "attribute"
+  },
+  "src\\utils\\memory_pressure.py:should_reduce_depth:328": {
+    "type": "method"
+  },
+  "src\\utils\\memory_pressure.py:should_skip_greeks:326": {
+    "type": "method"
+  },
+  "src\\utils\\memory_pressure.py:should_slow_cycles:330": {
+    "type": "method"
+  },
+  "src\\utils\\memory_trace.py:ensure_started:70": {
+    "type": "method"
+  },
+  "src\\utils\\metrics_adapter.py:_ProcessorProto:30": {
+    "type": "class"
+  },
+  "src\\utils\\metrics_adapter.py:get_api_latency_ms:129": {
+    "type": "method"
+  },
+  "src\\utils\\metrics_adapter.py:get_api_success_rate_percent:117": {
+    "type": "method"
+  },
+  "src\\utils\\metrics_adapter.py:get_collection_success_rate_percent:141": {
+    "type": "method"
+  },
+  "src\\utils\\metrics_adapter.py:get_cpu_percent:105": {
+    "type": "method"
+  },
+  "src\\utils\\metrics_adapter.py:get_last_cycle_options_sum:177": {
+    "type": "method"
+  },
+  "src\\utils\\metrics_adapter.py:get_memory_usage_mb:93": {
+    "type": "method"
+  },
+  "src\\utils\\metrics_adapter.py:get_options_per_minute:165": {
+    "type": "method"
+  },
+  "src\\utils\\metrics_adapter.py:get_options_processed_total:153": {
+    "type": "method"
+  },
+  "src\\utils\\output.py:add_sink:204": {
+    "type": "method"
+  },
+  "src\\utils\\output.py:panel_extend:299": {
+    "type": "method"
+  },
+  "src\\utils\\overlay_quality.py:validate_csv_header:21": {
+    "type": "function"
+  },
+  "src\\utils\\panel_support.py:obj_type:16": {
+    "type": "variable"
+  },
+  "src\\utils\\panel_support.py:supported:13": {
+    "type": "variable"
+  },
+  "src\\utils\\rate_limiter.py:rate_limited:37": {
+    "type": "function"
+  },
+  "src\\utils\\resilience.py:check_provider:175": {
+    "type": "method"
+  },
+  "src\\utils\\serialization_cache.py:_m_evictions:148": {
+    "type": "attribute"
+  },
+  "src\\utils\\serialization_cache.py:_m_evictions:84": {
+    "type": "attribute"
+  },
+  "src\\utils\\serialization_cache.py:_reset_for_tests:201": {
+    "type": "function"
+  },
+  "src\\utils\\serialization_cache.py:evictions:128": {
+    "type": "attribute"
+  },
+  "src\\utils\\serialization_cache.py:evictions:80": {
+    "type": "attribute"
+  },
+  "src\\utils\\status_reader.py:get_status_age_seconds:160": {
+    "type": "method"
+  },
+  "src\\utils\\status_reader.py:get_typed:142": {
+    "type": "method"
+  },
+  "src\\utils\\status_reader.py:get_typed:144": {
+    "type": "method"
+  },
+  "src\\utils\\status_reader.py:get_typed:146": {
+    "type": "method"
+  },
+  "src\\utils\\strike_index.py:TOL_UNITS:20": {
+    "type": "variable"
+  },
+  "src\\utils\\strike_index.py:describe:58": {
+    "type": "method"
+  },
+  "src\\utils\\strike_index.py:realized_coverage:82": {
+    "type": "method"
+  },
+  "src\\utils\\symbol_utils.py:segment:14": {
+    "type": "variable"
+  },
+  "src\\utils\\symbol_utils.py:segment:34": {
+    "type": "variable"
+  },
+  "src\\utils\\timeutils.py:_at_ist:206": {
+    "type": "function"
+  },
+  "src\\validation\\__init__.py:_debug_dump:68": {
+    "type": "function"
+  },
+  "src\\validation\\__init__.py:list_validators:64": {
+    "type": "function"
+  },
+  "src\\validation\\__init__.py:run_validators:72": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:LOG_PATH:141": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\app.py:MemorySnapshot:29": {
+    "type": "import"
+  },
+  "src\\web\\dashboard\\app.py:SECONDARY_REFRESH:145": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\app.py:_access_log_middleware:305": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:alert_webhook_file:916": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_diag_advisor_integrity:761": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_errors_recent:817": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_memory_gc:561": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_ml_ensemble_k_calibration:981": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_ml_ensemble_quarantine_log:1056": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_ml_ensemble_weights:1018": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_ml_forecast_path:1101": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_unified_cache_stats:602": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_unified_indices:513": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_unified_source_status:537": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:api_unified_status:487": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:health_metrics:863": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:http_exception_handler:353": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:memory_status:246": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:unhandled_exception_handler:381": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\app.py:validation_exception_handler:368": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\core\\config.py:WEB_WORKERS:22": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\debug.py:debug_indices:96": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\debug.py:debug_metric_names:71": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\debug.py:debug_missing:83": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\debug.py:debug_raw_metric:134": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\debug.py:metrics_raw:48": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\metrics_cache.py:unknown_lines:105": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\metrics_cache.py:unknown_lines:98": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\base.py:cache_age_seconds:63": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\base.py:model_config:18": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:BANKNIFTY:11": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:CE:27": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:FINNIFTY:12": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:MIDCPNIFTY:13": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:NEXT_MONTH:22": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:NEXT_WEEK:20": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:NIFTY:10": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:PE:28": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:SENSEX:14": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:THIS_MONTH:21": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\common.py:THIS_WEEK:19": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\requests\\ensemble.py:avg_iv:36": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\requests\\ensemble.py:cache_bust:39": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\requests\\ensemble.py:recent_window_size:38": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\requests\\ensemble.py:validate_horizon:64": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\ensemble.py:validate_offset:41": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\ensemble.py:validate_offset:57": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\live.py:model_config:109": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\requests\\live.py:validate_date_format:88": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\live.py:validate_offset:101": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\overlay.py:validate_offset:20": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\path_forecast.py:validate_offset:128": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\path_forecast.py:validate_offset:143": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\path_forecast.py:validate_offset:24": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\path_forecast.py:validate_offset:53": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\path_forecast.py:validate_offset:74": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\path_forecast.py:validate_offset:99": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\requests\\path_forecast.py:validate_quantiles:106": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:alertname:14": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:commonAnnotations:50": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:commonLabels:49": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:endsAt:36": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:externalURL:51": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:fingerprint:38": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:generatorURL:37": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:groupKey:45": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:groupLabels:48": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:job:17": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:model_config:30": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:receiver:47": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\alerts.py:startsAt:35": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:active_quarantines:99": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:calibration:40": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:convergence_status:33": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:duration_minutes:88": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:error_metrics:34": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:forecast:49": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:k_value:30": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:performance_score:68": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:released:89": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:total_weight:75": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:validate_weights_sum:18": {
+    "type": "method"
+  },
+  "src\\web\\dashboard\\models\\responses\\ensemble.py:weight:65": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\live.py:avg_iv:36": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\live.py:ce_ltp:21": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\live.py:ce_volume:22": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\live.py:model_config:74": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\live.py:pe_ltp:25": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\live.py:pe_volume:26": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:accuracy_metrics:42": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:coverage_rate:121": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:ensemble_weights:43": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:forecasts:85": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:mean_tp:116": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:median_tp:117": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:model_name:38": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:model_version:39": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:period:133": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:prediction_count:124": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:std_tp:118": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\path_forecast.py:timestamps:79": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\system.py:UNHEALTHY:15": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\system.py:function:68": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\system.py:last_checked:48": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\system.py:last_error:75": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\system.py:last_error_time:76": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\system.py:last_update:36": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\models\\responses\\system.py:metrics_available:24": {
+    "type": "variable"
+  },
+  "src\\web\\dashboard\\routes\\advisor.py:api_ml_universal_advisor:15": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\advisor.py:api_ml_universal_advisor_generated_at_age_minutes:72": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\advisor.py:api_ml_universal_advisor_health:46": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\live.py:api_live_csv:41": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_correlations:779": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_delta:685": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_diagnostics:1260": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_ensemble:228": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_ensemble_k_applied:464": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_ensemble_k_calibration:411": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_ensemble_k_override:541": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_ensemble_k_overrides:641": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_ensemble_quarantine_log:341": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_ensemble_weights:286": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_model_matrix:957": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_move_stats:2295": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_move_stats_archive:2421": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\ml.py:api_ml_predictions:59": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\overlay.py:_parse_time_any:17": {
+    "type": "import"
+  },
+  "src\\web\\dashboard\\routes\\overlay.py:api_overlay:49": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\__init__.py:__dir__:20": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\__init__.py:__getattr__:16": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:_archive_bands:28": {
+    "type": "import"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:_archive_config:28": {
+    "type": "import"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:_archive_q50:28": {
+    "type": "import"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_advisor_flags:766": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_calibrate:825": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_calibrate_now:800": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_calibration_history:851": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_coverage_history_csv:734": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_diagnostics:605": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_forecast_json:537": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_forecast_meta:357": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_prediction_history:292": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_prediction_history_csv:328": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_path_stats:634": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_reset_defaults:404": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\path_forecast\\_router.py:api_ml_tp_series:458": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\system.py:api_info:41": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\system.py:api_stats:143": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\system.py:api_sync_check:89": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\system.py:api_version:62": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\system.py:healthz:31": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\routes\\system.py:metrics_json:165": {
+    "type": "function"
+  },
+  "src\\web\\dashboard\\services\\forecast_core.py:forecast_path_core:63": {
+    "type": "function"
+  }
+}

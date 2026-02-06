@@ -9,6 +9,16 @@ import logging
 import os
 import time as _time
 
+from src.config.env_config import EnvConfig
+from src.utils.index_quote_instruments import get_index_quote_instrument
+from src.provider.errors import (
+    ProviderAuthError,
+    ProviderFatalError,
+    ProviderRecoverableError,
+    ProviderTimeoutError,
+    classify_provider_exception,
+)
+
 from src.metrics.generated import (
     m_api_calls_total_labels,
     m_api_response_latency_ms,
@@ -23,7 +33,7 @@ try:
     from src.broker.kite_provider import is_concise_logging as _is_concise_logging  # type: ignore
 except ImportError:  # pragma: no cover
     def _is_concise_logging():  # type: ignore
-        return os.environ.get('G6_CONCISE_LOGS', '1').lower() not in ('0','false','no','off')
+        return EnvConfig.get_bool('G6_CONCISE_LOGS', True)
 try:  # Prometheus client optional during some tests
     from prometheus_client import Counter as _C
     from prometheus_client import Histogram as _H
@@ -47,6 +57,29 @@ logger = logging.getLogger(__name__)
 
 # Global concise mode detection delegated to provider helper
 _CONCISE = _is_concise_logging()
+
+
+def _synthetic_fallback_enabled() -> bool:
+    """Whether provider-facing facades may return best-effort placeholders.
+
+    Default is enabled to preserve existing behavior in mock/no-API environments.
+    Disable by setting `G6_PROVIDER_SYNTHETIC_FALLBACK=0` to surface real failures.
+    """
+    try:
+        return EnvConfig.get_bool('G6_PROVIDER_SYNTHETIC_FALLBACK', True)
+    except Exception:  # pragma: no cover
+        return True
+
+
+def _raise_provider_error(e: BaseException) -> None:
+    err_cls = classify_provider_exception(e)
+    if err_cls is ProviderAuthError:
+        raise ProviderAuthError(str(e)) from e
+    if err_cls is ProviderTimeoutError:
+        raise ProviderTimeoutError(str(e)) from e
+    if err_cls is ProviderRecoverableError:
+        raise ProviderRecoverableError(str(e)) from e
+    raise ProviderFatalError(str(e)) from e
 
 def _safe_inc(lbl, amount=1):  # helper to tolerate label None or unexpected metric type
     try:
@@ -100,25 +133,22 @@ class Providers:
         Returns:
             Tuple of (price, ohlc_data)
         """
+        allow_synth = _synthetic_fallback_enabled()
         try:
-            # Format for Quote API
+            # Format for Quote API (canonicalized in src.utils.index_quote_instruments)
+            inst = get_index_quote_instrument(index_symbol)
+            instruments = [inst]
             if index_symbol == "NIFTY":
-                instruments = [("NSE", "NIFTY 50")]
                 self.logger.debug("INDEX_PATH mapping=NIFTY use_quote_endpoint")
             elif index_symbol == "BANKNIFTY":
-                instruments = [("NSE", "NIFTY BANK")]
                 self.logger.debug("INDEX_PATH mapping=BANKNIFTY use_quote_endpoint")
             elif index_symbol == "FINNIFTY":
-                instruments = [("NSE", "NIFTY FIN SERVICE")]
                 self.logger.debug("INDEX_PATH mapping=FINNIFTY use_quote_endpoint")
             elif index_symbol == "MIDCPNIFTY":
-                instruments = [("NSE", "NIFTY MIDCAP SELECT")]
                 self.logger.debug("INDEX_PATH mapping=MIDCPNIFTY use_quote_endpoint")
             elif index_symbol == "SENSEX":
-                instruments = [("BSE", "SENSEX")]
                 self.logger.debug("INDEX_PATH mapping=SENSEX use_quote_endpoint")
             else:
-                instruments = [("NSE", index_symbol)]
                 self.logger.debug("INDEX_PATH mapping=GENERIC symbol=%s", index_symbol)
 
             # Get quote from primary provider (includes OHLC) if available
@@ -129,10 +159,14 @@ class Providers:
                     quotes = self.primary_provider.get_quote(instruments)  # type: ignore
                 except Exception as qe:
                     self.logger.warning("get_quote failed, will fallback to LTP: %s", qe)
+                    if not allow_synth:
+                        _raise_provider_error(qe)
             else:
                 # Avoid noisy error spam; debug is sufficient because we can fallback to LTP
                 if not self.primary_provider:
                     self.logger.error("Primary provider not initialized")
+                    if not allow_synth:
+                        raise ProviderRecoverableError("primary_provider_unavailable")
                     return 0, {}
                 self.logger.debug("Primary provider missing get_quote, using LTP fallback")
 
@@ -148,33 +182,41 @@ class Providers:
                         )
                     except (AttributeError, TypeError):
                         pass
-                    # Synthetic fallback price injection (single pass) to keep pipeline moving
-                    synth_map = {
-                        'NIFTY': 24800.0,
-                        'BANKNIFTY': 54000.0,
-                        'FINNIFTY': 26000.0,
-                        'MIDCPNIFTY': 12000.0,
-                        'SENSEX': 81000.0,
-                    }
-                    if index_symbol in synth_map:
-                        price = synth_map[index_symbol]
-                        if isinstance(ohlc, dict) and not ohlc:
-                            # Provide minimal OHLC so downstream doesn't misinterpret emptiness as data absence
-                            base = price
-                            ohlc = {'open': base, 'high': base * 1.001, 'low': base * 0.999, 'close': base}
-                        self.logger.debug("Injected synthetic index price for %s: %s", index_symbol, price)
-                        lbl = m_index_zero_price_fallback_total_labels(index_symbol, 'quote')
-                        _safe_inc(lbl)
+                    if allow_synth:
+                        # Synthetic fallback price injection (single pass) to keep pipeline moving
+                        synth_map = {
+                            'NIFTY': 24800.0,
+                            'BANKNIFTY': 54000.0,
+                            'FINNIFTY': 26000.0,
+                            'MIDCPNIFTY': 12000.0,
+                            'SENSEX': 81000.0,
+                        }
+                        if index_symbol in synth_map:
+                            price = synth_map[index_symbol]
+                            if isinstance(ohlc, dict) and not ohlc:
+                                # Provide minimal OHLC so downstream doesn't misinterpret emptiness as data absence
+                                base = price
+                                ohlc = {'open': base, 'high': base * 1.001, 'low': base * 0.999, 'close': base}
+                            self.logger.debug("Injected synthetic index price for %s: %s", index_symbol, price)
+                            lbl = m_index_zero_price_fallback_total_labels(index_symbol, 'quote')
+                            _safe_inc(lbl)
+                    else:
+                        # Strict mode: do not return synthetic values; fall through to LTP path.
+                        break
 
                 if _CONCISE:
                     self.logger.debug("Index data for %s: Price=%s, OHLC=%s", index_symbol, price, ohlc)
                 else:
                     self.logger.info("Index data for %s: Price=%s, OHLC=%s", index_symbol, price, ohlc)
-                return price, ohlc
+                if isinstance(price, (int, float)) and price > 0:
+                    return price, ohlc
+                # else: strict mode with zero price -> attempt LTP fallback
 
             # Fall back to LTP if quote doesn't have OHLC
             if not self.primary_provider or not hasattr(self.primary_provider, 'get_ltp'):
                 self.logger.error("Primary provider not initialized or missing get_ltp for fallback")
+                if not allow_synth:
+                    raise ProviderRecoverableError("primary_provider_missing_get_ltp")
                 return 0, {}
             self.logger.debug("INDEX_PATH attempt=get_ltp provider=%s", type(self.primary_provider).__name__)
             ltp_data = {}
@@ -182,6 +224,8 @@ class Providers:
                 ltp_data = self.primary_provider.get_ltp(instruments)  # type: ignore
             except Exception as le:
                 self.logger.error("get_ltp fallback failed: %s", le)
+                if not allow_synth:
+                    _raise_provider_error(le)
                 return 0, {}
 
             for key, data in ltp_data.items():
@@ -192,25 +236,32 @@ class Providers:
                     except (AttributeError, TypeError):
                         # Logging failed due to attribute/type issues, not critical
                         pass
-                    synth_map = {
-                        'NIFTY': 24800.0,
-                        'BANKNIFTY': 54000.0,
-                        'FINNIFTY': 26000.0,
-                        'MIDCPNIFTY': 12000.0,
-                        'SENSEX': 81000.0,
-                    }
-                    if index_symbol in synth_map:
-                        price = synth_map[index_symbol]
-                        self.logger.debug("Injected synthetic LTP for %s: %s", index_symbol, price)
-                        lbl = m_index_zero_price_fallback_total_labels(index_symbol, 'ltp')
-                        _safe_inc(lbl)
+                    if allow_synth:
+                        synth_map = {
+                            'NIFTY': 24800.0,
+                            'BANKNIFTY': 54000.0,
+                            'FINNIFTY': 26000.0,
+                            'MIDCPNIFTY': 12000.0,
+                            'SENSEX': 81000.0,
+                        }
+                        if index_symbol in synth_map:
+                            price = synth_map[index_symbol]
+                            self.logger.debug("Injected synthetic LTP for %s: %s", index_symbol, price)
+                            lbl = m_index_zero_price_fallback_total_labels(index_symbol, 'ltp')
+                            _safe_inc(lbl)
+                    else:
+                        # Strict mode: keep searching for a valid price.
+                        continue
                 if _CONCISE:
                     self.logger.debug("LTP for %s: %s", index_symbol, price)
                 else:
                     self.logger.info("LTP for %s: %s", index_symbol, price)
-                return price, {}
+                if isinstance(price, (int, float)) and price > 0:
+                    return price, {}
 
             self.logger.error("No index data returned for %s", index_symbol)
+            if not allow_synth:
+                raise ProviderRecoverableError(f"index_price_unavailable:{index_symbol}")
             return 0, {}
 
         except Exception as e:
@@ -220,6 +271,8 @@ class Providers:
             except (AttributeError, TypeError):
                 # Logging failed due to attribute/type issues, not critical
                 pass
+            if not allow_synth:
+                _raise_provider_error(e)
             return 0, {}
 
     def get_ltp(self, index_symbol):
@@ -232,9 +285,16 @@ class Providers:
         Returns:
             Float: Last traded price
         """
+        allow_synth = _synthetic_fallback_enabled()
         try:
             # Get index price and OHLC
             price, _ = self.get_index_data(index_symbol)
+
+            if not isinstance(price, (int, float)) or float(price) <= 0:
+                if not allow_synth:
+                    raise ProviderRecoverableError(f"index_price_unavailable:{index_symbol}")
+                # Preserve legacy fallback behavior
+                price = 0
 
             # Calculate ATM strike based on index
             if index_symbol in ["BANKNIFTY", "SENSEX"]:
@@ -255,18 +315,28 @@ class Providers:
 
         except Exception as e:
             self.logger.error("Error getting LTP: %s", e)
+            if not allow_synth:
+                _raise_provider_error(e)
             return 20000 if index_symbol == "BANKNIFTY" else 22000
 
-    def get_atm_strike(self, index_symbol: str):
+    def get_atm_strike(self, index_symbol: str, ltp: float | None = None):
         """Return an approximate ATM strike for the index.
 
         Reuses get_ltp rounding logic (already produces the rounded strike).
         Provided for analytics compatibility (OptionChainAnalytics expects this).
         """
         try:
+            if isinstance(ltp, (int, float)) and float(ltp) > 0:
+                try:
+                    step = 100.0 if index_symbol in ["BANKNIFTY", "SENSEX"] else 50.0
+                    return round(float(ltp) / step) * step
+                except Exception:
+                    pass
             return self.get_ltp(index_symbol)
         except Exception as e:  # pragma: no cover
             self.logger.error("Error computing ATM strike: %s", e)
+            if not _synthetic_fallback_enabled():
+                _raise_provider_error(e)
             return 0
 
     # ---- Compatibility aliases expected by analytics modules ----
@@ -282,6 +352,8 @@ class Providers:
             return self.get_option_instruments(index_symbol, expiry_date, strikes)
         except Exception as e:  # pragma: no cover
             self.logger.error("option_instruments alias failure: %s", e)
+            if not _synthetic_fallback_enabled():
+                _raise_provider_error(e)
             return []
 
     def resolve_expiry(self, index_symbol, expiry_rule):
@@ -302,6 +374,7 @@ class Providers:
             self.logger.error("Failed to import universal expiry selector: %s", _e)
             raise ResolveExpiryError("Expiry selector unavailable")
 
+        allow_synth = _synthetic_fallback_enabled()
         try:
             # 1) Native resolver on provider, if available
             if self.primary_provider and hasattr(self.primary_provider, 'resolve_expiry'):
@@ -322,8 +395,11 @@ class Providers:
             try:
                 if self.primary_provider and hasattr(self.primary_provider, 'get_expiry_dates'):
                     candidates = list(self.primary_provider.get_expiry_dates(index_symbol))  # type: ignore[attr-defined]
-            except (AttributeError, TypeError, ValueError):
-                # Provider call failed or returned invalid data
+            except Exception as e:
+                # Provider call failed or returned invalid data.
+                # Strict mode: do not proceed on fatal provider errors.
+                if not allow_synth and classify_provider_exception(e) is ProviderFatalError:
+                    raise
                 candidates = []
 
             if candidates:
@@ -337,6 +413,8 @@ class Providers:
         except ResolveExpiryError:
             raise
         except Exception as e:  # pragma: no cover - defensive
+            if not allow_synth and classify_provider_exception(e) is ProviderFatalError:
+                raise
             self.logger.error("Error resolving expiry (universal): %s", e)
             lbl = m_expiry_resolve_fail_total_labels(index_symbol, str(expiry_rule).lower(), 'exception')
             _safe_inc(lbl)
@@ -354,32 +432,36 @@ class Providers:
         Returns:
             List of option instruments
         """
+        allow_synth = _synthetic_fallback_enabled()
         try:
+            if not self.primary_provider:
+                if not allow_synth:
+                    raise ProviderRecoverableError("primary_provider_unavailable")
+                self.logger.error("Primary provider not initialized")
+                return []
+
             # Try get_option_instruments first
             if hasattr(self.primary_provider, 'get_option_instruments'):
-                if not self.primary_provider or not hasattr(self.primary_provider, 'get_option_instruments'):
-                    self.logger.error("Primary provider missing get_option_instruments")
-                    return []
                 instruments = self.primary_provider.get_option_instruments(index_symbol, expiry_date, strikes)  # type: ignore
                 if instruments:
                     return instruments
 
             # Fallback to option_instruments if available
             if hasattr(self.primary_provider, 'option_instruments'):
-                if not self.primary_provider or not hasattr(self.primary_provider, 'option_instruments'):
-                    self.logger.error("Primary provider missing option_instruments")
-                    return []
                 instruments = self.primary_provider.option_instruments(index_symbol, expiry_date, strikes)  # type: ignore
                 if instruments:
                     return instruments
 
-            self.logger.error("Error getting option instruments from primary provider")
-
-            # Emergency fallback - return empty list
+            # No supported method
+            self.logger.error("Primary provider missing option instrument capability")
+            if not allow_synth:
+                raise ProviderRecoverableError("primary_provider_missing_option_instruments")
             return []
 
         except Exception as e:
             self.logger.error("Error getting option instruments: %s", e)
+            if not _synthetic_fallback_enabled():
+                _raise_provider_error(e)
             return []
 
     def get_quote(self, instruments):
@@ -392,15 +474,22 @@ class Providers:
         Returns:
             Dict of quotes keyed by "exchange:symbol"
         """
+        allow_synth = _synthetic_fallback_enabled()
         try:
+            if not self.primary_provider:
+                if not allow_synth:
+                    raise ProviderRecoverableError("primary_provider_unavailable")
+                self.logger.error("Primary provider not initialized")
+                return {}
             if hasattr(self.primary_provider, 'get_quote'):
-                if not self.primary_provider or not hasattr(self.primary_provider, 'get_quote'):
-                    self.logger.error("Primary provider missing get_quote for index quotes")
-                    return {}
                 return self.primary_provider.get_quote(instruments)  # type: ignore
+            if not allow_synth:
+                raise ProviderRecoverableError("primary_provider_missing_get_quote")
             return {}
         except Exception as e:
             self.logger.error("Error getting quotes: %s", e)
+            if not _synthetic_fallback_enabled():
+                _raise_provider_error(e)
             return {}
 
     def enrich_with_quotes(self, instruments):
@@ -505,7 +594,7 @@ class Providers:
                             lm = m_quote_missing_volume_oi_total_labels(prov); _safe_inc(lm, missing_volume_oi)
                         if avg_price_fallback:
                             lf = m_quote_avg_price_fallback_total_labels(prov); _safe_inc(lf, avg_price_fallback)
-                    if os.environ.get('G6_PROVIDER_METRICS_DEBUG'):
+                    if EnvConfig.get_bool('G6_PROVIDER_METRICS_DEBUG', False):
                         self.logger.debug(
                             "[prov-metrics] enriched_count=%s missing_vol_oi=%s avg_price_fb=%s provider=%s", enriched_count, missing_volume_oi, avg_price_fallback, prov
                         )
@@ -516,6 +605,8 @@ class Providers:
             import traceback
             tb = traceback.format_exc(limit=2)
             self.logger.error("Error enriching instruments with quotes: %s tb=%s", e, tb.strip().replace('\n', ' | '))
+            if not _synthetic_fallback_enabled():
+                _raise_provider_error(e)
             basic_data = {}
             for instrument in instruments:
                 symbol = instrument.get('tradingsymbol', '')

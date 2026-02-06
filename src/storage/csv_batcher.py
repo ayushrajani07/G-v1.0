@@ -6,10 +6,11 @@ Handles row batching, buffer management, and flush strategies for optimized I/O.
 
 from __future__ import annotations
 
-import csv
 import os
 import sys
 from typing import Any
+
+from src.storage.csvio import api as csvio_api
 
 
 class CsvBatcher:
@@ -157,7 +158,7 @@ class CsvBatcher:
                     # Log error but continue flushing other files
                     try:
                         self.logger.error("Failed to flush batch to %s: %s", filepath, e)
-                    except Exception as log_err:
+                    except (OSError, IOError, ValueError, TypeError, AttributeError, RuntimeError) as log_err:
                         # Critical: flush failed AND logging failed - use stderr fallback
                         print(f"CRITICAL: Batch flush failed for {filepath}: {e} (logging also failed: {log_err})", file=sys.stderr)
                     continue
@@ -180,7 +181,7 @@ class CsvBatcher:
                     # Metrics emission failed - log warning but don't crash
                     try:
                         self.logger.warning("Metrics emission failed for batch %s: %s", batch_key, e)
-                    except Exception:
+                    except (OSError, IOError, ValueError, TypeError, AttributeError, RuntimeError):
                         # Even warning logging failed, but metrics are not critical
                         pass
             
@@ -192,7 +193,7 @@ class CsvBatcher:
         except OSError as e:
             try:
                 self.logger.error("Batch flush failed for %s: %s", batch_key, e)
-            except Exception as log_err:
+            except (OSError, IOError, ValueError, TypeError, AttributeError, RuntimeError) as log_err:
                 # Critical: top-level flush failed AND logging failed - use stderr fallback
                 print(f"CRITICAL: Batch flush failed for {batch_key}: {e} (logging also failed: {log_err})", file=sys.stderr)
             return False
@@ -242,12 +243,12 @@ class CsvBatcher:
             try:
                 if self.maybe_flush_batch(batch_key=batch_key, force_flush_env=True):
                     flushed_count += 1
-            except Exception as e:
+            except (OSError, IOError, ValueError, TypeError, RuntimeError) as e:
                 # Critical: shutdown flush failure - log each failed batch
                 failed_batches.append((batch_key, str(e)))
                 try:
                     self.logger.error("Shutdown flush failed for batch %s: %s", batch_key, e)
-                except Exception as log_err:
+                except (OSError, IOError, ValueError, TypeError, AttributeError, RuntimeError) as log_err:
                     # Logging failed - use stderr as absolute fallback
                     print(f"CRITICAL: Shutdown flush failed for {batch_key}: {e} (logging failed: {log_err})", file=sys.stderr)
                 continue
@@ -257,7 +258,7 @@ class CsvBatcher:
             try:
                 self.logger.error("Shutdown completed with %d batch failures out of %d total batches", 
                                 len(failed_batches), len(self._batch_buffers) + flushed_count)
-            except Exception:
+            except (OSError, IOError, ValueError, TypeError, AttributeError, RuntimeError):
                 print(f"CRITICAL: {len(failed_batches)} batches failed to flush during shutdown", file=sys.stderr)
         
         return flushed_count
@@ -270,10 +271,7 @@ class CsvBatcher:
         rows: list[list[Any]],
         header: list[str] | None
     ) -> None:
-        """Write multiple rows to CSV file atomically.
-        
-        This is a temporary implementation. In production, this will delegate
-        to CsvWriter.append_many_rows() to avoid code duplication.
+        """Write multiple rows to CSV file via CSVIO.
         
         Args:
             filepath: Target CSV file path
@@ -283,13 +281,17 @@ class CsvBatcher:
         Side Effects:
             Appends rows to CSV file
         """
-        # Write rows atomically
-        with open(filepath, 'a', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            
-            # Write header if provided
-            if header:
-                writer.writerow(header)
-            
-            # Write all rows
-            writer.writerows(rows)
+        try:
+            csvio_api.append_many(filepath, rows, header)
+        except (OSError, IOError, ValueError, TypeError) as e:
+            try:
+                self.logger.error("Failed to write batch CSV rows to %s: %s", filepath, e)
+            except (OSError, IOError, ValueError, TypeError, AttributeError, RuntimeError):
+                print(f"CRITICAL: Failed to write batch CSV rows to {filepath}: {e}", file=sys.stderr)
+            raise
+        except (RuntimeError, AttributeError, KeyError) as e:
+            try:
+                self.logger.error("Unexpected error writing batch CSV rows to %s: %s", filepath, e)
+            except (OSError, IOError, ValueError, TypeError, AttributeError, RuntimeError):
+                print(f"CRITICAL: Unexpected error writing batch CSV rows to {filepath}: {e}", file=sys.stderr)
+            raise

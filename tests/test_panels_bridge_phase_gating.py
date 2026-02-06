@@ -1,10 +1,10 @@
-"""Historical legacy panels bridge phase gating tests.
+"""Historical compatibility placeholder.
 
-Replaced by no-op stub after bridge removal.
-Will be dropped entirely in follow-up cleanup.
+Kept as a module-level skip to preserve test naming stability across forks.
 """
 
 from __future__ import annotations
 
-def test_panels_bridge_phase_gating_stub():
-    assert True
+import pytest
+
+pytest.skip("compat placeholder; legacy panels bridge fully removed", allow_module_level=True)

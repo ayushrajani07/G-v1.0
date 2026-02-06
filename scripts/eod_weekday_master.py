@@ -46,7 +46,7 @@ try:
 except Exception:
     pass
 
-from external.G6_.archived.scripts.weekday_overlay import (  # type: ignore[import-not-found]
+from scripts.weekday_overlay import (
     INDEX_DEFAULT,
     WEEKDAY_NAMES,
     _normalize_indices,

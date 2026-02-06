@@ -290,7 +290,7 @@ class HealthMonitor:
             bool: True if all components and checks are healthy
         """
         # Check components
-        for name, data in self.components.items():
+        for data in self.components.values():
             if data['status'] != 'healthy':
                 return False
 

@@ -16,6 +16,7 @@ from collections.abc import Callable
 
 from src.config.env_config import EnvConfig
 from src.orchestrator.context import RuntimeContext
+from src.utils.exceptions import APIError, G6Exception, RetryError
 from src.utils.env_flags import is_truthy_env  # type: ignore
 
 try:  # optional gating utilities (early slice)
@@ -26,6 +27,50 @@ except (ImportError, AttributeError):  # pragma: no cover
         return False
 
 logger = logging.getLogger(__name__)
+
+
+def _is_likely_network_error(e: BaseException) -> bool:
+    """Best-effort classification for transient connectivity/API failures.
+
+    Goal: keep the loop alive and apply a reconnection backoff when the upstream
+    API is unreachable (WiFi drop, ISP hiccup, provider timeout).
+    """
+    if isinstance(e, (RetryError, APIError)):
+        return True
+    msg = str(e).lower()
+    if any(s in msg for s in ("timed out", "timeout", "temporarily", "connection", "dns", "name or service not known")):
+        return True
+    # Walk causes (requests/urllib3 exceptions often live in __cause__)
+    cur: BaseException | None = e  # type: ignore[assignment]
+    for _ in range(6):
+        if cur is None:
+            break
+        if isinstance(cur, (RetryError, APIError)):
+            return True
+        cmsg = str(cur).lower()
+        if any(s in cmsg for s in ("read timed out", "connect timeout", "connection aborted", "connection reset")):
+            return True
+        cur = getattr(cur, "__cause__", None)
+    return False
+
+
+def _compute_backoff_seconds(streak: int) -> float:
+    """Compute extra sleep for consecutive transient failures.
+
+    Controlled by:
+    - G6_LOOP_ERROR_BACKOFF_BASE_SEC (default 5)
+    - G6_LOOP_ERROR_BACKOFF_MAX_SEC (default 60)
+    """
+    base = EnvConfig.get_float("G6_LOOP_ERROR_BACKOFF_BASE_SEC", 5.0)
+    cap = EnvConfig.get_float("G6_LOOP_ERROR_BACKOFF_MAX_SEC", 60.0)
+    if base <= 0 or cap <= 0 or streak <= 0:
+        return 0.0
+    # Exponential with cap: base, 2*base, 4*base, ...
+    try:
+        backoff = base * (2 ** max(0, int(streak) - 1))
+    except (OverflowError, ValueError, TypeError):
+        backoff = base
+    return float(min(cap, max(0.0, backoff)))
 
 
 def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None], interval: float) -> None:
@@ -55,6 +100,8 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
             # Handle integer conversion failures
             logger.warning("[loop] Invalid G6_LOOP_MAX_CYCLES=%r (must be int)", max_cycles_raw)
     executed_cycles = 0
+    consecutive_failures = 0
+    last_failure_was_network = False
     try:
         while not ctx.shutdown:
             start = time.time()
@@ -64,6 +111,8 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
                 else:
                     cycle_fn(ctx)
                     executed_cycles += 1
+                    consecutive_failures = 0
+                    last_failure_was_network = False
                     if max_cycles is not None and executed_cycles >= max_cycles:
                         logger.info("[loop] Reached max cycles (%s) -> terminating", max_cycles)
                         break
@@ -71,11 +120,32 @@ def run_loop(ctx: RuntimeContext, *, cycle_fn: Callable[[RuntimeContext], None],
                 logger.info("[loop] KeyboardInterrupt received inside cycle; initiating shutdown")
                 ctx.shutdown = True  # type: ignore[attr-defined]
                 break
-            except (AttributeError, TypeError, ValueError, RuntimeError, OSError) as e:  # noqa
-                # Handle cycle function failures
-                logger.exception("Cycle execution failed")
+            except SystemExit:
+                # Preserve explicit exit semantics (used by some legacy abort policies).
+                raise
+            except BaseException as e:  # noqa
+                if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                    raise
+                # Never allow transient errors (e.g., internet drop) to terminate the loop.
+                consecutive_failures += 1
+                last_failure_was_network = _is_likely_network_error(e)
+                if last_failure_was_network:
+                    logger.warning(
+                        "[loop] Cycle failed due to network/provider error (streak=%s). Will keep running.",
+                        consecutive_failures,
+                        exc_info=True,
+                    )
+                elif isinstance(e, G6Exception):
+                    logger.exception("[loop] Cycle failed (G6Exception)")
+                else:
+                    logger.exception("[loop] Cycle execution failed")
             elapsed = time.time() - start
             sleep_for = max(0.0, interval - elapsed)
+            if consecutive_failures and sleep_for >= 0:
+                # Add extra backoff only for likely network errors.
+                # This avoids tight retry loops when the internet is down.
+                if last_failure_was_network:
+                    sleep_for += _compute_backoff_seconds(consecutive_failures)
             try:
                 if sleep_for:
                     time.sleep(sleep_for)

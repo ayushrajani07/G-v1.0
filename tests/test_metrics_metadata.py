@@ -6,8 +6,8 @@ try:
 except ImportError:
     _get_metrics_metadata_import = None  # type: ignore
 
-@pytest.mark.skipif(os.getenv('G6_EGRESS_FROZEN','').lower() in {'1','true','yes','on'}, reason='panel diff egress frozen')
-def test_dump_metrics_metadata_structure():
+def test_dump_metrics_metadata_structure(monkeypatch):
+    monkeypatch.delenv('G6_EGRESS_FROZEN', raising=False)
     # Use a fresh singleton to avoid prior test pollution
     os.environ.pop('G6_ENABLE_METRIC_GROUPS', None)
     os.environ.pop('G6_DISABLE_METRIC_GROUPS', None)
@@ -33,8 +33,8 @@ def test_dump_metrics_metadata_structure():
     assert found >= 3  # tolerate gating/env differences but require majority
 
 
-@pytest.mark.skipif(os.getenv('G6_EGRESS_FROZEN','').lower() in {'1','true','yes','on'}, reason='panel diff egress frozen')
 def test_dump_metrics_metadata_respects_filters(monkeypatch, metrics_port):
+    monkeypatch.delenv('G6_EGRESS_FROZEN', raising=False)
     # Enable only a narrow subset of groups, verify others absent
     monkeypatch.setenv('G6_ENABLE_METRIC_GROUPS', 'panel_diff,provider_failover')
     # Clear singleton so new env takes effect
@@ -53,8 +53,8 @@ def test_dump_metrics_metadata_respects_filters(monkeypatch, metrics_port):
     assert 'risk_agg_rows' not in groups
 
 
-@pytest.mark.skipif(os.getenv('G6_EGRESS_FROZEN','').lower() in {'1','true','yes','on'}, reason='panel diff egress frozen')
 def test_dump_metrics_metadata_disable_filter(monkeypatch, metrics_port):
+    monkeypatch.delenv('G6_EGRESS_FROZEN', raising=False)
     # Disable a specific group
     monkeypatch.setenv('G6_DISABLE_METRIC_GROUPS', 'panel_diff')
     from src.metrics import setup_metrics_server  # facade import

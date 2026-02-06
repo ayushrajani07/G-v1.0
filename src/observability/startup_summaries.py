@@ -68,7 +68,9 @@ def emit_and_register_summary(name: str, emitter: Callable[[], bool]) -> bool:
         return False
     try:
         emitted = bool(emitter())
-    except Exception:  # pragma: no cover - defensive path
+    except BaseException as e:  # pragma: no cover - defensive path
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         logger.debug("summary_emitter_failed immediate name=%s", name, exc_info=True)
         emitted = False
     register_or_note_summary(name, emitted=emitted)
@@ -87,7 +89,9 @@ def emit_all_summaries(include_composite: bool = True) -> None:
         try:
             emitted = fn()
             _EMITTED[name] = bool(emitted)
-        except Exception:  # pragma: no cover
+        except BaseException as e:  # pragma: no cover
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             logger.debug("summary_emitter_failed name=%s", name, exc_info=True)
             _EMITTED[name] = False
     # Backstop: ensure metrics.registry summary structured line exists once even if
@@ -97,25 +101,27 @@ def emit_all_summaries(include_composite: bool = True) -> None:
             try:
                 from prometheus_client import REGISTRY as _R  # type: ignore
                 fam_count = len(list(_R.collect()))
-            except Exception:
+            except (ImportError, AttributeError, TypeError, RuntimeError, ValueError):
                 fam_count = -1
             strict = 0
             try:
                 from src.utils.env_flags import is_truthy_env as _is_truthy
                 strict = int(_is_truthy('G6_METRICS_STRICT_EXCEPTIONS'))
-            except Exception:
+            except (ImportError, AttributeError, TypeError, ValueError, RuntimeError):
                 strict = 0
             try:
-                from src.metrics.metrics import ALWAYS_ON_GROUPS as _AOG  # type: ignore
+                from src.metrics import ALWAYS_ON_GROUPS as _AOG  # type: ignore
                 always_on = len(_AOG)
-            except Exception:
+            except (ImportError, AttributeError, TypeError, ValueError, RuntimeError):
                 always_on = 0
             logging.getLogger('src.metrics.metrics').info(
                 'metrics.registry.summary families=%s always_on_groups=%s prof_total_ms=%s strict=%s',
                 fam_count, always_on, None, strict
             )
             _EMITTED['metrics.registry'] = True
-    except Exception:  # pragma: no cover - non-critical backstop
+    except BaseException as e:  # pragma: no cover - non-critical backstop
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         pass
     if include_composite and not _COMPOSITE_EMITTED:
         try:
@@ -123,7 +129,9 @@ def emit_all_summaries(include_composite: bool = True) -> None:
             composite = hashlib.sha256('|'.join(ordered).encode('utf-8')).hexdigest()[:24]
             logger.info("startup.summaries.hash count=%s composite=%s ts=%s", len(ordered), composite, int(time.time()))
             _COMPOSITE_EMITTED = True
-        except Exception:  # pragma: no cover
+        except BaseException as e:  # pragma: no cover
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             pass
 
 # --- Test / internal utilities (not part of production public API) ---
@@ -158,7 +166,9 @@ def _force_emit_env_deprecations_summary() -> bool:  # pragma: no cover - determ
                 emitted = fn()
                 _EMITTED[name] = bool(emitted)
                 return emitted
-            except Exception:
+            except BaseException as e:
+                if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                    raise
                 logger.debug("env_deprecations_force_emit_failed", exc_info=True)
                 return False
     return False

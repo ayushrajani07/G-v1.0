@@ -39,18 +39,24 @@ class AsyncProviders:
         # Try quote first
         try:
             quotes = await self.primary_provider.get_quote(instruments)
-            for _, q in quotes.items():
+            for q in quotes.values():
                 return q.get('last_price', 0), q.get('ohlc', {})
-        except Exception as e:
+        except BaseException as e:
+            import asyncio
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                raise
             handle_provider_error(e, component="collectors.async_providers", index_name=index_symbol)
             logger.debug("async get_quote failed, fallback to LTP: %s", e)
 
         # Fallback to LTP
         try:
             ltp_map = await self.primary_provider.get_ltp(instruments)
-            for _, d in ltp_map.items():
+            for d in ltp_map.values():
                 return d.get('last_price', 0), {}
-        except Exception as e:
+        except BaseException as e:
+            import asyncio
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                raise
             handle_provider_error(e, component="collectors.async_providers", index_name=index_symbol)
             logger.error("async get_ltp fallback failed: %s", e)
         return 0, {}

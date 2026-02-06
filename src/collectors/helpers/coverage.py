@@ -58,21 +58,28 @@ def coverage_metrics(ctx, instruments: Iterable[dict[str, Any]], strikes, index_
         if metrics and hasattr(metrics, 'instrument_coverage_pct'):
             try:
                 metrics.instrument_coverage_pct.labels(index=index_symbol, expiry=str(expiry_date)).set(coverage_ratio * 100.0)
-            except (AttributeError, TypeError, ValueError) as e:
+            except BaseException as e:
+                import asyncio
+                if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                    raise
                 logger.debug("Failed to set instrument coverage metric: %s", e, exc_info=True)
         return coverage_ratio
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.debug("Coverage diagnostics failed: %s", e, exc_info=True)
         return None
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
+        # Never raise from diagnostics helpers; callers/tests expect best-effort behavior.
         logger.critical("Unexpected coverage diagnostics error: %s", e, exc_info=True)
-        raise
+        return None
 
 def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str, expiry_rule: str, expiry_date):  # side effects only; returns full-field coverage ratio (0..1)
     try:
         missing_counts = {'volume':0,'oi':0,'avg_price':0}
         total_options = 0
-        for _sym, opt in enriched_data.items():
+        for opt in enriched_data.values():
             if not isinstance(opt, dict):
                 continue
             total_options += 1
@@ -86,14 +93,24 @@ def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str
                     if cnt > 0:
                         try:
                             metrics.missing_option_fields_total.labels(index=index_symbol, expiry=str(expiry_date), field=field).inc(cnt)
-                        except (AttributeError, TypeError, ValueError) as e:
+                        except BaseException as e:
+                            import asyncio
+                            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                                raise
                             logger.debug("Failed to inc missing field metric: %s", e, exc_info=True)
-            full_present = sum(1 for _sym,opt in enriched_data.items() if opt.get('volume') and opt.get('oi') and opt.get('avg_price'))
+            full_present = sum(
+                1
+                for opt in enriched_data.values()
+                if isinstance(opt, dict) and opt.get('volume') and opt.get('oi') and opt.get('avg_price')
+            )
             coverage_pct = (full_present / total_options) * 100.0
             if metrics and hasattr(metrics, 'option_field_coverage_ratio'):
                 try:
                     metrics.option_field_coverage_ratio.labels(index=index_symbol, expiry=str(expiry_date)).set(coverage_pct)
-                except (AttributeError, TypeError, ValueError) as e:
+                except BaseException as e:
+                    import asyncio
+                    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                        raise
                     logger.debug("Failed to set field coverage ratio: %s", e, exc_info=True)
             logger.debug(
                 "Field coverage %s %s %s: total=%s full=%s missing(volume=%s,oi=%s,avg_price=%s) ratio=%s%%",
@@ -138,8 +155,12 @@ def field_coverage_metrics(ctx, enriched_data: dict[str, Any], index_symbol: str
     except (ValueError, TypeError, KeyError, AttributeError) as e:
         logger.debug("Field coverage diagnostics failure: %s", e, exc_info=True)
         return None
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
+        # Never raise from diagnostics helpers; callers/tests expect best-effort behavior.
         logger.critical("Unexpected field coverage error: %s", e, exc_info=True)
-        raise
+        return None
 
 __all__ = ["coverage_metrics", "field_coverage_metrics"]

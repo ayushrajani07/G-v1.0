@@ -1,4 +1,4842 @@
 {
-  "total": 0,
-  "items": []
+  "total": 691,
+  "items": [
+    {
+      "name": "check_hostname",
+      "typ": "attribute",
+      "filename": "scripts\\auto_resolve_stack.py",
+      "lineno": 64,
+      "confidence": 60
+    },
+    {
+      "name": "verify_mode",
+      "typ": "attribute",
+      "filename": "scripts\\auto_resolve_stack.py",
+      "lineno": 65,
+      "confidence": 60
+    },
+    {
+      "name": "original_content",
+      "typ": "variable",
+      "filename": "scripts\\batch_migrate_imports.py",
+      "lineno": 77,
+      "confidence": 60
+    },
+    {
+      "name": "TEST_FILE",
+      "typ": "variable",
+      "filename": "scripts\\check_env_doc_governance.py",
+      "lineno": 15,
+      "confidence": 60
+    },
+    {
+      "name": "dropped_total",
+      "typ": "variable",
+      "filename": "scripts\\cleanup\\clean_g6_data_csvs.py",
+      "lineno": 155,
+      "confidence": 60
+    },
+    {
+      "name": "dropped_total",
+      "typ": "variable",
+      "filename": "scripts\\cleanup\\clean_g6_data_csvs.py",
+      "lineno": 166,
+      "confidence": 60
+    },
+    {
+      "name": "src_segment",
+      "typ": "variable",
+      "filename": "scripts\\cleanup\\dead_code_scan.py",
+      "lineno": 126,
+      "confidence": 60
+    },
+    {
+      "name": "PYTHON_ROOTS",
+      "typ": "variable",
+      "filename": "scripts\\cleanup\\gen_inventory.py",
+      "lineno": 23,
+      "confidence": 60
+    },
+    {
+      "name": "TEST_PATTERN",
+      "typ": "variable",
+      "filename": "scripts\\cleanup\\orphan_tests.py",
+      "lineno": 25,
+      "confidence": 60
+    },
+    {
+      "name": "mdate",
+      "typ": "variable",
+      "filename": "scripts\\cleanup\\orphan_tests.py",
+      "lineno": 68,
+      "confidence": 60
+    },
+    {
+      "name": "lines_covered",
+      "typ": "variable",
+      "filename": "scripts\\coverage_hotspots.py",
+      "lineno": 56,
+      "confidence": 60
+    },
+    {
+      "name": "title_change",
+      "typ": "variable",
+      "filename": "scripts\\dashboard_diff.py",
+      "lineno": 44,
+      "confidence": 60
+    },
+    {
+      "name": "uid_change",
+      "typ": "variable",
+      "filename": "scripts\\dashboard_diff.py",
+      "lineno": 45,
+      "confidence": 60
+    },
+    {
+      "name": "sha256_changed",
+      "typ": "variable",
+      "filename": "scripts\\dashboard_diff.py",
+      "lineno": 46,
+      "confidence": 60
+    },
+    {
+      "name": "ROOT_ADDED",
+      "typ": "variable",
+      "filename": "scripts\\dev\\metrics_info.py",
+      "lineno": 22,
+      "confidence": 60
+    },
+    {
+      "name": "ROOT_ADDED",
+      "typ": "variable",
+      "filename": "scripts\\dev\\metrics_info.py",
+      "lineno": 28,
+      "confidence": 60
+    },
+    {
+      "name": "cmd_lint",
+      "typ": "function",
+      "filename": "scripts\\dev_tasks.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "cmd_format",
+      "typ": "function",
+      "filename": "scripts\\dev_tasks.py",
+      "lineno": 61,
+      "confidence": 60
+    },
+    {
+      "name": "cmd_typecheck",
+      "typ": "function",
+      "filename": "scripts\\dev_tasks.py",
+      "lineno": 68,
+      "confidence": 60
+    },
+    {
+      "name": "cmd_test",
+      "typ": "function",
+      "filename": "scripts\\dev_tasks.py",
+      "lineno": 78,
+      "confidence": 60
+    },
+    {
+      "name": "cmd_quick_cycle",
+      "typ": "function",
+      "filename": "scripts\\dev_tasks.py",
+      "lineno": 86,
+      "confidence": 60
+    },
+    {
+      "name": "cmd_secrets_scan",
+      "typ": "function",
+      "filename": "scripts\\dev_tasks.py",
+      "lineno": 96,
+      "confidence": 60
+    },
+    {
+      "name": "cmd_update_secrets_baseline",
+      "typ": "function",
+      "filename": "scripts\\dev_tasks.py",
+      "lineno": 102,
+      "confidence": 60
+    },
+    {
+      "name": "do_GET",
+      "typ": "method",
+      "filename": "scripts\\external_vix_collector.py",
+      "lineno": 50,
+      "confidence": 60
+    },
+    {
+      "name": "MANIFEST_PATH",
+      "typ": "variable",
+      "filename": "scripts\\gen_dashboards_modular_recovery.py",
+      "lineno": 24,
+      "confidence": 60
+    },
+    {
+      "name": "fam2",
+      "typ": "variable",
+      "filename": "scripts\\gen_metrics.py",
+      "lineno": 69,
+      "confidence": 60
+    },
+    {
+      "name": "hash_spec_text",
+      "typ": "function",
+      "filename": "scripts\\gen_recording_rules.py",
+      "lineno": 63,
+      "confidence": 60
+    },
+    {
+      "name": "spec_obj",
+      "typ": "variable",
+      "filename": "scripts\\metrics_drift_check.py",
+      "lineno": 104,
+      "confidence": 60
+    },
+    {
+      "name": "essential",
+      "typ": "variable",
+      "filename": "scripts\\ml\\backfill_bands_from_live.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "evalp",
+      "typ": "variable",
+      "filename": "scripts\\ml\\check_grid_status.py",
+      "lineno": 37,
+      "confidence": 60
+    },
+    {
+      "name": "stable_cycles",
+      "typ": "variable",
+      "filename": "scripts\\ml\\ensemble_consensus_exporter.py",
+      "lineno": 240,
+      "confidence": 60
+    },
+    {
+      "name": "iteration_count",
+      "typ": "variable",
+      "filename": "scripts\\ml\\move_predict_exporter.py",
+      "lineno": 136,
+      "confidence": 60
+    },
+    {
+      "name": "iteration_count",
+      "typ": "variable",
+      "filename": "scripts\\ml\\move_predict_exporter.py",
+      "lineno": 201,
+      "confidence": 60
+    },
+    {
+      "name": "_row_tp",
+      "typ": "function",
+      "filename": "scripts\\ml\\path_forecast_grid_eval.py",
+      "lineno": 121,
+      "confidence": 60
+    },
+    {
+      "name": "g_residual_errors",
+      "typ": "variable",
+      "filename": "scripts\\ml\\quantile_predict_exporter.py",
+      "lineno": 176,
+      "confidence": 60
+    },
+    {
+      "name": "g_residual_errors",
+      "typ": "variable",
+      "filename": "scripts\\ml\\quantile_predict_exporter.py",
+      "lineno": 187,
+      "confidence": 60
+    },
+    {
+      "name": "load_status",
+      "typ": "function",
+      "filename": "scripts\\monitor_status.py",
+      "lineno": 32,
+      "confidence": 60
+    },
+    {
+      "name": "max_columns",
+      "typ": "variable",
+      "filename": "scripts\\plot_weekday_overlays.py",
+      "lineno": 138,
+      "confidence": 60
+    },
+    {
+      "name": "tab_id",
+      "typ": "variable",
+      "filename": "scripts\\plot_weekday_overlays.py",
+      "lineno": 451,
+      "confidence": 60
+    },
+    {
+      "name": "ChecklistFailure",
+      "typ": "class",
+      "filename": "scripts\\pr_checklist.py",
+      "lineno": 41,
+      "confidence": 60
+    },
+    {
+      "name": "set_field_coverage",
+      "typ": "method",
+      "filename": "scripts\\profile_unified_cycle.py",
+      "lineno": 146,
+      "confidence": 60
+    },
+    {
+      "name": "writes",
+      "typ": "attribute",
+      "filename": "scripts\\profile_unified_cycle.py",
+      "lineno": 174,
+      "confidence": 60
+    },
+    {
+      "name": "writes",
+      "typ": "attribute",
+      "filename": "scripts\\profile_unified_cycle.py",
+      "lineno": 180,
+      "confidence": 60
+    },
+    {
+      "name": "write_points",
+      "typ": "method",
+      "filename": "scripts\\profile_unified_cycle.py",
+      "lineno": 206,
+      "confidence": 60
+    },
+    {
+      "name": "idx_index",
+      "typ": "variable",
+      "filename": "scripts\\repair_csv_alignment.py",
+      "lineno": 71,
+      "confidence": 60
+    },
+    {
+      "name": "idx_index",
+      "typ": "variable",
+      "filename": "scripts\\repair_csv_alignment.py",
+      "lineno": 73,
+      "confidence": 60
+    },
+    {
+      "name": "_apply_presentation_logging",
+      "typ": "function",
+      "filename": "scripts\\run_orchestrator_loop.py",
+      "lineno": 343,
+      "confidence": 60
+    },
+    {
+      "name": "counters2",
+      "typ": "variable",
+      "filename": "scripts\\summary\\app.py",
+      "lineno": 624,
+      "confidence": 60
+    },
+    {
+      "name": "updates_per_cycle_avg",
+      "typ": "variable",
+      "filename": "scripts\\summary\\bench_cycle.py",
+      "lineno": 79,
+      "confidence": 60
+    },
+    {
+      "name": "last_event_at",
+      "typ": "variable",
+      "filename": "scripts\\summary\\bench_sse.py",
+      "lineno": 64,
+      "confidence": 60
+    },
+    {
+      "name": "last_event_at",
+      "typ": "attribute",
+      "filename": "scripts\\summary\\bench_sse.py",
+      "lineno": 70,
+      "confidence": 60
+    },
+    {
+      "name": "create_sentinel",
+      "typ": "function",
+      "filename": "scripts\\summary\\bridge_detection.py",
+      "lineno": 41,
+      "confidence": 60
+    },
+    {
+      "name": "legacy_bridge_active",
+      "typ": "function",
+      "filename": "scripts\\summary\\bridge_detection.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "rewrite_active",
+      "typ": "variable",
+      "filename": "scripts\\summary\\config.py",
+      "lineno": 27,
+      "confidence": 60
+    },
+    {
+      "name": "sse_heartbeat_cycles",
+      "typ": "variable",
+      "filename": "scripts\\summary\\config.py",
+      "lineno": 29,
+      "confidence": 60
+    },
+    {
+      "name": "resync_port",
+      "typ": "variable",
+      "filename": "scripts\\summary\\config.py",
+      "lineno": 34,
+      "confidence": 60
+    },
+    {
+      "name": "derive_provider",
+      "typ": "function",
+      "filename": "scripts\\summary\\derive.py",
+      "lineno": 243,
+      "confidence": 60
+    },
+    {
+      "name": "describe",
+      "typ": "method",
+      "filename": "scripts\\summary\\env_config.py",
+      "lineno": 390,
+      "confidence": 60
+    },
+    {
+      "name": "server_version",
+      "typ": "variable",
+      "filename": "scripts\\summary\\http_resync.py",
+      "lineno": 29,
+      "confidence": 60
+    },
+    {
+      "name": "sys_version",
+      "typ": "variable",
+      "filename": "scripts\\summary\\http_resync.py",
+      "lineno": 30,
+      "confidence": 60
+    },
+    {
+      "name": "do_GET",
+      "typ": "method",
+      "filename": "scripts\\summary\\http_resync.py",
+      "lineno": 35,
+      "confidence": 60
+    },
+    {
+      "name": "describe",
+      "typ": "method",
+      "filename": "scripts\\summary\\metrics_server.py",
+      "lineno": 85,
+      "confidence": 60
+    },
+    {
+      "name": "server_version",
+      "typ": "variable",
+      "filename": "scripts\\summary\\metrics_server.py",
+      "lineno": 107,
+      "confidence": 60
+    },
+    {
+      "name": "sys_version",
+      "typ": "variable",
+      "filename": "scripts\\summary\\metrics_server.py",
+      "lineno": 108,
+      "confidence": 60
+    },
+    {
+      "name": "do_GET",
+      "typ": "method",
+      "filename": "scripts\\summary\\metrics_server.py",
+      "lineno": 113,
+      "confidence": 60
+    },
+    {
+      "name": "app_title",
+      "typ": "variable",
+      "filename": "scripts\\summary\\panels\\header.py",
+      "lineno": 11,
+      "confidence": 100
+    },
+    {
+      "name": "_calculate_collection_lag",
+      "typ": "function",
+      "filename": "scripts\\summary\\panels\\monitoring.py",
+      "lineno": 67,
+      "confidence": 60
+    },
+    {
+      "name": "pressure_desc",
+      "typ": "variable",
+      "filename": "scripts\\summary\\panels\\monitoring.py",
+      "lineno": 106,
+      "confidence": 60
+    },
+    {
+      "name": "performance_metrics_panel",
+      "typ": "function",
+      "filename": "scripts\\summary\\panels\\monitoring.py",
+      "lineno": 339,
+      "confidence": 60
+    },
+    {
+      "name": "enhanced_monitoring_panel",
+      "typ": "function",
+      "filename": "scripts\\summary\\panels\\monitoring.py",
+      "lineno": 598,
+      "confidence": 60
+    },
+    {
+      "name": "sinks_panel",
+      "typ": "function",
+      "filename": "scripts\\summary\\panels\\storage.py",
+      "lineno": 12,
+      "confidence": 60
+    },
+    {
+      "name": "health_panel",
+      "typ": "function",
+      "filename": "scripts\\summary\\panels\\system.py",
+      "lineno": 11,
+      "confidence": 60
+    },
+    {
+      "name": "mark_conflict",
+      "typ": "method",
+      "filename": "scripts\\summary\\plugins\\base.py",
+      "lineno": 716,
+      "confidence": 60
+    },
+    {
+      "name": "clear_conflict",
+      "typ": "method",
+      "filename": "scripts\\summary\\plugins\\base.py",
+      "lineno": 724,
+      "confidence": 60
+    },
+    {
+      "name": "domain_rebuilds",
+      "typ": "property",
+      "filename": "scripts\\summary\\plugins\\sse.py",
+      "lineno": 341,
+      "confidence": 60
+    },
+    {
+      "name": "_env_truthy",
+      "typ": "function",
+      "filename": "scripts\\summary\\plugins\\stream_gater.py",
+      "lineno": 52,
+      "confidence": 60
+    },
+    {
+      "name": "dq_percent",
+      "typ": "variable",
+      "filename": "scripts\\summary\\snapshot_builder.py",
+      "lineno": 58,
+      "confidence": 60
+    },
+    {
+      "name": "raw_status_present",
+      "typ": "variable",
+      "filename": "scripts\\summary\\snapshot_builder.py",
+      "lineno": 79,
+      "confidence": 60
+    },
+    {
+      "name": "_reset_metrics_for_tests",
+      "typ": "function",
+      "filename": "scripts\\summary\\snapshot_builder.py",
+      "lineno": 526,
+      "confidence": 60
+    },
+    {
+      "name": "_get_internal_metric_objects",
+      "typ": "function",
+      "filename": "scripts\\summary\\snapshot_builder.py",
+      "lineno": 533,
+      "confidence": 60
+    },
+    {
+      "name": "_get_alerts_dedup_metric",
+      "typ": "function",
+      "filename": "scripts\\summary\\snapshot_builder.py",
+      "lineno": 537,
+      "confidence": 60
+    },
+    {
+      "name": "server_version",
+      "typ": "variable",
+      "filename": "scripts\\summary\\sse_http.py",
+      "lineno": 233,
+      "confidence": 60
+    },
+    {
+      "name": "sys_version",
+      "typ": "variable",
+      "filename": "scripts\\summary\\sse_http.py",
+      "lineno": 234,
+      "confidence": 60
+    },
+    {
+      "name": "do_GET",
+      "typ": "method",
+      "filename": "scripts\\summary\\sse_http.py",
+      "lineno": 261,
+      "confidence": 60
+    },
+    {
+      "name": "request_full",
+      "typ": "method",
+      "filename": "scripts\\summary\\sse_state.py",
+      "lineno": 169,
+      "confidence": 60
+    },
+    {
+      "name": "_reset_in_memory",
+      "typ": "function",
+      "filename": "scripts\\summary\\summary_metrics.py",
+      "lineno": 184,
+      "confidence": 60
+    },
+    {
+      "name": "allow_reuse_address",
+      "typ": "attribute",
+      "filename": "scripts\\summary\\unified_http.py",
+      "lineno": 68,
+      "confidence": 60
+    },
+    {
+      "name": "server_version",
+      "typ": "variable",
+      "filename": "scripts\\summary\\unified_http.py",
+      "lineno": 77,
+      "confidence": 60
+    },
+    {
+      "name": "sys_version",
+      "typ": "variable",
+      "filename": "scripts\\summary\\unified_http.py",
+      "lineno": 78,
+      "confidence": 60
+    },
+    {
+      "name": "_last_json_body",
+      "typ": "attribute",
+      "filename": "scripts\\summary\\unified_http.py",
+      "lineno": 182,
+      "confidence": 60
+    },
+    {
+      "name": "do_GET",
+      "typ": "method",
+      "filename": "scripts\\summary\\unified_http.py",
+      "lineno": 189,
+      "confidence": 60
+    },
+    {
+      "name": "SEVERITY_ORDER",
+      "typ": "variable",
+      "filename": "scripts\\validate_metrics_spec.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "_bucket_util_streak",
+      "typ": "attribute",
+      "filename": "src\\adaptive\\alerts.py",
+      "lineno": 215,
+      "confidence": 60
+    },
+    {
+      "name": "reset_for_hot_reload",
+      "typ": "function",
+      "filename": "src\\adaptive\\severity.py",
+      "lineno": 722,
+      "confidence": 60
+    },
+    {
+      "name": "risk_level",
+      "typ": "variable",
+      "filename": "src\\advisor\\core.py",
+      "lineno": 44,
+      "confidence": 60
+    },
+    {
+      "name": "MarketBreadthAnalytics",
+      "typ": "class",
+      "filename": "src\\analytics\\market_breadth.py",
+      "lineno": 4,
+      "confidence": 60
+    },
+    {
+      "name": "analyze",
+      "typ": "method",
+      "filename": "src\\analytics\\market_breadth.py",
+      "lineno": 5,
+      "confidence": 60
+    },
+    {
+      "name": "OptionChainAnalytics",
+      "typ": "class",
+      "filename": "src\\analytics\\option_chain.py",
+      "lineno": 27,
+      "confidence": 60
+    },
+    {
+      "name": "calculate_pcr",
+      "typ": "method",
+      "filename": "src\\analytics\\option_chain.py",
+      "lineno": 167,
+      "confidence": 60
+    },
+    {
+      "name": "calculate_max_pain",
+      "typ": "method",
+      "filename": "src\\analytics\\option_chain.py",
+      "lineno": 229,
+      "confidence": 60
+    },
+    {
+      "name": "calculate_support_resistance",
+      "typ": "method",
+      "filename": "src\\analytics\\option_chain.py",
+      "lineno": 305,
+      "confidence": 60
+    },
+    {
+      "name": "analyze_participant_flows",
+      "typ": "function",
+      "filename": "src\\analytics\\participant.py",
+      "lineno": 5,
+      "confidence": 60
+    },
+    {
+      "name": "analyze_cash_flows",
+      "typ": "function",
+      "filename": "src\\analytics\\participant.py",
+      "lineno": 20,
+      "confidence": 60
+    },
+    {
+      "name": "set_metric",
+      "typ": "method",
+      "filename": "src\\analytics\\redis_cache.py",
+      "lineno": 195,
+      "confidence": 60
+    },
+    {
+      "name": "get_metric",
+      "typ": "method",
+      "filename": "src\\analytics\\redis_cache.py",
+      "lineno": 200,
+      "confidence": 60
+    },
+    {
+      "name": "set_overview_snapshot",
+      "typ": "method",
+      "filename": "src\\analytics\\redis_cache.py",
+      "lineno": 205,
+      "confidence": 60
+    },
+    {
+      "name": "get_overview_snapshot",
+      "typ": "method",
+      "filename": "src\\analytics\\redis_cache.py",
+      "lineno": 210,
+      "confidence": 60
+    },
+    {
+      "name": "set_options_chain",
+      "typ": "method",
+      "filename": "src\\analytics\\redis_cache.py",
+      "lineno": 215,
+      "confidence": 60
+    },
+    {
+      "name": "get_options_chain",
+      "typ": "method",
+      "filename": "src\\analytics\\redis_cache.py",
+      "lineno": 220,
+      "confidence": 60
+    },
+    {
+      "name": "get_info",
+      "typ": "method",
+      "filename": "src\\analytics\\redis_cache.py",
+      "lineno": 241,
+      "confidence": 60
+    },
+    {
+      "name": "health_check",
+      "typ": "method",
+      "filename": "src\\analytics\\redis_cache.py",
+      "lineno": 272,
+      "confidence": 60
+    },
+    {
+      "name": "add_leg",
+      "typ": "method",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "max_profit",
+      "typ": "property",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 69,
+      "confidence": 60
+    },
+    {
+      "name": "max_loss",
+      "typ": "property",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 75,
+      "confidence": 60
+    },
+    {
+      "name": "SpreadBuilder",
+      "typ": "class",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 81,
+      "confidence": 60
+    },
+    {
+      "name": "long_straddle",
+      "typ": "method",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 93,
+      "confidence": 60
+    },
+    {
+      "name": "short_straddle",
+      "typ": "method",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 128,
+      "confidence": 60
+    },
+    {
+      "name": "long_strangle",
+      "typ": "method",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 163,
+      "confidence": 60
+    },
+    {
+      "name": "iron_condor",
+      "typ": "method",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 202,
+      "confidence": 60
+    },
+    {
+      "name": "butterfly",
+      "typ": "method",
+      "filename": "src\\analytics\\spread_builder.py",
+      "lineno": 253,
+      "confidence": 60
+    },
+    {
+      "name": "get_all_stats",
+      "typ": "method",
+      "filename": "src\\broker\\circuit_breaker.py",
+      "lineno": 272,
+      "confidence": 60
+    },
+    {
+      "name": "reset_all",
+      "typ": "method",
+      "filename": "src\\broker\\circuit_breaker.py",
+      "lineno": 281,
+      "confidence": 60
+    },
+    {
+      "name": "refresh_attempts",
+      "typ": "attribute",
+      "filename": "src\\broker\\kite\\auth.py",
+      "lineno": 44,
+      "confidence": 60
+    },
+    {
+      "name": "last_error",
+      "typ": "attribute",
+      "filename": "src\\broker\\kite\\auth.py",
+      "lineno": 45,
+      "confidence": 60
+    },
+    {
+      "name": "record_error",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\auth.py",
+      "lineno": 47,
+      "confidence": 60
+    },
+    {
+      "name": "last_error",
+      "typ": "attribute",
+      "filename": "src\\broker\\kite\\auth.py",
+      "lineno": 48,
+      "confidence": 60
+    },
+    {
+      "name": "create_kite_client",
+      "typ": "function",
+      "filename": "src\\broker\\kite\\client.py",
+      "lineno": 56,
+      "confidence": 60
+    },
+    {
+      "name": "default_socket_options",
+      "typ": "attribute",
+      "filename": "src\\broker\\kite\\http_pool.py",
+      "lineno": 65,
+      "confidence": 60
+    },
+    {
+      "name": "patch_kite_connect_session",
+      "typ": "function",
+      "filename": "src\\broker\\kite\\http_pool.py",
+      "lineno": 99,
+      "confidence": 60
+    },
+    {
+      "name": "FilterRuntime",
+      "typ": "class",
+      "filename": "src\\broker\\kite\\options.py",
+      "lineno": 106,
+      "confidence": 60
+    },
+    {
+      "name": "_get_root_cached",
+      "typ": "function",
+      "filename": "src\\broker\\kite\\options.py",
+      "lineno": 317,
+      "confidence": 60
+    },
+    {
+      "name": "prefilter_rejects",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\options.py",
+      "lineno": 674,
+      "confidence": 60
+    },
+    {
+      "name": "mark_success",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\provider_events.py",
+      "lineno": 201,
+      "confidence": 60
+    },
+    {
+      "name": "cooldown_active",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\rate_limit.py",
+      "lineno": 110,
+      "confidence": 60
+    },
+    {
+      "name": "last_log_ts",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\rate_limiter_helpers.py",
+      "lineno": 28,
+      "confidence": 60
+    },
+    {
+      "name": "last_quote_log_ts",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\rate_limiter_helpers.py",
+      "lineno": 29,
+      "confidence": 60
+    },
+    {
+      "name": "daily_universe",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\state.py",
+      "lineno": 30,
+      "confidence": 60
+    },
+    {
+      "name": "daily_universe_loaded_date",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\state.py",
+      "lineno": 31,
+      "confidence": 60
+    },
+    {
+      "name": "reset_option_cache_if_new_day",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\state.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "record_option_cache_hit",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\state.py",
+      "lineno": 46,
+      "confidence": 60
+    },
+    {
+      "name": "record_option_cache_miss",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\state.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "invalidate_instruments",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\state.py",
+      "lineno": 52,
+      "confidence": 60
+    },
+    {
+      "name": "invalidate_expiries",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\state.py",
+      "lineno": 60,
+      "confidence": 60
+    },
+    {
+      "name": "reset_synthetic_counters",
+      "typ": "method",
+      "filename": "src\\broker\\kite\\state.py",
+      "lineno": 66,
+      "confidence": 60
+    },
+    {
+      "name": "segment",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\types.py",
+      "lineno": 17,
+      "confidence": 60
+    },
+    {
+      "name": "average_price",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\types.py",
+      "lineno": 33,
+      "confidence": 60
+    },
+    {
+      "name": "lot_size",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\types.py",
+      "lineno": 43,
+      "confidence": 60
+    },
+    {
+      "name": "tick_size",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\types.py",
+      "lineno": 45,
+      "confidence": 60
+    },
+    {
+      "name": "segment",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\types.py",
+      "lineno": 46,
+      "confidence": 60
+    },
+    {
+      "name": "exchange_token",
+      "typ": "variable",
+      "filename": "src\\broker\\kite\\types.py",
+      "lineno": 47,
+      "confidence": 60
+    },
+    {
+      "name": "load_instruments",
+      "typ": "function",
+      "filename": "src\\broker\\kite_instruments.py",
+      "lineno": 11,
+      "confidence": 60
+    },
+    {
+      "name": "_provider_config",
+      "typ": "attribute",
+      "filename": "src\\broker\\kite_provider.py",
+      "lineno": 240,
+      "confidence": 60
+    },
+    {
+      "name": "pop_synthetic_quote_usage",
+      "typ": "method",
+      "filename": "src\\broker\\kite_provider.py",
+      "lineno": 479,
+      "confidence": 60
+    },
+    {
+      "name": "last_quotes_were_synthetic",
+      "typ": "method",
+      "filename": "src\\broker\\kite_provider.py",
+      "lineno": 482,
+      "confidence": 60
+    },
+    {
+      "name": "last_quotes_synthetic_flag",
+      "typ": "property",
+      "filename": "src\\broker\\kite_provider.py",
+      "lineno": 538,
+      "confidence": 60
+    },
+    {
+      "name": "instrument_token",
+      "typ": "variable",
+      "filename": "src\\broker\\models.py",
+      "lineno": 9,
+      "confidence": 60
+    },
+    {
+      "name": "segment",
+      "typ": "variable",
+      "filename": "src\\broker\\models.py",
+      "lineno": 10,
+      "confidence": 60
+    },
+    {
+      "name": "QuoteSnapshot",
+      "typ": "class",
+      "filename": "src\\broker\\models.py",
+      "lineno": 15,
+      "confidence": 60
+    },
+    {
+      "name": "symbol_display",
+      "typ": "variable",
+      "filename": "src\\broker\\models.py",
+      "lineno": 18,
+      "confidence": 60
+    },
+    {
+      "name": "instrument_token",
+      "typ": "variable",
+      "filename": "src\\broker\\models.py",
+      "lineno": 19,
+      "confidence": 60
+    },
+    {
+      "name": "oi_open",
+      "typ": "variable",
+      "filename": "src\\broker\\models.py",
+      "lineno": 23,
+      "confidence": 60
+    },
+    {
+      "name": "net_change",
+      "typ": "variable",
+      "filename": "src\\broker\\models.py",
+      "lineno": 25,
+      "confidence": 60
+    },
+    {
+      "name": "day_change",
+      "typ": "variable",
+      "filename": "src\\broker\\models.py",
+      "lineno": 26,
+      "confidence": 60
+    },
+    {
+      "name": "average_price",
+      "typ": "variable",
+      "filename": "src\\broker\\models.py",
+      "lineno": 27,
+      "confidence": 60
+    },
+    {
+      "name": "provider_supports",
+      "typ": "function",
+      "filename": "src\\broker\\provider_registry.py",
+      "lineno": 198,
+      "confidence": 60
+    },
+    {
+      "name": "head_id",
+      "typ": "method",
+      "filename": "src\\bus\\in_memory_bus.py",
+      "lineno": 114,
+      "confidence": 60
+    },
+    {
+      "name": "tail_id",
+      "typ": "method",
+      "filename": "src\\bus\\in_memory_bus.py",
+      "lineno": 118,
+      "confidence": 60
+    },
+    {
+      "name": "refactor_debug",
+      "typ": "variable",
+      "filename": "src\\collector\\cycle_env_settings.py",
+      "lineno": 42,
+      "confidence": 60
+    },
+    {
+      "name": "daily_header_every_cycle",
+      "typ": "variable",
+      "filename": "src\\collector\\cycle_env_settings.py",
+      "lineno": 45,
+      "confidence": 60
+    },
+    {
+      "name": "disable_repeat_banners",
+      "typ": "variable",
+      "filename": "src\\collector\\cycle_env_settings.py",
+      "lineno": 46,
+      "confidence": 60
+    },
+    {
+      "name": "enable_data_quality",
+      "typ": "variable",
+      "filename": "src\\collector\\cycle_env_settings.py",
+      "lineno": 50,
+      "confidence": 60
+    },
+    {
+      "name": "disable_pretty_cycle",
+      "typ": "variable",
+      "filename": "src\\collector\\cycle_env_settings.py",
+      "lineno": 53,
+      "confidence": 60
+    },
+    {
+      "name": "stale_write_mode",
+      "typ": "variable",
+      "filename": "src\\collector\\cycle_env_settings.py",
+      "lineno": 58,
+      "confidence": 60
+    },
+    {
+      "name": "stale_abort_cycles",
+      "typ": "variable",
+      "filename": "src\\collector\\cycle_env_settings.py",
+      "lineno": 59,
+      "confidence": 60
+    },
+    {
+      "name": "single",
+      "typ": "variable",
+      "filename": "src\\collectors\\cycle_context.py",
+      "lineno": 61,
+      "confidence": 60
+    },
+    {
+      "name": "single",
+      "typ": "variable",
+      "filename": "src\\collectors\\cycle_context.py",
+      "lineno": 65,
+      "confidence": 60
+    },
+    {
+      "name": "as_tags",
+      "typ": "method",
+      "filename": "src\\collectors\\cycle_context.py",
+      "lineno": 172,
+      "confidence": 60
+    },
+    {
+      "name": "perform_preventive_validation",
+      "typ": "function",
+      "filename": "src\\collectors\\helpers\\validation.py",
+      "lineno": 42,
+      "confidence": 60
+    },
+    {
+      "name": "AnomalyDetector",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\benchmark_bridge.py",
+      "lineno": 55,
+      "confidence": 60
+    },
+    {
+      "name": "get_index",
+      "typ": "method",
+      "filename": "src\\collectors\\modules\\context.py",
+      "lineno": 26,
+      "confidence": 60
+    },
+    {
+      "name": "strike_coverage_avg",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\coverage_eval.py",
+      "lineno": 35,
+      "confidence": 60
+    },
+    {
+      "name": "_get_expiry_service",
+      "typ": "function",
+      "filename": "src\\collectors\\modules\\expiry_helpers.py",
+      "lineno": 130,
+      "confidence": 60
+    },
+    {
+      "name": "_coerce_mapping",
+      "typ": "function",
+      "filename": "src\\collectors\\modules\\expiry_processor.py",
+      "lineno": 168,
+      "confidence": 60
+    },
+    {
+      "name": "legacy_kwargs",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\expiry_processor.py",
+      "lineno": 280,
+      "confidence": 100
+    },
+    {
+      "name": "strikes_requested",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\expiry_types.py",
+      "lineno": 19,
+      "confidence": 60
+    },
+    {
+      "name": "index_price_is_nan",
+      "typ": "function",
+      "filename": "src\\collectors\\modules\\greeks_compute.py",
+      "lineno": 106,
+      "confidence": 60
+    },
+    {
+      "name": "human_block",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\index_processor.py",
+      "lineno": 91,
+      "confidence": 60
+    },
+    {
+      "name": "indices_struct_entry",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\index_processor.py",
+      "lineno": 92,
+      "confidence": 60
+    },
+    {
+      "name": "summary_rows_entry",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\index_processor.py",
+      "lineno": 93,
+      "confidence": 60
+    },
+    {
+      "name": "overall_legs",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\index_processor.py",
+      "lineno": 94,
+      "confidence": 60
+    },
+    {
+      "name": "overall_fails",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\index_processor.py",
+      "lineno": 95,
+      "confidence": 60
+    },
+    {
+      "name": "TimePhaseCtx",
+      "typ": "class",
+      "filename": "src\\collectors\\modules\\index_processor.py",
+      "lineno": 108,
+      "confidence": 60
+    },
+    {
+      "name": "TraceFn",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\persist_flow.py",
+      "lineno": 44,
+      "confidence": 60
+    },
+    {
+      "name": "expiry_stats",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\pipeline.py",
+      "lineno": 425,
+      "confidence": 60
+    },
+    {
+      "name": "strikes_meta",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\pipeline.py",
+      "lineno": 452,
+      "confidence": 60
+    },
+    {
+      "name": "strikes_meta",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\pipeline.py",
+      "lineno": 459,
+      "confidence": 60
+    },
+    {
+      "name": "synthetic_used_flag",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\pipeline.py",
+      "lineno": 462,
+      "confidence": 60
+    },
+    {
+      "name": "indices_processed",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\snapshot_core.py",
+      "lineno": 37,
+      "confidence": 60
+    },
+    {
+      "name": "ComputeReasonTotals",
+      "typ": "variable",
+      "filename": "src\\collectors\\modules\\status_finalize.py",
+      "lineno": 25,
+      "confidence": 60
+    },
+    {
+      "name": "_stable_sorted_symbols",
+      "typ": "function",
+      "filename": "src\\collectors\\parity_harness.py",
+      "lineno": 24,
+      "confidence": 60
+    },
+    {
+      "name": "struct",
+      "typ": "variable",
+      "filename": "src\\collectors\\parity_harness.py",
+      "lineno": 31,
+      "confidence": 100
+    },
+    {
+      "name": "outcome_token",
+      "typ": "variable",
+      "filename": "src\\collectors\\pipeline\\error_records.py",
+      "lineno": 28,
+      "confidence": 60
+    },
+    {
+      "name": "final_if_known",
+      "typ": "variable",
+      "filename": "src\\collectors\\pipeline\\executor.py",
+      "lineno": 692,
+      "confidence": 100
+    },
+    {
+      "name": "get_phase_logger",
+      "typ": "function",
+      "filename": "src\\collectors\\pipeline\\logging_schema.py",
+      "lineno": 195,
+      "confidence": 60
+    },
+    {
+      "name": "strike_coverage_avg",
+      "typ": "variable",
+      "filename": "src\\collectors\\pipeline\\parity.py",
+      "lineno": 65,
+      "confidence": 60
+    },
+    {
+      "name": "strike_shape",
+      "typ": "variable",
+      "filename": "src\\collectors\\pipeline\\parity.py",
+      "lineno": 66,
+      "confidence": 60
+    },
+    {
+      "name": "strike_cov_variance",
+      "typ": "variable",
+      "filename": "src\\collectors\\pipeline\\parity.py",
+      "lineno": 67,
+      "confidence": 60
+    },
+    {
+      "name": "get_parity_average",
+      "typ": "function",
+      "filename": "src\\collectors\\pipeline\\parity.py",
+      "lineno": 430,
+      "confidence": 60
+    },
+    {
+      "name": "_FetchInstrumentsLike",
+      "typ": "class",
+      "filename": "src\\collectors\\pipeline\\phases.py",
+      "lineno": 45,
+      "confidence": 60
+    },
+    {
+      "name": "stage",
+      "typ": "variable",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 43,
+      "confidence": 60
+    },
+    {
+      "name": "start_cycle",
+      "typ": "method",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 121,
+      "confidence": 60
+    },
+    {
+      "name": "submit_work",
+      "typ": "method",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 145,
+      "confidence": 60
+    },
+    {
+      "name": "wait_for_completion",
+      "typ": "method",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 174,
+      "confidence": 60
+    },
+    {
+      "name": "stage",
+      "typ": "attribute",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 231,
+      "confidence": 60
+    },
+    {
+      "name": "stage",
+      "typ": "attribute",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 237,
+      "confidence": 60
+    },
+    {
+      "name": "stage",
+      "typ": "attribute",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 279,
+      "confidence": 60
+    },
+    {
+      "name": "stage",
+      "typ": "attribute",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 282,
+      "confidence": 60
+    },
+    {
+      "name": "stage",
+      "typ": "attribute",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 324,
+      "confidence": 60
+    },
+    {
+      "name": "stage",
+      "typ": "attribute",
+      "filename": "src\\collectors\\pipeline\\staged_executor.py",
+      "lineno": 326,
+      "confidence": 60
+    },
+    {
+      "name": "_ensure_provider_metrics",
+      "typ": "function",
+      "filename": "src\\collectors\\providers_interface.py",
+      "lineno": 632,
+      "confidence": 60
+    },
+    {
+      "name": "_record_api_call",
+      "typ": "function",
+      "filename": "src\\collectors\\providers_interface.py",
+      "lineno": 636,
+      "confidence": 60
+    },
+    {
+      "name": "build_domain_models",
+      "typ": "variable",
+      "filename": "src\\collectors\\snapshot_collectors.py",
+      "lineno": 80,
+      "confidence": 60
+    },
+    {
+      "name": "synthetic_quotes",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 24,
+      "confidence": 60
+    },
+    {
+      "name": "elapsed_s",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 35,
+      "confidence": 60
+    },
+    {
+      "name": "strike_coverage_avg",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 36,
+      "confidence": 60
+    },
+    {
+      "name": "field_coverage_avg",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 37,
+      "confidence": 60
+    },
+    {
+      "name": "PipelineReturn",
+      "typ": "class",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "indices_processed",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 41,
+      "confidence": 60
+    },
+    {
+      "name": "have_raw",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 42,
+      "confidence": 60
+    },
+    {
+      "name": "snapshot_count",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 44,
+      "confidence": 60
+    },
+    {
+      "name": "partial_reason_groups",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 48,
+      "confidence": 60
+    },
+    {
+      "name": "partial_reason_order",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "partial_reason_group_order",
+      "typ": "variable",
+      "filename": "src\\collectors\\types.py",
+      "lineno": 50,
+      "confidence": 60
+    },
+    {
+      "name": "_ExpiryResult",
+      "typ": "class",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 289,
+      "confidence": 60
+    },
+    {
+      "name": "human_row",
+      "typ": "attribute",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 305,
+      "confidence": 60
+    },
+    {
+      "name": "empty_consec",
+      "typ": "variable",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 342,
+      "confidence": 60
+    },
+    {
+      "name": "empty_consec",
+      "typ": "variable",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 353,
+      "confidence": 60
+    },
+    {
+      "name": "strike_coverage_avg",
+      "typ": "variable",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 354,
+      "confidence": 60
+    },
+    {
+      "name": "field_coverage_avg",
+      "typ": "variable",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 355,
+      "confidence": 60
+    },
+    {
+      "name": "_persist_and_metrics",
+      "typ": "function",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 583,
+      "confidence": 60
+    },
+    {
+      "name": "_synthetic_metric_pop",
+      "typ": "function",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 588,
+      "confidence": 60
+    },
+    {
+      "name": "collector_ctx",
+      "typ": "attribute",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 1000,
+      "confidence": 60
+    },
+    {
+      "name": "refactor_debug",
+      "typ": "variable",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 1008,
+      "confidence": 60
+    },
+    {
+      "name": "stale_abort_evaluated",
+      "typ": "variable",
+      "filename": "src\\collectors\\unified_collectors.py",
+      "lineno": 1546,
+      "confidence": 60
+    },
+    {
+      "name": "low_watermark_rows",
+      "typ": "variable",
+      "filename": "src\\column_store\\pipeline.py",
+      "lineno": 64,
+      "confidence": 60
+    },
+    {
+      "name": "install_failure_hook",
+      "typ": "method",
+      "filename": "src\\column_store\\pipeline.py",
+      "lineno": 120,
+      "confidence": 60
+    },
+    {
+      "name": "collection_interval",
+      "typ": "method",
+      "filename": "src\\config\\config_wrapper.py",
+      "lineno": 201,
+      "confidence": 60
+    },
+    {
+      "name": "influx_enabled",
+      "typ": "method",
+      "filename": "src\\config\\config_wrapper.py",
+      "lineno": 210,
+      "confidence": 60
+    },
+    {
+      "name": "influx_config",
+      "typ": "method",
+      "filename": "src\\config\\config_wrapper.py",
+      "lineno": 213,
+      "confidence": 60
+    },
+    {
+      "name": "raw_dict",
+      "typ": "method",
+      "filename": "src\\config\\config_wrapper.py",
+      "lineno": 225,
+      "confidence": 60
+    },
+    {
+      "name": "get_list",
+      "typ": "method",
+      "filename": "src\\config\\env_config.py",
+      "lineno": 161,
+      "confidence": 60
+    },
+    {
+      "name": "require",
+      "typ": "method",
+      "filename": "src\\config\\env_config.py",
+      "lineno": 236,
+      "confidence": 60
+    },
+    {
+      "name": "found_any",
+      "typ": "variable",
+      "filename": "src\\config\\env_loader.py",
+      "lineno": 107,
+      "confidence": 60
+    },
+    {
+      "name": "found_any",
+      "typ": "variable",
+      "filename": "src\\config\\env_loader.py",
+      "lineno": 112,
+      "confidence": 60
+    },
+    {
+      "name": "apply_to_config",
+      "typ": "method",
+      "filename": "src\\config\\env_registry.py",
+      "lineno": 63,
+      "confidence": 60
+    },
+    {
+      "name": "_to_v1_0",
+      "typ": "function",
+      "filename": "src\\config\\migrations.py",
+      "lineno": 50,
+      "confidence": 60
+    },
+    {
+      "name": "_to_v1_1",
+      "typ": "function",
+      "filename": "src\\config\\migrations.py",
+      "lineno": 58,
+      "confidence": 60
+    },
+    {
+      "name": "_to_v1_2",
+      "typ": "function",
+      "filename": "src\\config\\migrations.py",
+      "lineno": 73,
+      "confidence": 60
+    },
+    {
+      "name": "_to_v1_3",
+      "typ": "function",
+      "filename": "src\\config\\migrations.py",
+      "lineno": 103,
+      "confidence": 60
+    },
+    {
+      "name": "get_status",
+      "typ": "function",
+      "filename": "src\\console\\ws_service.py",
+      "lineno": 106,
+      "confidence": 60
+    },
+    {
+      "name": "ws_status",
+      "typ": "function",
+      "filename": "src\\console\\ws_service.py",
+      "lineno": 117,
+      "confidence": 60
+    },
+    {
+      "name": "get_all_indices",
+      "typ": "method",
+      "filename": "src\\data_access\\unified_source.py",
+      "lineno": 564,
+      "confidence": 60
+    },
+    {
+      "name": "invalidate_cache",
+      "typ": "method",
+      "filename": "src\\data_access\\unified_source.py",
+      "lineno": 606,
+      "confidence": 60
+    },
+    {
+      "name": "from_quote",
+      "typ": "method",
+      "filename": "src\\domain\\models.py",
+      "lineno": 83,
+      "confidence": 60
+    },
+    {
+      "name": "TRANSFORMATION",
+      "typ": "variable",
+      "filename": "src\\error_handling.py",
+      "lineno": 42,
+      "confidence": 60
+    },
+    {
+      "name": "ANALYTICS",
+      "typ": "variable",
+      "filename": "src\\error_handling.py",
+      "lineno": 43,
+      "confidence": 60
+    },
+    {
+      "name": "DATABASE",
+      "typ": "variable",
+      "filename": "src\\error_handling.py",
+      "lineno": 47,
+      "confidence": 60
+    },
+    {
+      "name": "CSV_WRITE",
+      "typ": "variable",
+      "filename": "src\\error_handling.py",
+      "lineno": 48,
+      "confidence": 60
+    },
+    {
+      "name": "BACKUP",
+      "typ": "variable",
+      "filename": "src\\error_handling.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "INITIALIZATION",
+      "typ": "variable",
+      "filename": "src\\error_handling.py",
+      "lineno": 53,
+      "confidence": 60
+    },
+    {
+      "name": "MEMORY",
+      "typ": "variable",
+      "filename": "src\\error_handling.py",
+      "lineno": 55,
+      "confidence": 60
+    },
+    {
+      "name": "RICH_MARKUP",
+      "typ": "variable",
+      "filename": "src\\error_handling.py",
+      "lineno": 60,
+      "confidence": 60
+    },
+    {
+      "name": "clear_errors",
+      "typ": "method",
+      "filename": "src\\error_handling.py",
+      "lineno": 354,
+      "confidence": 60
+    },
+    {
+      "name": "export_errors",
+      "typ": "method",
+      "filename": "src\\error_handling.py",
+      "lineno": 362,
+      "confidence": 60
+    },
+    {
+      "name": "safe_execute",
+      "typ": "function",
+      "filename": "src\\error_handling.py",
+      "lineno": 521,
+      "confidence": 60
+    },
+    {
+      "name": "register_error",
+      "typ": "function",
+      "filename": "src\\errors\\error_routing.py",
+      "lineno": 69,
+      "confidence": 60
+    },
+    {
+      "name": "unregister_error",
+      "typ": "function",
+      "filename": "src\\errors\\error_routing.py",
+      "lineno": 73,
+      "confidence": 60
+    },
+    {
+      "name": "reentry_cooldown_seconds",
+      "typ": "variable",
+      "filename": "src\\events\\adaptive_degrade.py",
+      "lineno": 55,
+      "confidence": 60
+    },
+    {
+      "name": "_last_enter_ts",
+      "typ": "attribute",
+      "filename": "src\\events\\adaptive_degrade.py",
+      "lineno": 80,
+      "confidence": 60
+    },
+    {
+      "name": "_last_exit_ts",
+      "typ": "attribute",
+      "filename": "src\\events\\adaptive_degrade.py",
+      "lineno": 86,
+      "confidence": 60
+    },
+    {
+      "name": "_last_exit_ts",
+      "typ": "attribute",
+      "filename": "src\\events\\adaptive_degrade.py",
+      "lineno": 148,
+      "confidence": 60
+    },
+    {
+      "name": "RegisterFunc",
+      "typ": "variable",
+      "filename": "src\\events\\event_bus.py",
+      "lineno": 73,
+      "confidence": 60
+    },
+    {
+      "name": "_m_events_full_recovery",
+      "typ": "attribute",
+      "filename": "src\\events\\event_bus.py",
+      "lineno": 647,
+      "confidence": 60
+    },
+    {
+      "name": "_m_events_full_recovery",
+      "typ": "attribute",
+      "filename": "src\\events\\event_bus.py",
+      "lineno": 689,
+      "confidence": 60
+    },
+    {
+      "name": "log_debug",
+      "typ": "variable",
+      "filename": "src\\filters\\junk_filter.py",
+      "lineno": 86,
+      "confidence": 60
+    },
+    {
+      "name": "get_active_alerts",
+      "typ": "method",
+      "filename": "src\\health\\alerts\\alert_manager.py",
+      "lineno": 311,
+      "confidence": 60
+    },
+    {
+      "name": "get_alert_history",
+      "typ": "method",
+      "filename": "src\\health\\alerts\\alert_manager.py",
+      "lineno": 314,
+      "confidence": 60
+    },
+    {
+      "name": "acknowledge",
+      "typ": "method",
+      "filename": "src\\health\\alerts\\alert_manager.py",
+      "lineno": 317,
+      "confidence": 60
+    },
+    {
+      "name": "do_GET",
+      "typ": "method",
+      "filename": "src\\health\\api_server.py",
+      "lineno": 76,
+      "confidence": 60
+    },
+    {
+      "name": "last_check",
+      "typ": "variable",
+      "filename": "src\\health\\models.py",
+      "lineno": 52,
+      "confidence": 60
+    },
+    {
+      "name": "last_check",
+      "typ": "variable",
+      "filename": "src\\health\\models.py",
+      "lineno": 65,
+      "confidence": 60
+    },
+    {
+      "name": "get_health_status",
+      "typ": "method",
+      "filename": "src\\health\\monitor.py",
+      "lineno": 276,
+      "confidence": 60
+    },
+    {
+      "name": "is_healthy",
+      "typ": "method",
+      "filename": "src\\health\\monitor.py",
+      "lineno": 285,
+      "confidence": 60
+    },
+    {
+      "name": "bulk_set_components",
+      "typ": "method",
+      "filename": "src\\health\\prom_exporter.py",
+      "lineno": 61,
+      "confidence": 60
+    },
+    {
+      "name": "API",
+      "typ": "variable",
+      "filename": "src\\interfaces\\error_handler_protocol.py",
+      "lineno": 19,
+      "confidence": 60
+    },
+    {
+      "name": "PROVIDER",
+      "typ": "variable",
+      "filename": "src\\interfaces\\error_handler_protocol.py",
+      "lineno": 21,
+      "confidence": 60
+    },
+    {
+      "name": "VALIDATION",
+      "typ": "variable",
+      "filename": "src\\interfaces\\error_handler_protocol.py",
+      "lineno": 23,
+      "confidence": 60
+    },
+    {
+      "name": "MetricsRegistryProtocol",
+      "typ": "class",
+      "filename": "src\\interfaces\\metrics_protocol.py",
+      "lineno": 97,
+      "confidence": 60
+    },
+    {
+      "name": "register_counter",
+      "typ": "method",
+      "filename": "src\\interfaces\\metrics_protocol.py",
+      "lineno": 106,
+      "confidence": 60
+    },
+    {
+      "name": "register_gauge",
+      "typ": "method",
+      "filename": "src\\interfaces\\metrics_protocol.py",
+      "lineno": 110,
+      "confidence": 60
+    },
+    {
+      "name": "get_metric",
+      "typ": "method",
+      "filename": "src\\interfaces\\metrics_protocol.py",
+      "lineno": 118,
+      "confidence": 60
+    },
+    {
+      "name": "get_quotes",
+      "typ": "method",
+      "filename": "src\\interfaces\\provider_protocol.py",
+      "lineno": 42,
+      "confidence": 60
+    },
+    {
+      "name": "get_historical_data",
+      "typ": "method",
+      "filename": "src\\interfaces\\provider_protocol.py",
+      "lineno": 66,
+      "confidence": 60
+    },
+    {
+      "name": "from_date",
+      "typ": "variable",
+      "filename": "src\\interfaces\\provider_protocol.py",
+      "lineno": 69,
+      "confidence": 100
+    },
+    {
+      "name": "is_connected",
+      "typ": "property",
+      "filename": "src\\interfaces\\provider_protocol.py",
+      "lineno": 87,
+      "confidence": 60
+    },
+    {
+      "name": "_G6_METRICS_FACADE_IMPORT",
+      "typ": "attribute",
+      "filename": "src\\metrics\\__init__.py",
+      "lineno": 184,
+      "confidence": 60
+    },
+    {
+      "name": "dump_metrics",
+      "typ": "function",
+      "filename": "src\\metrics\\__init__.py",
+      "lineno": 216,
+      "confidence": 60
+    },
+    {
+      "name": "_reset_metrics_summary_state",
+      "typ": "function",
+      "filename": "src\\metrics\\__init__.py",
+      "lineno": 567,
+      "confidence": 60
+    },
+    {
+      "name": "_state_g",
+      "typ": "attribute",
+      "filename": "src\\metrics\\circuit_metrics.py",
+      "lineno": 23,
+      "confidence": 60
+    },
+    {
+      "name": "exc_val",
+      "typ": "variable",
+      "filename": "src\\metrics\\cycle_phase_timing.py",
+      "lineno": 137,
+      "confidence": 100
+    },
+    {
+      "name": "_max_wait",
+      "typ": "attribute",
+      "filename": "src\\metrics\\emission_batcher.py",
+      "lineno": 92,
+      "confidence": 60
+    },
+    {
+      "name": "_last_activity",
+      "typ": "attribute",
+      "filename": "src\\metrics\\emission_batcher.py",
+      "lineno": 93,
+      "confidence": 60
+    },
+    {
+      "name": "_last_activity",
+      "typ": "attribute",
+      "filename": "src\\metrics\\emission_batcher.py",
+      "lineno": 174,
+      "confidence": 60
+    },
+    {
+      "name": "_GaugeLike",
+      "typ": "class",
+      "filename": "src\\metrics\\emitter.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "_final_flush",
+      "typ": "function",
+      "filename": "src\\metrics\\emitter.py",
+      "lineno": 176,
+      "confidence": 60
+    },
+    {
+      "name": "cycle_fault_budget_remaining",
+      "typ": "attribute",
+      "filename": "src\\metrics\\fault_budget.py",
+      "lineno": 206,
+      "confidence": 60
+    },
+    {
+      "name": "cycle_fault_budget_breaches_window",
+      "typ": "attribute",
+      "filename": "src\\metrics\\fault_budget.py",
+      "lineno": 208,
+      "confidence": 60
+    },
+    {
+      "name": "cycle_fault_budget_window_seconds",
+      "typ": "attribute",
+      "filename": "src\\metrics\\fault_budget.py",
+      "lineno": 210,
+      "confidence": 60
+    },
+    {
+      "name": "cycle_fault_budget_consumed_percent",
+      "typ": "attribute",
+      "filename": "src\\metrics\\fault_budget.py",
+      "lineno": 212,
+      "confidence": 60
+    },
+    {
+      "name": "get_metric_groups",
+      "typ": "method",
+      "filename": "src\\metrics\\metrics.py",
+      "lineno": 1087,
+      "confidence": 60
+    },
+    {
+      "name": "set_provider_mode",
+      "typ": "function",
+      "filename": "src\\metrics\\metrics.py",
+      "lineno": 1523,
+      "confidence": 60
+    },
+    {
+      "name": "build_time",
+      "typ": "variable",
+      "filename": "src\\metrics\\metrics.py",
+      "lineno": 1624,
+      "confidence": 100
+    },
+    {
+      "name": "index_data_quality_score",
+      "typ": "attribute",
+      "filename": "src\\metrics\\performance.py",
+      "lineno": 31,
+      "confidence": 60
+    },
+    {
+      "name": "allow_reuse_address",
+      "typ": "attribute",
+      "filename": "src\\orchestrator\\catalog_http.py",
+      "lineno": 102,
+      "confidence": 60
+    },
+    {
+      "name": "_hot_reload_if_requested",
+      "typ": "function",
+      "filename": "src\\orchestrator\\catalog_http.py",
+      "lineno": 119,
+      "confidence": 60
+    },
+    {
+      "name": "FORCED_WINDOW",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\catalog_http.py",
+      "lineno": 143,
+      "confidence": 60
+    },
+    {
+      "name": "server_version",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\catalog_http.py",
+      "lineno": 148,
+      "confidence": 60
+    },
+    {
+      "name": "do_GET",
+      "typ": "method",
+      "filename": "src\\orchestrator\\catalog_http.py",
+      "lineno": 195,
+      "confidence": 60
+    },
+    {
+      "name": "_g6_generation",
+      "typ": "attribute",
+      "filename": "src\\orchestrator\\catalog_http.py",
+      "lineno": 705,
+      "confidence": 60
+    },
+    {
+      "name": "get_error_handler_fn",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 59,
+      "confidence": 60
+    },
+    {
+      "name": "ErrorCategoryT",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 60,
+      "confidence": 60
+    },
+    {
+      "name": "ErrorSeverityT",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 61,
+      "confidence": 60
+    },
+    {
+      "name": "get_error_handler_fn",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 359,
+      "confidence": 60
+    },
+    {
+      "name": "ErrorCategoryT",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 360,
+      "confidence": 60
+    },
+    {
+      "name": "ErrorSeverityT",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 361,
+      "confidence": 60
+    },
+    {
+      "name": "INITIALIZATION",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 370,
+      "confidence": 60
+    },
+    {
+      "name": "DATABASE",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 372,
+      "confidence": 60
+    },
+    {
+      "name": "get_error_handler_fn",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 378,
+      "confidence": 60
+    },
+    {
+      "name": "ErrorCategoryT",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 379,
+      "confidence": 60
+    },
+    {
+      "name": "ErrorSeverityT",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\components.py",
+      "lineno": 380,
+      "confidence": 60
+    },
+    {
+      "name": "runtime_config",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\context.py",
+      "lineno": 19,
+      "confidence": 60
+    },
+    {
+      "name": "runtime_status_file",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\context.py",
+      "lineno": 30,
+      "confidence": 60
+    },
+    {
+      "name": "per_option_metrics_disabled",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\context.py",
+      "lineno": 38,
+      "confidence": 60
+    },
+    {
+      "name": "cardinality_last_toggle",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\context.py",
+      "lineno": 40,
+      "confidence": 60
+    },
+    {
+      "name": "_g6_index",
+      "typ": "attribute",
+      "filename": "src\\orchestrator\\cycle.py",
+      "lineno": 352,
+      "confidence": 60
+    },
+    {
+      "name": "use_enhanced",
+      "typ": "variable",
+      "filename": "src\\orchestrator\\parity_harness.py",
+      "lineno": 111,
+      "confidence": 100
+    },
+    {
+      "name": "_geh_mod_f",
+      "typ": "function",
+      "filename": "src\\orchestrator\\status_writer.py",
+      "lineno": 40,
+      "confidence": 60
+    },
+    {
+      "name": "_ec_mod_f",
+      "typ": "class",
+      "filename": "src\\orchestrator\\status_writer.py",
+      "lineno": 45,
+      "confidence": 60
+    },
+    {
+      "name": "_es_mod_f",
+      "typ": "class",
+      "filename": "src\\orchestrator\\status_writer.py",
+      "lineno": 48,
+      "confidence": 60
+    },
+    {
+      "name": "build_indices_stream_items",
+      "typ": "function",
+      "filename": "src\\panels\\factory.py",
+      "lineno": 209,
+      "confidence": 60
+    },
+    {
+      "name": "build_panels",
+      "typ": "function",
+      "filename": "src\\panels\\factory.py",
+      "lineno": 372,
+      "confidence": 60
+    },
+    {
+      "name": "HealthPanel",
+      "typ": "class",
+      "filename": "src\\panels\\models.py",
+      "lineno": 32,
+      "confidence": 60
+    },
+    {
+      "name": "time_hms",
+      "typ": "variable",
+      "filename": "src\\panels\\models.py",
+      "lineno": 52,
+      "confidence": 60
+    },
+    {
+      "name": "validate_directory",
+      "typ": "function",
+      "filename": "src\\panels\\validate.py",
+      "lineno": 107,
+      "confidence": 60
+    },
+    {
+      "name": "from_modular",
+      "typ": "method",
+      "filename": "src\\path_forecast\\config_structs.py",
+      "lineno": 90,
+      "confidence": 60
+    },
+    {
+      "name": "legacy_dict",
+      "typ": "method",
+      "filename": "src\\path_forecast\\config_structs.py",
+      "lineno": 110,
+      "confidence": 60
+    },
+    {
+      "name": "emit_once",
+      "typ": "method",
+      "filename": "src\\provider\\diagnostics.py",
+      "lineno": 13,
+      "confidence": 60
+    },
+    {
+      "name": "fabricate_if_needed",
+      "typ": "method",
+      "filename": "src\\provider\\expiries.py",
+      "lineno": 168,
+      "confidence": 60
+    },
+    {
+      "name": "LEGACY_IMPORT",
+      "typ": "variable",
+      "filename": "src\\provider\\facade.py",
+      "lineno": 26,
+      "confidence": 60
+    },
+    {
+      "name": "_ensure_core",
+      "typ": "function",
+      "filename": "src\\provider\\facade.py",
+      "lineno": 32,
+      "confidence": 60
+    },
+    {
+      "name": "load_all",
+      "typ": "method",
+      "filename": "src\\provider\\instruments.py",
+      "lineno": 43,
+      "confidence": 60
+    },
+    {
+      "name": "get_or_fetch",
+      "typ": "method",
+      "filename": "src\\provider\\instruments.py",
+      "lineno": 50,
+      "confidence": 60
+    },
+    {
+      "name": "RecordingMetrics",
+      "typ": "class",
+      "filename": "src\\provider\\metrics_adapter.py",
+      "lineno": 22,
+      "confidence": 60
+    },
+    {
+      "name": "set_metrics_sink",
+      "typ": "function",
+      "filename": "src\\provider\\metrics_adapter.py",
+      "lineno": 34,
+      "confidence": 60
+    },
+    {
+      "name": "_is_true",
+      "typ": "function",
+      "filename": "src\\runtime\\runtime_flags.py",
+      "lineno": 15,
+      "confidence": 60
+    },
+    {
+      "name": "enable_forward_fallback",
+      "typ": "variable",
+      "filename": "src\\runtime\\runtime_flags.py",
+      "lineno": 25,
+      "confidence": 60
+    },
+    {
+      "name": "enable_backward_fallback",
+      "typ": "variable",
+      "filename": "src\\runtime\\runtime_flags.py",
+      "lineno": 26,
+      "confidence": 60
+    },
+    {
+      "name": "prefilter_disabled",
+      "typ": "variable",
+      "filename": "src\\runtime\\runtime_flags.py",
+      "lineno": 29,
+      "confidence": 60
+    },
+    {
+      "name": "inject_last_prices",
+      "typ": "method",
+      "filename": "src\\storage\\csv_aggregator.py",
+      "lineno": 302,
+      "confidence": 60
+    },
+    {
+      "name": "get_batch_count",
+      "typ": "method",
+      "filename": "src\\storage\\csv_batcher.py",
+      "lineno": 201,
+      "confidence": 60
+    },
+    {
+      "name": "clear_all_batches",
+      "typ": "method",
+      "filename": "src\\storage\\csv_batcher.py",
+      "lineno": 212,
+      "confidence": 60
+    },
+    {
+      "name": "flush_all_batches",
+      "typ": "method",
+      "filename": "src\\storage\\csv_batcher.py",
+      "lineno": 226,
+      "confidence": 60
+    },
+    {
+      "name": "csv_writer",
+      "typ": "variable",
+      "filename": "src\\storage\\csv_batcher.py",
+      "lineno": 226,
+      "confidence": 100
+    },
+    {
+      "name": "CsvExpiryResolver",
+      "typ": "class",
+      "filename": "src\\storage\\csv_expiry.py",
+      "lineno": 16,
+      "confidence": 60
+    },
+    {
+      "name": "resolve_expiry_context",
+      "typ": "method",
+      "filename": "src\\storage\\csv_expiry.py",
+      "lineno": 46,
+      "confidence": 60
+    },
+    {
+      "name": "advise_missing_expiries",
+      "typ": "method",
+      "filename": "src\\storage\\csv_expiry.py",
+      "lineno": 171,
+      "confidence": 60
+    },
+    {
+      "name": "handle_expiry_misclassification",
+      "typ": "method",
+      "filename": "src\\storage\\csv_expiry.py",
+      "lineno": 242,
+      "confidence": 60
+    },
+    {
+      "name": "update_expiry_daily_stats",
+      "typ": "method",
+      "filename": "src\\storage\\csv_metrics.py",
+      "lineno": 89,
+      "confidence": 60
+    },
+    {
+      "name": "record_row_written",
+      "typ": "method",
+      "filename": "src\\storage\\csv_metrics.py",
+      "lineno": 106,
+      "confidence": 60
+    },
+    {
+      "name": "record_batch_flush",
+      "typ": "method",
+      "filename": "src\\storage\\csv_metrics.py",
+      "lineno": 110,
+      "confidence": 60
+    },
+    {
+      "name": "record_duplicate_suppressed",
+      "typ": "method",
+      "filename": "src\\storage\\csv_metrics.py",
+      "lineno": 115,
+      "confidence": 60
+    },
+    {
+      "name": "record_junk_filtered",
+      "typ": "method",
+      "filename": "src\\storage\\csv_metrics.py",
+      "lineno": 119,
+      "confidence": 60
+    },
+    {
+      "name": "record_quarantine_write",
+      "typ": "method",
+      "filename": "src\\storage\\csv_metrics.py",
+      "lineno": 123,
+      "confidence": 60
+    },
+    {
+      "name": "record_overview_write",
+      "typ": "method",
+      "filename": "src\\storage\\csv_metrics.py",
+      "lineno": 128,
+      "confidence": 60
+    },
+    {
+      "name": "record_aggregation_update",
+      "typ": "method",
+      "filename": "src\\storage\\csv_metrics.py",
+      "lineno": 132,
+      "confidence": 60
+    },
+    {
+      "name": "_clean_for_json",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 373,
+      "confidence": 60
+    },
+    {
+      "name": "read_options_overview",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2072,
+      "confidence": 60
+    },
+    {
+      "name": "read_option_data",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2121,
+      "confidence": 60
+    },
+    {
+      "name": "_compute_pcr",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2530,
+      "confidence": 60
+    },
+    {
+      "name": "_align_rows_for_existing_file",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2581,
+      "confidence": 60
+    },
+    {
+      "name": "_update_open_prices",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2591,
+      "confidence": 60
+    },
+    {
+      "name": "_is_expiry_disallowed",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2630,
+      "confidence": 60
+    },
+    {
+      "name": "_resolve_index_price",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2642,
+      "confidence": 60
+    },
+    {
+      "name": "_compute_day_width",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2663,
+      "confidence": 60
+    },
+    {
+      "name": "_resolve_vix",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2676,
+      "confidence": 60
+    },
+    {
+      "name": "_build_return_metrics",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2694,
+      "confidence": 60
+    },
+    {
+      "name": "_init_batch_state_if_needed",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2709,
+      "confidence": 60
+    },
+    {
+      "name": "_compute_change_metrics",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2721,
+      "confidence": 60
+    },
+    {
+      "name": "_build_misclass_quarantine_record",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2738,
+      "confidence": 60
+    },
+    {
+      "name": "_reorder_time_columns",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2784,
+      "confidence": 60
+    },
+    {
+      "name": "_is_preopen_and_quarantine",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2816,
+      "confidence": 60
+    },
+    {
+      "name": "_nearest_price_for_type",
+      "typ": "method",
+      "filename": "src\\storage\\csv_sink.py",
+      "lineno": 2881,
+      "confidence": 60
+    },
+    {
+      "name": "group_by_strike",
+      "typ": "function",
+      "filename": "src\\storage\\csv_utils.py",
+      "lineno": 40,
+      "confidence": 60
+    },
+    {
+      "name": "compute_atm_strike",
+      "typ": "function",
+      "filename": "src\\storage\\csv_utils.py",
+      "lineno": 83,
+      "confidence": 60
+    },
+    {
+      "name": "format_date_key",
+      "typ": "function",
+      "filename": "src\\storage\\csv_utils.py",
+      "lineno": 146,
+      "confidence": 60
+    },
+    {
+      "name": "parse_offset_label",
+      "typ": "function",
+      "filename": "src\\storage\\csv_utils.py",
+      "lineno": 167,
+      "confidence": 60
+    },
+    {
+      "name": "compute_day_width",
+      "typ": "function",
+      "filename": "src\\storage\\csv_utils.py",
+      "lineno": 189,
+      "confidence": 60
+    },
+    {
+      "name": "validate_schema",
+      "typ": "method",
+      "filename": "src\\storage\\csv_validator.py",
+      "lineno": 43,
+      "confidence": 60
+    },
+    {
+      "name": "maybe_skip_as_junk",
+      "typ": "method",
+      "filename": "src\\storage\\csv_validator.py",
+      "lineno": 128,
+      "confidence": 60
+    },
+    {
+      "name": "check_duplicate",
+      "typ": "method",
+      "filename": "src\\storage\\csv_validator.py",
+      "lineno": 282,
+      "confidence": 60
+    },
+    {
+      "name": "prune_mixed_expiry",
+      "typ": "method",
+      "filename": "src\\storage\\csv_validator.py",
+      "lineno": 331,
+      "confidence": 60
+    },
+    {
+      "name": "get_file_mtime",
+      "typ": "method",
+      "filename": "src\\storage\\csv_writer.py",
+      "lineno": 99,
+      "confidence": 60
+    },
+    {
+      "name": "list_files_in_dir",
+      "typ": "method",
+      "filename": "src\\storage\\csv_writer.py",
+      "lineno": 117,
+      "confidence": 60
+    },
+    {
+      "name": "_get_partition_path",
+      "typ": "method",
+      "filename": "src\\storage\\parquet_sink.py",
+      "lineno": 184,
+      "confidence": 60
+    },
+    {
+      "name": "read_options_data",
+      "typ": "method",
+      "filename": "src\\storage\\parquet_sink.py",
+      "lineno": 269,
+      "confidence": 60
+    },
+    {
+      "name": "CSVPathGenerator",
+      "typ": "class",
+      "filename": "src\\storage\\path_generator.py",
+      "lineno": 13,
+      "confidence": 60
+    },
+    {
+      "name": "option_file_path",
+      "typ": "method",
+      "filename": "src\\storage\\path_generator.py",
+      "lineno": 23,
+      "confidence": 60
+    },
+    {
+      "name": "debug_file_path",
+      "typ": "method",
+      "filename": "src\\storage\\path_generator.py",
+      "lineno": 29,
+      "confidence": 60
+    },
+    {
+      "name": "overview_file_path",
+      "typ": "method",
+      "filename": "src\\storage\\path_generator.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "start_retention_worker",
+      "typ": "function",
+      "filename": "src\\storage\\retention.py",
+      "lineno": 123,
+      "confidence": 60
+    },
+    {
+      "name": "StreamCallback",
+      "typ": "variable",
+      "filename": "src\\streaming\\bus.py",
+      "lineno": 33,
+      "confidence": 60
+    },
+    {
+      "name": "render",
+      "typ": "method",
+      "filename": "src\\summary\\curated_layout.py",
+      "lineno": 510,
+      "confidence": 60
+    },
+    {
+      "name": "cache_size_items",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 74,
+      "confidence": 60
+    },
+    {
+      "name": "cache_memory_mb",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 75,
+      "confidence": 60
+    },
+    {
+      "name": "cache_evictions",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 76,
+      "confidence": 60
+    },
+    {
+      "name": "avg_batch_size",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 80,
+      "confidence": 60
+    },
+    {
+      "name": "batch_processing_time",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 81,
+      "confidence": 60
+    },
+    {
+      "name": "api_errors",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 85,
+      "confidence": 60
+    },
+    {
+      "name": "network_errors",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 86,
+      "confidence": 60
+    },
+    {
+      "name": "influxdb_connection_status",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 119,
+      "confidence": 60
+    },
+    {
+      "name": "influxdb_query_performance",
+      "typ": "variable",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 120,
+      "confidence": 60
+    },
+    {
+      "name": "metric_mappings",
+      "typ": "attribute",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 153,
+      "confidence": 60
+    },
+    {
+      "name": "get_collection_metrics",
+      "typ": "method",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 652,
+      "confidence": 60
+    },
+    {
+      "name": "get_storage_metrics",
+      "typ": "method",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 663,
+      "confidence": 60
+    },
+    {
+      "name": "export_metrics_dict",
+      "typ": "method",
+      "filename": "src\\summary\\metrics_processor.py",
+      "lineno": 697,
+      "confidence": 60
+    },
+    {
+      "name": "last_update_epoch",
+      "typ": "variable",
+      "filename": "src\\summary\\model.py",
+      "lineno": 31,
+      "confidence": 60
+    },
+    {
+      "name": "success_rate_percent",
+      "typ": "variable",
+      "filename": "src\\summary\\model.py",
+      "lineno": 32,
+      "confidence": 60
+    },
+    {
+      "name": "options_last_cycle",
+      "typ": "variable",
+      "filename": "src\\summary\\model.py",
+      "lineno": 33,
+      "confidence": 60
+    },
+    {
+      "name": "iv_repr",
+      "typ": "variable",
+      "filename": "src\\summary\\model.py",
+      "lineno": 35,
+      "confidence": 60
+    },
+    {
+      "name": "publish_cycle_panels",
+      "typ": "function",
+      "filename": "src\\summary\\publisher.py",
+      "lineno": 66,
+      "confidence": 60
+    },
+    {
+      "name": "next_run_in_sec",
+      "typ": "variable",
+      "filename": "src\\summary\\unified\\model.py",
+      "lineno": 51,
+      "confidence": 60
+    },
+    {
+      "name": "alerts_by_type",
+      "typ": "variable",
+      "filename": "src\\summary\\unified\\model.py",
+      "lineno": 64,
+      "confidence": 60
+    },
+    {
+      "name": "raw_ref",
+      "typ": "variable",
+      "filename": "src\\summary\\unified\\model.py",
+      "lineno": 82,
+      "confidence": 60
+    },
+    {
+      "name": "raw_ref",
+      "typ": "attribute",
+      "filename": "src\\summary\\unified\\model.py",
+      "lineno": 115,
+      "confidence": 60
+    },
+    {
+      "name": "next_run_in_sec",
+      "typ": "attribute",
+      "filename": "src\\summary\\unified\\model.py",
+      "lineno": 176,
+      "confidence": 60
+    },
+    {
+      "name": "alerts_by_type",
+      "typ": "attribute",
+      "filename": "src\\summary\\unified\\model.py",
+      "lineno": 286,
+      "confidence": 60
+    },
+    {
+      "name": "raw_ref",
+      "typ": "attribute",
+      "filename": "src\\summary\\unified\\model.py",
+      "lineno": 335,
+      "confidence": 60
+    },
+    {
+      "name": "__getattr__",
+      "typ": "function",
+      "filename": "src\\summary\\unified\\snapshot.py",
+      "lineno": 17,
+      "confidence": 60
+    },
+    {
+      "name": "generation",
+      "typ": "method",
+      "filename": "src\\summary\\unified\\sse_client.py",
+      "lineno": 108,
+      "confidence": 60
+    },
+    {
+      "name": "env_loaded",
+      "typ": "variable",
+      "filename": "src\\tools\\run_with_real_api.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "env_loaded",
+      "typ": "variable",
+      "filename": "src\\tools\\run_with_real_api.py",
+      "lineno": 41,
+      "confidence": 60
+    },
+    {
+      "name": "userName",
+      "typ": "variable",
+      "filename": "src\\tools\\token_manager.py",
+      "lineno": 95,
+      "confidence": 60
+    },
+    {
+      "name": "success_route",
+      "typ": "function",
+      "filename": "src\\tools\\token_manager.py",
+      "lineno": 365,
+      "confidence": 60
+    },
+    {
+      "name": "callback_route",
+      "typ": "function",
+      "filename": "src\\tools\\token_manager.py",
+      "lineno": 371,
+      "confidence": 60
+    },
+    {
+      "name": "root_route",
+      "typ": "function",
+      "filename": "src\\tools\\token_manager.py",
+      "lineno": 375,
+      "confidence": 60
+    },
+    {
+      "name": "favicon_route",
+      "typ": "function",
+      "filename": "src\\tools\\token_manager.py",
+      "lineno": 380,
+      "confidence": 60
+    },
+    {
+      "name": "_cb",
+      "typ": "function",
+      "filename": "src\\tools\\token_providers\\kite.py",
+      "lineno": 106,
+      "confidence": 60
+    },
+    {
+      "name": "succ_avg",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 27,
+      "confidence": 60
+    },
+    {
+      "name": "succ_life",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 28,
+      "confidence": 60
+    },
+    {
+      "name": "cycle_attempts",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 29,
+      "confidence": 60
+    },
+    {
+      "name": "overall_success",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 36,
+      "confidence": 60
+    },
+    {
+      "name": "files_total",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 40,
+      "confidence": 60
+    },
+    {
+      "name": "records_total",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 41,
+      "confidence": 60
+    },
+    {
+      "name": "records_delta",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 42,
+      "confidence": 60
+    },
+    {
+      "name": "errors_total",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 43,
+      "confidence": 60
+    },
+    {
+      "name": "disk_mb",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 44,
+      "confidence": 60
+    },
+    {
+      "name": "points_total",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 47,
+      "confidence": 60
+    },
+    {
+      "name": "points_delta",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 48,
+      "confidence": 60
+    },
+    {
+      "name": "write_success_pct",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "query_latency_ms",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 51,
+      "confidence": 60
+    },
+    {
+      "name": "files_total",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 54,
+      "confidence": 60
+    },
+    {
+      "name": "last_backup_unixtime",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 55,
+      "confidence": 60
+    },
+    {
+      "name": "size_mb",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 57,
+      "confidence": 60
+    },
+    {
+      "name": "ago",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 68,
+      "confidence": 60
+    },
+    {
+      "name": "IndicesStreamPanel",
+      "typ": "class",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 72,
+      "confidence": 60
+    },
+    {
+      "name": "StoragePanel",
+      "typ": "class",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 76,
+      "confidence": 60
+    },
+    {
+      "name": "FooterPanel",
+      "typ": "class",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 80,
+      "confidence": 60
+    },
+    {
+      "name": "MemorySnapshot",
+      "typ": "class",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 84,
+      "confidence": 60
+    },
+    {
+      "name": "peak_rss_mb",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 86,
+      "confidence": 60
+    },
+    {
+      "name": "gc_collections_total",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 87,
+      "confidence": 60
+    },
+    {
+      "name": "gc_last_duration_ms",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 88,
+      "confidence": 60
+    },
+    {
+      "name": "last_collection",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 109,
+      "confidence": 60
+    },
+    {
+      "name": "legs_total",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 144,
+      "confidence": 60
+    },
+    {
+      "name": "legs_cycles",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 145,
+      "confidence": 60
+    },
+    {
+      "name": "succ_total",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 146,
+      "confidence": 60
+    },
+    {
+      "name": "succ_cycles",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 147,
+      "confidence": 60
+    },
+    {
+      "name": "last_err_ts",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 148,
+      "confidence": 60
+    },
+    {
+      "name": "last_err_type",
+      "typ": "variable",
+      "filename": "src\\types\\dashboard_types.py",
+      "lineno": 149,
+      "confidence": 60
+    },
+    {
+      "name": "push",
+      "typ": "method",
+      "filename": "src\\ui_enhanced\\alerts_hub.py",
+      "lineno": 16,
+      "confidence": 60
+    },
+    {
+      "name": "underline",
+      "typ": "variable",
+      "filename": "src\\ui_enhanced\\color.py",
+      "lineno": 50,
+      "confidence": 100
+    },
+    {
+      "name": "market_data",
+      "typ": "variable",
+      "filename": "src\\ui_enhanced\\live_panel.py",
+      "lineno": 18,
+      "confidence": 100
+    },
+    {
+      "name": "render_line",
+      "typ": "method",
+      "filename": "src\\ui_enhanced\\market_status.py",
+      "lineno": 20,
+      "confidence": 60
+    },
+    {
+      "name": "__getattr__",
+      "typ": "function",
+      "filename": "src\\unified_main.py",
+      "lineno": 24,
+      "confidence": 60
+    },
+    {
+      "name": "get_statistics",
+      "typ": "method",
+      "filename": "src\\utils\\data_quality.py",
+      "lineno": 275,
+      "confidence": 60
+    },
+    {
+      "name": "try_with_central_handler",
+      "typ": "function",
+      "filename": "src\\utils\\error_utils.py",
+      "lineno": 14,
+      "confidence": 60
+    },
+    {
+      "name": "select_expiries",
+      "typ": "function",
+      "filename": "src\\utils\\expiry_service.py",
+      "lineno": 211,
+      "confidence": 60
+    },
+    {
+      "name": "unsubscribe",
+      "typ": "method",
+      "filename": "src\\utils\\file_watch_events.py",
+      "lineno": 36,
+      "confidence": 60
+    },
+    {
+      "name": "_g6_close_logging_handlers",
+      "typ": "function",
+      "filename": "src\\utils\\logging_utils.py",
+      "lineno": 311,
+      "confidence": 60
+    },
+    {
+      "name": "adjust_expiry_for_holiday",
+      "typ": "function",
+      "filename": "src\\utils\\market_hours.py",
+      "lineno": 248,
+      "confidence": 60
+    },
+    {
+      "name": "register_cache",
+      "typ": "method",
+      "filename": "src\\utils\\memory_manager.py",
+      "lineno": 124,
+      "confidence": 60
+    },
+    {
+      "name": "with_memory_cleanup",
+      "typ": "function",
+      "filename": "src\\utils\\memory_manager.py",
+      "lineno": 270,
+      "confidence": 60
+    },
+    {
+      "name": "last_actions",
+      "typ": "attribute",
+      "filename": "src\\utils\\memory_pressure.py",
+      "lineno": 101,
+      "confidence": 60
+    },
+    {
+      "name": "last_actions",
+      "typ": "attribute",
+      "filename": "src\\utils\\memory_pressure.py",
+      "lineno": 192,
+      "confidence": 60
+    },
+    {
+      "name": "effective_strike_window",
+      "typ": "method",
+      "filename": "src\\utils\\memory_pressure.py",
+      "lineno": 260,
+      "confidence": 60
+    },
+    {
+      "name": "should_skip_greeks",
+      "typ": "method",
+      "filename": "src\\utils\\memory_pressure.py",
+      "lineno": 326,
+      "confidence": 60
+    },
+    {
+      "name": "should_reduce_depth",
+      "typ": "method",
+      "filename": "src\\utils\\memory_pressure.py",
+      "lineno": 328,
+      "confidence": 60
+    },
+    {
+      "name": "should_slow_cycles",
+      "typ": "method",
+      "filename": "src\\utils\\memory_pressure.py",
+      "lineno": 330,
+      "confidence": 60
+    },
+    {
+      "name": "drop_per_option_metrics",
+      "typ": "method",
+      "filename": "src\\utils\\memory_pressure.py",
+      "lineno": 332,
+      "confidence": 60
+    },
+    {
+      "name": "ensure_started",
+      "typ": "method",
+      "filename": "src\\utils\\memory_trace.py",
+      "lineno": 70,
+      "confidence": 60
+    },
+    {
+      "name": "_ProcessorProto",
+      "typ": "class",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 30,
+      "confidence": 60
+    },
+    {
+      "name": "get_memory_usage_mb",
+      "typ": "method",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 93,
+      "confidence": 60
+    },
+    {
+      "name": "get_cpu_percent",
+      "typ": "method",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 105,
+      "confidence": 60
+    },
+    {
+      "name": "get_api_success_rate_percent",
+      "typ": "method",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 117,
+      "confidence": 60
+    },
+    {
+      "name": "get_api_latency_ms",
+      "typ": "method",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 129,
+      "confidence": 60
+    },
+    {
+      "name": "get_collection_success_rate_percent",
+      "typ": "method",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 141,
+      "confidence": 60
+    },
+    {
+      "name": "get_options_processed_total",
+      "typ": "method",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 153,
+      "confidence": 60
+    },
+    {
+      "name": "get_options_per_minute",
+      "typ": "method",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 165,
+      "confidence": 60
+    },
+    {
+      "name": "get_last_cycle_options_sum",
+      "typ": "method",
+      "filename": "src\\utils\\metrics_adapter.py",
+      "lineno": 177,
+      "confidence": 60
+    },
+    {
+      "name": "add_sink",
+      "typ": "method",
+      "filename": "src\\utils\\output.py",
+      "lineno": 204,
+      "confidence": 60
+    },
+    {
+      "name": "panel_extend",
+      "typ": "method",
+      "filename": "src\\utils\\output.py",
+      "lineno": 299,
+      "confidence": 60
+    },
+    {
+      "name": "validate_csv_header",
+      "typ": "function",
+      "filename": "src\\utils\\overlay_quality.py",
+      "lineno": 21,
+      "confidence": 60
+    },
+    {
+      "name": "supported",
+      "typ": "variable",
+      "filename": "src\\utils\\panel_support.py",
+      "lineno": 13,
+      "confidence": 60
+    },
+    {
+      "name": "obj_type",
+      "typ": "variable",
+      "filename": "src\\utils\\panel_support.py",
+      "lineno": 16,
+      "confidence": 60
+    },
+    {
+      "name": "rate_limited",
+      "typ": "function",
+      "filename": "src\\utils\\rate_limiter.py",
+      "lineno": 37,
+      "confidence": 60
+    },
+    {
+      "name": "check_provider",
+      "typ": "method",
+      "filename": "src\\utils\\resilience.py",
+      "lineno": 175,
+      "confidence": 60
+    },
+    {
+      "name": "evictions",
+      "typ": "attribute",
+      "filename": "src\\utils\\serialization_cache.py",
+      "lineno": 80,
+      "confidence": 60
+    },
+    {
+      "name": "_m_evictions",
+      "typ": "attribute",
+      "filename": "src\\utils\\serialization_cache.py",
+      "lineno": 84,
+      "confidence": 60
+    },
+    {
+      "name": "evictions",
+      "typ": "attribute",
+      "filename": "src\\utils\\serialization_cache.py",
+      "lineno": 128,
+      "confidence": 60
+    },
+    {
+      "name": "_m_evictions",
+      "typ": "attribute",
+      "filename": "src\\utils\\serialization_cache.py",
+      "lineno": 148,
+      "confidence": 60
+    },
+    {
+      "name": "_reset_for_tests",
+      "typ": "function",
+      "filename": "src\\utils\\serialization_cache.py",
+      "lineno": 201,
+      "confidence": 60
+    },
+    {
+      "name": "get_typed",
+      "typ": "method",
+      "filename": "src\\utils\\status_reader.py",
+      "lineno": 142,
+      "confidence": 60
+    },
+    {
+      "name": "get_typed",
+      "typ": "method",
+      "filename": "src\\utils\\status_reader.py",
+      "lineno": 144,
+      "confidence": 60
+    },
+    {
+      "name": "get_typed",
+      "typ": "method",
+      "filename": "src\\utils\\status_reader.py",
+      "lineno": 146,
+      "confidence": 60
+    },
+    {
+      "name": "get_status_age_seconds",
+      "typ": "method",
+      "filename": "src\\utils\\status_reader.py",
+      "lineno": 160,
+      "confidence": 60
+    },
+    {
+      "name": "TOL_UNITS",
+      "typ": "variable",
+      "filename": "src\\utils\\strike_index.py",
+      "lineno": 20,
+      "confidence": 60
+    },
+    {
+      "name": "describe",
+      "typ": "method",
+      "filename": "src\\utils\\strike_index.py",
+      "lineno": 58,
+      "confidence": 60
+    },
+    {
+      "name": "realized_coverage",
+      "typ": "method",
+      "filename": "src\\utils\\strike_index.py",
+      "lineno": 82,
+      "confidence": 60
+    },
+    {
+      "name": "segment",
+      "typ": "variable",
+      "filename": "src\\utils\\symbol_utils.py",
+      "lineno": 14,
+      "confidence": 60
+    },
+    {
+      "name": "segment",
+      "typ": "variable",
+      "filename": "src\\utils\\symbol_utils.py",
+      "lineno": 34,
+      "confidence": 60
+    },
+    {
+      "name": "_at_ist",
+      "typ": "function",
+      "filename": "src\\utils\\timeutils.py",
+      "lineno": 206,
+      "confidence": 60
+    },
+    {
+      "name": "list_validators",
+      "typ": "function",
+      "filename": "src\\validation\\__init__.py",
+      "lineno": 64,
+      "confidence": 60
+    },
+    {
+      "name": "_debug_dump",
+      "typ": "function",
+      "filename": "src\\validation\\__init__.py",
+      "lineno": 68,
+      "confidence": 60
+    },
+    {
+      "name": "run_validators",
+      "typ": "function",
+      "filename": "src\\validation\\__init__.py",
+      "lineno": 72,
+      "confidence": 60
+    },
+    {
+      "name": "MemorySnapshot",
+      "typ": "import",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 29,
+      "confidence": 90
+    },
+    {
+      "name": "LOG_PATH",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 141,
+      "confidence": 60
+    },
+    {
+      "name": "SECONDARY_REFRESH",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 145,
+      "confidence": 60
+    },
+    {
+      "name": "memory_status",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 246,
+      "confidence": 60
+    },
+    {
+      "name": "_access_log_middleware",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 305,
+      "confidence": 60
+    },
+    {
+      "name": "http_exception_handler",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 353,
+      "confidence": 60
+    },
+    {
+      "name": "validation_exception_handler",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 368,
+      "confidence": 60
+    },
+    {
+      "name": "unhandled_exception_handler",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 381,
+      "confidence": 60
+    },
+    {
+      "name": "api_unified_status",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 487,
+      "confidence": 60
+    },
+    {
+      "name": "api_unified_indices",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 513,
+      "confidence": 60
+    },
+    {
+      "name": "api_unified_source_status",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 537,
+      "confidence": 60
+    },
+    {
+      "name": "api_memory_gc",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 561,
+      "confidence": 60
+    },
+    {
+      "name": "api_unified_cache_stats",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 602,
+      "confidence": 60
+    },
+    {
+      "name": "api_diag_advisor_integrity",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 761,
+      "confidence": 60
+    },
+    {
+      "name": "api_errors_recent",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 817,
+      "confidence": 60
+    },
+    {
+      "name": "health_metrics",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 863,
+      "confidence": 60
+    },
+    {
+      "name": "alert_webhook_file",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 916,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_k_calibration",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 981,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_weights",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 1018,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_quarantine_log",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 1056,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_forecast_path",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\app.py",
+      "lineno": 1101,
+      "confidence": 60
+    },
+    {
+      "name": "WEB_WORKERS",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\core\\config.py",
+      "lineno": 22,
+      "confidence": 60
+    },
+    {
+      "name": "metrics_raw",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\debug.py",
+      "lineno": 48,
+      "confidence": 60
+    },
+    {
+      "name": "debug_metric_names",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\debug.py",
+      "lineno": 71,
+      "confidence": 60
+    },
+    {
+      "name": "debug_missing",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\debug.py",
+      "lineno": 83,
+      "confidence": 60
+    },
+    {
+      "name": "debug_indices",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\debug.py",
+      "lineno": 96,
+      "confidence": 60
+    },
+    {
+      "name": "debug_raw_metric",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\debug.py",
+      "lineno": 134,
+      "confidence": 60
+    },
+    {
+      "name": "unknown_lines",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\metrics_cache.py",
+      "lineno": 98,
+      "confidence": 60
+    },
+    {
+      "name": "unknown_lines",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\metrics_cache.py",
+      "lineno": 105,
+      "confidence": 60
+    },
+    {
+      "name": "model_config",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\base.py",
+      "lineno": 18,
+      "confidence": 60
+    },
+    {
+      "name": "cache_age_seconds",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\base.py",
+      "lineno": 63,
+      "confidence": 60
+    },
+    {
+      "name": "NIFTY",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 10,
+      "confidence": 60
+    },
+    {
+      "name": "BANKNIFTY",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 11,
+      "confidence": 60
+    },
+    {
+      "name": "FINNIFTY",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 12,
+      "confidence": 60
+    },
+    {
+      "name": "MIDCPNIFTY",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 13,
+      "confidence": 60
+    },
+    {
+      "name": "SENSEX",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 14,
+      "confidence": 60
+    },
+    {
+      "name": "THIS_WEEK",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 19,
+      "confidence": 60
+    },
+    {
+      "name": "NEXT_WEEK",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 20,
+      "confidence": 60
+    },
+    {
+      "name": "THIS_MONTH",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 21,
+      "confidence": 60
+    },
+    {
+      "name": "NEXT_MONTH",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 22,
+      "confidence": 60
+    },
+    {
+      "name": "CE",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 27,
+      "confidence": 60
+    },
+    {
+      "name": "PE",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\common.py",
+      "lineno": 28,
+      "confidence": 60
+    },
+    {
+      "name": "avg_iv",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\requests\\ensemble.py",
+      "lineno": 36,
+      "confidence": 60
+    },
+    {
+      "name": "recent_window_size",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\requests\\ensemble.py",
+      "lineno": 38,
+      "confidence": 60
+    },
+    {
+      "name": "cache_bust",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\requests\\ensemble.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\ensemble.py",
+      "lineno": 41,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\ensemble.py",
+      "lineno": 57,
+      "confidence": 60
+    },
+    {
+      "name": "validate_horizon",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\ensemble.py",
+      "lineno": 64,
+      "confidence": 60
+    },
+    {
+      "name": "validate_date_format",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\live.py",
+      "lineno": 88,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\live.py",
+      "lineno": 101,
+      "confidence": 60
+    },
+    {
+      "name": "model_config",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\requests\\live.py",
+      "lineno": 109,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\overlay.py",
+      "lineno": 20,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\path_forecast.py",
+      "lineno": 24,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\path_forecast.py",
+      "lineno": 53,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\path_forecast.py",
+      "lineno": 74,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\path_forecast.py",
+      "lineno": 99,
+      "confidence": 60
+    },
+    {
+      "name": "validate_quantiles",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\path_forecast.py",
+      "lineno": 106,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\path_forecast.py",
+      "lineno": 128,
+      "confidence": 60
+    },
+    {
+      "name": "validate_offset",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\requests\\path_forecast.py",
+      "lineno": 143,
+      "confidence": 60
+    },
+    {
+      "name": "alertname",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 14,
+      "confidence": 60
+    },
+    {
+      "name": "job",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 17,
+      "confidence": 60
+    },
+    {
+      "name": "model_config",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 30,
+      "confidence": 60
+    },
+    {
+      "name": "startsAt",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 35,
+      "confidence": 60
+    },
+    {
+      "name": "endsAt",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 36,
+      "confidence": 60
+    },
+    {
+      "name": "generatorURL",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 37,
+      "confidence": 60
+    },
+    {
+      "name": "fingerprint",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 38,
+      "confidence": 60
+    },
+    {
+      "name": "groupKey",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 45,
+      "confidence": 60
+    },
+    {
+      "name": "receiver",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 47,
+      "confidence": 60
+    },
+    {
+      "name": "groupLabels",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 48,
+      "confidence": 60
+    },
+    {
+      "name": "commonLabels",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "commonAnnotations",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 50,
+      "confidence": 60
+    },
+    {
+      "name": "externalURL",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\alerts.py",
+      "lineno": 51,
+      "confidence": 60
+    },
+    {
+      "name": "validate_weights_sum",
+      "typ": "method",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 18,
+      "confidence": 60
+    },
+    {
+      "name": "k_value",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 30,
+      "confidence": 60
+    },
+    {
+      "name": "convergence_status",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 33,
+      "confidence": 60
+    },
+    {
+      "name": "error_metrics",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 34,
+      "confidence": 60
+    },
+    {
+      "name": "calibration",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 40,
+      "confidence": 60
+    },
+    {
+      "name": "forecast",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "weight",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 65,
+      "confidence": 60
+    },
+    {
+      "name": "performance_score",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 68,
+      "confidence": 60
+    },
+    {
+      "name": "total_weight",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 75,
+      "confidence": 60
+    },
+    {
+      "name": "duration_minutes",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 88,
+      "confidence": 60
+    },
+    {
+      "name": "released",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 89,
+      "confidence": 60
+    },
+    {
+      "name": "active_quarantines",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\ensemble.py",
+      "lineno": 99,
+      "confidence": 60
+    },
+    {
+      "name": "ce_ltp",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\live.py",
+      "lineno": 21,
+      "confidence": 60
+    },
+    {
+      "name": "ce_volume",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\live.py",
+      "lineno": 22,
+      "confidence": 60
+    },
+    {
+      "name": "pe_ltp",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\live.py",
+      "lineno": 25,
+      "confidence": 60
+    },
+    {
+      "name": "pe_volume",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\live.py",
+      "lineno": 26,
+      "confidence": 60
+    },
+    {
+      "name": "avg_iv",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\live.py",
+      "lineno": 36,
+      "confidence": 60
+    },
+    {
+      "name": "model_config",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\live.py",
+      "lineno": 74,
+      "confidence": 60
+    },
+    {
+      "name": "model_name",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 38,
+      "confidence": 60
+    },
+    {
+      "name": "model_version",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 39,
+      "confidence": 60
+    },
+    {
+      "name": "accuracy_metrics",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 42,
+      "confidence": 60
+    },
+    {
+      "name": "ensemble_weights",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 43,
+      "confidence": 60
+    },
+    {
+      "name": "timestamps",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 79,
+      "confidence": 60
+    },
+    {
+      "name": "forecasts",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 85,
+      "confidence": 60
+    },
+    {
+      "name": "mean_tp",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 116,
+      "confidence": 60
+    },
+    {
+      "name": "median_tp",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 117,
+      "confidence": 60
+    },
+    {
+      "name": "std_tp",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 118,
+      "confidence": 60
+    },
+    {
+      "name": "coverage_rate",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 121,
+      "confidence": 60
+    },
+    {
+      "name": "prediction_count",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 124,
+      "confidence": 60
+    },
+    {
+      "name": "period",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\path_forecast.py",
+      "lineno": 133,
+      "confidence": 60
+    },
+    {
+      "name": "UNHEALTHY",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\system.py",
+      "lineno": 15,
+      "confidence": 60
+    },
+    {
+      "name": "metrics_available",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\system.py",
+      "lineno": 24,
+      "confidence": 60
+    },
+    {
+      "name": "last_update",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\system.py",
+      "lineno": 36,
+      "confidence": 60
+    },
+    {
+      "name": "last_checked",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\system.py",
+      "lineno": 48,
+      "confidence": 60
+    },
+    {
+      "name": "function",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\system.py",
+      "lineno": 68,
+      "confidence": 60
+    },
+    {
+      "name": "last_error",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\system.py",
+      "lineno": 75,
+      "confidence": 60
+    },
+    {
+      "name": "last_error_time",
+      "typ": "variable",
+      "filename": "src\\web\\dashboard\\models\\responses\\system.py",
+      "lineno": 76,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_universal_advisor",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\advisor.py",
+      "lineno": 15,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_universal_advisor_health",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\advisor.py",
+      "lineno": 46,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_universal_advisor_generated_at_age_minutes",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\advisor.py",
+      "lineno": 72,
+      "confidence": 60
+    },
+    {
+      "name": "api_live_csv",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\live.py",
+      "lineno": 41,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_predictions",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 86,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 369,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_weights",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 473,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_quarantine_log",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 530,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_k_calibration",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 602,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_k_applied",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 657,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_k_override",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 736,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_ensemble_k_overrides",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 836,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_delta",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 882,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_correlations",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 999,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_model_matrix",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 1179,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_diagnostics",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 1500,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_move_stats",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 2570,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_move_stats_archive",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\ml.py",
+      "lineno": 2716,
+      "confidence": 60
+    },
+    {
+      "name": "_parse_time_any",
+      "typ": "import",
+      "filename": "src\\web\\dashboard\\routes\\overlay.py",
+      "lineno": 17,
+      "confidence": 90
+    },
+    {
+      "name": "api_overlay",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\overlay.py",
+      "lineno": 49,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_prediction_history",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 250,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_prediction_history_csv",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 399,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_forecast_meta",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 535,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_reset_defaults",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 637,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_tp_series",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 794,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_forecast_json",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 1634,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_diagnostics",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 1884,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_stats",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 2119,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_coverage_history_csv",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 2924,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_advisor_flags",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 2989,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_calibrate",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 3201,
+      "confidence": 60
+    },
+    {
+      "name": "api_ml_path_calibration_history",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\path_forecast.py",
+      "lineno": 3257,
+      "confidence": 60
+    },
+    {
+      "name": "healthz",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\system.py",
+      "lineno": 31,
+      "confidence": 60
+    },
+    {
+      "name": "api_info",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\system.py",
+      "lineno": 41,
+      "confidence": 60
+    },
+    {
+      "name": "api_version",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\system.py",
+      "lineno": 62,
+      "confidence": 60
+    },
+    {
+      "name": "api_sync_check",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\system.py",
+      "lineno": 89,
+      "confidence": 60
+    },
+    {
+      "name": "api_stats",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\system.py",
+      "lineno": 143,
+      "confidence": 60
+    },
+    {
+      "name": "metrics_json",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\routes\\system.py",
+      "lineno": 165,
+      "confidence": 60
+    },
+    {
+      "name": "forecast_path_core",
+      "typ": "function",
+      "filename": "src\\web\\dashboard\\services\\forecast_core.py",
+      "lineno": 63,
+      "confidence": 60
+    }
+  ]
 }

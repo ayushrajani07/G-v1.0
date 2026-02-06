@@ -90,8 +90,7 @@ $env:G6_PARALLEL_INDICES = '1'
 
 **Configuration**:
 ```bash
-# Enable CSVIO facade with writer thread
-$env:G6_USE_CSVIO_FACADE = '1'
+# CSVIO is always on; tune backend + writer thread
 $env:G6_CSVIO_BACKEND = 'filesystem'
 $env:G6_CSVIO_FLUSH_MS = '500'           # Flush interval in milliseconds
 $env:G6_CSVIO_BATCH = '2000'              # Max batch size before forced flush
@@ -323,8 +322,7 @@ $env:G6_PARALLEL_INDICES = '0'
 
 # Disable CSVIO writer thread
 $env:G6_CSVIO_WRITER_THREAD = '0'
-# Or disable facade entirely
-$env:G6_USE_CSVIO_FACADE = '0'
+# CSVIO is always-on; fallback is disabling writes or selecting a safer backend
 
 # Disable HTTP pooling
 $env:G6_HTTP_POOL_ENABLED = '0'

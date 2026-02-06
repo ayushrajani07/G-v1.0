@@ -1,28 +1,46 @@
 # G6 Observability Stack - Startup Scripts Guide
 
 **Updated:** October 25, 2025  
-**Context:** Following Phase 2 optimizations (5 → 2 services)
+**Context:** Following Phase 2 optimizations (5 → 2 baseline services)
 
 ---
 
-## Current Architecture (2 Services)
+## Current Architecture (2 Baseline Services)
 
-After optimization, the G6 stack now consists of only **2 services**:
+After optimization, the baseline G6 observability stack consists of **2 services**:
 1. **Grafana** (port 3002) - Visualization
 2. **Web API** (port 9500) - JSON API serving live/overlay data
 
-**Removed services:**
-- ❌ Prometheus (port 9091) - Not used by dashboards
-- ❌ Metrics Server (port 9108) - Deprecated
+**Removed from the baseline:**
+- ❌ Prometheus (port 9091) - Not required by dashboards (optional for scraping/rules)
+- ❌ Standalone metrics server (port 9108) - Removed; `/metrics` is embedded in the app when enabled
 - ❌ Overlay Exporter (port 9109) - Deprecated
 
 ---
 
 ## Canonical Startup Script
 
-### ✅ **obs_start_clean.ps1** (RECOMMENDED)
+### ✅ **start.ps1** (RECOMMENDED)
 
-**Purpose:** Start the complete G6 observability stack (Grafana + Web API)  
+Single entry point for operators and developers.
+
+```powershell
+# Start baseline observability stack
+.\scripts\start.ps1 -Mode obs
+
+# Start and open Grafana
+.\scripts\start.ps1 -Mode obs -OpenBrowser
+
+# Start baseline + optional Prometheus
+.\scripts\start.ps1 -Mode obs -StartPrometheus
+
+# Stop baseline stack
+.\scripts\start.ps1 -Mode obs-stop
+```
+
+### ✅ **obs_start_clean.ps1** (IMPLEMENTATION)
+
+**Purpose:** Implementation used by `start.ps1` for the observability stack (Grafana + Web API)  
 **Lines:** 203 (clean, focused, well-tested)  
 **Status:** Canonical version, actively maintained
 

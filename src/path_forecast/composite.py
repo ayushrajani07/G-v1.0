@@ -124,13 +124,10 @@ class CompositePathForecaster(PathForecaster):
                     continue
             futures_by_day.append(tp[now_pos: now_pos + horizon])
         H = horizon
-        prior: List[float] = []
-        for i in range(H):
-            col: List[float] = []
-            for seg in futures_by_day:
-                if i < len(seg):
-                    col.append(seg[i])
-            prior.append(_median(col))
+        prior: List[float] = [
+            _median([seg[i] for seg in futures_by_day if i < len(seg)])
+            for i in range(H)
+        ]
         self.last_meta = {
             "prior_days": len(futures_by_day),
             "pruned_days": pruned_days,

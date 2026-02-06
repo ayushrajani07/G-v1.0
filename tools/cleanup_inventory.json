@@ -1639,15 +1639,6 @@
       "tags": []
     },
     {
-      "path": "scripts/launch_platform.py",
-      "size": 9201,
-      "hash": "0e0ab601cf2d872d",
-      "tags": [
-        "candidate-remove"
-      ],
-      "import_inbound": 0
-    },
-    {
       "path": "scripts/legacy_import_audit.py",
       "size": 3832,
       "hash": "bdb276180d2abaab",

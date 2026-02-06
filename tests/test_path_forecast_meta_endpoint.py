@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-import src.web.dashboard.routes.path_forecast as path_mod
+import src.web.dashboard.routes.path_forecast._router as path_mod
 from src.web.dashboard.app import app
 
 

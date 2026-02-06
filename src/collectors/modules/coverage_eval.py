@@ -54,11 +54,7 @@ def coverage_metrics(
         norm_strikes: Sequence[float | int] | None = None
         if strikes is not None:
             # Ensure sequence elements are numeric (skip invalid silently)
-            tmp: list[float | int] = []
-            for s in strikes:
-                if isinstance(s, (int, float)):
-                    tmp.append(s)
-            norm_strikes = tmp
+            norm_strikes = [s for s in strikes if isinstance(s, (int, float))]
         # Legacy expects Iterable[Dict[str, Any]]; perform a shallow coercion where possible.
         coerced: list[dict[str, Any]] = []
         for inst in instruments:

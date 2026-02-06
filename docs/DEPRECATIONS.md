@@ -42,7 +42,7 @@ Before deleting a deprecated component, all of the following must be satisfied:
 4. Release notes drafted with clear upgrade guidance.
 
 ## 4. Historical (Removed) Items
-| `unified_main.collection_loop` | Removed (2025-09-28) | `src.orchestrator.loop.run_loop` | N/A | Use orchestrator runner (`scripts/run_orchestrator_loop.py`). Flags `G6_ENABLE_LEGACY_LOOP`, `G6_SUPPRESS_LEGACY_LOOP_WARN` obsolete. |
+| `unified_main.collection_loop` | Removed (2025-09-28) | `src.orchestrator.loop.run_loop` | N/A | Use orchestrator runner (`scripts/run_orchestrator_loop.py`). Legacy loop gating flags are obsolete. |
 | `scripts/summary_view.py` | Removed (2025-10-03) | `scripts/summary/app.py` | N/A | Use unified summary (`python -m scripts.summary.app`). Skipped legacy tests retained as placeholders to assert removal milestone. |
 
 ## 5. Guidance for Introducing New Deprecations

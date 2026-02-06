@@ -9,10 +9,8 @@ import pytest
 from src.storage.csvio import api as csvio_api
 
 
-@pytest.mark.serial
 def test_atomic_backend_concurrent_append(tmp_path, monkeypatch):
-    # Force facade + atomic backend
-    monkeypatch.setenv("G6_USE_CSVIO_FACADE", "1")
+    # Force atomic backend
     monkeypatch.setenv("G6_CSVIO_BACKEND", "atomic")
 
     # Prepare target file with header pre-created to avoid header races

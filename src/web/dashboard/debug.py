@@ -31,6 +31,10 @@ _EXPECTED_CORE = [
 # Create debug router that will be conditionally included in main app
 debug_router = APIRouter(prefix="/debug", tags=["debug"])
 
+# Additional debug endpoints that should not be exposed in production by default,
+# but do not sit under the /debug prefix (kept for backward compatibility).
+debug_public_router = APIRouter(tags=["debug"])
+
 # Cache will be set by app.py after initialization
 _cache: MetricsCache | None = None
 
@@ -39,6 +43,29 @@ def set_cache(cache: MetricsCache) -> None:
     """Set the metrics cache instance for debug endpoints."""
     global _cache
     _cache = cache
+
+
+@debug_public_router.get('/metrics/raw')
+async def metrics_raw() -> PlainTextResponse:
+    """Return a raw Prometheus-text view of the last cached snapshot.
+
+    This is intended for ad-hoc debugging and is only mounted when
+    G6_DASHBOARD_DEBUG=1.
+    """
+    if _cache is None:
+        raise HTTPException(status_code=503, detail='cache not initialized')
+    snap = _cache.snapshot()
+    if not snap:
+        return PlainTextResponse("no data", status_code=503)
+    lines: list[str] = []
+    for name, samples in snap.raw.items():
+        for s in samples:
+            if s.labels:
+                label_str = ','.join(f"{k}=\"{v}\"" for k, v in s.labels.items())
+                lines.append(f"{name}{{{label_str}}} {s.value}")
+            else:
+                lines.append(f"{name} {s.value}")
+    return PlainTextResponse('\n'.join(lines))
 
 
 @debug_router.get('/metrics')

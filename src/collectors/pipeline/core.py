@@ -136,7 +136,7 @@ class IVEstimationBlock(AnalyticsBlock):
         if spot <= 0:
             # best-effort: try provider ATM fallback later
             return
-        for symbol, data in ee.enriched.items():
+        for data in ee.enriched.values():
             try:
                 if float(data.get('iv', 0)) > 0:
                     continue
@@ -172,7 +172,7 @@ class GreeksBlock(AnalyticsBlock):
         spot = float(ee.work.index_price or 0)
         if spot <= 0:
             return
-        for symbol, data in ee.enriched.items():
+        for data in ee.enriched.values():
             try:
                 strike = float(data.get('strike') or data.get('strike_price') or 0)
                 if strike <= 0:

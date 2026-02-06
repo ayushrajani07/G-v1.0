@@ -4,8 +4,6 @@ import json
 import pytest
 from src.schema.runtime_status_validator import validate_runtime_status
 
-pytestmark = pytest.mark.optional
-
 BASE = {
     "timestamp": "2025-01-01T00:00:00Z",
     "cycle": 1,

@@ -61,6 +61,25 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+_IST_TZ = datetime.timezone(datetime.timedelta(hours=5, minutes=30), name="IST")
+_UNIVERSE_CACHE: dict[tuple[str, str, str], tuple[float, list[dict[str, Any]]]] = {}
+_EXPIRY_MAP_CACHE: dict[tuple[str, str, str], tuple[float, dict[Any, list[dict[str, Any]]]]] = {}
+
+
+def _ist_date_str() -> str:
+    try:
+        return datetime.datetime.now(datetime.UTC).astimezone(_IST_TZ).date().isoformat()
+    except Exception:
+        return datetime.date.today().isoformat()
+
+
+def _provider_cache_id(providers: Any) -> str:
+    try:
+        p = getattr(providers, 'primary_provider', providers)
+        return f"{p.__class__.__module__}.{p.__class__.__name__}"
+    except Exception:
+        return "unknown"
+
 
 T = TypeVar("T")
 
@@ -82,7 +101,7 @@ DepsMap = dict[str, Any]
 class ProviderFacade(Protocol):  # minimal surface actually used
     def get_index_data(self, index: str) -> Any: ...  # (price, ohlc) pair expected
     def get_ltp(self, index: str) -> Any: ...
-    def get_atm_strike(self, index: str) -> Any: ...
+    def get_atm_strike(self, index: str, ltp: float | None = None) -> Any: ...
     def get_expiry_dates(self, index: str) -> Iterable[Any]: ...
     def get_option_instruments_universe(self, index: str) -> Iterable[dict[str, Any]]: ...
 
@@ -119,6 +138,24 @@ def _p(obj: Any, name: str, default: T) -> T:
         return cast(T, val)
     except Exception:
         return default
+
+
+def _metric_inc(metrics: Any, name: str, *, index_symbol: str, cache: str) -> None:
+    """Best-effort counter increment for cache diagnostics."""
+    if not metrics:
+        return
+    labels = {"index": str(index_symbol), "cache": str(cache)}
+    try:
+        if hasattr(metrics, 'safe_emit') and callable(getattr(metrics, 'safe_emit')):
+            metrics.safe_emit(name, 1.0, labels)
+            return
+    except Exception:
+        pass
+    try:
+        if hasattr(metrics, 'increment_counter') and callable(getattr(metrics, 'increment_counter')):
+            metrics.increment_counter(name, 1.0, labels)
+    except Exception:
+        pass
 
 def process_index(
     ctx: ContextLike | Any,
@@ -329,7 +366,11 @@ def process_index(
     _t0 = time.time()
     providers = ctx.providers
     try:
-        atm_strike = providers.get_atm_strike(index_symbol)
+        _ltp_hint = float(index_price) if isinstance(index_price, (int, float)) and float(index_price) > 0 else None
+        try:
+            atm_strike = providers.get_atm_strike(index_symbol, ltp=_ltp_hint)
+        except TypeError:
+            atm_strike = providers.get_atm_strike(index_symbol)
     except (KeyError, ValueError, TypeError) as e:
         logger.warning("get_atm_strike failed for %s: %s; falling back to get_ltp", index_symbol, e)
         try:
@@ -359,8 +400,16 @@ def process_index(
         success_flag = isinstance(atm_strike,(int,float)) and atm_strike>0
         metrics.mark_api_call(success=success_flag, latency_ms=(time.time()-_t0)*1000.0)
     trace("atm_strike", index=index_symbol, atm=atm_strike)
-    if not concise_mode: logger.info("%s ATM strike: %s", index_symbol, atm_strike)
-    else: logger.debug("%s ATM strike: %s", index_symbol, atm_strike)
+    try:
+        human_mode = bool(_env_bool('G6_HUMAN_MODE', False))
+        show_atm = bool(_env_bool('G6_HUMAN_SHOW_ATM', True))
+    except Exception:
+        human_mode = False
+        show_atm = True
+    if (not concise_mode) or (human_mode and show_atm):
+        logger.info("%s ATM strike: %s", index_symbol, atm_strike)
+    else:
+        logger.debug("%s ATM strike: %s", index_symbol, atm_strike)
     # Normalize return typing from injected synthetic price function
     ip_val, atm_val, used_synth = synth_index_price(index_symbol, index_price, atm_strike)
     index_price = ip_val  # already numeric tuple contract
@@ -503,7 +552,11 @@ def process_index(
 
     # Allowed expiries and adaptive summary should run regardless of strike_universe import outcome
     try:
-        allowed_expiry_dates = set(ctx.providers.get_expiry_dates(index_symbol))
+        try:
+            from src.collectors.modules.expiry_helpers import get_expiry_candidates_cached
+            allowed_expiry_dates = set(get_expiry_candidates_cached(index_symbol, ctx.providers))
+        except Exception:
+            allowed_expiry_dates = set(ctx.providers.get_expiry_dates(index_symbol))
     except Exception:
         allowed_expiry_dates = set()
     try:
@@ -520,7 +573,60 @@ def process_index(
         if not _env_bool('G6_DISABLE_EXPIRY_MAP', False):
             raw_universe_fetch = getattr(ctx.providers,'get_option_instruments_universe',None)
             if callable(raw_universe_fetch):
-                _t_um = time.time(); universe = raw_universe_fetch(index_symbol)
+                _t_um = time.time()
+                universe: Iterable[dict[str, Any]] | list[dict[str, Any]] = []
+                try:
+                    ttl = float(os.environ.get('G6_UNIVERSE_CACHE_TTL_SEC', '0') or '0')
+                except Exception:
+                    ttl = 0.0
+                try:
+                    max_instruments = int(os.environ.get('G6_UNIVERSE_CACHE_MAX_INSTRUMENTS', '200000') or '200000')
+                except Exception:
+                    max_instruments = 200000
+                try:
+                    max_entries = int(os.environ.get('G6_UNIVERSE_CACHE_MAX_ENTRIES', '8') or '8')
+                except Exception:
+                    max_entries = 8
+
+                try:
+                    map_ttl = float(os.environ.get('G6_EXPIRY_MAP_CACHE_TTL_SEC', '0') or '0')
+                except Exception:
+                    map_ttl = 0.0
+
+                cache_key = (_provider_cache_id(ctx.providers), str(index_symbol), _ist_date_str())
+                cache_hit = False
+                if ttl > 0:
+                    try:
+                        hit = _UNIVERSE_CACHE.get(cache_key)
+                        if hit is not None:
+                            ts, cached_list = hit
+                            if (time.time() - float(ts)) <= ttl:
+                                universe = list(cached_list)
+                                cache_hit = True
+                    except Exception:
+                        cache_hit = False
+
+                _metric_inc(metrics, 'g6_universe_cache_hits_total' if cache_hit else 'g6_universe_cache_misses_total', index_symbol=index_symbol, cache='universe')
+
+                if not cache_hit:
+                    universe = raw_universe_fetch(index_symbol)
+                    # Only cache bounded-size universes to avoid unbounded memory growth.
+                    try:
+                        uni_list = list(universe) if isinstance(universe, Iterable) else []
+                        universe = uni_list
+                        if ttl > 0 and uni_list and len(uni_list) <= max_instruments:
+                            if max_entries > 0 and len(_UNIVERSE_CACHE) >= max_entries:
+                                _UNIVERSE_CACHE.clear()
+                            _UNIVERSE_CACHE[cache_key] = (time.time(), uni_list)
+                    except Exception:
+                        pass
+
+                if TRACE_ENABLED:
+                    try:
+                        ucount = len(universe) if isinstance(universe, list) else None
+                        trace('expiry_universe_cache', index=index_symbol, hit=cache_hit, ttl=ttl, count=ucount)
+                    except Exception:
+                        pass
                 try:
                     # Ensure universe is iterable of dicts; if not, skip building.
                     if not isinstance(universe, Iterable):
@@ -533,8 +639,37 @@ def process_index(
                 else:
                     try:
                         from typing import cast as _cast
-                        expiry_universe_map_raw, map_stats = _build_expiry_map(universe)
-                        expiry_universe_map = _cast(dict[Any, Any], expiry_universe_map_raw)
+                        map_cache_hit = False
+                        if map_ttl > 0:
+                            try:
+                                hit_map = _EXPIRY_MAP_CACHE.get(cache_key)
+                                if hit_map is not None:
+                                    ts_map, cached_map = hit_map
+                                    if (time.time() - float(ts_map)) <= map_ttl and cached_map:
+                                        # Shallow-copy lists so downstream can’t mutate cached lists.
+                                        expiry_universe_map = {k: list(v) for k, v in cached_map.items()}
+                                        map_cache_hit = True
+                            except Exception:
+                                map_cache_hit = False
+
+                        _metric_inc(metrics, 'g6_expiry_map_cache_hits_total' if map_cache_hit else 'g6_expiry_map_cache_misses_total', index_symbol=index_symbol, cache='expiry_map')
+
+                        if not map_cache_hit:
+                            expiry_universe_map_raw, map_stats = _build_expiry_map(universe)
+                            expiry_universe_map = _cast(dict[Any, Any], expiry_universe_map_raw)
+                            if map_ttl > 0 and expiry_universe_map:
+                                try:
+                                    if max_entries > 0 and len(_EXPIRY_MAP_CACHE) >= max_entries:
+                                        _EXPIRY_MAP_CACHE.clear()
+                                    _EXPIRY_MAP_CACHE[cache_key] = (time.time(), {k: list(v) for k, v in expiry_universe_map.items()})
+                                except Exception:
+                                    pass
+
+                        if TRACE_ENABLED:
+                            try:
+                                trace('expiry_map_cache', index=index_symbol, hit=map_cache_hit, ttl=map_ttl, unique=len(expiry_universe_map) if expiry_universe_map else 0)
+                            except Exception:
+                                pass
                         if TRACE_ENABLED:
                             trace('expiry_map_build', index=index_symbol, unique=len(expiry_universe_map) if expiry_universe_map else 0, stats=map_stats)
                         if metrics and hasattr(metrics,'expiry_map_build_seconds'):
@@ -756,69 +891,90 @@ def process_index(
                     except Exception:
                         rate = 100.0 if per_index_success else 0.0
                         metrics.index_success_rate.labels(index=index_symbol).set(rate)
-                except Exception: logger.debug("Failed index aggregate metrics for %s", index_symbol)
-        # Initialize to a sane default; override below
-        cycle_status = 'unknown'
-        try:
-            # Derive index status from aggregated expiry statuses (coverage aware) instead of simple fail count heuristic.
-            last_age = 0.0; pcr_val = None
-            try:
-                if pcr_snapshot:
-                    first_key = sorted(pcr_snapshot.keys())[0]; pcr_val = pcr_snapshot[first_key]
-            except Exception:
-                pass
-            # Ensure each expiry_detail has a definitive status reflecting coverage metrics.
-            for _exp in expiry_details:
-                try:
-                    # Recompute status if missing or legacy placeholder
-                    _exp_status = _exp.get('status')
-                    if not _exp_status or _exp_status.lower() in ('bad','unknown'):
-                        _exp['status'] = compute_expiry_status(_exp)
                 except Exception:
-                    continue
-            cycle_status = aggregate_cycle_status(expiry_details)
-            if index_stale:
-                # Preserve original classification but mark explicitly as STALE for visibility.
-                cycle_status = 'STALE'
-            # Format index summary line (non-concise mode) using cycle_status (ok/partial/empty)
-            line = format_index(
-                index=index_symbol,
-                legs=per_index_option_count,
-                legs_avg=None,
-                legs_cum=None,
-                succ_pct=None,
-                succ_avg_pct=None,
-                attempts=per_index_attempts,
-                failures=per_index_failures,
-                last_age_s=last_age,
-                pcr=pcr_val,
-                atm=atm_strike if isinstance(atm_strike,(int,float)) else None,
-                err=None if per_index_failures==0 else 'fail',
-                status=cycle_status.lower(),
-            )
+                    logger.debug("Failed index aggregate metrics for %s", index_symbol)
+
+    # ---------------- Index Status / Summary (always compute) ----------------
+    cycle_status = 'unknown'
+    try:
+        # Derive index status from aggregated expiry statuses (coverage aware).
+        last_age = 0.0
+        pcr_val = None
+        try:
+            if pcr_snapshot:
+                first_key = sorted(pcr_snapshot.keys())[0]
+                pcr_val = pcr_snapshot[first_key]
+        except Exception:
+            pass
+
+        # Ensure each expiry_detail has a definitive status reflecting coverage metrics.
+        for _exp in expiry_details:
+            try:
+                _exp_status = _exp.get('status')
+                if not _exp_status or str(_exp_status).lower() in ('bad', 'unknown'):
+                    _exp['status'] = compute_expiry_status(_exp)
+            except Exception:
+                continue
+
+        cycle_status = aggregate_cycle_status(expiry_details)
+        if index_stale:
+            cycle_status = 'STALE'
+
+        line = format_index(
+            index=index_symbol,
+            legs=per_index_option_count,
+            legs_avg=None,
+            legs_cum=None,
+            succ_pct=None,
+            succ_avg_pct=None,
+            attempts=per_index_attempts,
+            failures=per_index_failures,
+            last_age_s=last_age,
+            pcr=pcr_val,
+            atm=atm_strike if isinstance(atm_strike, (int, float)) else None,
+            err=None if per_index_failures == 0 else 'fail',
+            status=cycle_status.lower(),
+        )
+        # In human mode we render a cleaner per-index table at the end of the cycle.
+        # Suppress the machine INDEX line by default to avoid duplicate noise.
+        try:
+            human_mode = bool(_env_bool('G6_HUMAN_MODE', False))
+            hide_index_lines = bool(_env_bool('G6_HUMAN_HIDE_INDEX_LINES', True))
+        except Exception:
+            human_mode = False
+            hide_index_lines = False
+
+        if not (human_mode and hide_index_lines):
             if concise_mode:
                 logger.debug(line)
             else:
                 logger.info(line)
-            if concise_mode:
-                block_lines = [
-                    "-------------------------",
-                    f"INDEX: {index_symbol}",
-                    "-------------------------",
-                    "Time   Price     ATM   Expiry      Tag         Legs  CE   PE   PCR   Range          Step",
-                    "-------------------------------------------------------------------------------",
-                ]
-                for (t, price_disp, atm_disp, exp_str, tag, legs, ce_c, pe_c, pcr_v, rng_disp, step_v) in human_rows:
-                    block_lines.append(f"{t:<6} {price_disp:>8} {atm_disp:>6} {exp_str:<11} {tag:<11} {legs:>4} {ce_c:>3} {pe_c:>3} {pcr_v:>5} {rng_disp:<14} {step_v:>4}")
-                block_lines.append("-------------------------------------------------------------------------------")
-                block_lines.append(f"{index_symbol} TOTAL LEGS: {per_index_option_count} | FAILS: {per_index_failures} | STATUS: {cycle_status.upper()}{' (SKIPPED)' if (stale_mode=='skip' and index_stale) else ''}")
-                result['human_block'] = "\n".join(block_lines)
-                result['overall_legs'] += per_index_option_count
-                result['overall_fails'] += per_index_failures
-        except Exception as e:  # ensure we always return a result structure
-            logger.error("Error processing index %s: %s", index_symbol, e)
-            try: trace('index_error', index=index_symbol, error=str(e))
-            except Exception: pass
+
+        if concise_mode:
+            block_lines = [
+                "-------------------------",
+                f"INDEX: {index_symbol}",
+                "-------------------------",
+                "Time   Price     ATM   Expiry      Tag         Legs  CE   PE   PCR   Range          Step",
+                "-------------------------------------------------------------------------------",
+            ]
+            for (t, price_disp, atm_disp, exp_str, tag, legs, ce_c, pe_c, pcr_v, rng_disp, step_v) in human_rows:
+                block_lines.append(
+                    f"{t:<6} {price_disp:>8} {atm_disp:>6} {exp_str:<11} {tag:<11} {legs:>4} {ce_c:>3} {pe_c:>3} {pcr_v:>5} {rng_disp:<14} {step_v:>4}"
+                )
+            block_lines.append("-------------------------------------------------------------------------------")
+            block_lines.append(
+                f"{index_symbol} TOTAL LEGS: {per_index_option_count} | FAILS: {per_index_failures} | STATUS: {cycle_status.upper()}{' (SKIPPED)' if (stale_mode=='skip' and index_stale) else ''}"
+            )
+            result['human_block'] = "\n".join(block_lines)
+            result['overall_legs'] += per_index_option_count
+            result['overall_fails'] += per_index_failures
+    except Exception as e:  # ensure we always return a result structure
+        logger.error("Error processing index %s: %s", index_symbol, e)
+        try:
+            trace('index_error', index=index_symbol, error=str(e))
+        except Exception:
+            pass
     # Always set overall legs/fails on the result (used by callers for rollups)
     try:
         result['overall_legs'] = int(per_index_option_count)

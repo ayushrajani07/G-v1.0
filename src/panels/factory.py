@@ -164,7 +164,7 @@ def build_indices_summary(reader: StatusReader, status: dict[str, Any] | None) -
                         if isinstance(ex, dict):
                             s = 0
                             got = False
-                            for _ek, _ev in ex.items():
+                            for _ev in ex.values():
                                 if isinstance(_ev, dict):
                                     _lv = _ev.get("legs")
                                     if isinstance(_lv, (int, float)):
@@ -230,9 +230,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
         cy.update(cy_status)
     if isinstance(cy_reader, dict):
         # Reader wins for explicit values, but keep status fields when reader lacks them
-        for k, v in cy_reader.items():
-            if v is not None:
-                cy[k] = v
+        cy.update({k: v for k, v in cy_reader.items() if v is not None})
     cur_cycle = None
     try:
         cur_cycle = cy.get("cycle") if isinstance(cy, dict) else None
@@ -291,7 +289,7 @@ def build_indices_stream_items(reader: StatusReader, status: dict[str, Any] | No
                         if isinstance(ex, dict):
                             s = 0
                             got = False
-                            for _ek, _ev in ex.items():
+                            for _ev in ex.values():
                                 if isinstance(_ev, dict):
                                     _lv = _ev.get("legs")
                                     if isinstance(_lv, (int, float)):

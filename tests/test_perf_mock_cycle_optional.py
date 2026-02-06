@@ -1,7 +1,7 @@
 import time
 import pytest
 
-pytestmark = [pytest.mark.optional, pytest.mark.perf]
+pytestmark = pytest.mark.slow
 
 
 def test_mock_cycle_perf_baseline(run_mock_cycle):

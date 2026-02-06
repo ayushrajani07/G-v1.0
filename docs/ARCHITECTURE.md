@@ -57,8 +57,8 @@ Refactor Plan (Phase 2+):
 Modes:
 - Plain terminal
 - Rich adaptive panel view (with group toggles & severity diffusion)
-- Panels bridge writing structured panel fragments to `data/panels`
-Key env toggles: `G6_SUMMARY_*`, `G6_PANELS_*`
+- In-process panels writer emitting structured panel fragments to `data/panels`
+Key env toggles: `G6_PANELS_*`
 Pain Points:
 - Mixed concerns (rendering, state transforms, dedupe, history persistence)
 Roadmap: separate model layer (deriving canonical summary model) from UI formatting + transport.

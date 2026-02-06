@@ -113,7 +113,7 @@ src/collectors/pipeline_root.py         - Pipeline variant
 ```
 
 **From DEPRECATIONS.md:**
-> "`unified_main.collection_loop` (legacy orchestration loop)" - Deprecated but still present with `G6_ENABLE_LEGACY_LOOP=1`
+> "`unified_main.collection_loop` (legacy orchestration loop)" - Removed (2025-09-28); legacy loop flags are no longer supported.
 
 **Problem:**
 Having two complete orchestration paths (legacy + new) doubles the testing surface and maintenance burden. The deprecation has been in place since 2025-09-26 but not removed.
@@ -293,7 +293,7 @@ The need for `serial` marker and `metrics_no_reset` indicates tests are not prop
 ```
 | Item | First Warn Release | Earliest Removal | Status |
 |------|-------------------|------------------|--------|
-| unified_main.collection_loop | 2025-09-26 | GATED (R+1 removal target) | Still present |
+| unified_main.collection_loop | 2025-09-26 | REMOVED 2025-09-28 | Removed |
 | start_live_dashboard_v2.ps1 | 2025-10-01 | R+1 | Still present |
 | G6_DISABLE_CYCLE_TABLES | 2025-10-07 | 2025-11 | No-op but not removed |
 ```
@@ -329,8 +329,6 @@ Deprecation policy not being enforced. Code marked for removal remains in codeba
 
 **Example Confusion:**
 ```bash
-G6_ENABLE_LEGACY_LOOP=1          # Deprecated, but still works
-G6_SUPPRESS_LEGACY_LOOP_WARN=1   # Suppresses warning for above
 G6_LOOP_MAX_CYCLES vs G6_MAX_CYCLES  # Aliases with unclear precedence
 ```
 
@@ -369,7 +367,7 @@ src/storage/csvio/                 - New facade attempt
 Despite refactoring efforts, CSV writing has multiple paths with unclear ownership:
 - Direct writes vs. buffered writes
 - Legacy paths vs. facade paths
-- `G6_USE_CSVIO_FACADE=0` opt-out suggests incomplete migration
+- Stale docs/automation mentioning an opt-out flag suggests incomplete migration
 
 **From CODE_HEALTH_ROADMAP.md:**
 > "Update (2025-11-13): CSV facade default-on with safe opt-out"
@@ -384,7 +382,8 @@ Having parallel implementations creates:
 **Recommended Fix:**
 1. Complete facade migration - remove all legacy paths
 2. Single `CsvWriter` interface
-3. Remove `G6_USE_CSVIO_FACADE` flag
+3. Remove retired CSVIO opt-out flag
+    - (Completed) CSVIO is always-on; docs/automation should only tune `G6_CSVIO_BACKEND` and related settings.
 4. Comprehensive integration tests for edge cases (concurrent writes, failures, retries)
 
 **Impact:** High - Data integrity critical for platform
@@ -539,7 +538,7 @@ $ ls *.md | wc -l
 - Architecture docs (ADVISOR_ARCHITECTURE.md, PIPELINE_DESIGN.md, etc.)
 - Roadmaps (CODE_HEALTH_ROADMAP.md, ML_ROADMAP*, etc.)
 - Changelogs (CHANGELOG.md, CHANGELOG_DASHBOARDS.md, etc.)
-- Guides (DEPLOYMENT_GUIDE.md, OPERATOR_MANUAL.md, etc.)
+- Guides (docs/operations/deployment/DEPLOYMENT_GUIDE.md, docs/operations/OPERATOR_MANUAL.md, etc.)
 - Status reports (COMPLETION_SUMMARY.md, WAVE*_TRACKING.md, etc.)
 
 **Problems:**
@@ -721,7 +720,7 @@ Application Layer (orchestrator)
 
 2. **Remove Legacy Orchestration Loop**
    - Complete deprecation of `unified_main.collection_loop`
-   - Remove `G6_ENABLE_LEGACY_LOOP` flag
+    - Remove legacy-loop gating flags
    - Single canonical orchestration path
    - **Estimated Effort:** 1 week
    - **Impact:** Reduces maintenance burden

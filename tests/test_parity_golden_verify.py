@@ -8,15 +8,14 @@ import pytest
 from src.orchestrator.parity_harness import run_parity_cycle
 from pathlib import Path as _P
 
-@pytest.mark.optional
+pytestmark = pytest.mark.slow
+
 def test_parity_golden_verify(tmp_path):
     """Verify current parity snapshot against stored golden if enabled.
 
-    Activation: set G6_PARITY_GOLDEN_VERIFY=1. If file empty (placeholder) test skips.
-    Regeneration remains via existing G6_REGEN_PARITY_GOLDEN flag in original parity test.
+    Runs only when optional tests are enabled. If the golden file is missing or empty
+    (placeholder), the test skips.
     """
-    if os.environ.get('G6_PARITY_GOLDEN_VERIFY') != '1':
-        pytest.skip('Set G6_PARITY_GOLDEN_VERIFY=1 to enable golden parity verification')
     golden_path = Path('tests/parity_golden.json')
     if not golden_path.exists():
         pytest.skip('Golden file missing; regenerate first')

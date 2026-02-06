@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from datetime import date, datetime, time as dt_time
@@ -34,7 +35,7 @@ try:
 except Exception:
     pass
 
-from external.G6_.archived.scripts.weekday_overlay import (  # type: ignore[import-not-found]
+from scripts.weekday_overlay import (
     INDEX_DEFAULT,
     _normalize_indices,
     update_weekday_master,
@@ -76,6 +77,7 @@ def run_realtime_builder(
     alpha: float,
     interval: int,
     market_hours_only: bool,
+    force_market_open: bool,
     market_open: str | None,
     market_close: str | None,
 ) -> None:
@@ -90,7 +92,12 @@ def run_realtime_builder(
     logger.info("Alpha (EMA):      %s", alpha)
     logger.info("Update interval:  %ss", interval)
     logger.info("Market hours only: %s", market_hours_only)
+    logger.info("Force market open: %s", force_market_open)
     logger.info("=" * 60)
+
+    # Keep behavior consistent with the collector/orchestrator gate.
+    if force_market_open:
+        os.environ.setdefault('G6_FORCE_MARKET_OPEN', '1')
     
     # Ensure output directory exists
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -113,13 +120,15 @@ def run_realtime_builder(
             today = now.date()
             
             # Check if it's a trading day
-            if not is_trading_day(today):
+            if (not force_market_open) and (not is_trading_day(today)):
                 if market_hours_only:
                     logger.info("Non-trading day (%s) - sleeping %ss", today, interval)
                     time.sleep(interval)
                     continue
                 else:
                     logger.warning("Non-trading day (%s) but processing anyway", today)
+            elif force_market_open and (not is_trading_day(today)):
+                logger.warning("Non-trading day (%s) but force-market-open enabled; processing anyway", today)
             
             # Get market hours for today
             try:
@@ -134,11 +143,8 @@ def run_realtime_builder(
             # Check if we're in market hours
             in_market_hours = is_market_hours(now, open_time, close_time)
             
-            if market_hours_only and not in_market_hours:
-                logger.info(
-                    "Outside market hours (%s - %s) - sleeping %ss", open_time, close_time, interval
-                    f"- sleeping {interval}s"
-                )
+            if market_hours_only and (not force_market_open) and (not in_market_hours):
+                logger.info("Outside market hours (%s - %s) - sleeping %ss", open_time, close_time, interval)
                 time.sleep(interval)
                 continue
             
@@ -205,8 +211,10 @@ def run_realtime_builder(
             # Log summary
             if cycle_updates > 0:
                 logger.info(
-                    "✓ Cycle complete: %s updates in %ss (total: %s)", cycle_updates, cycle_duration, update_count
-                    f"(total: {update_count})"
+                    "✓ Cycle complete: %s updates in %ss (total: %s)",
+                    cycle_updates,
+                    cycle_duration,
+                    update_count,
                 )
             else:
                 logger.debug(
@@ -300,6 +308,12 @@ Examples:
         help='Only update during market hours (9:15 AM - 3:30 PM IST)',
     )
     ap.add_argument(
+        '--force-market-open',
+        '--force-open',
+        action='store_true',
+        help='Bypass trading-day and market-hours gating (treat like a normal weekday run)',
+    )
+    ap.add_argument(
         '--market-open',
         help='Override market open time (HH:MM:SS)',
     )
@@ -356,6 +370,7 @@ Examples:
             alpha=alpha,
             interval=args.interval,
             market_hours_only=args.market_hours_only,
+            force_market_open=args.force_market_open,
             market_open=args.market_open,
             market_close=args.market_close,
         )

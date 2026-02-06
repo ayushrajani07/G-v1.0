@@ -19,7 +19,7 @@ def main():
     os.environ['G6_ADAPTIVE_CONTROLLER_SEVERITY']='1'
     os.environ['G6_ADAPTIVE_SEVERITY_TREND_SMOOTH']='1'
     os.environ['G6_ADAPTIVE_SEVERITY_TREND_WINDOW']='5'
-    os.environ['G6_CATALOG_HTTP_FORCE_RELOAD']='1'
+    # NOTE: flag removed
     try:
         shutdown_http_server()
     except Exception:

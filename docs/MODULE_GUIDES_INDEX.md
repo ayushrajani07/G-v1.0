@@ -346,8 +346,8 @@ Start with:
 - `docs/RULES_CATALOG.md` - Alert rules
 
 ### Operations
-- `docs/OPERATOR_MANUAL.md` - Operations guide
-- `docs/DEPLOYMENT_GUIDE.md` - Deployment procedures
+- `docs/operations/OPERATOR_MANUAL.md` - Operations guide
+- `docs/operations/deployment/DEPLOYMENT_GUIDE.md` - Deployment procedures
 - `docs/RETENTION_POLICY.md` - Data retention
 
 ---

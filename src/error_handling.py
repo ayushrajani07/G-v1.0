@@ -8,6 +8,8 @@ capabilities for the entire G6 platform ecosystem.
 import functools
 import json
 import logging
+import os
+import sys
 import threading
 import traceback
 from collections.abc import Callable
@@ -307,11 +309,26 @@ class G6ErrorHandler:
         if error_info.context:
             log_msg += f" | Context: {error_info.context}"
 
+        # In operator-facing modes, avoid dumping full Python tracebacks to the console.
+        # Tracebacks can be re-enabled with G6_CONSOLE_TRACEBACKS=1 or G6_VERBOSE_CONSOLE=1.
+        def _is_truthy(v: str) -> bool:
+            return (v or '').strip().lower() in ('1', 'true', 'yes', 'on')
+
+        quiet_mode = _is_truthy(os.environ.get('G6_QUIET_MODE', '0'))
+        human_mode = _is_truthy(os.environ.get('G6_HUMAN_MODE', '0'))
+        verbose_console = _is_truthy(os.environ.get('G6_VERBOSE_CONSOLE', '0'))
+        want_tb = _is_truthy(os.environ.get('G6_CONSOLE_TRACEBACKS', '0'))
+
+        # Only include traceback when explicitly requested or when not in human/quiet mode.
+        emit_tb = bool(verbose_console or want_tb or (not (quiet_mode or human_mode)))
+        # Avoid printing "NoneType: None" if called without an active exception context.
+        emit_tb = bool(emit_tb and (sys.exc_info()[0] is not None))
+
         # Log at appropriate level based on severity
         if error_info.severity == ErrorSeverity.CRITICAL:
-            self.logger.critical(log_msg, exc_info=error_info.exception)
+            self.logger.critical(log_msg, exc_info=emit_tb)
         elif error_info.severity == ErrorSeverity.HIGH:
-            self.logger.error(log_msg, exc_info=error_info.exception)
+            self.logger.error(log_msg, exc_info=emit_tb)
         elif error_info.severity == ErrorSeverity.MEDIUM:
             self.logger.warning(log_msg)
         else:
@@ -378,17 +395,20 @@ class G6ErrorHandler:
             ]
 
             # Format for indices panel consumption
-            formatted_errors = []
-            for error in indices_errors[-count:]:
-                formatted_errors.append({
+            formatted_errors = [
+                {
                     "time": error.timestamp.isoformat(),
                     "index": error.context.get("index", "UNKNOWN"),
-                    "status": "ERROR" if error.severity in (ErrorSeverity.HIGH, ErrorSeverity.CRITICAL) else "WARN",
+                    "status": "ERROR"
+                    if error.severity in (ErrorSeverity.HIGH, ErrorSeverity.CRITICAL)
+                    else "WARN",
                     "description": f"{error.category.value}: {error.message or str(error.exception)}"[:100],  # Truncate for display
                     "component": error.component,
                     "severity": error.severity.value,
-                    "cycle": error.context.get("cycle")
-                })
+                    "cycle": error.context.get("cycle"),
+                }
+                for error in indices_errors[-count:]
+            ]
 
             return formatted_errors
 

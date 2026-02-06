@@ -326,16 +326,11 @@ except Exception:
 # MetricsRegistry before each test function (default scope) using the helper in
 # src.metrics.testing.
 #
-# Opt‑out: A test can add @pytest.mark.metrics_no_reset if it intentionally
-# asserts persistence or wants to micro‑opt performance by reusing state.
 # Global opt‑out env: G6_DISABLE_AUTOUSE_METRICS_RESET=1
 # ---------------------------------------------------------------------------
 @pytest.fixture(autouse=True)
 def _auto_metrics_reset(request):
     if G6_TEST_MINIMAL:
-        yield
-        return
-    if 'metrics_no_reset' in request.keywords:
         yield
         return
     if is_truthy_env('G6_DISABLE_AUTOUSE_METRICS_RESET'):

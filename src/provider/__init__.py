@@ -1,8 +1,12 @@
-"""Provider skeleton package (Phase 4 A7).
+"""Legacy provider facade-style package (Phase 4 A7).
 
 Initial modularization scaffold. This package will gradually absorb logic
 from the legacy provider facade (`src.broker.kite_provider`). For the first
 patch we only declare structural placeholders; no functional changes.
+
+This package exposes a small facade surface used by some legacy workflows.
+
+Note: The newer, general provider framework lives under `src.providers`.
 
 Export the facade for early adoption; legacy code can switch imports later:
     from src.provider import get_instruments

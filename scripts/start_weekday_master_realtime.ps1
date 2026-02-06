@@ -4,6 +4,7 @@
 param(
     [int]$Interval = 60,  # Update every 60 seconds
     [switch]$MarketHoursOnly,  # Only run during market hours (9:15 AM - 3:30 PM IST)
+    [switch]$ForceMarketOpen,  # Bypass market-hours gating (treat like a normal weekday run)
     [switch]$Verbose
 )
 
@@ -28,6 +29,7 @@ Write-Host ""
 Write-Host "=== Starting Weekday Master Real-time Builder ===" -ForegroundColor Cyan
 Write-Host "Interval:         $Interval seconds" -ForegroundColor Gray
 Write-Host "Market hours only: $MarketHoursOnly" -ForegroundColor Gray
+Write-Host "Force market open: $ForceMarketOpen" -ForegroundColor Gray
 Write-Host "Press Ctrl+C to stop" -ForegroundColor Yellow
 Write-Host ""
 
@@ -36,6 +38,10 @@ $args_list = @($Script, '--interval', $Interval)
 
 if ($MarketHoursOnly) {
     $args_list += '--market-hours-only'
+}
+
+if ($ForceMarketOpen) {
+    $args_list += '--force-market-open'
 }
 
 if ($Verbose) {

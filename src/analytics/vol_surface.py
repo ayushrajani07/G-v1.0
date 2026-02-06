@@ -121,10 +121,8 @@ def _interpolate_missing(rows: list[dict[str, Any]], buckets: list[float]) -> li
         key = (r['index'], r['expiry'])
         by_key.setdefault(key, {})[r['bucket']] = r
     augmented = list(rows)
-    finite_bucket_labels = []
     # Build list of finite bucket labels in order for interpolation domain
-    for i in range(len(buckets)-1):
-        finite_bucket_labels.append(f"[{buckets[i]},{buckets[i+1]}]")
+    finite_bucket_labels = [f"[{buckets[i]},{buckets[i+1]}]" for i in range(len(buckets) - 1)]
     for (idx, exp), bucket_map in by_key.items():
         # Collect existing finite points in order
         existing = []

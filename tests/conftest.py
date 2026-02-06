@@ -126,14 +126,18 @@ def catalog_http_server(monkeypatch):
 
 Responsibilities:
 1. Ensure project root on sys.path.
-2. Marker gatekeeping via environment variables:
-   - optional tests require G6_ENABLE_OPTIONAL_TESTS=1
-   - slow tests require G6_ENABLE_SLOW_TESTS=1
+2. Collection gatekeeping via markers/CLI:
+     - Slow tests are marked with `@pytest.mark.slow`.
+     - Legacy optional tests (filename suffix `*_optional.py` or `@pytest.mark.optional`) are treated as `slow`.
+     - Slow tests are marked with `@pytest.mark.slow`.
+     - By default, optional/slow tests are skipped unless enabled via
+         `--run-slow` (or explicit `-m slow`).
 3. Provide fixtures for mock provider runs.
 """
 import sys
 import json
 import time
+import os
 from pathlib import Path
 from typing import Iterator, Callable, Type
 import pytest
@@ -141,6 +145,29 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+
+@pytest.fixture(autouse=True)
+def _restore_process_env():
+    """Prevent env var leakage across tests.
+
+    Many modules read environment variables at import or first-call time.
+    Tests that use direct `os.environ[...]` mutation can accidentally bleed
+    configuration into unrelated tests when run as a full suite.
+    """
+    before = dict(os.environ)
+    yield
+    # Remove keys added during test
+    for k in list(os.environ.keys()):
+        if k not in before:
+            try:
+                del os.environ[k]
+            except Exception:
+                pass
+    # Restore removed/changed keys
+    for k, v in before.items():
+        if os.environ.get(k) != v:
+            os.environ[k] = v
 
 # ---------------------------------------------------------------------------
 # Shadow pipeline isolation fixture (autouse)
@@ -264,16 +291,38 @@ def kite_provider():
 
 # Legacy collection_loop fully removed (2025-09-28); prior gating env flags retired.
 
+def pytest_addoption(parser):  # pragma: no cover (pytest hook)
+    group = parser.getgroup('g6')
+    group.addoption(
+        '--run-slow',
+        action='store_true',
+        default=False,
+        help='Run slow tests (otherwise skipped by default).',
+    )
+
 def pytest_collection_modifyitems(config, items):  # pragma: no cover (collection phase)
     if G6_TEST_MINIMAL:
         return  # Skip gating entirely in minimal mode
-    enable_optional = is_truthy_env('G6_ENABLE_OPTIONAL_TESTS')
-    enable_slow = is_truthy_env('G6_ENABLE_SLOW_TESTS')
-    skip_optional = pytest.mark.skip(reason="Set G6_ENABLE_OPTIONAL_TESTS=1 to run optional tests")
-    skip_slow = pytest.mark.skip(reason="Set G6_ENABLE_SLOW_TESTS=1 to run slow tests")
+
+    # Remove env-based test gates. Optional/slow tests are controlled via
+    # CLI flags and/or explicit marker selection.
+    try:
+        markexpr = (getattr(getattr(config, 'option', None), 'markexpr', None) or '').lower()
+    except Exception:
+        markexpr = ''
+
+    enable_slow = bool(config.getoption('--run-slow')) or ('slow' in markexpr)
+    skip_slow = pytest.mark.skip(reason="Run with --run-slow or -m slow")
     for item in items:
-        if 'optional' in item.keywords and not enable_optional:
-            item.add_marker(skip_optional)
+        # Treat legacy optional tests as slow (so the suite only needs unit/integration/slow).
+        try:
+            is_optional_file = str(getattr(item, 'fspath', '')).endswith('_optional.py')
+        except Exception:
+            is_optional_file = False
+
+        if is_optional_file or 'optional' in item.keywords:
+            item.add_marker(pytest.mark.slow)
+
         if 'slow' in item.keywords and not enable_slow:
             item.add_marker(skip_slow)
 
@@ -382,16 +431,11 @@ except Exception:
 # MetricsRegistry before each test function (default scope) using the helper in
 # src.metrics.testing.
 #
-# Opt‑out: A test can add @pytest.mark.metrics_no_reset if it intentionally
-# asserts persistence or wants to micro‑opt performance by reusing state.
 # Global opt‑out env: G6_DISABLE_AUTOUSE_METRICS_RESET=1
 # ---------------------------------------------------------------------------
 @pytest.fixture(autouse=True)
 def _auto_metrics_reset(request):
     if G6_TEST_MINIMAL:
-        yield
-        return
-    if 'metrics_no_reset' in request.keywords:
         yield
         return
     if is_truthy_env('G6_DISABLE_AUTOUSE_METRICS_RESET'):

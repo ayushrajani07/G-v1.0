@@ -1,7 +1,4 @@
 import os, json, glob, pathlib, time, pytest
-# Ensure market hours gating does not short-circuit the collector during the test.
-os.environ.setdefault('G6_FORCE_MARKET_OPEN','1')
-from src.collectors.unified_collectors import run_unified_collectors
 
 class _DummyCsv:
     def write_options_data(self, *a, **k):
@@ -30,24 +27,24 @@ class _DummyProv:
         return {inst['tradingsymbol']:{'instrument_type':inst['instrument_type'],'strike':inst['strike'],'oi':10,'last_price':1.0} for inst in instruments}
 
 
-def test_benchmark_dump_creates_artifact(tmp_path):
+def test_benchmark_dump_creates_artifact(tmp_path, monkeypatch):
     dump_dir = tmp_path / 'bench'
-    os.environ['G6_BENCHMARK_DUMP'] = str(dump_dir)
+    monkeypatch.setenv('G6_BENCHMARK_DUMP', str(dump_dir))
     # Force market open so the unified collectors do not short-circuit with 'market_closed'
     # which would prevent a normal cycle summary and artifact emission in some configurations.
-    os.environ['G6_FORCE_MARKET_OPEN'] = '1'
-    try:
-        params = {'NIFTY': {'expiries':['this_week'],'strikes_itm':2,'strikes_otm':2}}
-        res = run_unified_collectors(index_params=params, providers=_DummyProv(), csv_sink=_DummyCsv(), influx_sink=None, compute_greeks=False)
-        if res.get('status') == 'market_closed':
-            pytest.skip('Market closed gating active unexpectedly; skipping benchmark dump artifact assertion.')
-        assert res['status'] == 'ok'
-        files = list(dump_dir.glob('benchmark_cycle_*.json'))
-        assert files, 'No benchmark artifact produced'
-        # Basic schema check
-        with open(files[0],'r',encoding='utf-8') as f:
-            data = json.load(f)
-        assert 'phase_times' in data and 'indices' in data and 'duration_s' in data
-    finally:
-        os.environ.pop('G6_BENCHMARK_DUMP', None)
-        os.environ.pop('G6_FORCE_MARKET_OPEN', None)
+    monkeypatch.setenv('G6_FORCE_MARKET_OPEN', '1')
+
+    # Ensure any module-level gating sees updated env.
+    import importlib
+    import src.collectors.unified_collectors as uc
+    uc = importlib.reload(uc)
+    res = uc.run_unified_collectors(index_params={'NIFTY': {'expiries':['this_week'],'strikes_itm':2,'strikes_otm':2}}, providers=_DummyProv(), csv_sink=_DummyCsv(), influx_sink=None, compute_greeks=False)
+    if res.get('status') == 'market_closed':
+        pytest.skip('Market closed gating active unexpectedly; skipping benchmark dump artifact assertion.')
+    assert res['status'] == 'ok'
+    files = list(dump_dir.glob('benchmark_cycle_*.json'))
+    assert files, 'No benchmark artifact produced'
+    # Basic schema check
+    with open(files[0],'r',encoding='utf-8') as f:
+        data = json.load(f)
+    assert 'phase_times' in data and 'indices' in data and 'duration_s' in data

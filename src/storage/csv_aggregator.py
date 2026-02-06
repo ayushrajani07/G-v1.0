@@ -12,6 +12,8 @@ import os
 import sys
 from typing import Any
 
+from src.storage.csvio import api as csvio_api
+
 
 class CsvAggregator:
     """Manages overview CSV aggregation and snapshot writes.
@@ -206,35 +208,43 @@ class CsvAggregator:
         # Use provided VIX or last seen
         use_vix = float(vix) if vix is not None else float(self._last_vix or 0.0)
         
-        # Write CSV row
-        with open(overview_file, 'a' if file_exists else 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            
-            # Write header if new file
-            if not file_exists:
-                writer.writerow([
-                    'timestamp', 'index',
-                    'pcr_this_week', 'pcr_next_week', 'pcr_this_month', 'pcr_next_month',
-                    'day_width',
-                    'index_price', 'index_net_change', 'index_day_change',
-                    'VIX',
-                    'expiries_expected', 'expiries_collected',
-                    'expected_mask', 'collected_mask', 'missing_mask'
-                ])
-            
-            # Write data row
-            writer.writerow([
-                ts_str, index,
-                pcr_snapshot.get('this_week', 0),
-                pcr_snapshot.get('next_week', 0),
-                pcr_snapshot.get('this_month', 0),
-                pcr_snapshot.get('next_month', 0),
-                day_width,
-                idx_price, idx_net, idx_day_ch,
-                use_vix,
-                expiries_expected, expiries_collected,
-                expected_mask, collected_mask, missing_mask
-            ])
+        header = [
+            'timestamp', 'index',
+            'pcr_this_week', 'pcr_next_week', 'pcr_this_month', 'pcr_next_month',
+            'day_width',
+            'index_price', 'index_net_change', 'index_day_change',
+            'VIX',
+            'expiries_expected', 'expiries_collected',
+            'expected_mask', 'collected_mask', 'missing_mask'
+        ]
+        row = [
+            ts_str, index,
+            pcr_snapshot.get('this_week', 0),
+            pcr_snapshot.get('next_week', 0),
+            pcr_snapshot.get('this_month', 0),
+            pcr_snapshot.get('next_month', 0),
+            day_width,
+            idx_price, idx_net, idx_day_ch,
+            use_vix,
+            expiries_expected, expiries_collected,
+            expected_mask, collected_mask, missing_mask
+        ]
+
+        try:
+            csvio_api.append_one(overview_file, row, header if not file_exists else None)
+        except (OSError, IOError, ValueError, TypeError, csv.Error) as e:
+            try:
+                self.logger.error("Failed to write overview snapshot CSV to %s: %s", overview_file, e)
+            except (OSError, IOError, ValueError, TypeError, RuntimeError):
+                print(f"CRITICAL: Failed to write overview snapshot CSV to {overview_file}: {e}", file=sys.stderr)
+            raise
+        except (RuntimeError, AttributeError, KeyError) as e:
+            # Defensive: keep legacy behavior (log + raise), but mark unexpected.
+            try:
+                self.logger.error("Unexpected error writing overview snapshot CSV to %s: %s", overview_file, e)
+            except (OSError, IOError, ValueError, TypeError, RuntimeError):
+                print(f"CRITICAL: Unexpected error writing overview snapshot CSV to {overview_file}: {e}", file=sys.stderr)
+            raise
         
         # Log write
         if self._concise:

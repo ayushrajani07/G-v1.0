@@ -112,7 +112,7 @@ def run_collect_cycle(index_params, providers, csv_sink, influx_sink, metrics=No
             logger.warning(msg)
         else:
             logger.debug("Facade parity indices_ok count=%d", pipe_idx)
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
         logger.debug("facade_parity_index_compare_failed", exc_info=True)
 
     return pipeline_result

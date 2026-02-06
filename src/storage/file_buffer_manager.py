@@ -84,8 +84,8 @@ class FileBufferManager:
             fe.fh.close()
         except (OSError, IOError) as e:
             try:
-                logger.warning(f"Failed to close file {path}: {e}")
-            except Exception:
+                logger.warning("Failed to close file %s: %s", path, e)
+            except (OSError, IOError, ValueError, TypeError, RuntimeError):
                 print(f"CRITICAL: Failed to close file {path}: {e}", file=sys.stderr)
         finally:
             self._files.pop(path, None)
@@ -142,10 +142,13 @@ class FileBufferManager:
         except (OSError, IOError) as e:
             try:
                 logger.error(
-                    f"LRU eviction flush failed for {oldest_path}, {len(fe.pending)} rows lost: {e}",
+                    "LRU eviction flush failed for %s, %s rows lost: %s",
+                    oldest_path,
+                    len(fe.pending),
+                    e,
                     exc_info=True
                 )
-            except Exception:
+            except (OSError, IOError, ValueError, TypeError, RuntimeError):
                 print(
                     f"CRITICAL: LRU eviction flush failed for {oldest_path}, {len(fe.pending)} rows lost: {e}",
                     file=sys.stderr
@@ -155,6 +158,6 @@ class FileBufferManager:
                 fe.fh.close()
             except (OSError, IOError) as e:
                 try:
-                    logger.warning(f"Failed to close evicted file {oldest_path}: {e}")
-                except Exception:
+                    logger.warning("Failed to close evicted file %s: %s", oldest_path, e)
+                except (OSError, IOError, ValueError, TypeError, RuntimeError):
                     print(f"CRITICAL: Failed to close evicted file {oldest_path}: {e}", file=sys.stderr)

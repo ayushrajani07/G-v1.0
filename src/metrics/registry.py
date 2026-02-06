@@ -53,6 +53,12 @@ def get_registry(reset: bool = False) -> MetricsRegistry:
     if existing is not None and not reset:
         return existing  # already unified
     if reset:
+        # Tests sometimes need a fresh registry instance. The central anchor's
+        # set_singleton() only publishes if absent, so clear first.
+        try:
+            _anchor.clear_singleton()
+        except (AttributeError, TypeError, RuntimeError):
+            pass
         return _new_registry()
     # Defer to legacy bootstrap path (will set anchor); fallback to direct construction
     try:

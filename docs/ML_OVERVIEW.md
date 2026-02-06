@@ -11,7 +11,16 @@ This repo has pivoted to a path-forecasting design focused on intraday tp (ATM p
   - `interfaces.py` — `PathForecaster` protocol (forecast_path contract)
   - `hybrid.py` — Minimal stub `HybridPathForecaster` (flat path + bands) to keep the API alive while we implement the full hybrid model
 - Dashboard API:
-  - `src/web/dashboard/routes/path_forecast.py` — `/api/ml/path_forecast` endpoint returning CSV in wide or long format
+  - `src/web/dashboard/routes/path_forecast/` — path forecast API router package
+    - Primary ribbon: `/api/ml/path_forecast_json` (JSON array for Grafana Infinity)
+    - Metadata: `/api/ml/path_forecast_meta`
+    - Diagnostics/stats: `/api/ml/path_diagnostics`, `/api/ml/path_stats`, `/api/ml/path_advisor`
+    - Advisor flags (alerting-friendly): `/api/ml/path_advisor_flags`
+    - History exports: `/api/ml/path_prediction_history` and `/api/ml/path_prediction_history_csv`
+    - Realized TP series: `/api/ml/live_tp_series` (alias: `/api/ml/tp_series`)
+    - Coverage history exports: `/api/ml/path_coverage_history` and `/api/ml/path_coverage_history_csv`
+    - Calibration: `/api/ml/path_calibrate_now`, `/api/ml/path_calibrate` (POST), `/api/ml/path_calibration_history`
+    - Grafana convenience redirect: `/api/ml/reset_defaults`
 
 Note: Legacy ML modules (`src/ml_arm`, `scripts/ml`, `configs/ml`) and their docs have been removed. Any old VS Code tasks pointing to those scripts are obsolete.
 
@@ -19,19 +28,19 @@ Note: Legacy ML modules (`src/ml_arm`, `scripts/ml`, `configs/ml`) and their doc
 
 1) Live market CSVs: `data/g6_data/<INDEX>/<expiry_tag>/<offset>/*.csv`
 2) Path forecaster ingests last W minutes + context; returns timeseries for the remaining session (quantiles included)
-3) Dashboard Infinity panel queries `/api/ml/path_forecast` to render the P10/P50/P90 bands
+3) Dashboard Infinity panel queries `/api/ml/path_forecast_json` to render the P10/P50/P90 bands
 
 Sketch:
 
-  live_csv  ->  path forecaster (stub today) -> /api/ml/path_forecast (CSV)
+  live_csv  ->  path forecaster -> /api/ml/path_forecast_json (JSON)
 
 ## Endpoint
 
-- `/api/ml/path_forecast?index=NIFTY&horizon_minutes=390&quantiles=0.1,0.5,0.9&format=wide`
-  - wide: `time,q10,q50,q90`
-  - long: `time,quantile,value`
+- `/api/ml/path_forecast_json?index=NIFTY&horizon_minutes=390&mode=auto&calibrate=true`
+  - Response: JSON array of rows with `plot_time` (UTC ISO Z), `plot_ms`, `q10`, `q50`, `q90` (and a best-effort `tp` overlay when available).
+  - Use `plot_time` as the Grafana time field.
 
-Current behavior: The endpoint returns a flat path at the last observed tp with ±5% bands (stub). This is intentional while we implement the retrieval + transformer components.
+Current behavior: the endpoint is robust to missing/early-session data. When retrieval cannot run, it falls back to a safe stub (so dashboards stay live), and may widen a degenerate ribbon for visibility.
 
 ## Next steps
 

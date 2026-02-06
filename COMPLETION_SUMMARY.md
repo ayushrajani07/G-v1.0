@@ -61,7 +61,6 @@ increase(g6_cycle_write_time_seconds_sum[15m]) / increase(g6_cycle_write_time_se
   - Graceful shutdown with final flush
 - **Configuration**:
   ```bash
-  G6_USE_CSVIO_FACADE=1
   G6_CSVIO_BACKEND=filesystem
   G6_CSVIO_FLUSH_MS=500
   G6_CSVIO_BATCH=2000
@@ -275,7 +274,7 @@ def collect_index(index, ...):
 
 # Enable Phase 1 features one at a time
 $env:G6_PARALLEL_INDICES = '1'          # First
-$env:G6_USE_CSVIO_FACADE = '1'          # Second
+$env:G6_CSVIO_BACKEND = 'filesystem'     # Second
 $env:G6_HTTP_POOL_ENABLED = '1'         # Third
 
 # Measure impact of each
@@ -330,7 +329,7 @@ All features are opt-in via environment variables. To disable:
 # Disable all features
 $env:G6_PARALLEL_INDICES = '0'
 $env:G6_CSVIO_WRITER_THREAD = '0'
-$env:G6_USE_CSVIO_FACADE = '0'
+$env:G6_CSVIO_WRITER_THREAD = '0'
 $env:G6_HTTP_POOL_ENABLED = '0'
 $env:G6_PIPELINE_ENABLED = '0'
 $env:G6_PARQUET_PILOT = '0'

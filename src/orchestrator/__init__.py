@@ -29,7 +29,9 @@ try:
 except ModuleNotFoundError:
     # Silent (debug-level) to avoid noisy logs in normal operation; surfaced during diagnostics earlier.
     logger.debug("orchestrator.__init__: optional '.orchestrator' module not present (expected during refactor)")
-except Exception as e:  # pragma: no cover - defensive
+except BaseException as e:  # pragma: no cover - defensive
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+        raise
     logger.warning("orchestrator.__init__: unexpected exception importing optional '.orchestrator': %s", e)
 
 __all__ = ["Orchestrator"]

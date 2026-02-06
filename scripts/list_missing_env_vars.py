@@ -30,12 +30,9 @@ ALLOW = {
     'G6_NAME',     # generic token captured by pattern in docs/examples
 }
 
-# Legacy fully deprecated flags (scheduled removal / no longer documented)
-LEGACY_REMOVED = {
-    'G6_ENABLE_LEGACY_LOOP',
-    'G6_SUPPRESS_LEGACY_LOOP_WARN',
-    'G6_SUMMARY_PANELS_MODE',
-}
+# Legacy fully deprecated flags (kept here only if they still appear in scanned text).
+# NOTE: Do not include removed flags that should be treated as unknown/unsupported.
+LEGACY_REMOVED: set[str] = set()
 
 # Ignored prefixes represent truncated/partial tokens that appear in code (often during formatting or string building)
 # and should not be treated as standalone env vars.

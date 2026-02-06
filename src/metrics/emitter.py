@@ -27,6 +27,8 @@ import time
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Protocol
 
+from src.config.env_config import EnvConfig
+
 # Optional imports for late import elimination (Batch 38)
 try:
     from src.metrics.generated import m_metrics_batch_queue_depth as _real_mq
@@ -85,7 +87,9 @@ class MetricBatcher:
             time.sleep(self.flush_interval)
             try:
                 self.flush()
-            except Exception as e:  # defensive; never crash
+            except BaseException as e:  # defensive; never crash
+                if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                    raise
                 _error_once.log(f"loop:{type(e).__name__}", f"MetricBatcher flush loop error: {e}")
 
     def inc(self, accessor: CounterAccessor, amount: float, *label_values: Any):
@@ -166,9 +170,9 @@ class MetricBatcher:
             # Handle flush failures
             pass
 
-_enabled = os.getenv("G6_METRICS_BATCH", "0").lower() in ("1", "true", "on", "yes")
-_flush_interval = float(os.getenv("G6_METRICS_BATCH_INTERVAL", "2.0") or 2.0)
-_flush_threshold = int(os.getenv("G6_METRICS_BATCH_FLUSH_THRESHOLD", "0") or 0)
+_enabled = EnvConfig.get_bool("G6_METRICS_BATCH", False)
+_flush_interval = EnvConfig.get_float("G6_METRICS_BATCH_INTERVAL", 2.0)
+_flush_threshold = EnvConfig.get_int("G6_METRICS_BATCH_FLUSH_THRESHOLD", 0)
 metric_batcher = MetricBatcher(enabled=_enabled, flush_interval=_flush_interval, flush_threshold=_flush_threshold)
 
 @atexit.register

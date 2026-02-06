@@ -11,6 +11,7 @@ from typing import Any, Iterable, Optional
 
 # CsvWriterHelper not used in atomic backend directly
 from src.utils.backoff import backoff_delays, sleep_ms
+from src.config.env_config import EnvConfig
 
 # Lightweight, optional Prometheus metrics (no hard dependency at import time)
 try:  # pragma: no cover - defensive optional import
@@ -111,8 +112,8 @@ def _align_rows(file_header: list[str], new_header: list[str], values_list: list
 
 def _copy_original_to_temp(src: str, dst: str, *, logger: logging.Logger | None = None) -> None:
     # Retry on Windows sharing violations
-    max_retries = int(os.environ.get('G6_CSV_LOCK_RETRIES', '50'))
-    base_backoff_ms = float(os.environ.get('G6_CSV_LOCK_BACKOFF_MS', '100'))
+    max_retries = EnvConfig.get_int('G6_CSV_LOCK_RETRIES', 50)
+    base_backoff_ms = EnvConfig.get_float('G6_CSV_LOCK_BACKOFF_MS', 100.0)
     delays = backoff_delays(max_retries=max_retries, base_ms=base_backoff_ms, factor=1.3, cap_ms=2000.0)
     waited_ms_total = 0.0
     while True:
@@ -176,8 +177,8 @@ def append_one(
     lock_path = filepath + '.lock'
     lock_acquired = False
     try:
-        max_retries = int(os.environ.get('G6_CSV_LOCK_RETRIES', '50'))
-        base_backoff_ms = float(os.environ.get('G6_CSV_LOCK_BACKOFF_MS', '100'))
+        max_retries = EnvConfig.get_int('G6_CSV_LOCK_RETRIES', 50)
+        base_backoff_ms = EnvConfig.get_float('G6_CSV_LOCK_BACKOFF_MS', 100.0)
         delays = backoff_delays(max_retries=max_retries, base_ms=base_backoff_ms, factor=1.3, cap_ms=2000.0)
         waited_ms_total = 0.0
         while True:
@@ -293,8 +294,8 @@ def append_many(
     lock_acquired = False
     tmp_path: str | None = None
     try:
-        max_retries = int(os.environ.get('G6_CSV_LOCK_RETRIES', '50'))
-        base_backoff_ms = float(os.environ.get('G6_CSV_LOCK_BACKOFF_MS', '100'))
+        max_retries = EnvConfig.get_int('G6_CSV_LOCK_RETRIES', 50)
+        base_backoff_ms = EnvConfig.get_float('G6_CSV_LOCK_BACKOFF_MS', 100.0)
         delays = backoff_delays(max_retries=max_retries, base_ms=base_backoff_ms, factor=1.3, cap_ms=2000.0)
         waited_ms_total = 0.0
         while True:

@@ -30,9 +30,9 @@ def main() -> int:
     if mode == "serial":
         args = ["-q", "-n", "0"]
     elif mode == "parallel-subset":
-        args = ["-q", "-ra", "-n", "auto", "-m", "not serial", "--durations=10"]
+        args = ["-q", "-ra", "-n", "auto", "-m", "not slow", "--durations=10"]
     elif mode == "fast-inner":
-        args = ["-q", "-ra", "-k", "not slow and not integration and not perf and not serial", "--durations=10"]
+        args = ["-q", "-ra", "-k", "not slow and not integration", "--durations=10"]
     else:
         # passthrough any remaining args after mode
         args = sys.argv[1:]

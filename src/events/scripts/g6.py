@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys, json
-HELP='Available subcommands: summary simulate panels-bridge integrity bench retention-scan diagnostics version'
+HELP='Available subcommands: summary simulate integrity bench retention-scan diagnostics version'
 if len(sys.argv)==1 or sys.argv[1] in ('-h','--help'):
     print(HELP)
     raise SystemExit(0)

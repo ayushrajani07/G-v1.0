@@ -18,10 +18,10 @@ The following execution paths or scripts are deprecated or have been removed. Hi
 
 | Item | Replacement | First Warn Release | Earliest Removal* | Migration Guidance | Notes |
 |------|-------------|--------------------|-------------------|--------------------|-------|
-| `unified_main.collection_loop` (legacy orchestration loop) | `src.orchestrator.loop.run_loop` + `run_cycle` | 2025-09-26 (post parity harness) | GATED (R+1 removal target) | Use orchestrator bootstrap; set `G6_ENABLE_LEGACY_LOOP=1` only for transitional tests. | Disabled by default; temporary enable: `G6_ENABLE_LEGACY_LOOP=1`; suppress warn: `G6_SUPPRESS_LEGACY_LOOP_WARN=1`. Max cycles env alias resolved (`G6_LOOP_MAX_CYCLES` prefers, `G6_MAX_CYCLES` still honored). |
+| (REMOVED) `unified_main.collection_loop` (legacy orchestration loop) | `src.orchestrator.loop.run_loop` + `run_cycle` | 2025-09-26 (post parity harness) | REMOVED 2025-09-28 | Use orchestrator bootstrap or runner script. | `src/unified_main.py` is tombstoned (import raises). Legacy loop gating flags are not supported. |
 | (REMOVED) `scripts/run_live.py` | `scripts/run_orchestrator_loop.py` | 2025-09-26 | REMOVED 2025-10-01 | Use orchestrator runner: `python scripts/run_orchestrator_loop.py --config ... --interval 30 --cycles 5` | Removed; fully replaced. |
 | (REMOVED) `scripts/terminal_dashboard.py` | `scripts/summary_view.py` | 2025-09-30 | REMOVED 2025-10-01 | Use summary view: `python scripts/summary_view.py --refresh 1` | Removed; unified summary preferred. |
-| (REMOVED) `scripts/summary_view.py` | `scripts/summary/app.py` (unified) | 2025-10-01 | REMOVED 2025-10-03 | Use unified summary application: `python -m scripts.summary.app --refresh 1`; legacy plain fallback consolidated (StatusCache + plain_fallback now in app). | File deleted; launcher scripts updated (g6, dev_tools, launch_platform). |
+| (REMOVED) `scripts/summary_view.py` | `scripts/summary/app.py` (unified) | 2025-10-01 | REMOVED 2025-10-03 | Use unified summary application: `python -m scripts.summary.app --refresh 1`; legacy plain fallback consolidated (StatusCache + plain_fallback now in app). | File deleted; launcher scripts updated (g6, dev_tools). |
 | (REMOVED) `--no-unified` flag & summary legacy fallback (StatusCache/plain_fallback) | Always-on unified loop + PlainRenderer for --no-rich | 2025-10-03 (post consolidation) | REMOVED 2025-10-03 | Remove flag usage; call `python -m scripts.summary.app` directly. Non-rich mode auto-selects PlainRenderer; failures return exit code 1. | Fast-path removal (N+0) justified: zero external test references; parity harness green; improves failure visibility. |
 | `start_live_dashboard_v2.ps1` (deprecated launcher) | `scripts/start_live_dashboard.ps1` | 2025-10-01 | R+1 | Use canonical launcher: `powershell -File scripts/start_live_dashboard.ps1` | Shim prints deprecation banner; scheduled removal next release. |
 | `scripts/benchmark_cycles.py` (cycle timing script) | `scripts/bench_tools.py` / `profile_unified_cycle.py` | 2025-09-30 (Phase 1 cleanup) | 2025-10-31 | Use bench_tools aggregate/diff/verify or profile_unified_cycle for timing | Stub emits deprecation; removal after 2025-10-31. |
@@ -255,11 +255,11 @@ Status: Removed (compatibility shim deleted) – 2025-10-01.
 Background: During the initial introduction of the wrapped panels schema (`{"panel": ..., "updated_at": ..., "data": {...}}`) a temporary backward compatibility layer duplicated selected fields from two panels at the top-level of each panel JSON file:
 
 * `indices_panel.json`: `items`, `count`
-* `system_panel.json`: `memory_rss_mb`, `cycle`, `interval`, `last_duration`
+* `system.json`: `memory_rss_mb`, `cycle`, `interval`, `last_duration`
 
 Rationale: This short-lived duplication allowed existing exploratory scripts / legacy tests that still expected flat keys to pass while the canonical wrapper (`data`) structure propagated through the codebase and tests were updated.
 
-Change: The duplication block in `PanelsWriter` (emission loop) was removed. All consumers must now access these values exclusively via the nested `data` object (e.g., `indices_panel["data"]["items"]`, `system_panel["data"]["memory_rss_mb"]`). No top-level fallbacks remain.
+Change: The duplication block in `PanelsWriter` (emission loop) was removed. All consumers must now access these values exclusively via the nested `data` object (e.g., `indices_panel["data"]["items"]`, `system["data"]["memory_rss_mb"]`). No top-level fallbacks remain.
 
 Migration Guidance:
 1. Replace any direct lookups like `panel_json["items"]` with `panel_json["data"]["items"]` (similarly for the other system metrics fields).

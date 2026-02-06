@@ -30,7 +30,6 @@ ALLOWED_SUBSTRINGS: tuple[str, ...] = (
     # (Leave empty; allow explicit per-test whitelisting if needed)
 )
 
-@pytest.mark.metrics_no_reset  # avoid costly full metrics reset if such a mark exists
 def test_no_unexpected_deprecations(monkeypatch):
     # Force silence of register shim + deep metrics import (handled in other targeted tests)
     monkeypatch.setenv('G6_SUPPRESS_LEGACY_WARNINGS', '1')

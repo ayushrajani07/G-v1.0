@@ -75,7 +75,7 @@ async def api_live_csv(
         try:
             await asyncio.wait_for(_SEM.acquire(), timeout=0.002)
             acquired = True
-        except Exception:
+        except asyncio.TimeoutError:
             _obs_too_many("live_csv")
             return JSONResponse(
                 {"error": "too_many_requests", "retry_after": 1},
@@ -176,7 +176,7 @@ async def api_live_csv(
                         if v is None:
                             return False
                         x = int(v)
-                    except Exception:
+                    except (TypeError, ValueError):
                         return False
                     if fms is not None and x < fms:
                         return False
@@ -205,7 +205,9 @@ async def api_live_csv(
                     else:
                         for r in rows_sel:
                             r["index_pct"] = None
-                except Exception:
+                except BaseException as e:
+                    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                        raise
                     for r in rows_sel:
                         r["index_pct"] = None
 
@@ -240,7 +242,7 @@ async def api_live_csv(
                 try:
                     lm = _time.gmtime(lm_ns / 1_000_000_000)
                     headers["Last-Modified"] = _time.strftime("%a, %d %b %Y %H:%M:%S GMT", lm)
-                except Exception:
+                except (OSError, OverflowError, ValueError):
                     pass
             inm = request.headers.get("if-none-match") if isinstance(request, Request) else None
             if (not disable_cache) and inm and inm == etag_key:
@@ -263,7 +265,7 @@ async def api_live_csv(
                 try:
                     lm = _time.gmtime(st.st_mtime_ns / 1_000_000_000)
                     headers["Last-Modified"] = _time.strftime("%a, %d %b %Y %H:%M:%S GMT", lm)
-                except Exception:
+                except (OSError, OverflowError, ValueError):
                     pass
             headers["Cache-Control"] = "public, max-age=15, must-revalidate"
             headers["ETag"] = f"W/\"{h:x}\""
@@ -276,7 +278,9 @@ async def api_live_csv(
     except HTTPException:
         _obs_end("live_csv", t0, ok=False)
         raise
-    except Exception as e:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.FILE_IO,
@@ -292,5 +296,7 @@ async def api_live_csv(
         if acquired:
             try:
                 _SEM.release()
-            except Exception:
+            except BaseException as e:
+                if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                    raise
                 pass

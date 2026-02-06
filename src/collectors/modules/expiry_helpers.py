@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+import datetime as _dt
 from collections.abc import Sequence
 from typing import Any
 
@@ -43,6 +44,89 @@ logger = logging.getLogger(__name__)
 
 _EXPIRY_SERVICE_SINGLETON = None  # cached instance or None (mirrors original)
 
+# Per-day cache for provider expiry lists. These rarely change intraday, but can be expensive
+# if the provider fetches them from network.
+# Keyed by (provider_id, index_symbol, ist_date).
+_EXPIRY_LIST_CACHE: dict[tuple[str, str, str], tuple[float, list[_dt.date]]] = {}
+
+_IST_TZ = _dt.timezone(_dt.timedelta(hours=5, minutes=30), name="IST")
+
+# Cache for resolved option instruments (already filtered by expiry+strike set).
+# Keyed by (provider_id, index_symbol, expiry_date, strikes_hash, ist_date).
+_OPTION_INSTRUMENTS_CACHE: dict[tuple[str, str, str, int, str], tuple[float, list[dict]]] = {}
+
+
+def _ist_date_str() -> str:
+    try:
+        return _dt.datetime.now(_dt.UTC).astimezone(_IST_TZ).date().isoformat()
+    except Exception:
+        return _dt.date.today().isoformat()
+
+
+def _provider_cache_id(providers: Any) -> str:
+    try:
+        p = getattr(providers, 'primary_provider', providers)
+        return f"{p.__class__.__module__}.{p.__class__.__name__}"
+    except Exception:
+        return "unknown"
+
+
+def _get_cached_expiry_candidates(index_symbol: str, providers: Any) -> list[_dt.date]:
+    ttl = 3600.0
+    try:
+        ttl = float(EnvConfig.get_float('G6_EXPIRY_CACHE_TTL_SEC', 3600.0))
+    except Exception:
+        ttl = 3600.0
+    if ttl <= 0:
+        ttl = 0.0
+
+    cache_key = (_provider_cache_id(providers), str(index_symbol), _ist_date_str())
+    if ttl > 0:
+        try:
+            hit = _EXPIRY_LIST_CACHE.get(cache_key)
+            if hit is not None:
+                ts, cand = hit
+                if (time.time() - float(ts)) <= ttl:
+                    return list(cand)
+        except Exception:
+            pass
+
+    # Miss / expired: fetch from provider
+    try:
+        prov_obj = getattr(providers, 'primary_provider', providers)
+        raw_list = list(prov_obj.get_expiry_dates(index_symbol)) if hasattr(prov_obj, 'get_expiry_dates') else []
+    except Exception:
+        raw_list = []
+
+    candidates: list[_dt.date] = []
+    for x in raw_list:
+        try:
+            if isinstance(x, _dt.datetime):
+                candidates.append(x.date())
+            elif isinstance(x, _dt.date):
+                candidates.append(x)
+            else:
+                candidates.append(_dt.date.fromisoformat(str(x)))
+        except Exception:
+            continue
+    candidates = sorted(set(candidates))
+
+    if ttl > 0:
+        try:
+            _EXPIRY_LIST_CACHE[cache_key] = (time.time(), list(candidates))
+        except Exception:
+            pass
+    return candidates
+
+
+def get_expiry_candidates_cached(index_symbol: str, providers: Any) -> list[_dt.date]:
+    """Return cached provider expiry candidates for an index.
+
+    This is a lightweight public wrapper so callers can avoid hitting
+    provider.get_expiry_dates repeatedly within/between cycles.
+    """
+    return _get_cached_expiry_candidates(index_symbol, providers)
+
 def _get_expiry_service() -> Any:  # lazy import + build to avoid overhead
     global _EXPIRY_SERVICE_SINGLETON
     if _EXPIRY_SERVICE_SINGLETON is not None:
@@ -56,7 +140,30 @@ def _get_expiry_service() -> Any:  # lazy import + build to avoid overhead
 
 
 def fetch_option_instruments(index_symbol: str, expiry_rule: str, expiry_date: Any, strikes: Sequence[float], providers: Any, metrics: Any) -> list[dict]:
-    _t_api = time.time(); instruments = []; primary_err: Exception | None = None
+    _t_api = time.time(); instruments: list[dict] = []; primary_err: Exception | None = None
+
+    # Win-win optimization: cache the *resolved* instruments list when strikes/expiry are unchanged.
+    # This avoids repeated instrument-token resolution work across cycles.
+    try:
+        ttl = float(EnvConfig.get_float('G6_INSTRUMENTS_CACHE_TTL_SEC', 0.0))
+    except Exception:
+        ttl = 0.0
+    if ttl > 0:
+        try:
+            prov_id = _provider_cache_id(providers)
+            expiry_key = str(expiry_date)
+            # strikes may arrive as floats; convert to stable int-ish representation
+            strike_ints = tuple(int(round(float(s))) for s in (strikes or ()))
+            strikes_hash = hash(strike_ints)
+            key = (prov_id, str(index_symbol), expiry_key, int(strikes_hash), _ist_date_str())
+            hit = _OPTION_INSTRUMENTS_CACHE.get(key)
+            if hit is not None:
+                ts, cached = hit
+                if (time.time() - float(ts)) <= ttl and cached:
+                    # Shallow-copy dicts to avoid downstream mutation leaking across cycles.
+                    return [dict(x) for x in cached]
+        except Exception:
+            pass
     try:
         logger.debug(
             "fetch_option_instruments_start index=%s rule=%s expiry=%s strikes=%d first_strikes=%s",
@@ -132,6 +239,18 @@ def fetch_option_instruments(index_symbol: str, expiry_rule: str, expiry_date: A
             logger.debug('instrument_diag_build_failed', exc_info=True)
     if metrics and hasattr(metrics, 'mark_api_call'):
         metrics.mark_api_call(success=bool(instruments), latency_ms=(time.time()-_t_api)*1000.0)
+
+    # Populate cache only on non-empty success.
+    if ttl > 0 and instruments:
+        try:
+            prov_id = _provider_cache_id(providers)
+            expiry_key = str(expiry_date)
+            strike_ints = tuple(int(round(float(s))) for s in (strikes or ()))
+            strikes_hash = hash(strike_ints)
+            key = (prov_id, str(index_symbol), expiry_key, int(strikes_hash), _ist_date_str())
+            _OPTION_INSTRUMENTS_CACHE[key] = (time.time(), [dict(x) for x in instruments])
+        except Exception:
+            pass
     return instruments
 
 def enrich_quotes(index_symbol: str, expiry_rule: str, expiry_date: Any, instruments: Sequence[dict], providers: Any, metrics: Any) -> list[dict] | dict:
@@ -169,26 +288,9 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
          next_month = monthly after this_month (needs >=2 monthly buckets with at least one >= today).
       4. Anything else => ResolveExpiryError.
     """
-    import datetime as _dt
     import time as _time
     start = _time.time()
-    try:
-        prov_obj = getattr(providers, 'primary_provider', providers)
-        raw_list = list(prov_obj.get_expiry_dates(index_symbol)) if hasattr(prov_obj, 'get_expiry_dates') else []
-    except Exception:
-        raw_list = []
-    candidates: list[_dt.date] = []
-    for x in raw_list:
-        try:
-            if isinstance(x, _dt.datetime):
-                candidates.append(x.date())
-            elif isinstance(x, _dt.date):
-                candidates.append(x)
-            else:
-                candidates.append(_dt.date.fromisoformat(str(x)))
-        except Exception:
-            continue
-    candidates = sorted(set(candidates))
+    candidates = _get_cached_expiry_candidates(index_symbol, providers)
 
     def mark_metrics(success: bool) -> None:
         if metrics and hasattr(metrics, 'mark_api_call'):
@@ -219,14 +321,6 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
             mark_metrics(False)
             raise ResolveExpiryError(f"No provider expiries available for {index_symbol}")
     rule = str(expiry_rule).lower().strip()
-    # Delegate mapping to universal selector (SSoT)
-    # Fully consolidate: use providers' resolver to get a concrete date
-    try:
-        chosen = providers.resolve_expiry(index_symbol, rule)
-        mark_metrics(True)
-        return chosen
-    except Exception:
-        pass
     if len(rule) == 10 and rule[4]=='-' and rule[7]=='-':
         try:
             direct = _dt.date.fromisoformat(rule)
@@ -262,7 +356,10 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
         mark_metrics(False)
         raise ResolveExpiryError(f"No monthly expiries derivable for {index_symbol}")
 
-    today = _dt.date.today()
+    try:
+        today = _dt.datetime.now(_dt.UTC).astimezone(_IST_TZ).date()
+    except Exception:
+        today = _dt.date.today()
     if rule == 'this_month':
         chosen = None
         for mexp in monthly_list:
@@ -283,8 +380,14 @@ def resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics:
         mark_metrics(True)
         return monthly_list[cur_idx+1]
 
-    mark_metrics(False)
-    raise ResolveExpiryError(f"Unknown expiry rule {expiry_rule} for {index_symbol}")
+    # Unknown rule: fall back to provider's resolver (may support extra tags).
+    try:
+        chosen = providers.resolve_expiry(index_symbol, rule)
+        mark_metrics(True)
+        return chosen
+    except Exception:
+        mark_metrics(False)
+        raise ResolveExpiryError(f"Unknown expiry rule {expiry_rule} for {index_symbol}")
 
 
  # Removed calendar fallback: provider list is authoritative.
@@ -306,5 +409,6 @@ __all__ = [
     'fetch_option_instruments',
     'enrich_quotes',
     'resolve_expiry',
+    'get_expiry_candidates_cached',
     'synthetic_metric_pop',
 ]

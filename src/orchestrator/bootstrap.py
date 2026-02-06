@@ -23,7 +23,9 @@ import os
 from typing import Any
 
 from src.config.env_config import EnvConfig
+from src.config.g6_config import get_g6_config
 from src.config.runtime_config import get_runtime_config
+from src.config.env_unknown import validate_unknown_env_vars
 from src.orchestrator.context import RuntimeContext
 from src.utils.build_info import auto_register_build_info
 
@@ -63,8 +65,10 @@ except (ImportError, AttributeError):  # pragma: no cover
     load_config_fn = None
 try:
     from src.unified_main import load_config as _legacy_load_config_import
-except (ImportError, AttributeError):
-    # Handle missing module or function
+except BaseException as e:
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+        raise
+    # Handle missing module or function (or legacy module raising during import)
     _legacy_load_config_import = None  # type: ignore
 
 
@@ -121,6 +125,9 @@ def bootstrap_runtime(config_path: str,
     enable_resource_sampler : bool
         Launch resource sampler thread for utilization gauges.
     """
+    # Optional startup guard: warn/fail on unknown G6_* env vars (typo prevention)
+    validate_unknown_env_vars()
+
     if load_config_fn is None:
         # Fallback to legacy if new path unavailable
         if _legacy_load_config_import:
@@ -149,12 +156,18 @@ def bootstrap_runtime(config_path: str,
             # Handle server bind, I/O, or initialization failures
             logger.exception("Metrics server initialization failed")
 
-    # Build runtime_config snapshot (loop/metrics env) and attach to context
+    # Build unified env-derived config + typed runtime_config view and attach to context
     try:
-        rt_cfg = get_runtime_config(refresh=True)
+        g6_cfg = get_g6_config(refresh=True)
     except (AttributeError, TypeError, ValueError, RuntimeError):
         # Handle config retrieval failures
+        g6_cfg = None
+    try:
+        rt_cfg = get_runtime_config(refresh=False)
+    except (AttributeError, TypeError, ValueError, RuntimeError):
         rt_cfg = None
+
+    # Keep typed RuntimeConfig on the context; it is derived from G6Config.
     ctx = RuntimeContext(config=raw_cfg, runtime_config=rt_cfg, metrics=metrics)
     # Emit deprecation warnings / strict enforcement
     run_env_deprecation_scan()
@@ -167,14 +180,26 @@ def bootstrap_runtime(config_path: str,
         logger.debug("Auto build info registration failed", exc_info=True)
 
     # Component initialization (now default ON). Set G6_DISABLE_COMPONENTS=1 to skip.
-    if not EnvConfig.get_bool('G6_DISABLE_COMPONENTS', False):
+    disable_components = g6_cfg.disable_components if g6_cfg is not None else EnvConfig.get_bool('G6_DISABLE_COMPONENTS', False)
+    if not disable_components:
         try:
             providers = init_providers(raw_cfg)
-            csv_sink = init_storage(raw_cfg)
+            storage = init_storage(raw_cfg)
+            csv_sink = None
+            influx_sink = None
+            # init_storage historically returned csv sink only; newer versions return (csv_sink, influx_sink)
+            try:
+                if isinstance(storage, tuple) and len(storage) == 2:
+                    csv_sink, influx_sink = storage
+                else:
+                    csv_sink = storage
+            except (TypeError, ValueError):
+                csv_sink = storage
             apply_circuit_breakers(raw_cfg, providers)
             health = init_health(raw_cfg, providers, csv_sink)
             ctx.providers = providers
             ctx.csv_sink = csv_sink
+            ctx.influx_sink = influx_sink
             ctx.health_monitor = health
         except (ImportError, AttributeError, TypeError, ValueError, RuntimeError, OSError, IOError):
             # Handle import, initialization, or I/O failures
@@ -195,7 +220,8 @@ def bootstrap_runtime(config_path: str,
                 # Handle market hours check failures
                 pass
     # Start catalog HTTP server if enabled
-    if is_truthy_env('G6_CATALOG_HTTP'):
+    catalog_http_enabled = g6_cfg.catalog_http_enabled if g6_cfg is not None else is_truthy_env('G6_CATALOG_HTTP')
+    if catalog_http_enabled:
         try:
             start_http_server_in_thread()
         except (OSError, IOError, RuntimeError, AttributeError):
@@ -209,7 +235,7 @@ def bootstrap_runtime(config_path: str,
             # Derive key runtime flags / counts
             try:
                 # Prefer runtime config value, fallback to raw config's loop.interval when available
-                loop_interval = getattr(rt_cfg, 'loop_interval', None)
+                loop_interval = getattr(g6_cfg, 'loop_interval_seconds', None) if g6_cfg is not None else None
                 if loop_interval is None and hasattr(raw_cfg, 'raw'):
                     loop_interval = raw_cfg.raw.get('loop', {}).get('interval', None)
             except (AttributeError, TypeError, KeyError):
@@ -369,7 +395,7 @@ def bootstrap_runtime(config_path: str,
                             ],
                             logger_override=logger,
                         )
-            except (AttributeError, TypeError, OSError, IOError, json.JSONEncodeError):
+            except (AttributeError, TypeError, ValueError, OverflowError, OSError, IOError):
                 # Handle JSON emission failures
                 pass
     except (AttributeError, TypeError, ValueError, RuntimeError):
@@ -401,7 +427,7 @@ try:  # registration happens at import time (idempotent)
             if is_truthy_env('G6_ENV_DEPRECATIONS_SUMMARY_JSON'):
                 try:
                     emit_summary_json('env.deprecations', [('count', 0)], logger_override=logging.getLogger(__name__))
-                except (AttributeError, TypeError, OSError, IOError, json.JSONEncodeError):
+                except (AttributeError, TypeError, ValueError, OverflowError, OSError, IOError):
                     # Handle JSON emission failures
                     pass
             return True
@@ -414,7 +440,7 @@ try:  # registration happens at import time (idempotent)
                     [('count', len(present)), ('names', present)],
                     logger_override=log,
                 )
-            except (AttributeError, TypeError, OSError, IOError, json.JSONEncodeError):
+            except (AttributeError, TypeError, ValueError, OverflowError, OSError, IOError):
                 # Handle JSON emission failures
                 pass
         return True

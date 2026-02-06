@@ -71,23 +71,26 @@ Success criteria:
 
 ## Inference interface (proposed)
 
-- New API: `/api/ml/path_forecast`
-  - Query: index=NIFTY&horizon_minutes=390&quantiles=0.1,0.5,0.9
-  - Response CSV (wide): `time, q10, q50, q90`
-  - Response CSV (long): `time, quantile, value`
-- Exporter: extend to write `data/ml/path_forecasts/<INDEX>.csv` with rolling path updates (first row is current time; future rows are predictions)
+- Current API surface (implemented)
+  - Primary ribbon: GET `/api/ml/path_forecast_json`
+    - Query: `index`, `horizon_minutes`, `expiry_tag`, `offset`, `window`, `k`, `mode`, `bucket_ms`, `date_str`, `calibrate`, `no_cache`, `align`, plus optional Phase C/D knobs.
+    - Response: JSON array rows with `time` (ISO), `plot_time` (UTC ISO Z), `plot_ms` (epoch ms), `q10/q50/q90`, and best-effort `tp` overlay.
+  - Diagnostics & stats: `/api/ml/path_diagnostics`, `/api/ml/path_stats`, `/api/ml/path_advisor`
+  - Alerting-friendly advisor flags: `/api/ml/path_advisor_flags`
+  - History exports: `/api/ml/path_prediction_history` and `/api/ml/path_prediction_history_csv`
+  - Realized TP: `/api/ml/live_tp_series` (alias: `/api/ml/tp_series`)
 
 ## Rollout plan
 
 - Phase 0: Baselines
   - Implement retrieval-only path forecast: encode last W via simple feature vector (handcrafted stats + FE v2); kNN over historical windows; output mean future path; smooth with exponential weights.
-  - Add `/api/ml/path_forecast` endpoint + Grafana panel (bands P10/P50/P90 from percentiles over neighbors).
+  - Add `/api/ml/path_forecast_json` endpoint + Grafana panel (bands P10/P50/P90 from percentiles over neighbors).
 
 ### Diagnostics and tunables (Phase 0)
 
 Lightweight improvements have been added to aid validation and iteration:
 
-- Retrieval tunables via query params on `/api/ml/path_forecast`:
+- Retrieval tunables via query params on `/api/ml/path_forecast_json`:
   - `expiry_tag` (default: `this_week`)
   - `offset` (default: `0`)
   - `window` (default: `60`, minutes used for similarity)
@@ -104,7 +107,7 @@ Lightweight improvements have been added to aid validation and iteration:
   - If retrieval cannot run (insufficient history etc.), `mode` is `fallback` and `retrieval.error` contains the reason.
 
 OpenAPI/Swagger notes:
-- The `/api/ml/path_forecast` OpenAPI now includes the `mode` query parameter with allowed values `auto|hybrid|retrieval|stub`.
+- The `/api/ml/path_forecast_json` OpenAPI includes the `mode` query parameter with allowed values `auto|hybrid|retrieval|stub`.
 - For quick runtime verification, the endpoint also echoes the requested mode via the header `X-PathForecast-RequestedMode`.
 
 Notes:
@@ -125,8 +128,8 @@ Additional headers when `hybrid` is used:
 - `X-Retrieval-KUsed` and `X-Retrieval-Window` are also populated in hybrid mode for consistency.
 
 Examples:
-- `.../api/ml/path_forecast?index=NIFTY&horizon_minutes=30&quantiles=0.1,0.5,0.9&format=wide&window=60&k=10&expiry_tag=this_week&offset=0&mode=hybrid`
-- `.../api/ml/path_forecast?index=NIFTY&mode=retrieval`
+- `.../api/ml/path_forecast_json?index=NIFTY&horizon_minutes=30&window=60&k=10&expiry_tag=this_week&offset=0&mode=hybrid`
+- `.../api/ml/path_forecast_json?index=NIFTY&mode=retrieval`
 
 ### Archival and live evaluation
 
@@ -180,11 +183,8 @@ New lightweight enhancements for Grafana and operational stability:
 
 - In-process memoization cache with TTL and controls
   - Forecast responses are memoized per key: `(route | index | expiry_tag | offset | window | k | horizon | bucket_ms | mode | quantiles | bucket_key)`.
-  - TTL: 90 seconds. Entries older than TTL are ignored.
-  - Headers: CSV route sets `X-Cache: HIT` on cache hits.
-  - Admin/debug endpoints:
-    - GET `/api/ml/_debug/cache_stats` (optional `prefix=csv|json`, `detail=true` for sample)
-    - POST `/api/ml/_admin/cache_clear` (optional `prefix`)
+  - TTL: short-lived (currently ~20s) to keep dashboards fast without pinning stale paths.
+  - Control: use `no_cache=true` to force a fresh compute.
 
 Grafana Infinity example (JSON):
 - URL: `http://127.0.0.1:9500/api/ml/path_forecast_json?index=NIFTY&horizon_minutes=390&mode=auto&calibrate=true`

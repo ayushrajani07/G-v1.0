@@ -62,7 +62,7 @@ async def api_overlay(
         try:
             await asyncio.wait_for(_SEM.acquire(), timeout=0.001)
             acquired = True
-        except Exception:
+        except asyncio.TimeoutError:
             _obs_too_many("overlay")
             return JSONResponse(
                 {"error": "too_many_requests", "retry_after": 1},
@@ -112,7 +112,7 @@ async def api_overlay(
                     else:
                         try:
                             obj[col] = float(val)
-                        except Exception:
+                        except (TypeError, ValueError):
                             obj[col] = None
                 rows.append(obj)
 
@@ -132,7 +132,9 @@ async def api_overlay(
                 if (not disable_cache) and inm and inm == headers["ETag"]:
                     _obs_end("overlay", t0, ok=True)
                     return JSONResponse(None, status_code=304, headers=headers)
-        except Exception:
+        except BaseException as e:
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                raise
             pass
 
         resp = ORJSONResponse(rows, headers=headers)
@@ -141,7 +143,9 @@ async def api_overlay(
     except HTTPException:
         _obs_end("overlay", t0, ok=False)
         raise
-    except Exception as e:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.FILE_IO,
@@ -157,5 +161,7 @@ async def api_overlay(
         if acquired:
             try:
                 _SEM.release()
-            except Exception:
+            except BaseException as e:
+                if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                    raise
                 pass

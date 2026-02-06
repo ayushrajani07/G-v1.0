@@ -29,7 +29,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from src.config.env_config import EnvConfig
-from src.config.runtime_config import get_runtime_config
+from src.config.g6_config import get_g6_config
 from src.orchestrator.bootstrap import bootstrap_runtime  # type: ignore
 from src.orchestrator.context import RuntimeContext  # type: ignore
 from src.orchestrator.cycle import run_cycle  # type: ignore
@@ -49,7 +49,12 @@ logger = logging.getLogger("run_orchestrator_loop")
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Orchestrator Loop Runner")
     p.add_argument("--config", default="config/g6_config.json", help="Config JSON path")
-    p.add_argument("--interval", type=float, default=30.0, help="Cycle interval seconds")
+    p.add_argument(
+        "--interval",
+        type=float,
+        default=None,
+        help="Cycle interval seconds (default: 30; override with G6_LOOP_INTERVAL_SECONDS)",
+    )
     p.add_argument("--cycles", type=int, default=0, help="Number of cycles (0=unbounded)")
     p.add_argument("--auto-snapshots", action="store_true", help="Enable auto snapshots (sets env toggle)")
     p.add_argument("--parallel", action="store_true", help="Enable parallel per-index collection")
@@ -186,14 +191,20 @@ def main(argv: list[str]) -> int:
         os.environ['G6_AUTO_SNAPSHOTS'] = '1'
 
     cycle_fn = build_cycle_fn()
-    rcfg = get_runtime_config(refresh=True)
-    effective_interval = args.interval if args.interval != 30.0 else rcfg.loop.interval_seconds
-    # If CLI interval explicitly provided (different from default), prefer it and update runtime config (one-off)
-    if args.interval != 30.0 and args.interval != rcfg.loop.interval_seconds:
-        # Rebuild singleton with overridden interval (non-invasive); this keeps future adopters consistent
+    g6_cfg = get_g6_config(refresh=True)
+    if args.interval is not None:
         os.environ['G6_LOOP_INTERVAL_SECONDS'] = str(args.interval)
-        rcfg = get_runtime_config(refresh=True)
-        effective_interval = rcfg.loop.interval_seconds
+        try:
+            EnvConfig.clear_cache()
+        except Exception:
+            pass
+        g6_cfg = get_g6_config(refresh=True)
+    effective_interval = g6_cfg.loop_interval_seconds
+    try:
+        if not isinstance(effective_interval, (int, float)) or float(effective_interval) <= 0:
+            effective_interval = 30.0
+    except Exception:
+        effective_interval = 30.0
     logger.info(
         "Starting orchestrator loop interval=%.2fs parallel=%s auto_snapshots=%s max_cycles_env=%s",
         effective_interval,

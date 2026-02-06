@@ -33,8 +33,6 @@ def test_theme_endpoint_and_trend(monkeypatch):
     monkeypatch.setenv('G6_ADAPTIVE_CONTROLLER_SEVERITY','1')
     monkeypatch.setenv('G6_ADAPTIVE_SEVERITY_TREND_SMOOTH','1')
     monkeypatch.setenv('G6_ADAPTIVE_SEVERITY_TREND_WINDOW','5')
-    # Force reload to ensure any prior server with stale window is restarted
-    monkeypatch.setenv('G6_CATALOG_HTTP_FORCE_RELOAD','1')
     # Ensure any previous server (from other tests) is shut down via registry-backed helper
     shutdown_http_server()
     # Clean state sufficient; no module reload required with registry lifecycle

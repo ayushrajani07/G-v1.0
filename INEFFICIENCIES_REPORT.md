@@ -81,7 +81,7 @@ config_wrapper = load_config('config/platform_config.json')  # Returns ConfigWra
 1. ✅ Canonical `src.utils.status_reader.py` in use (154 lines)
 2. ✅ All production code imports from `src.utils.status_reader`
 3. ✅ No duplicate `scripts/summary/status_reader.py` in active code
-4. ✅ Duplicate only exists in archived/G6_.archived directory
+4. ✅ Duplicate only existed in archived/G6_.archived directory (external/G6_.archived; removed 2026-01-25)
 
 **Canonical API (Final):**
 ```python
@@ -668,7 +668,7 @@ class CsvSink:
 **Analysis Results:**
 - **Total late imports discovered**: 539 across the codebase (including archived)
 - **Active code late imports**: 92 eliminated (100% of anti-pattern usage)
-- **Remaining**: 447 in archived directory (external/G6_.archived) - not migrated
+- **Remaining**: 447 in archived directory (external/G6_.archived; removed 2026-01-25) - not migrated
 - **Files with circular dependency comments**: 33
 - **Top offenders** (files with most late imports - BEFORE migration):
   1. `src/collectors/unified_collectors.py`: 44 late imports
@@ -791,7 +791,7 @@ class CsvSink:
     - ✅ Migrated `src/utils/memory_pressure.py` - 5 late imports eliminated (error handling consolidation)
 - ✅ Phase 3 COMPLETE: **Active codebase fully migrated**
   - **Active src/ directory**: 0 late import anti-patterns remaining
-  - **Archived code**: 447 late imports in external/G6_.archived/ (intentionally not migrated)
+   - **Archived code**: 447 late imports in external/G6_.archived/ (removed 2026-01-25)
   - **Verified**: Only 2 intentional patterns remain (fallback code, self-imports)
 - ⏹️ Phase 4: Configuration consolidation (deferred - active code complete)
 - ⏹️ Phase 5: Archived code migration (deferred - not in active use)
@@ -830,7 +830,7 @@ class CsvSink:
 **Migration Statistics:**
 - **Total late imports in codebase**: 539 (including archived)
 - **Active code late imports eliminated**: 92 of 92 (100% ✅)
-- **Archived code late imports**: 447 in external/G6_.archived/ (deferred)
+- **Archived code late imports**: 447 in external/G6_.archived/ (removed 2026-01-25)
 - **Files migrated**: 15 (100% of identified anti-patterns)
 - **Session accomplishments**: 
   - Session 1 (Oct 25): 46 late imports across 10 files
@@ -853,7 +853,7 @@ class CsvSink:
 
 **Deferred Work:**
 - **unified_collectors.py**: 44 late imports require major refactor (complex file, separate project)
-- **Archived code**: 447 late imports in external/G6_.archived/ (intentionally not migrated)
+- **Archived code**: 447 late imports in external/G6_.archived/ (removed 2026-01-25)
 - **Configuration consolidation**: env_flags + env_adapter unification (lower priority now)
 
 **Benefits Achieved:**
@@ -1046,7 +1046,7 @@ No further optimization needed - streaming already implemented where beneficial.
    - **Status:** Moved to archived (zero imports found in codebase)
    - **Verification:** Grep search found no active references
    - **Reason:** Experimental/enhanced version never adopted, superseded by `src/error_handling.py`
-   - **Location:** `external/G6_.archived/src/enhanced_error_handling_UNUSED.py`
+   - **Location:** `external/G6_.archived/src/enhanced_error_handling_UNUSED.py` (path removed 2026-01-25)
 
 **Previously Archived (Prior Cleanup):**
 - `src/debug_mode.py` - Already in archived directory

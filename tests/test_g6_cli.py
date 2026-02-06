@@ -14,7 +14,7 @@ def test_g6_help_lists_subcommands():
     r = run_cli('--help')
     assert r.returncode == 0
     out = r.stdout.lower()
-    for sub in ['summary','simulate','panels-bridge','integrity','bench','retention-scan','version']:
+    for sub in ['summary','simulate','integrity','bench','retention-scan','version']:
         assert sub in out, f"Subcommand {sub} missing from help output"
 
 

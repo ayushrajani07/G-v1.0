@@ -40,8 +40,8 @@ def test_metrics_spec_file_exists():
     assert SPEC_PATH.exists(), f"Missing metrics spec file: {SPEC_PATH}"
 
 
-@pytest.mark.skipif(os.getenv('G6_EGRESS_FROZEN','').lower() in {'1','true','yes','on'}, reason='panel diff egress frozen affects spec surface')
-def test_all_spec_metrics_present():
+def test_all_spec_metrics_present(monkeypatch):
+    monkeypatch.delenv('G6_EGRESS_FROZEN', raising=False)
     """Each metric defined in metrics_spec.yaml must exist in runtime registry.
 
     Extra runtime metrics are tolerated (spec grows over time). This is Phase A guardrail.

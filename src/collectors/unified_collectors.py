@@ -6,6 +6,8 @@ import os
 import time
 from src.config.env_config import EnvConfig
 
+_IST_TZ = datetime.timezone(datetime.timedelta(hours=5, minutes=30), name="IST")
+
 try:
     from src.utils.env_flags import is_truthy_env
 except ImportError:  # fallback should not trigger normally
@@ -116,11 +118,12 @@ try:
 except ImportError:
     global_phase_timing = None  # type: ignore
 try:
-    from src.logstream.formatter import format_cycle, format_cycle_readable, format_cycle_table
+    from src.logstream.formatter import format_cycle, format_cycle_readable, format_cycle_table, format_indices_table
 except ImportError:
     format_cycle = None  # type: ignore
     format_cycle_readable = None  # type: ignore
     format_cycle_table = None  # type: ignore
+    format_indices_table = None  # type: ignore
 
 # Optional imports for complex singles (Phase 3b Batch 26)
 try:
@@ -496,9 +499,9 @@ def _maybe_init_greeks(compute_greeks: bool, estimate_iv: bool, risk_free_rate: 
                 raise ImportError("OptionGreeks not available")
             greeks_calculator = OptionGreeks(risk_free_rate=risk_free_rate)
             if compute_greeks:
-                logger.info("Greek computation enabled (r=%s) [force_env=%s]", risk_free_rate, _env_force_greeks)
+                logger.info("Greek computation enabled (r=%s) [force-env=%s]", risk_free_rate, _env_force_greeks)
             elif estimate_iv:
-                logger.info("IV estimation enabled (r=%s) [force_env=%s]", risk_free_rate, _env_force_greeks)
+                logger.info("IV estimation enabled (r=%s) [force-env=%s]", risk_free_rate, _env_force_greeks)
         except Exception as e:
             logger.error("Failed to initialize OptionGreeks: %s", e)
             if compute_greeks:
@@ -534,13 +537,11 @@ except ImportError:  # pragma: no cover
             step = float(get_index_meta(index_symbol).step)
         except (ImportError, AttributeError, TypeError, ValueError):
             step = 100.0 if index_symbol in ['BANKNIFTY','SENSEX'] else 50.0
-        arr: list[float] = []
-        for i in range(1, n_itm + 1):
-            arr.append(float(atm - i*step))
-        arr.append(float(atm))
-        for i in range(1, n_otm + 1):
-            arr.append(float(atm + i*step))
-        return sorted(arr)
+        return sorted(
+            [float(atm - i * step) for i in range(1, n_itm + 1)]
+            + [float(atm)]
+            + [float(atm + i * step) for i in range(1, n_otm + 1)]
+        )
 
 # -----------------------------------------------------------------------------
 # Future Refactor Opportunities (non-functional; roadmap)
@@ -649,13 +650,15 @@ def _default_rule_for_index(index_symbol: str) -> str:
 def _resolve_expiry(index_symbol: str, expiry_rule: str, providers: Any, metrics: Any, concise_mode: bool) -> datetime.date:  # pragma: no cover
     """Unified expiry resolution.
 
-    Single source of truth: delegate directly to `providers.resolve_expiry`.
+    Uses the cached selector in `collectors.modules.expiry_helpers.resolve_expiry`
+    to avoid re-resolving expiry candidates every cycle.
     Any failure falls back to today's date (logged in non-concise mode).
     """
     import datetime as _dt
     import logging
     try:
-        return cast(datetime.date, providers.resolve_expiry(index_symbol, expiry_rule))
+        from src.collectors.modules.expiry_helpers import resolve_expiry as _impl
+        return cast(datetime.date, _impl(index_symbol, expiry_rule, providers, metrics, concise_mode))
     except Exception as e:  # defensive fallback: today
         if not concise_mode:
             logging.getLogger(__name__).warning(
@@ -871,8 +874,9 @@ def run_unified_collectors(
     index_params: dict[str, Any],
     providers: Any,
     csv_sink: Any,
+    *args: Any,
     metrics: Any = None,
-    *,
+    influx_sink: Any = None,
     compute_greeks: bool = False,
     risk_free_rate: float = 0.05,
     estimate_iv: bool = False,
@@ -904,6 +908,23 @@ def run_unified_collectors(
         iv_max_iterations / iv_min / iv_max / iv_precision : (future use)
         Forthcoming IV solver tuning knobs; currently captured for forward compatibility.
     """
+    # Backwards-compatible signature handling.
+    # Historical variants seen in the repo/tests:
+    #   run_unified_collectors(index_params, providers, csv_sink, metrics)
+    #   run_unified_collectors(index_params, providers, csv_sink, influx_sink, metrics)
+    #   run_unified_collectors(..., influx_sink=..., metrics=...)
+    if args:
+        # If 2+ extra positional args, treat them as (influx_sink, metrics, ...)
+        if len(args) >= 2:
+            if influx_sink is None:
+                influx_sink = args[0]
+            if metrics is None:
+                metrics = args[1]
+        else:
+            # If only one extra positional, treat it as metrics (legacy 4th positional)
+            if metrics is None:
+                metrics = args[0]
+
     # Phase 0 pipeline prep: create a shared CollectorSettings instance (used by expiry_processor).
     _collector_settings = None
     try:
@@ -1081,8 +1102,10 @@ def run_unified_collectors(
 
     merged_phase_times: dict[str,float] = {} if _PHASE_MERGE else {}
     per_index_summaries: list[dict[str,int]] = [] if _AGGREGATED_SUMMARY_ENABLED else []
+
     for index_symbol, params in index_params.items():
-        _res = _process_index(
+        try:
+            _res = _process_index(
             ctx,
             index_symbol,
             params,
@@ -1097,7 +1120,25 @@ def run_unified_collectors(
             snapshots_accum=snapshots_accum,
             dq_enabled=dq_enabled,
             dq_checker=dq_checker,
-        )
+            )
+        except Exception as e:
+            logger.error("index_collect_failed index=%s err=%s", index_symbol, e)
+            _res = {
+                'summary_rows_entry': None,
+                'human_block': None,
+                'overall_legs': 0,
+                'overall_fails': 1,
+                'indices_struct_entry': {
+                    'index': str(index_symbol),
+                    'status': 'ERROR',
+                    'option_count': 0,
+                    'attempts': 0,
+                    'expiries': [],
+                    'legs': 0,
+                    'fails': 1,
+                    'error': str(e)[:200],
+                },
+            }
         if _res.get('summary_rows_entry'):
             summary_rows.append(_res['summary_rows_entry'])
         if _res.get('human_block'):
@@ -1286,7 +1327,7 @@ def run_unified_collectors(
                 try:
                     cycle_ts_attr = int(getattr(cycle_start_ts, 'timestamp', lambda: 0)())  # datetime to epoch
                 except (AttributeError, TypeError, ValueError) as e:
-                    logger.debug(f"Failed to convert cycle_ts to int: {e}")
+                    logger.debug("Failed to convert cycle_ts to int: %s", e)
                     cycle_ts_attr = 0
             cycle_ts_int = int(cycle_ts_attr or 0)
             index_count = len(index_params) if isinstance(index_params, dict) else -1
@@ -1309,7 +1350,7 @@ def run_unified_collectors(
                     try:
                         cycle_ts_attr = int(getattr(cycle_start_ts, 'timestamp', lambda: 0)())
                     except (AttributeError, TypeError, ValueError) as e:
-                        logger.debug(f"Failed to convert cycle_ts to int: {e}")
+                        logger.debug("Failed to convert cycle_ts to int: %s", e)
                         cycle_ts_attr = 0
                 cycle_ts_int = int(cycle_ts_attr or 0)
                 index_count = len(index_params) if isinstance(index_params, dict) else -1
@@ -1321,7 +1362,7 @@ def run_unified_collectors(
     try:
         stale_present = any(((e.get('status') or '').upper() == 'STALE') for e in indices_struct)
     except (AttributeError, TypeError) as e:
-        logger.debug(f"Failed to check stale status in indices: {e}")
+        logger.debug("Failed to check stale status in indices: %s", e)
         stale_present = False
     if concise_mode and human_blocks:
         try:
@@ -1362,7 +1403,7 @@ def run_unified_collectors(
                         if cs2 and getattr(cs2, 'provider_outage_threshold', None):
                             outage_threshold = int(cs2.provider_outage_threshold)
                     except (AttributeError, TypeError, ValueError) as e:
-                        logger.debug(f"Failed to get provider_outage_threshold from settings: {e}")
+                        logger.debug("Failed to get provider_outage_threshold from settings: %s", e)
                         pass
                 # Normalize outage_threshold to a positive int
                 try:
@@ -1376,7 +1417,7 @@ def run_unified_collectors(
                     if outage_threshold <= 0:
                         outage_threshold = EnvConfig.get_int('G6_PROVIDER_OUTAGE_THRESHOLD', 3)
                 except (AttributeError, TypeError, ValueError) as e:
-                    logger.debug(f"Failed to normalize outage_threshold: {e}")
+                    logger.debug("Failed to normalize outage_threshold: %s", e)
                     outage_threshold = 3
                 provider_outage = False  # reuse outer variable (avoid redefinition)
                 try:
@@ -1387,7 +1428,7 @@ def run_unified_collectors(
                             if (counter_map.get(ix_entry.get('index'),0) or 0) < outage_threshold:
                                 provider_outage = False; break
                 except (AttributeError, TypeError, KeyError) as e:
-                    logger.debug(f"Failed to check provider outage: {e}")
+                    logger.debug("Failed to check provider outage: %s", e)
                     provider_outage = False
                 if provider_outage:
                     system_status = 'OUTAGE'
@@ -1400,7 +1441,7 @@ def run_unified_collectors(
                                 if cs3 and getattr(cs3, 'provider_outage_log_every', None):
                                     throttle_n = int(cs3.provider_outage_log_every)
                             except (AttributeError, TypeError, ValueError) as e:
-                                logger.debug(f"Failed to get provider_outage_log_every from settings: {e}")
+                                logger.debug("Failed to get provider_outage_log_every from settings: %s", e)
                                 pass
                         if not throttle_n:
                             if get_int:
@@ -1408,7 +1449,7 @@ def run_unified_collectors(
                             else:
                                 throttle_n = EnvConfig.get_int('G6_PROVIDER_OUTAGE_LOG_EVERY', 5)
                     except (AttributeError, TypeError, ValueError) as e:
-                        logger.debug(f"Failed to set throttle_n: {e}")
+                        logger.debug("Failed to set throttle_n: %s", e)
                         throttle_n = 5
                     try:
                         global _G6_PROVIDER_OUTAGE_SEQ
@@ -1428,7 +1469,7 @@ def run_unified_collectors(
                         except (KeyError, NameError):
                             pass
             except (AttributeError, TypeError, NameError) as e:
-                logger.debug(f"Failed to process system status: {e}", exc_info=True)
+                logger.debug("Failed to process system status: %s", e, exc_info=True)
                 pass
             if overall_fail_total > 0 and system_status == 'GREEN':
                 system_status = 'DEGRADED'
@@ -1448,7 +1489,7 @@ def run_unified_collectors(
                     try:
                         metrics._consec_stale_cycles = consec
                     except (AttributeError, TypeError) as e:
-                        logger.debug(f"Failed to set _consec_stale_cycles: {e}")
+                        logger.debug("Failed to set _consec_stale_cycles: %s", e)
                 else:
                     # Fallback transient local counter if metrics absent
                     consec = 1 if stale_present else 0
@@ -1465,7 +1506,7 @@ def run_unified_collectors(
                                     ['mode'],
                                 )
                             except (ValueError, AttributeError, TypeError) as e:
-                                logger.debug(f"Failed to create stale_system_cycles_total metric: {e}")
+                                logger.debug("Failed to create stale_system_cycles_total metric: %s", e)
                         if not hasattr(metrics, 'stale_consecutive_cycles'):
                             try:
                                 metrics.stale_consecutive_cycles = _G(
@@ -1474,7 +1515,7 @@ def run_unified_collectors(
                                     ['mode'],
                                 )
                             except (ValueError, AttributeError, TypeError) as e:
-                                logger.debug(f"Failed to create stale_consecutive_cycles metric: {e}")
+                                logger.debug("Failed to create stale_consecutive_cycles metric: %s", e)
                         if not hasattr(metrics, 'stale_system_active'):
                             try:
                                 metrics.stale_system_active = _G(
@@ -1483,24 +1524,24 @@ def run_unified_collectors(
                                     ['mode'],
                                 )
                             except (ValueError, AttributeError, TypeError) as e:
-                                logger.debug(f"Failed to create stale_system_active metric: {e}")
+                                logger.debug("Failed to create stale_system_active metric: %s", e)
                         # Update
                         try:
                             metrics.stale_system_active.labels(mode=stale_mode).set(1 if stale_present else 0)
                         except (AttributeError, ValueError, KeyError) as e:
-                            logger.debug(f"Failed to set stale_system_active: {e}")
+                            logger.debug("Failed to set stale_system_active: %s", e)
                         try:
                             metrics.stale_consecutive_cycles.labels(mode=stale_mode).set(consec)
                         except (AttributeError, ValueError, KeyError) as e:
-                            logger.debug(f"Failed to set stale_consecutive_cycles: {e}")
+                            logger.debug("Failed to set stale_consecutive_cycles: %s", e)
                             pass
                         if stale_present:
                             try:
                                 metrics.stale_system_cycles_total.labels(mode=stale_mode).inc()
                             except (AttributeError, ValueError, KeyError) as e:
-                                logger.debug(f"Failed to increment stale_system_cycles_total: {e}")
+                                logger.debug("Failed to increment stale_system_cycles_total: %s", e)
                     except (AttributeError, ValueError, KeyError, TypeError) as e:
-                        logger.debug(f'stale_system_metrics_failed: {e}', exc_info=True)
+                        logger.debug('stale_system_metrics_failed: %s', e, exc_info=True)
                 # Mark that we evaluated stale abort logic in this path
                 stale_abort_evaluated = True
                 if stale_mode == 'abort' and stale_present and consec >= abort_cycles:
@@ -1511,11 +1552,11 @@ def run_unified_collectors(
                     except SystemExit:
                         raise
                     except (ImportError, AttributeError) as e:
-                        logger.error(f"Failed to execute sys.exit: {e}")
+                        logger.error("Failed to execute sys.exit: %s", e)
             except (AttributeError, TypeError, NameError) as e:
-                logger.debug(f"Failed stale abort evaluation: {e}", exc_info=True)
+                logger.debug("Failed stale abort evaluation: %s", e, exc_info=True)
         except (AttributeError, TypeError, KeyError, ValueError, OSError) as e:
-            logger.debug(f"Failed to emit human summary footer: {e}", exc_info=True)
+            logger.debug("Failed to emit human summary footer: %s", e, exc_info=True)
         _trace("concise_footer_emitted", total_legs=overall_legs_total, total_fails=overall_fail_total)
     else:
         # If we didn’t emit the concise footer block, still enforce stale abort logic here.
@@ -1528,7 +1569,7 @@ def run_unified_collectors(
                 try:
                     metrics._consec_stale_cycles = consec
                 except (AttributeError, TypeError) as e:
-                    logger.debug(f"Failed to set _consec_stale_cycles in fallback: {e}")
+                    logger.debug("Failed to set _consec_stale_cycles in fallback: %s", e)
             else:
                 consec = 1 if stale_present else 0
             if stale_mode == 'abort' and stale_present and consec >= abort_cycles:
@@ -1539,9 +1580,9 @@ def run_unified_collectors(
                 except SystemExit:
                     raise
                 except (ImportError, AttributeError) as e:
-                    logger.error(f"Failed to execute sys.exit in fallback: {e}")
+                    logger.error("Failed to execute sys.exit in fallback: %s", e)
         except (AttributeError, TypeError, NameError) as e:
-            logger.debug(f"stale_abort_evaluation_failed_fallback: {e}", exc_info=True)
+            logger.debug("stale_abort_evaluation_failed_fallback: %s", e, exc_info=True)
 
     # Emit cycle line(s) with new mode control: G6_CYCLE_OUTPUT={pretty|raw|both}
     # Precedence rules:
@@ -1628,7 +1669,7 @@ def run_unified_collectors(
                         extra=extra_cycle,
                     )
             except (TypeError, ValueError, AttributeError, KeyError) as e:
-                logger.debug(f"Failed to format raw cycle line: {e}", exc_info=True)
+                logger.debug("Failed to format raw cycle line: %s", e, exc_info=True)
         if mode in ('pretty','both') and not legacy_disable:
             try:
                 header_line, value_line = format_cycle_table(
@@ -1641,40 +1682,144 @@ def run_unified_collectors(
                     api_success_pct=api_succ,
                     collection_success_pct=coll_succ,
                     indices=len(index_params or {}),
-                    stall_flag=None
+                    stall_flag=None,
+                    ist_ts=(
+                        (lambda: (
+                            __import__('datetime').datetime.now(
+                                __import__('datetime').timezone(__import__('datetime').timedelta(hours=5, minutes=30))
+                            ).strftime('%Y-%m-%d %H:%M:%S')
+                        ))()
+                        if (EnvConfig.get_bool('G6_CYCLE_SHOW_IST_TS', EnvConfig.get_bool('G6_HUMAN_MODE', False)))
+                        else None
+                    ),
                 )
-                # For now log both header and value every cycle; future: track last header to avoid repetition.
-                pretty_line = f"{header_line}\n{value_line}"
+                # Expose latest header for other human emitters (e.g., PHASE_TIMING block footer).
+                try:
+                    if metrics is not None:
+                        setattr(metrics, '_last_cycle_table_header_line', header_line)
+                except Exception:
+                    pass
+                # Human mode defaults to a cleaner stream: print header once, then only the value row.
+                try:
+                    human_mode = EnvConfig.get_bool('G6_HUMAN_MODE', False)
+                    header_once = EnvConfig.get_bool('G6_CYCLE_TABLE_HEADER_ONCE', human_mode)
+                except Exception:
+                    human_mode = False
+                    header_once = False
+
+                if header_once:
+                    # Attach state on metrics when available; otherwise fallback to a module-level sentinel.
+                    already = False
+                    try:
+                        if metrics is not None and hasattr(metrics, '_cycle_table_header_emitted'):
+                            already = bool(getattr(metrics, '_cycle_table_header_emitted', False))
+                        elif metrics is not None:
+                            already = False
+                    except Exception:
+                        already = False
+                    # Periodic header refresh to keep mid-scroll readable.
+                    try:
+                        header_every = EnvConfig.get_int('G6_CYCLE_TABLE_HEADER_EVERY', 0)
+                    except Exception:
+                        header_every = 0
+                    try:
+                        n_since = int(getattr(metrics, '_cycle_table_rows_since_header', 0)) if metrics is not None else 0
+                    except Exception:
+                        n_since = 0
+
+                    emit_header_now = (not already)
+                    if header_every and header_every > 0 and n_since >= header_every:
+                        emit_header_now = True
+
+                    if emit_header_now:
+                        pretty_line = f"{header_line}\n{value_line}"
+                        try:
+                            if metrics is not None:
+                                setattr(metrics, '_cycle_table_header_emitted', True)
+                                setattr(metrics, '_cycle_table_rows_since_header', 0)
+                        except Exception:
+                            pass
+                    else:
+                        pretty_line = value_line
+                        try:
+                            if metrics is not None:
+                                setattr(metrics, '_cycle_table_rows_since_header', n_since + 1)
+                        except Exception:
+                            pass
+                else:
+                    pretty_line = f"{header_line}\n{value_line}"
             except (TypeError, ValueError, AttributeError, KeyError) as e:
-                logger.debug(f"Failed to format pretty cycle table: {e}", exc_info=True)
+                logger.debug("Failed to format pretty cycle table: %s", e, exc_info=True)
 
         # Emit in deterministic order: raw then pretty if both
         try:
             if raw_line:
                 logger.info(raw_line)
         except (OSError, ValueError) as e:
-            logger.debug(f"Failed to emit raw cycle line: {e}", exc_info=True)
+            logger.debug("Failed to emit raw cycle line: %s", e, exc_info=True)
         _trace("cycle_raw_emitted", have_raw=bool(raw_line))
         try:
             if pretty_line:
                 logger.info(pretty_line)
         except (OSError, ValueError) as e:
-            logger.debug(f"Failed to emit pretty cycle summary: {e}", exc_info=True)
+            logger.debug("Failed to emit pretty cycle summary: %s", e, exc_info=True)
         _trace("cycle_pretty_emitted", have_pretty=bool(pretty_line))
+
+        # Optional blank spacer between blocks for terminal readability.
+        try:
+            if EnvConfig.get_bool('G6_HUMAN_MODE', False) and EnvConfig.get_bool('G6_HUMAN_SPACERS', True):
+                n = EnvConfig.get_int('G6_HUMAN_SPACER_LINES', 1)
+                for _ in range(max(0, n)):
+                    logger.info("")
+        except Exception:
+            pass
+
+        # Optional: emit a compact per-index table for better operator readability.
+        try:
+            human_mode = EnvConfig.get_bool('G6_HUMAN_MODE', False)
+            show_ix_table = EnvConfig.get_bool('G6_HUMAN_SHOW_INDEX_TABLE', human_mode)
+        except Exception:
+            show_ix_table = False
+        if show_ix_table and format_indices_table and isinstance(indices_struct, list):
+            try:
+                max_rows = EnvConfig.get_int('G6_HUMAN_INDEX_TABLE_MAX_ROWS', 8)
+            except Exception:
+                max_rows = 8
+            try:
+                block = format_indices_table(cast(list[dict[str, Any]], indices_struct), max_rows=max_rows)
+                logger.info(block)
+                try:
+                    if EnvConfig.get_bool('G6_HUMAN_MODE', False) and EnvConfig.get_bool('G6_HUMAN_SPACERS', True):
+                        n = EnvConfig.get_int('G6_HUMAN_SPACER_LINES', 1)
+                        for _ in range(max(0, n)):
+                            logger.info("")
+                except Exception:
+                    pass
+            except Exception as e:
+                logger.debug('human_index_table_emit_failed: %s', e, exc_info=True)
+
+        # End-of-cycle IST timestamp (operator-friendly; useful for screenshots and audits).
+        try:
+            human_mode = EnvConfig.get_bool('G6_HUMAN_MODE', False)
+            if EnvConfig.get_bool('G6_CYCLE_END_IST', human_mode):
+                ist_now = datetime.datetime.now(datetime.UTC).astimezone(_IST_TZ)
+                logger.info("IST_END %s", ist_now.strftime('%Y-%m-%d %H:%M:%S'))
+        except Exception:
+            pass
     except (AttributeError, TypeError, NameError) as e:
-        logger.debug(f"Failed to emit cycle line(s): {e}", exc_info=True)
+        logger.debug("Failed to emit cycle line(s): %s", e, exc_info=True)
     # Optional heartbeat
     try:
         _maybe_emit_heartbeat(metrics)
     except (AttributeError, TypeError, NameError) as e:
-        logger.debug(f'heartbeat_invoke_failed: {e}', exc_info=True)
+        logger.debug('heartbeat_invoke_failed: %s', e, exc_info=True)
         _trace("cycle_emit_error")
 
     # Auto-disable noisy trace flags after cycle completion if enabled
     try:
         _maybe_auto_disable_trace_flags()
     except (AttributeError, NameError) as e:
-        logger.debug(f'trace_auto_disable_post_failed: {e}', exc_info=True)
+        logger.debug('trace_auto_disable_post_failed: %s', e, exc_info=True)
 
     # Safety: ensure indices_struct has at least one entry in minimal test environments
     try:
@@ -1696,7 +1841,7 @@ def run_unified_collectors(
                 'expiries': [{'rule': (_exp_list[0] if _exp_list else _default_rule_for_index(_ix)), 'status': 'empty', 'options': 0, 'failed': True}],
             })
     except (AttributeError, TypeError, NameError) as e:
-        logger.debug(f'indices_struct_safety_append_failed: {e}', exc_info=True)
+        logger.debug('indices_struct_safety_append_failed: %s', e, exc_info=True)
 
     # Structured return object (backward compatible: callers ignoring return unaffected).
     try:
@@ -1710,7 +1855,7 @@ def run_unified_collectors(
                 include_reason_totals=True,
             )
         except (AttributeError, TypeError, NameError) as e:
-            logger.debug(f"cycle_status_summary_emit_failed: {e}", exc_info=True)
+            logger.debug("cycle_status_summary_emit_failed: %s", e, exc_info=True)
         # Phase 5: Benchmark / Anomaly persistence extracted to modules.benchmark_bridge
         try:
             if not write_benchmark_artifact:
@@ -1719,7 +1864,7 @@ def run_unified_collectors(
             detector_fn = _detect_anomalies if _detect_anomalies else None
             write_benchmark_artifact(cast(list[dict[str, Any]], indices_struct), total_elapsed, ctx, metrics, detector_fn)
         except (ImportError, AttributeError, TypeError) as e:
-            logger.debug(f"benchmark_bridge_failed: {e}", exc_info=True)
+            logger.debug("benchmark_bridge_failed: %s", e, exc_info=True)
         # Build snapshot summary (Phase 7 extraction cleanup – fallback removed) + Phase 9 alert aggregation
         if not build_snapshot:
             raise ImportError("snapshot_core module not available")
@@ -1728,7 +1873,7 @@ def run_unified_collectors(
                 raise ImportError("alerts_core module not available")
             _alert_summary = aggregate_alerts(cast(list[dict[str, Any]], indices_struct))
         except (ImportError, AttributeError, TypeError) as e:
-            logger.debug(f'legacy_alert_aggregation_failed: {e}', exc_info=True)
+            logger.debug('legacy_alert_aggregation_failed: %s', e, exc_info=True)
             _alert_summary = None
         snap_summary = build_snapshot(cast(list[dict[str, Any]], indices_struct), len(index_params or {}), metrics, build_reason_totals=True)
         partial_reason_totals = snap_summary.partial_reason_totals
@@ -1749,7 +1894,7 @@ def run_unified_collectors(
                     for k, v in alerts_block['categories'].items():
                         snapshot_summary[f'alert_{k}'] = v
             except (KeyError, TypeError, AttributeError) as e:
-                logger.debug(f'legacy_alert_snapshot_merge_failed: {e}', exc_info=True)
+                logger.debug('legacy_alert_snapshot_merge_failed: %s', e, exc_info=True)
         # Expose provider outage flag & threshold (best-effort; may be absent if earlier failure)
     # provider_outage already defined above; leave as-is
         ret_obj = {
@@ -1803,7 +1948,7 @@ def run_unified_collectors(
                             try: c.inc(int(val) if isinstance(val, (int, float, str)) else 1)
                             except (AttributeError, TypeError, ValueError): pass  # Metric increment failed
         except (AttributeError, TypeError, KeyError, ImportError) as e:
-            logger.debug(f'legacy_operational_metrics_failed: {e}', exc_info=True)
+            logger.debug('legacy_operational_metrics_failed: %s', e, exc_info=True)
         # Shadow diff attachment removed with rollout mode deprecation.
         # Phase 8: add coverage rollups at index level if not already present
         try:
@@ -1817,12 +1962,12 @@ def run_unified_collectors(
                     ix['strike_coverage_avg'] = cov_roll.get('strike_coverage_avg')
                     ix['field_coverage_avg'] = cov_roll.get('field_coverage_avg')
         except (ImportError, TypeError, AttributeError, KeyError) as e:
-            logger.debug(f'legacy_coverage_rollup_failed: {e}', exc_info=True)
+            logger.debug('legacy_coverage_rollup_failed: %s', e, exc_info=True)
         return ret_obj
     except (KeyError, TypeError, AttributeError, ValueError) as e:
         # Structured return build failed late; preserve best-effort indices_struct so callers/tests
         # can still introspect outcomes instead of receiving an incomplete dict.
-        logger.debug(f'structured_return_build_failed: {e}', exc_info=True)
+        logger.debug('structured_return_build_failed: %s', e, exc_info=True)
         try:
             return {
                 'status': 'ok',
@@ -1833,7 +1978,7 @@ def run_unified_collectors(
                 'snapshot_count': (len(snapshots_accum) if ("snapshots_accum" in locals() and build_snapshots) else 0),
             }
         except (NameError, TypeError, AttributeError) as e:
-            logger.debug(f'fallback_return_build_failed: {e}', exc_info=True)
+            logger.debug('fallback_return_build_failed: %s', e, exc_info=True)
             return {
                 'status': 'ok',
                 'indices_processed': len(index_params or {}),

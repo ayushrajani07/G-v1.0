@@ -45,22 +45,28 @@ def persist_and_metrics(ctx, enriched_data: dict[str, dict[str, Any]], index_sym
             context={"stage":"csv_write","rule":expiry_rule,"expiry":str(expiry_date)}
         )
         return PersistResult(option_count=0, pcr=None, metrics_payload=None, failed=True)
-    except Exception as e:  # pragma: no cover
+    except BaseException as e:  # pragma: no cover
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         logger.error("Unexpected CSV write error %s %s: %s", index_symbol, expiry_rule, e)
         return PersistResult(option_count=0, pcr=None, metrics_payload=None, failed=True)
 
-    influx_sink = ctx.influx_sink
+    influx_sink = getattr(ctx, 'influx_sink', None)
     if influx_sink:
         try:
             influx_sink.write_options_data(index_symbol, expiry_date, enriched_data, collection_time)
-        except Exception as e:
+        except BaseException as e:
+            import asyncio
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                raise
             handle_collector_error(
                 InfluxWriteError(f"Influx write failed for {index_symbol} {expiry_rule} (expiry {expiry_date}): {e}"),
                 component="collectors.unified_collectors", index_name=index_symbol,
                 context={"stage":"influx_write","rule":expiry_rule,"expiry":str(expiry_date)}
             )
 
-    metrics = ctx.metrics
+    metrics = getattr(ctx, 'metrics', None)
     if metrics:
         try:
             metrics.options_collected.labels(index=index_symbol, expiry=expiry_rule).set(len(enriched_data))
@@ -89,7 +95,7 @@ def persist_and_metrics(ctx, enriched_data: dict[str, dict[str, Any]], index_sym
                     except (AttributeError, TypeError) as e:
                         mgr = None
                 atm_reference = None
-                for symbol, data in enriched_data.items():
+                for data in enriched_data.values():
                     strike_val = data.get('strike') or data.get('strike_price') or 0
                     opt_type = (data.get('instrument_type') or data.get('type') or '').upper()
                     if not strike_val or opt_type not in ('CE','PE'):

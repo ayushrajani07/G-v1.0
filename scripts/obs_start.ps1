@@ -1,5 +1,5 @@
-# Observability Stack Startup Script
-# Starts Prometheus, Grafana (with auth), and optionally InfluxDB
+# Observability Stack Startup Script (LEGACY)
+# Deprecated: use scripts/start.ps1 -Mode obs (or scripts/obs_start_clean.ps1 directly)
 
 param(
     [switch]$SkipPrometheus,
@@ -11,11 +11,11 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  G6 Observability Stack Startup" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
+Write-Host "[DEPRECATED] scripts/obs_start.ps1" -ForegroundColor Yellow
+Write-Host "Use: .\\scripts\\start.ps1 -Mode obs" -ForegroundColor Gray
+
+& "$PSScriptRoot\start.ps1" -Mode obs -OpenBrowser:$OpenBrowser
+return
 
 $repoRoot = Split-Path $PSScriptRoot -Parent
 

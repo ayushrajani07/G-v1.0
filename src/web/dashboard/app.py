@@ -43,7 +43,10 @@ from .routes.path_forecast import router as path_forecast_router
 try:
     # Advisor router provides universal advisor endpoints
     from .routes.advisor import router as advisor_router
-except Exception:  # pragma: no cover - missing optional advisor engine deps
+except BaseException as e:  # pragma: no cover - missing optional advisor engine deps
+    import asyncio
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+        raise
     advisor_router = None  # type: ignore
 
 # Optional imports for late import elimination (Batch 30)
@@ -67,14 +70,14 @@ def _resolve_log_dir() -> str:
     try:
         if os.path.isdir(r"C:\GrafanaData\log"):
             return r"C:\GrafanaData\log"
-    except Exception:
+    except (OSError, PermissionError):
         pass
     return os.path.join(os.getcwd(), "logs")
 
 _LOG_DIR = _resolve_log_dir()
 try:
     os.makedirs(_LOG_DIR, exist_ok=True)
-except Exception:
+except (OSError, PermissionError):
     pass
 
 class _JsonFormatter(logging.Formatter):
@@ -94,7 +97,10 @@ class _JsonFormatter(logging.Formatter):
             if record.exc_info:
                 payload["exc"] = self.formatException(record.exc_info)
             return _json.dumps(payload, ensure_ascii=False)
-        except Exception:
+        except BaseException as e:
+            import asyncio
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                raise
             return super().format(record)
 
 _logger = logging.getLogger("g6.webapi")
@@ -105,7 +111,7 @@ if not _logger.handlers:
         _h = logging.handlers.RotatingFileHandler(_file, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
         _h.setFormatter(_JsonFormatter())
         _logger.addHandler(_h)
-    except Exception:
+    except (OSError, PermissionError, ValueError, TypeError):
         _sh = logging.StreamHandler()
         _sh.setFormatter(_JsonFormatter())
         _logger.addHandler(_sh)
@@ -123,7 +129,10 @@ def _load_unified_source() -> UnifiedSourceProtocol | None:
             return None
         # Cast to protocol for typed downstream usage
         return cast(UnifiedSourceProtocol, _unified_source_import)
-    except Exception as e:  # pragma: no cover - optional path
+    except BaseException as e:  # pragma: no cover - optional path
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.CONFIGURATION,
@@ -154,7 +163,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Startup
     try:
         cache.start()
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.RESOURCE,
@@ -169,14 +181,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     if DEBUG_MODE:
         try:
             set_debug_cache(cache)
-        except Exception:
+        except BaseException as e:
+            import asyncio
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                raise
             pass  # Debug endpoints are optional, don't fail startup
     
     yield
     # Shutdown
     try:
         cache.stop()
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.RESOURCE,
@@ -193,7 +211,10 @@ app = FastAPI(title="G6 Dashboard", version="0.1.0", lifespan=lifespan, default_
 # Compression for JSON payloads (saves bandwidth and speeds Grafana Infinity)
 try:
     app.add_middleware(GZipMiddleware, minimum_size=1024)
-except Exception:
+except BaseException as e:
+    import asyncio
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+        raise
     # Defensive: if middleware import fails in minimal envs, continue without gzip
     pass
 
@@ -225,7 +246,10 @@ try:
             allow_headers=["*"],
             max_age=300,
         )
-except Exception:
+except BaseException as e:
+    import asyncio
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+        raise
     pass
 
 # Lightweight observability handled in routers
@@ -240,7 +264,10 @@ app.include_router(path_forecast_router)
 # Memory status endpoint (lightweight; avoid dedicated router for single path)
 try:
     from src.utils.memory_manager import get_memory_manager as _get_mm
-except Exception:  # pragma: no cover - optional dependency
+except BaseException as e:  # pragma: no cover - optional dependency
+    import asyncio
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+        raise
     _get_mm = None  # type: ignore
 
 @app.get('/api/memory/status')
@@ -266,13 +293,16 @@ def memory_status() -> JSONResponse:
                 'gc_last_duration_ms': m.get('gc_last_duration_ms'),
                 'registered_caches': m.get('registered_caches'),
             } if isinstance(m, dict) else {}
-        except Exception:
+        except (AttributeError, TypeError, ValueError, KeyError):
             pass
         # Ensure all expected keys present even if snapshot partial
         for k in ('rss_mb','peak_rss_mb','gc_collections_total','gc_last_duration_ms','registered_caches'):
             snap.setdefault(k, None)
         return JSONResponse(content={'status': 'ok', 'stats': snap})
-    except Exception as e:  # pragma: no cover - defensive
+    except BaseException as e:  # pragma: no cover - defensive
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.RESOURCE,
@@ -292,11 +322,14 @@ def memory_status() -> JSONResponse:
 if advisor_router is not None:
     try:
         app.include_router(advisor_router)
-    except Exception:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         pass
 try:
     app.state.metrics_cache = cache
-except Exception:
+except (AttributeError, TypeError):
     pass
 
 # startup handled by lifespan above
@@ -311,7 +344,10 @@ async def _access_log_middleware(request: Request, call_next):
     try:
         response = await call_next(request)
         status = getattr(response, "status_code", 200)
-    except Exception:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         status = 500
         _logger.exception(
             "request_error",
@@ -340,7 +376,7 @@ async def _access_log_middleware(request: Request, call_next):
         )
     try:
         response.headers["X-Request-ID"] = cid
-    except Exception:
+    except (AttributeError, TypeError):
         pass
     return response
 
@@ -440,22 +476,6 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 #         'lines': entries,
 #     })
 
-@app.get('/metrics/raw')
-async def metrics_raw() -> PlainTextResponse:
-    snap = cache.snapshot()
-    if not snap:
-        return PlainTextResponse("no data", status_code=503)
-    # Reconstruct minimal raw view for debugging
-    lines = []
-    for name, samples in snap.raw.items():
-        for s in samples:
-            if s.labels:
-                label_str = ','.join(f"{k}=\"{v}\"" for k,v in s.labels.items())
-                lines.append(f"{name}{{{label_str}}} {s.value}")
-            else:
-                lines.append(f"{name} {s.value}")
-    return PlainTextResponse('\n'.join(lines))
-
 # DEBUG_MODE already defined above
 
 # HTML_DEPRECATED: Removed _build_memory_snapshot helper (only used by HTML endpoints)
@@ -513,7 +533,10 @@ async def api_unified_status() -> JSONResponse:
         else:
             payload = {}
         return JSONResponse(payload)
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.RESOURCE,
@@ -538,7 +561,10 @@ async def api_unified_indices() -> JSONResponse:
         else:
             payload = {}
         return JSONResponse(payload)
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.RESOURCE,
@@ -562,7 +588,10 @@ async def api_unified_source_status() -> JSONResponse:
         else:
             payload = {}
         return JSONResponse(payload)
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.RESOURCE,
@@ -588,7 +617,7 @@ async def api_memory_gc(request: Request) -> JSONResponse:
         try:
             form = await request.form()
             aggressive = str(form.get('aggressive','0')).lower() in ('1','true','yes','on')
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError) as e:
             # Non-fatal form parse issue
             get_error_handler().handle_error(
                 e,
@@ -602,7 +631,10 @@ async def api_memory_gc(request: Request) -> JSONResponse:
         # Use post_cycle_cleanup for consistent metrics/stats updates
         mm.post_cycle_cleanup(aggressive=aggressive)
         return JSONResponse({"status": "ok", "aggressive": aggressive, "stats": mm.get_stats()})
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.RESOURCE,
@@ -634,7 +666,10 @@ async def api_unified_cache_stats(reset: bool = False) -> JSONResponse:
         if not isinstance(stats, dict):
             stats = {}
         return JSONResponse(stats)
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.RESOURCE,
@@ -646,21 +681,12 @@ async def api_unified_cache_stats(reset: bool = False) -> JSONResponse:
     )
     raise HTTPException(status_code=500, detail='unified cache-stats error') from None
 
-# --------------------------- DEBUG ENDPOINTS (ONE-TIME DIAGNOSTIC BLOCK) ---------------------------
-# DEBUG_CLEANUP_BEGIN: temporary debug/observability endpoints. Enabled only when
-# G6_DASHBOARD_DEBUG=1 to keep production surface minimal.
-_EXPECTED_CORE = [
-    'g6_uptime_seconds', 'g6_collection_cycle_time_seconds', 'g6_options_processed_per_minute',
-    'g6_collection_success_rate_percent', 'g6_api_success_rate_percent', 'g6_cpu_usage_percent',
-    'g6_memory_usage_mb', 'g6_index_cycle_attempts', 'g6_index_cycle_success_percent',
-    'g6_index_options_processed', 'g6_index_options_processed_total'
-]
-
 # MEDIUM_IMPACT_OPTIMIZATION (Opportunity 5): DEBUG endpoints moved to separate module
 # Conditionally include debug router only when DEBUG_MODE=1
 if DEBUG_MODE:
-    from src.web.dashboard.debug import debug_router, set_cache as set_debug_cache
+    from src.web.dashboard.debug import debug_router, debug_public_router, set_cache as set_debug_cache
     app.include_router(debug_router)
+    app.include_router(debug_public_router)
     # Set cache reference after cache is initialized (see startup event)
 
 # HTML_DEPRECATED: Removed _scan_options_fs, _read_text_file helpers (only used by HTML endpoints)
@@ -773,14 +799,17 @@ def _ensure_advisor_gauges() -> None:
         if not hasattr(reg, 'advisor_integrity_ok'):
             try:
                 reg.advisor_integrity_ok = Gauge('g6_advisor_integrity_ok', 'advisor integrity ok (1/0)')  # type: ignore[attr-defined]
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 pass
         if not hasattr(reg, 'advisor_age_minutes'):
             try:
                 reg.advisor_age_minutes = Gauge('g6_advisor_age_minutes', 'advisor report age (minutes)')  # type: ignore[attr-defined]
-            except Exception:
+            except (ValueError, TypeError, RuntimeError):
                 pass
-    except Exception:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         pass
 
 @app.get('/api/diag/advisor_integrity')
@@ -806,7 +835,7 @@ async def api_diag_advisor_integrity() -> JSONResponse:
             reg = get_metrics_singleton()
             if reg is not None and hasattr(reg, 'advisor_integrity_ok'):
                 reg.advisor_integrity_ok.set(1 if present else 0)  # type: ignore[attr-defined]
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError):
             pass
         # Check OpenAPI presence (best-effort)
         openapi_present = False
@@ -814,7 +843,7 @@ async def api_diag_advisor_integrity() -> JSONResponse:
             spec = app.openapi()
             paths_dict = spec.get('paths', {}) if isinstance(spec, dict) else {}
             openapi_present = all(p in paths_dict for p in expected_routes)
-        except Exception:
+        except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
             openapi_present = False
         payload = {
             'pid': os.getpid(),
@@ -827,7 +856,10 @@ async def api_diag_advisor_integrity() -> JSONResponse:
             # 'latest_snapshot': None  # optional; omit so tests skip snapshot assertions
         }
         return JSONResponse(payload)
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.CONFIGURATION,
@@ -873,7 +905,10 @@ async def api_errors_recent(
                 d['function'] = d['function_name']
             out.append(d)
         return JSONResponse({'errors': out, 'count': len(out), 'filtered': bool(cat_norm or sev_norm)})
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.CONFIGURATION,
@@ -903,16 +938,19 @@ async def health_metrics() -> JSONResponse:
                     fams = list(reg.advisor_integrity_ok.collect())  # type: ignore[attr-defined]
                     if fams and fams[0].samples:
                         advisor_integrity_ok = fams[0].samples[0].value
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
                 pass
             try:
                 if hasattr(reg, 'advisor_age_minutes'):
                     fams2 = list(reg.advisor_age_minutes.collect())  # type: ignore[attr-defined]
                     if fams2 and fams2[0].samples:
                         advisor_age_minutes = fams2[0].samples[0].value
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
                 pass
-    except Exception:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         pass
     return JSONResponse({
         'advisor_integrity_ok': advisor_integrity_ok,
@@ -927,14 +965,17 @@ from .core import paths as _paths_core
 from src.utils.timeutils import utc_now_z as _utc_now_z
 try:
     from src.path_forecast.composite import CompositePathForecaster, CompositeConfig
-except Exception:
+except BaseException as e:
+    import asyncio
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+        raise
     CompositePathForecaster = None  # type: ignore
     CompositeConfig = None  # type: ignore
 
 def _ml_live_predictions_dir() -> Path:
     try:
         return _paths_core.project_root() / 'data' / 'ml' / 'live_predictions'
-    except Exception:
+    except (AttributeError, TypeError, ValueError, OSError):
         return Path('data/ml/live_predictions')
 
 # --------------------------- Alerts File Write Endpoint ---------------------------
@@ -949,7 +990,10 @@ async def alert_webhook_file(request: Request) -> JSONResponse:
     """
     try:
         payload = await request.json()
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.DATA_PARSING,
@@ -971,7 +1015,7 @@ async def alert_webhook_file(request: Request) -> JSONResponse:
     log_fp = log_dir / 'alerts.log'
     try:
         log_dir.mkdir(parents=True, exist_ok=True)
-    except Exception:
+    except (OSError, PermissionError):
         pass
     lines: list[str] = []
     for a in alerts:
@@ -989,7 +1033,7 @@ async def alert_webhook_file(request: Request) -> JSONResponse:
         with _bi.open(str(log_fp), 'a', encoding='utf-8') as f:
             for ln in lines:
                 f.write(ln + '\n')
-    except Exception as e:
+    except (OSError, IOError, UnicodeError, TypeError, ValueError) as e:
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.FILE_IO,
@@ -1016,7 +1060,7 @@ async def api_ml_ensemble_k_calibration(index: str, horizon: str | None = None) 
         return PlainTextResponse('not found', status_code=404)
     try:
         data = _json.loads(fp.read_text(encoding='utf-8'))
-    except Exception as e:
+    except (OSError, UnicodeError, ValueError, TypeError) as e:
         get_error_handler().handle_error(e, category=ErrorCategory.FILE_IO, severity=ErrorSeverity.LOW, component='web.dashboard.app', function_name='api_ml_ensemble_k_calibration', message='failed_read')
         return PlainTextResponse('read error', status_code=500)
     # Build header/row
@@ -1033,7 +1077,7 @@ async def api_ml_ensemble_k_calibration(index: str, horizon: str | None = None) 
     if k_smooth is not None:
         try:
             k_smooth_fmt = f"{float(k_smooth):.2f}"
-        except Exception:
+        except (TypeError, ValueError):
             k_smooth_fmt = str(k_smooth)
     else:
         k_smooth_fmt = ''
@@ -1054,7 +1098,7 @@ async def api_ml_ensemble_weights(index: str, horizon: str) -> PlainTextResponse
         return PlainTextResponse('not found', status_code=404)
     try:
         data = _json.loads(fp.read_text(encoding='utf-8'))
-    except Exception as e:
+    except (OSError, UnicodeError, ValueError, TypeError) as e:
         get_error_handler().handle_error(e, category=ErrorCategory.FILE_IO, severity=ErrorSeverity.LOW, component='web.dashboard.app', function_name='api_ml_ensemble_weights', message='failed_read')
         return PlainTextResponse('read error', status_code=500)
     weights: dict[str, Any] = data.get('weights', {}) if isinstance(data.get('weights'), dict) else {}
@@ -1063,11 +1107,11 @@ async def api_ml_ensemble_weights(index: str, horizon: str) -> PlainTextResponse
     for model, w in weights.items():
         try:
             w_val = float(w)
-        except Exception:
+        except (TypeError, ValueError):
             w_val = 0.0
         try:
             rmse_val = float(rmse.get(model, 0.0))
-        except Exception:
+        except (TypeError, ValueError):
             rmse_val = 0.0
         rows.append((model, w_val, rmse_val))
     rows.sort(key=lambda x: x[1], reverse=True)
@@ -1091,7 +1135,7 @@ async def api_ml_ensemble_quarantine_log(index: str, horizon: str | None = None,
         return PlainTextResponse('not found', status_code=404)
     try:
         raw_lines = fp.read_text(encoding='utf-8').splitlines()
-    except Exception as e:
+    except (OSError, UnicodeError, ValueError, TypeError) as e:
         get_error_handler().handle_error(e, category=ErrorCategory.FILE_IO, severity=ErrorSeverity.LOW, component='web.dashboard.app', function_name='api_ml_ensemble_quarantine_log', message='failed_read')
         return PlainTextResponse('read error', status_code=500)
     header = 'timestamp,event,model,z,dis,until_ms,horizon'
@@ -1139,7 +1183,7 @@ async def api_ml_forecast_path(index: str, horizon: int = 60, quantiles: str = '
             continue
         try:
             q_list.append(float(part))
-        except Exception:
+        except (TypeError, ValueError):
             continue
     if not q_list:
         q_list = [0.1, 0.5, 0.9]
@@ -1149,12 +1193,13 @@ async def api_ml_forecast_path(index: str, horizon: int = 60, quantiles: str = '
     if CompositePathForecaster is None or CompositeConfig is None:
         # Placeholder output: single future point per quantile with NAN
         now_ms = int(time.time()*1000)
-        for q in q_list:
-            rows.append(f"{req_ts},{index},{horizon},{q:.3f},{now_ms + bucket_ms},{float('nan')}")
+        rows.extend(
+            f"{req_ts},{index},{horizon},{q:.3f},{now_ms + bucket_ms},{float('nan')}" for q in q_list
+        )
         return PlainTextResponse('\n'.join([header] + rows))
     try:
         root = _paths_core.project_root() / 'data' / 'g6_data'
-    except Exception:
+    except (AttributeError, TypeError, ValueError, OSError):
         root = Path('data/g6_data')
     try:
         cfg = CompositeConfig(root=root, window=60, k=15, min_days=3)
@@ -1164,12 +1209,17 @@ async def api_ml_forecast_path(index: str, horizon: int = 60, quantiles: str = '
         times, qmap = fore.forecast_path([], context={'index': index, 'now_ms': now_ms, 'live_rows': []}, quantiles=q_list, horizon_minutes=int(horizon), bucket_ms=int(bucket_ms))
         for q in q_list:
             vals = list(qmap.get(q, []))
-            for i, ft in enumerate(times):
-                v = vals[i] if i < len(vals) else float('nan')
-                rows.append(f"{req_ts},{index},{horizon},{q:.3f},{ft},{v}")
-    except Exception as e:
+            rows.extend(
+                f"{req_ts},{index},{horizon},{q:.3f},{ft},{(vals[i] if i < len(vals) else float('nan'))}"
+                for i, ft in enumerate(times)
+            )
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(e, category=ErrorCategory.ML, severity=ErrorSeverity.LOW, component='web.dashboard.app', function_name='api_ml_forecast_path', message='forecast_error')
         now_ms = int(time.time()*1000)
-        for q in q_list:
-            rows.append(f"{req_ts},{index},{horizon},{q:.3f},{now_ms + bucket_ms},{float('nan')}")
+        rows.extend(
+            f"{req_ts},{index},{horizon},{q:.3f},{now_ms + bucket_ms},{float('nan')}" for q in q_list
+        )
     return PlainTextResponse('\n'.join([header] + rows))

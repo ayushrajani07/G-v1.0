@@ -85,7 +85,9 @@ try:  # optional imports preserved; fallbacks for early stages
     CircuitBreakerT = _CircuitBreaker
     retryable_fn = _retryable
     circuit_protected_fn = _circuit_protected
-except Exception as _providers_import_err:  # pragma: no cover
+except BaseException as _providers_import_err:  # pragma: no cover
+    if isinstance(_providers_import_err, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+        raise
     # We failed to import the real Providers facade and related modules. Capture
     # the root exception so operators understand we are in degraded mode.
     logger.warning(
@@ -552,7 +554,8 @@ def init_storage(config) -> tuple[Any, Any]:
         pass
     csv_sink_ctor: Any = CsvSinkT
     csv_sink = csv_sink_ctor(base_dir=data_dir)
-    return csv_sink
+    influx_sink = None
+    return csv_sink, influx_sink
 
 
 def init_health(config, providers, csv_sink) -> Any:
@@ -588,11 +591,11 @@ def init_health(config, providers, csv_sink) -> Any:
 def apply_circuit_breakers(config, providers):
     try:
         adaptive_on = is_truthy_env('G6_ADAPTIVE_CB_PROVIDERS')
-    except Exception:
+    except (AttributeError, TypeError, KeyError, ValueError):
         adaptive_on = False
     try:
         retries_on = is_truthy_env('G6_RETRY_PROVIDERS')
-    except Exception:
+    except (AttributeError, TypeError, KeyError, ValueError):
         retries_on = False
     prov = getattr(providers, 'primary_provider', None)
     if adaptive_on and prov:

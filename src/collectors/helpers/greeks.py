@@ -58,7 +58,10 @@ def compute_greeks_block(ctx, enriched_data: dict[str, dict[str, Any]], index_sy
                 if float(data.get('iv', 0)) == 0 and iv_fraction:
                     data['iv'] = iv_fraction
                 greek_success += 1
-            except Exception as oge:
+            except BaseException as oge:
+                import asyncio
+                if isinstance(oge, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                    raise
                 greek_fail += 1
                 logger.debug("Greek calc failed for %s: %s", symbol, oge)
         if metrics:
@@ -69,7 +72,10 @@ def compute_greeks_block(ctx, enriched_data: dict[str, dict[str, Any]], index_sy
                     metrics.greeks_fail.labels(index=index_symbol, expiry=expiry_rule).inc(greek_fail)
             except (AttributeError, TypeError) as e:  # pragma: no cover
                 pass  # Silently ignore metric update errors
-    except Exception as gex:
+    except BaseException as gex:
+        import asyncio
+        if isinstance(gex, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         logger.error("Greek computation batch failed for %s %s: %s", index_symbol, expiry_rule, gex)
         if metrics and hasattr(metrics, 'greeks_batch_fail'):
             try:

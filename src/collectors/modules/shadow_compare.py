@@ -58,14 +58,15 @@ def _shallow_extract(result: dict[str, Any]) -> dict[str, Any]:
     ) if k in result
   }
   # Trim indices to summary coverage subset only
-  idx_summaries = []
-  for idx in result.get('indices', []) or []:
-    idx_summaries.append({
+  idx_summaries = [
+    {
       'index': idx.get('index'),
       'strike_coverage_avg': idx.get('strike_coverage_avg'),
       'field_coverage_avg': idx.get('field_coverage_avg'),
       'option_count': idx.get('option_count'),
-    })
+    }
+    for idx in (result.get('indices', []) or [])
+  ]
   out['indices'] = idx_summaries
   return out
 
@@ -140,13 +141,13 @@ def _compare_coverage(legacy: dict[str, Any], pipeline: dict[str, Any]) -> list[
 def _compare_partial_reason_totals(legacy: dict[str, Any], pipeline: dict[str, Any]) -> list[dict[str, Any]]:
   lpr = legacy.get('partial_reason_totals') or {}
   ppr = pipeline.get('partial_reason_totals') or {}
-  diffs = []
   keys = set(lpr) | set(ppr)
-  for k in sorted(keys):
-    lv = lpr.get(k, 0); pv = ppr.get(k, 0)
-    if lv != pv:
-      diffs.append({'partial_reason': k, 'legacy': lv, 'pipeline': pv})
-  return diffs
+  return [
+    {'partial_reason': k, 'legacy': lv, 'pipeline': pv}
+    for k in sorted(keys)
+    for lv, pv in [(lpr.get(k, 0), ppr.get(k, 0))]
+    if lv != pv
+  ]
 
 
 def _compare_structural(legacy: dict[str, Any], pipeline: dict[str, Any]) -> list[dict[str, Any]]:
@@ -155,10 +156,8 @@ def _compare_structural(legacy: dict[str, Any], pipeline: dict[str, Any]) -> lis
   miss = lsum - psum
   extra = psum - lsum
   diffs: list[dict[str, Any]] = []
-  for k in sorted(miss):
-    diffs.append({'key': k, 'reason': 'missing_in_pipeline'})
-  for k in sorted(extra):
-    diffs.append({'key': k, 'reason': 'extra_in_pipeline'})
+  diffs.extend({'key': k, 'reason': 'missing_in_pipeline'} for k in sorted(miss))
+  diffs.extend({'key': k, 'reason': 'extra_in_pipeline'} for k in sorted(extra))
   return diffs
 
 

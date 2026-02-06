@@ -20,4 +20,4 @@ Start-Process -FilePath $python -ArgumentList "scripts/dev_tools.py", "simulate-
 
 # Unified summary will auto-detect panels directory.
 Write-Host "[G6] Starting unified summary (auto panels detection)..."
-& $python -m scripts.summary.app --refresh $BridgeRefresh --status-file $StatusFile
+& "$PSScriptRoot\start.ps1" -Mode summary -Refresh $BridgeRefresh -StatusFile $StatusFile

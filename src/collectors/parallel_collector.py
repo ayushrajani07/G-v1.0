@@ -27,10 +27,11 @@ except ImportError:
 
 
 class ParallelCollector:
-    def __init__(self, providers: AsyncProviders, csv_sink, metrics=None, *, max_workers: int = 8):
+    def __init__(self, providers: AsyncProviders, csv_sink, metrics=None, *, influx_sink=None, max_workers: int = 8):
         self.providers = providers
         self.csv = csv_sink
         self.metrics = metrics
+        self.influx_sink = influx_sink
         # Optional thread pool for blocking sinks
         self._pool = ThreadPoolExecutor(max_workers=max_workers) if max_workers and max_workers > 0 else None
         # One-time expiry matrix print state
@@ -210,13 +211,11 @@ class ParallelCollector:
                     step = 100.0 if index_symbol in ("BANKNIFTY", "SENSEX") else 50.0
             else:
                 step = 100.0 if index_symbol in ("BANKNIFTY", "SENSEX") else 50.0
-            strikes: list[float] = []
-            for i in range(1, strikes_itm + 1):
-                strikes.append(float(atm - i * step))
-            strikes.append(float(atm))
-            for i in range(1, strikes_otm + 1):
-                strikes.append(float(atm + i * step))
-            strikes.sort()
+            strikes = sorted(
+                [float(atm - i * step) for i in range(1, strikes_itm + 1)]
+                + [float(atm)]
+                + [float(atm + i * step) for i in range(1, strikes_otm + 1)]
+            )
             int_strikes = [int(s) for s in strikes]
             instruments = await self.providers.get_option_instruments(index_symbol, expiry_date, int_strikes)
             if not instruments:

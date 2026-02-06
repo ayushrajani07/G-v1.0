@@ -292,7 +292,7 @@ def emit_catalog(*, runtime_status_path: str, csv_dir: str = "data/g6_data") -> 
         with open(tmp, 'w', encoding='utf-8') as fh:
             json.dump(cat, fh, indent=2, sort_keys=True)
         os.replace(tmp, CATALOG_PATH)
-    except (OSError, IOError, json.JSONEncodeError):  # pragma: no cover
+    except (OSError, IOError, TypeError, ValueError, OverflowError):  # pragma: no cover
         # Handle file I/O or JSON encoding failures
         logger.warning("catalog: failed to write catalog.json", exc_info=True)
 

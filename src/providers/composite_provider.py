@@ -18,6 +18,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from src.provider.errors import ProviderFatalError, classify_provider_exception
+
 # Optional imports for late import elimination (Batch 34)
 try:
     from src.utils.env_flags import is_truthy_env
@@ -77,6 +79,15 @@ class CompositeProvider:
                     self._record_failover(prev, curr)
                 return result
             except Exception as e:  # collect and continue
+                # Never failover on fatal provider errors; they indicate a bug or contract break.
+                try:
+                    if classify_provider_exception(e) is ProviderFatalError:
+                        raise
+                except ProviderFatalError:
+                    raise
+                except Exception:
+                    # Classification is best-effort; continue with legacy behavior.
+                    pass
                 if idx == 0:
                     first_exc = e
                 prev_name = type(prov).__name__
@@ -102,7 +113,18 @@ class CompositeProvider:
     def _record_failover(self, from_name: str, to_name: str):
         try:
             if self.metrics and hasattr(self.metrics, 'provider_failover'):
-                self.metrics.provider_failover.labels(src=from_name, dest=to_name).inc()  # type: ignore[attr-defined]
+                c = self.metrics.provider_failover  # type: ignore[attr-defined]
+                # Support both labeled and unlabeled counters.
+                try:
+                    c.labels(src=from_name, dest=to_name).inc()  # type: ignore[call-arg]
+                except TypeError:
+                    try:
+                        c.labels(from_name, to_name).inc()  # type: ignore[call-arg]
+                    except TypeError:
+                        try:
+                            c.labels().inc()  # type: ignore[call-arg]
+                        except Exception:
+                            c.inc()
         except Exception:
             pass
         try:

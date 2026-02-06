@@ -152,7 +152,7 @@ class ParquetSink:
         except (TypeError, ValueError, AttributeError) as e:
             try:
                 logger.error("Failed to create normalized PyArrow table: %s", e, exc_info=True)
-            except Exception:
+            except (OSError, IOError, ValueError, TypeError, RuntimeError):
                 print(f"CRITICAL: Failed to create PyArrow table for {index_symbol}/{expiry_date}: {e}", file=sys.stderr)
             return
         
@@ -167,13 +167,13 @@ class ParquetSink:
                     import pyarrow as pa
                     table = pa.concat_tables([existing_table, table])
                 except (OSError, IOError, ValueError) as e:
-                    logger.warning(f"Failed to read existing Parquet file {sink_file}, overwriting: {e}")
+                    logger.warning("Failed to read existing Parquet file %s, overwriting: %s", sink_file, e)
             pq.write_table(table, sink_file, compression=self.compression, use_dictionary=True)
             logger.debug("Wrote %d records to Parquet file: %s", len(records), sink_file)
         except (OSError, IOError, ValueError) as e:
             try:
                 logger.error("Failed to write Parquet table %s: %s", sink_file, e, exc_info=True)
-            except Exception:
+            except (OSError, IOError, ValueError, TypeError, RuntimeError):
                 print(f"CRITICAL: Failed to write Parquet table {sink_file}: {e}", file=sys.stderr)
             return
         
@@ -251,6 +251,7 @@ class ParquetSink:
         
         # Read and combine all Parquet files
         try:
+            import pyarrow as pa
             table = pq.read_table(str(partition_dir))
             df = table.to_pandas()
             
@@ -262,8 +263,8 @@ class ParquetSink:
             
             self._last_csv_export[key] = now
             logger.info("Exported Parquet to CSV: %s", csv_path)
-        
-        except Exception as e:
+
+        except (OSError, IOError, ValueError, TypeError, pa.ArrowInvalid, pa.ArrowTypeError) as e:
             logger.error("Failed to export Parquet to CSV: %s", e)
     
     def read_options_data(
@@ -323,8 +324,8 @@ class ParquetSink:
             
             # Convert to list of dicts
             return table.to_pylist()
-        
-        except Exception as e:
+
+        except (OSError, IOError, ValueError, TypeError, pa.ArrowInvalid, pa.ArrowTypeError, pa.ArrowNotImplementedError) as e:
             logger.error("Failed to read Parquet data: %s", e)
             return []
     

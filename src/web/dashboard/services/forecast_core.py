@@ -55,7 +55,7 @@ def load_profiles(config_path: Optional[str]) -> Dict[str, Dict[str, float]]:
                 for name, cfg in data.items():
                     if isinstance(cfg, dict):
                         profiles[name] = {**profiles.get(name, {}), **cfg}
-    except Exception:
+    except (OSError, PermissionError, TypeError, ValueError):
         pass
     return profiles
 
@@ -115,7 +115,7 @@ def forecast_path_core(
             mode_used = "hybrid"
             try:
                 diag = dict(comp.last_meta or {})
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 diag = {}
         else:
             from pathlib import Path
@@ -131,9 +131,12 @@ def forecast_path_core(
             mode_used = "retrieval"
             try:
                 diag = dict(retr.last_meta or {})
-            except Exception:
+            except (AttributeError, TypeError, ValueError):
                 diag = {}
-    except Exception:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         # Keep a functional fallback
         forecaster = HybridPathForecaster(band_pct=fb_band_pct)
         times, qmap = forecaster.forecast_path(
@@ -171,11 +174,14 @@ def forecast_path_core(
                         qmap[q] = arr
                 try:
                     qmap = _clamp_non_negative(qmap)
-                except Exception:
+                except (TypeError, ValueError):
                     pass
                 diag["fallback_trend_slope"] = slope
                 diag["fallback_trend_points"] = len(tps_recent)
-        except Exception:
+        except BaseException as e:
+            import asyncio
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                raise
             pass
 
     return times, qmap, mode_used, diag

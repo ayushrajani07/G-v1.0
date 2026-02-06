@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from prometheus_client import Counter, Gauge
+from prometheus_client import Counter, Gauge, Histogram
 
 if TYPE_CHECKING:  # only for type checkers; avoids runtime import cycles
     from .metrics import MetricsRegistry  # noqa: F401
@@ -46,3 +46,37 @@ def init_storage_metrics(registry: MetricsRegistry) -> None:
     core('csv_sink_backlog_rows', Gauge, 'g6_csv_sink_backlog_rows', 'Queued rows in CSV batch backlog')
     core('csv_sink_backlog_files', Gauge, 'g6_csv_sink_backlog_files', 'Buffered files in CSV batch backlog')
     core('csv_sink_health_score', Gauge, 'g6_csv_sink_health_score', 'Composite CSV sink health score (0-100)')
+
+    # Batch buffering / backpressure (CsvSink batching mode)
+    core('csv_batch_buffered_rows', Gauge, 'g6_csv_batch_buffered_rows', 'Buffered CSV rows in in-memory batch buffers (current)')
+    core('csv_batch_buffered_files', Gauge, 'g6_csv_batch_buffered_files', 'Buffered CSV files in in-memory batch buffers (current)')
+    core('csv_batch_max_buffered_rows', Gauge, 'g6_csv_batch_max_buffered_rows', 'Configured max buffered CSV rows before forcing flush (0=disabled)')
+    core('csv_batch_max_buffered_files', Gauge, 'g6_csv_batch_max_buffered_files', 'Configured max buffered CSV files before forcing flush (0=disabled)')
+    core('csv_batch_backpressure_flushes', Counter, 'g6_csv_batch_backpressure_flushes_total', 'Forced batch flushes due to memory/backpressure limits')
+
+    # Async CSV writer (opt-in via G6_CSV_ASYNC_WRITER)
+    core('csv_async_queue_depth', Gauge, 'g6_csv_async_queue_depth', 'Async CSV writer queue depth (tasks)')
+    core(
+        'csv_async_enqueue_latency_ms',
+        Histogram,
+        'g6_csv_async_enqueue_latency_ms',
+        'Async CSV writer enqueue latency (ms)',
+        buckets=[0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500],
+    )
+    core(
+        'csv_async_write_task_latency_ms',
+        Histogram,
+        'g6_csv_async_write_task_latency_ms',
+        'Async CSV writer per-task write latency (ms)',
+        buckets=[0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000],
+    )
+    core(
+        'csv_async_write_row_latency_ms',
+        Histogram,
+        'g6_csv_async_write_row_latency_ms',
+        'Async CSV writer per-row write latency estimate (ms)',
+        buckets=[0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 25, 50],
+    )
+    core('csv_async_queue_full', Counter, 'g6_csv_async_queue_full_total', 'Async CSV writer queue full events')
+    core('csv_async_sync_fallback', Counter, 'g6_csv_async_sync_fallback_total', 'Async CSV writer sync fallback writes (queue full)')
+    core('csv_async_worker_errors', Counter, 'g6_csv_async_worker_errors_total', 'Async CSV writer worker loop errors')

@@ -24,7 +24,6 @@ classifiers = [
 # Core runtime dependencies (exclude pure dev/test tooling)
 dependencies = [
   "kiteconnect>=4.0.0",
-  "orjson>=3.8.0",
   "tenacity>=8.2.0",
   "filelock>=3.12.0",
   "pytz>=2023.3",

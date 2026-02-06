@@ -299,7 +299,7 @@ The Q4 2025 Code Quality Initiative represents a **comprehensive architectural c
 
 - **Detailed Analysis:** `INEFFICIENCIES_REPORT.md`
 - **Lazy Logging Tool:** `scripts/fix_lazy_logging.py`
-- **Development Guidelines:** `DEVELOPMENT_GUIDELINES.md`
+- **Development Guidelines:** `docs/development/DEVELOPMENT_GUIDELINES.md`
 - **Archived Code:** `external/G6_.archived/`
 
 ---

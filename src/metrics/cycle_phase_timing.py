@@ -53,7 +53,7 @@ def create_phase_timing_metrics(registry: CollectorRegistry | None = None) -> di
             buckets=_PHASE_BUCKETS,
             **kwargs
         )
-    except Exception as e:
+    except (ValueError, TypeError, RuntimeError) as e:
         logger.debug("Failed to create fetch phase histogram: %s", e)
     
     try:
@@ -64,7 +64,7 @@ def create_phase_timing_metrics(registry: CollectorRegistry | None = None) -> di
             buckets=_PHASE_BUCKETS,
             **kwargs
         )
-    except Exception as e:
+    except (ValueError, TypeError, RuntimeError) as e:
         logger.debug("Failed to create process phase histogram: %s", e)
     
     try:
@@ -75,7 +75,7 @@ def create_phase_timing_metrics(registry: CollectorRegistry | None = None) -> di
             buckets=_PHASE_BUCKETS,
             **kwargs
         )
-    except Exception as e:
+    except (ValueError, TypeError, RuntimeError) as e:
         logger.debug("Failed to create write phase histogram: %s", e)
     
     # Additional counters for retries and throughput per roadmap
@@ -87,7 +87,7 @@ def create_phase_timing_metrics(registry: CollectorRegistry | None = None) -> di
             labelnames=['index', 'reason'],
             **kwargs
         )
-    except Exception as e:
+    except (ImportError, ValueError, TypeError, RuntimeError) as e:
         logger.debug("Failed to create fetch_retries counter: %s", e)
     
     try:
@@ -98,7 +98,7 @@ def create_phase_timing_metrics(registry: CollectorRegistry | None = None) -> di
             labelnames=['index'],
             **kwargs
         )
-    except Exception as e:
+    except (ImportError, ValueError, TypeError, RuntimeError) as e:
         logger.debug("Failed to create write_bytes counter: %s", e)
     
     try:
@@ -109,7 +109,7 @@ def create_phase_timing_metrics(registry: CollectorRegistry | None = None) -> di
             labelnames=['index'],
             **kwargs
         )
-    except Exception as e:
+    except (ImportError, ValueError, TypeError, RuntimeError) as e:
         logger.debug("Failed to create write_rows counter: %s", e)
     
     return metrics

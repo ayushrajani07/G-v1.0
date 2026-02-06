@@ -358,10 +358,8 @@ class KiteProvider:
         return self
 
     def __exit__(self, exc_type, exc, tb):  # pragma: no cover - thin wrapper
-        try:
-            self.close()
-        finally:
-            return False  # do not suppress exceptions  # type: ignore[return-value]
+        self.close()
+        return False  # do not suppress exceptions  # type: ignore[return-value]
 
     # --- internal RL helpers ------------------------------------------------
     def _rl_fallback(self) -> bool:  # delegate to helper logic

@@ -40,7 +40,7 @@ Success looks like: “Run full pytest” passes reliably, reduced incident rate
 
 2) Complexity Pass on Hotspots
 - Scope (by size/complexity)
-  - `src/web/dashboard/routes/path_forecast.py`
+  - `src/web/dashboard/routes/path_forecast/` (router package; formerly `path_forecast.py`)
   - `src/storage/csv_sink.py`
   - `src/web/dashboard/routes/ml.py`
   - `src/collectors/unified_collectors.py`
@@ -81,11 +81,13 @@ Success looks like: “Run full pytest” passes reliably, reduced incident rate
   - Storage modules call the unified writer; duplicate helpers removed/tombstoned
   - Tests cover happy-path + concurrency/retry + legacy field mapping
 
-Update (2025-11-13): CSV facade default-on with safe opt-out
-- The unified facade `storage.csvio.api` is now enabled by default in `csv_sink` for both append-one and append-many paths.
-- `CsvBatcher` now delegates batched writes to the facade by default, with a legacy inline path retained behind `G6_USE_CSVIO_FACADE=0`.
-- `CsvAggregator` overview snapshot writer now uses the facade by default; legacy inline path remains behind the same flag.
-- Opt-out: set `G6_USE_CSVIO_FACADE=0` (or `false`/`no`) to use legacy inline/`CsvWriter` paths.
+Update (2026-01-25): CSVIO consolidation (flag retired)
+- CSV writes are centralized via `src.storage.csvio.api` (CSVIO) through `src.storage.csv_writer.CsvWriter`.
+- Legacy inline write paths in storage modules were removed.
+- Backend selection remains via env `G6_CSVIO_BACKEND`:
+  - `filesystem` (default)
+  - `atomic` — atomic temp-file strategy (safer on Windows lock errors)
+- Optional writer thread is controlled by `G6_CSVIO_WRITER_THREAD=1` (default off).
 - Backend selection via env `G6_CSVIO_BACKEND`:
   - `filesystem` (default) — uses `CsvWriterHelper` directly
   - `atomic` — atomic temp-file strategy (safer on Windows lock errors)
@@ -170,7 +172,7 @@ Update (2025-11-14): csv_sink write-path instrumentation split
   - Expand mypy checks to include `src/storage` and the csvio facade (incremental, file-by-file baseline) and add CI gating for the focused subset.
 
 - Medium-term (3–6 weeks)
-  - Implement a lightweight complexity budget check (radon/xenon) in CI for hotspot files (start with `csv_sink.py`, `path_forecast.py`) and add gradual enforcement.
+  - Implement a lightweight complexity budget check (radon/xenon) in CI for hotspot files (start with `csv_sink.py`, `routes/path_forecast/_router.py`) and add gradual enforcement.
   - Consolidate CSV writer backends into an explicit strategy registry so tests can inject a deterministic in-memory writer for faster unit tests.
   - Add Prometheus histograms for write latency and retries per-backend to support dashboarding and alerting.
 
@@ -186,7 +188,7 @@ VS Code helpers (added): quick CSVIO toggles for core-only tests
 - CSVIO: Core pytest (facade ON, filesystem)
 - CSVIO: Core pytest (facade ON, atomic)
 
-Each task sets `G6_USE_CSVIO_FACADE` and, when applicable, `G6_CSVIO_BACKEND` for the run. Use these to compare legacy vs facade/atomic behavior without changing your shell environment.
+Each task sets `G6_CSVIO_BACKEND` (and related tuning) for the run. Use these to compare filesystem vs atomic behavior without changing your shell environment.
 
 Lock metrics and tuning (2025-11-13)
 - Atomic backend now emits lightweight lock metrics via Prometheus:
@@ -483,7 +485,7 @@ This session wired centralized, low-noise error handling across high-traffic opt
   - Add retry/backoff utility usages; remove blocking sleeps in affected code
   - Continue trimming blanket exceptions in top modules
 - Phase 3 (Weeks 4–5): Decomposition and Deprecations
-  - Extract services from `path_forecast.py`, `ml.py`, `metrics.py`, `cycle.py`
+  - Extract services from `routes/path_forecast/_router.py`, `ml.py`, `metrics.py`, `cycle.py`
   - Stage deprecations removal (warn, measure, remove)
 - Phase 4 (Week 6+): Hardening and CI Gates
   - Add/raise lint and complexity thresholds; expand type coverage
@@ -508,7 +510,7 @@ This session wired centralized, low-noise error handling across high-traffic opt
 ## Module Priorities (Initial)
 
 1. `src/storage/csv_sink.py` (consolidate writer logic)
-2. `src/web/dashboard/routes/path_forecast.py` (decompose, logging, exceptions)
+2. `src/web/dashboard/routes/path_forecast/` (decompose, logging, exceptions)
 3. `src/web/dashboard/routes/ml.py` (decompose, logging)
 4. `src/metrics/metrics.py` (logging, exception policy, decomposition)
 5. `src/orchestrator/cycle.py` (sleep/backoff, logging, exceptions)
@@ -527,7 +529,7 @@ This session wired centralized, low-noise error handling across high-traffic opt
 ## References
 
 - Hotspot files by size (initial sample):
-  - `src/web/dashboard/routes/path_forecast.py`, `src/storage/csv_sink.py`, `src/web/dashboard/routes/ml.py`, `src/collectors/unified_collectors.py`, `src/metrics/metrics.py`, `src/orchestrator/cycle.py`
+  - `src/web/dashboard/routes/path_forecast/_router.py`, `src/storage/csv_sink.py`, `src/web/dashboard/routes/ml.py`, `src/collectors/unified_collectors.py`, `src/metrics/metrics.py`, `src/orchestrator/cycle.py`
 - Noted smells:
   - Broad exception handlers; print() usage; time.sleep(); duplicate CSV writing logic; pervasive open()
 - Existing utilities to reuse:

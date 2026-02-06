@@ -8,7 +8,7 @@ g6_reorganized/
 ├── main.py                       # 🔄 Merged main app + Kite integration (NO MORE PLACEHOLDERS!)
 ├── requirements.txt              # 🆕 Python dependencies list
 ├── deploy.sh                     # 🆕 Automated deployment script
-├── DEPLOYMENT_GUIDE.md           # 🆕 Complete setup guide
+├── docs/operations/deployment/DEPLOYMENT_GUIDE.md  # 🆕 Complete setup guide
 │
 ├── config/                       # 🔄 CONSOLIDATED CONFIGURATION
 │   ├── __init__.py              # 🆕 Package init
@@ -137,7 +137,7 @@ Your reorganized G6 platform is now:
 
 ## 🎯 Next Steps
 
-1. **Setup**: Follow DEPLOYMENT_GUIDE.md for initial setup
+1. **Setup**: Follow [docs/operations/deployment/DEPLOYMENT_GUIDE.md](docs/operations/deployment/DEPLOYMENT_GUIDE.md) for initial setup
 2. **Configuration**: Customize g6_config.json for your needs
 3. **Credentials**: Set up Kite Connect API keys in environment
 4. **Testing**: Run platform and verify data collection
