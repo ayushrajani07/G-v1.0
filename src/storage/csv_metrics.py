@@ -53,9 +53,12 @@ class CsvMetricsTracker:
                 # Simple counter: metric.inc(amount)
                 if hasattr(metric, 'inc'):
                     metric.inc(amount)
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError, KeyError) as e:
             # Metrics failures should not break storage operations
             self.logger.debug("Failed to increment metric %s: %s", name, e)
+        except (RuntimeError, OSError, IOError) as e:
+            # Defensive: keep metrics failures non-fatal, but mark as unexpected
+            self.logger.debug("Unexpected error incrementing metric %s: %s", name, e)
 
     def set(self, name: str, value: int | float, labels: dict[str, Any] | None = None) -> None:
         """
@@ -83,8 +86,10 @@ class CsvMetricsTracker:
                 # Simple gauge: metric.set(value)
                 if hasattr(metric, 'set'):
                     metric.set(value)
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError, KeyError) as e:
             self.logger.debug("Failed to set metric %s: %s", name, e)
+        except (RuntimeError, OSError, IOError) as e:
+            self.logger.debug("Unexpected error setting metric %s: %s", name, e)
 
     def update_expiry_daily_stats(self, kind: str) -> None:
         """
@@ -100,8 +105,10 @@ class CsvMetricsTracker:
             metric = getattr(self.metrics, 'csv_expiry_daily_stats', None)
             if metric and hasattr(metric, 'labels'):
                 metric.labels(kind=kind).inc()
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError, KeyError) as e:
             self.logger.debug("Failed to update expiry stats for %s: %s", kind, e)
+        except (RuntimeError, OSError, IOError) as e:
+            self.logger.debug("Unexpected error updating expiry stats for %s: %s", kind, e)
 
     def record_row_written(self, index: str, expiry_code: str, offset: int) -> None:
         """Record a CSV row write operation."""

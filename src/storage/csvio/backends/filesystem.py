@@ -90,20 +90,38 @@ def _write_csv_append(
     # Check if file exists (for header logic)
     file_exists = os.path.exists(filepath)
     
+    lock_path = filepath + '.lock'
+    lock_created = False
+    if not os.path.exists(lock_path):
+        try:
+            with open(lock_path, 'x', encoding='utf-8') as _lf:
+                _lf.write(str(os.getpid()))
+            lock_created = True
+        except (IOError, OSError, FileExistsError):
+            # Best-effort lock; proceed without if lock cannot be acquired.
+            pass
+
     try:
         # Open in append mode
         with open(filepath, 'a', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
-            
+
             # Write header only if file is new and header provided
             if not file_exists and header:
                 writer.writerow(header)
-            
+
             # Write all rows
             writer.writerows(rows)
     except (OSError, IOError) as e:
         try:
             logger.error("Failed to write CSV to %s: %s", filepath, e, exc_info=True)
-        except Exception:
+        except (OSError, IOError, ValueError, TypeError, RuntimeError):
             # Critical: CSV write failed AND logging failed - use stderr fallback
             print(f"CRITICAL: Failed to write CSV to {filepath}: {e}", file=sys.stderr)
+        raise
+    finally:
+        if lock_created:
+            try:
+                os.remove(lock_path)
+            except (IOError, OSError, FileNotFoundError):
+                pass

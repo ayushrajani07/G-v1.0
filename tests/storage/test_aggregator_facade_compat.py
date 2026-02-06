@@ -3,15 +3,9 @@ import logging
 import os
 from datetime import datetime
 
-import pytest
-
 from src.storage.csv_aggregator import CsvAggregator
 
-
-@pytest.mark.parametrize("facade_on", [True, False])
-def test_csv_aggregator_overview_header_and_row(tmp_path, monkeypatch, facade_on):
-    # Toggle facade via env
-    monkeypatch.setenv("G6_USE_CSVIO_FACADE", "1" if facade_on else "0")
+def test_csv_aggregator_overview_header_and_row(tmp_path, monkeypatch):
     monkeypatch.setenv("G6_CSVIO_BACKEND", "filesystem")
 
     base_dir = str(tmp_path)

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.1
+    rev: v0.6.9
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -9,7 +9,7 @@ repos:
     rev: v3.17.0
     hooks:
       - id: pyupgrade
-        args: ["--py313-plus"]
+        args: ["--py311-plus"]
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
@@ -23,12 +23,6 @@ repos:
     hooks:
       - id: detect-secrets
         args: ["--baseline", ".secrets.baseline"]
-  # Optional flake8 (can be removed once ruff parity confirmed)
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.1.0
-    hooks:
-      - id: flake8
-        additional_dependencies: []
   # Local custom governance & policy hooks
   - repo: local
     hooks:

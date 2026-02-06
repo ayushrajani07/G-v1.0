@@ -408,9 +408,9 @@ Rename-Item src\web\dashboard\static.deprecated static
 - [ ] Monitor for 1 week to confirm stability
 
 ### Future (MEDIUM IMPACT from OPTIMIZATION_OPPORTUNITIES.md):
-- [ ] Simplify metrics_cache.py (remove HTML-only fields)
-- [ ] Move DEBUG endpoints to separate module
-- [ ] Clean up external/G6_ directory
+- [x] Simplify metrics_cache.py (remove HTML-only fields)
+- [x] Move DEBUG endpoints to separate module
+- [x] Clean up external/G6_ directory
 - [ ] Consolidate remaining startup scripts
 
 ---

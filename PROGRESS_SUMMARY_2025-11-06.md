@@ -27,7 +27,7 @@ This document captures what we delivered for the intraday path-forecasting servi
   - Panels switched to backend parsing to enable alerting
   - Alert rules added and dashboards hardened (quick links, debug/backfill indicators)
 - Code hygiene and fixes
-  - `src/web/dashboard/routes/path_forecast.py` cleaned up (removed duplicate/interleaved blocks; fixed dangling try/indent)
+  - `src/web/dashboard/routes/path_forecast.py` cleaned up (legacy monolith at the time; now decomposed into `src/web/dashboard/routes/path_forecast/`)
   - Calibration helpers restored: `_calibration_dirs`, `_load_calibration`, `_save_calibration`, `_apply_band_scale`
   - Implemented calibration endpoints above and type-safe archival casts
   - `src/web/dashboard/routes/ml.py` correlations: parameter rename to `set_name` (alias `set`), and fixed key-union logic to avoid shadowing `set()`
@@ -54,7 +54,7 @@ This document captures what we delivered for the intraday path-forecasting servi
 ## Quality gates (current)
 
 - Build/Service: PASS (API runs; core endpoints return expected structures)
-- Python typecheck: PASS for changed files (`path_forecast.py`, `ml.py`)
+- Python typecheck: PASS for changed files (`path_forecast.py` at the time; now `src/web/dashboard/routes/path_forecast/`, plus `ml.py`)
 - PowerShell lint/compile: MIXED (non-blocking for API)
   - `scripts/kill_dashboard_ports.ps1`: `$pid` naming and `${}` interpolation issues
   - `scripts/force_rebind_9500.ps1`: `$pid/$args` naming, unapproved verb warning

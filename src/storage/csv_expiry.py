@@ -100,8 +100,9 @@ class CsvExpiryResolver:
         if supplied_tag and re.fullmatch(r"\d{4}-\d{2}-\d{2}", supplied_tag):
             try:
                 self.logger.debug(
-                    "CSV_EXPIRY_TAG_RAW_DATE index=%s tag=%s -> falling back to heuristic classification", index, supplied_tag
-                    "-> falling back to heuristic classification"
+                    "CSV_EXPIRY_TAG_RAW_DATE index=%s tag=%s -> falling back to heuristic classification",
+                    index,
+                    supplied_tag,
                 )
             except (AttributeError, TypeError):
                 pass
@@ -230,8 +231,10 @@ class CsvExpiryResolver:
                     )
                 else:
                     self.logger.info(
-                        "Advisory: Not all configured expiries observed for %s today. Seen=%s Missing=%s", index, sorted(seen), sorted(missing)
-                        f"Seen={sorted(seen)} Missing={sorted(missing)}"
+                        "Advisory: Not all configured expiries observed for %s today. Seen=%s Missing=%s",
+                        index,
+                        sorted(seen),
+                        sorted(missing),
                     )
         except (IOError, OSError, json.JSONDecodeError, KeyError, AttributeError, TypeError, ValueError) as e:  # pragma: no cover
             self.logger.debug("CSV_EXPIRY_ADVISORY_ERROR error=%s", e)
@@ -288,14 +291,23 @@ class CsvExpiryResolver:
                 try:
                     if self._concise:
                         self.logger.debug(
-                            "CSV_EXPIRY_MISCLASS index=%s old=%s new=%s exp_date=%s days=%s offset=%s", index, expiry_code, new_code, expiry_str, days_to_expiry, offset
-                            f"exp_date={expiry_str} days={days_to_expiry} offset={offset}"
+                                "CSV_EXPIRY_MISCLASS index=%s old=%s new=%s exp_date=%s days=%s offset=%s",
+                                index,
+                                expiry_code,
+                                new_code,
+                                expiry_str,
+                                days_to_expiry,
+                                offset,
                         )
                     else:
                         self.logger.warning(
-                            "Expiry misclassification detected: %s offset=%s classified=%s days_away=%s exp_date=%s -> reclassifying to %s", index, offset, expiry_code, days_to_expiry, expiry_str, new_code
-                            f"classified={expiry_code} days_away={days_to_expiry} "
-                            f"exp_date={expiry_str} -> reclassifying to {new_code}"
+                                "Expiry misclassification detected: %s offset=%s classified=%s days_away=%s exp_date=%s -> reclassifying to %s",
+                                index,
+                                offset,
+                                expiry_code,
+                                days_to_expiry,
+                                expiry_str,
+                                new_code,
                         )
                 except (AttributeError, TypeError) as e:
                     self.logger.debug("CSV_EXPIRY_MISCLASS_LOG_ERROR error=%s", e)

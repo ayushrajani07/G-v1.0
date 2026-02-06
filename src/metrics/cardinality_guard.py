@@ -344,7 +344,10 @@ class _RegistryGuard:
                 # Duplicate registration attempt – increment duplicates counter if available
                 try:
                     try:
-                        logger.info("registry_guard.duplicate_detected name=%s", name)
+                        if EnvConfig.get_bool('G6_METRICS_LOG_DUPLICATES', False):
+                            logger.info("registry_guard.duplicate_detected name=%s", name)
+                        else:
+                            logger.debug("registry_guard.duplicate_detected name=%s", name)
                     except (AttributeError, TypeError):
                         # Handle missing logger or format errors
                         pass

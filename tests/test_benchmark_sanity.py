@@ -4,7 +4,6 @@ Runs a tiny benchmark (few warmup + measured cycles) and asserts latency and
 hit ratio thresholds so catastrophic regressions are caught early.
 
 Thresholds chosen to be lenient for CI variability; adjust as architecture evolves.
-Skip via env G6_BENCH_SKIP=1 for extremely resource constrained runs.
 """
 from __future__ import annotations
 import os, json, subprocess, sys
@@ -12,10 +11,11 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.slow
+
 MIN_HIT_RATIO = float(os.getenv("G6_BENCH_MIN_HIT_RATIO", "0.30"))  # allow low initial diff efficiency
 MAX_P95_MS = float(os.getenv("G6_BENCH_MAX_P95_MS", "150.0"))       # generous CI cap
 
-@pytest.mark.skipif(os.getenv("G6_BENCH_SKIP") in ("1","true","yes"), reason="Benchmark guard skipped by env")
 def test_benchmark_sanity():
     repo_root = Path(__file__).resolve().parent.parent
     bench_script = repo_root / "scripts" / "summary" / "bench_cycle.py"

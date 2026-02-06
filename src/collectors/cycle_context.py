@@ -25,7 +25,7 @@ class CycleContext:
     index_params: dict[str, Any]
     providers: Any
     csv_sink: Any
-    influx_sink: Any = None
+    influx_sink: Any | None = None
     metrics: Any | None = None
     start_wall: float = field(default_factory=time.time)
     start_ts: datetime.datetime = field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
@@ -63,17 +63,78 @@ class CycleContext:
             sh = EnvConfig.get_bool('G6_SINGLE_HEADER_MODE', False)
             merge = EnvConfig.get_bool('G6_PHASE_TIMING_MERGE', False)
             single = EnvConfig.get_bool('G6_PHASE_TIMING_SINGLE_EMIT', False)
-        # Always emit consolidated PHASE_TIMING line; higher-level merged lines may also appear.
+        # Always emit consolidated PHASE_TIMING log; higher-level merged lines may also appear.
         try:
             total = sum(self.phase_times.values()) or 0.0
-            parts = []
-            for phase, secs in sorted(self.phase_times.items(), key=lambda x: -x[1]):
-                pct = (secs/total*100.0) if total else 0.0
-                fail = self.phase_failures.get(phase, 0)
-                parts.append(f"{phase}={secs:.3f}s({pct:.1f}%){'/F'+str(fail) if fail else ''}")
-            line = "PHASE_TIMING " + " | ".join(parts) + f" | total={total:.3f}s"
-            logger.info(line)
-        except Exception:  # pragma: no cover
+            # Prefer screenshot-style multiline formatting in human mode.
+            multiline = False
+            try:
+                if EnvConfig is not None:
+                    multiline = EnvConfig.get_bool('G6_PHASE_TIMING_MULTILINE', EnvConfig.get_bool('G6_HUMAN_MODE', False))
+            except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
+                multiline = False
+
+            items = [(phase, secs) for phase, secs in self.phase_times.items()]
+            items.sort(key=lambda x: -x[1])
+
+            # Hide metric phases that took ~0 time (common noise in terminal output).
+            try:
+                hide_zero_metrics = False
+                if EnvConfig is not None:
+                    hide_zero_metrics = EnvConfig.get_bool(
+                        'G6_PHASE_TIMING_HIDE_ZERO_METRICS',
+                        EnvConfig.get_bool('G6_HUMAN_MODE', False),
+                    )
+                if hide_zero_metrics:
+                    items = [
+                        (p, s)
+                        for (p, s) in items
+                        if not (('metrics' in str(p).lower()) and (float(s) <= 0.0))
+                    ]
+            except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
+                pass
+            if multiline:
+                pad = max((len(p) for p, _ in items), default=0)
+                lines = ["PHASE_TIMING"]
+                for phase, secs in items:
+                    pct = (secs / total * 100.0) if total else 0.0
+                    fail = self.phase_failures.get(phase, 0)
+                    suffix = f"/F{fail}" if fail else ""
+                    lines.append(f"{phase.ljust(pad)}={secs:.3f}s({pct:.1f}%){suffix}")
+                lines.append(f"total={total:.3f}s")
+
+                # If the cycle table row is emitted after this block (common in human mode),
+                # append the table header here so the numbers are readable mid-scroll.
+                try:
+                    if EnvConfig is not None and EnvConfig.get_bool('G6_HUMAN_MODE', False):
+                        if EnvConfig.get_bool('G6_PHASE_TIMING_APPEND_CYCLE_HEADER', True):
+                            m = getattr(self, 'metrics', None)
+                            header = getattr(m, '_last_cycle_table_header_line', None) if m is not None else None
+                            if isinstance(header, str) and header.strip():
+                                lines.append(header)
+                except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
+                    pass
+
+                try:
+                    if EnvConfig is not None and EnvConfig.get_bool('G6_HUMAN_MODE', False) and EnvConfig.get_bool('G6_HUMAN_SPACERS', True):
+                        n = EnvConfig.get_int('G6_HUMAN_SPACER_LINES', 1)
+                        for _ in range(max(0, n)):
+                            logger.info("")
+                except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
+                    pass
+                logger.info("\n".join(lines))
+            else:
+                parts = []
+                for phase, secs in items:
+                    pct = (secs/total*100.0) if total else 0.0
+                    fail = self.phase_failures.get(phase, 0)
+                    parts.append(f"{phase}={secs:.3f}s({pct:.1f}%){'/F'+str(fail) if fail else ''}")
+                line = "PHASE_TIMING " + " | ".join(parts) + f" | total={total:.3f}s"
+                logger.info(line)
+        except BaseException as e:  # pragma: no cover
+            import asyncio
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                raise
             logger.debug("Failed consolidated phase log", exc_info=True)
 
     def emit_phase_metrics(self):
@@ -85,7 +146,7 @@ class CycleContext:
         for phase, secs in self.phase_times.items():
             try:
                 m.phase_duration_seconds.labels(phase=phase).observe(secs)
-            except Exception:  # pragma: no cover
+            except (AttributeError, TypeError, ValueError, RuntimeError):  # pragma: no cover
                 logger.debug("Failed to observe phase duration", exc_info=True)
 
 
@@ -134,7 +195,7 @@ class _PhaseTimer:
             if m and hasattr(m, 'phase_failures_total'):
                 try:
                     m.phase_failures_total.labels(phase=self.name).inc()
-                except Exception:  # pragma: no cover
+                except (AttributeError, TypeError, ValueError, RuntimeError):  # pragma: no cover
                     pass
         # Do not suppress exceptions
         return False

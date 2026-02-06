@@ -17,7 +17,9 @@ from .providers_interface import Providers  # noqa: F401
 
 try:  # pragma: no cover - trivial defensive shim
 	from .unified_collectors import run_unified_collectors  # type: ignore  # noqa: F401
-except Exception:  # pragma: no cover
+except BaseException as _e:  # pragma: no cover
+	if isinstance(_e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+		raise
 	def run_unified_collectors(*_a, **_k):  # type: ignore
 		raise RuntimeError("run_unified_collectors not available in this test/stub context")
 

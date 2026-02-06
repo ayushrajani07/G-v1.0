@@ -31,10 +31,18 @@ from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 
 # Common imports moved to top to eliminate late imports (Phase 3 refactoring)
+from src.config.env_config import EnvConfig
 from src.runtime.runtime_flags import get_flags
 from src.filters.option_filter import OptionFilterContext, accept_option
 from src.utils.env_flags import is_truthy_env
 from src.errors import handle_error, ErrorCategory, ErrorSeverity
+from src.provider.errors import (
+    ProviderAuthError,
+    ProviderFatalError,
+    ProviderRecoverableError,
+    ProviderTimeoutError,
+    classify_provider_exception,
+)
 from src.utils.symbol_root import detect_root, parse_root_before_digits
 from src.broker.kite.tracing import trace, rate_limited_trace
 
@@ -50,6 +58,29 @@ except Exception:  # pragma: no cover
     get_index_meta = None  # type: ignore
 
 logger = logging.getLogger(__name__)
+
+
+def _synthetic_fallback_enabled() -> bool:
+    """Whether provider helpers may swallow failures and return best-effort values.
+
+    Default is enabled to preserve current behavior in mock/no-API environments.
+    Disable by setting `G6_PROVIDER_SYNTHETIC_FALLBACK=0` to surface real failures.
+    """
+    try:
+        return EnvConfig.get_bool('G6_PROVIDER_SYNTHETIC_FALLBACK', True)
+    except Exception:  # pragma: no cover
+        return True
+
+
+def _raise_provider_error(e: BaseException) -> None:
+    err_cls = classify_provider_exception(e)
+    if err_cls is ProviderAuthError:
+        raise ProviderAuthError(str(e)) from e
+    if err_cls is ProviderTimeoutError:
+        raise ProviderTimeoutError(str(e)) from e
+    if err_cls is ProviderRecoverableError:
+        raise ProviderRecoverableError(str(e)) from e
+    raise ProviderFatalError(str(e)) from e
 
 # Reuse global concise flag from provider module if already imported; else default True
 try:  # pragma: no cover - defensive import
@@ -865,4 +896,6 @@ def option_instruments(provider: ProviderLike | Any, index_symbol: str, expiry_d
             )
         except Exception:
             pass
+        if not _synthetic_fallback_enabled():
+            _raise_provider_error(e)
         return []

@@ -66,6 +66,17 @@ sample_by_index.html
 sample_grid.html
 weekday_overlays_meta.json
 
+# --- Local perf/scan scratch files ---
+.tmp_ruff_perf.txt
+.tmp_hotspots.txt
+.tmp_mypy.txt
+.tmp_ruff_all_stats.txt
+_tmp_scan_*.txt
+_tmp_vulture_*.txt
+_tmp_vulture_*.py
+_tmp_vulture_*_out.txt
+_tmp_vulture_*_err.txt
+
 # --- Prometheus / Grafana runtime state (keep configs) ---
 prometheus/
 !prometheus.yml

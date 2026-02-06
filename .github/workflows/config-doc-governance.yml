@@ -29,4 +29,4 @@ jobs:
         env:
           G6_CONFIG_DOC_STRICT: '1'
         run: |
-          pytest -q tests/test_config_doc_coverage.py::test_all_config_keys_are_documented
+          pytest -q --run-slow tests/test_config_doc_coverage.py::test_all_config_keys_are_documented

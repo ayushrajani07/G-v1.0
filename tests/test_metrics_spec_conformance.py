@@ -66,8 +66,8 @@ def _labels_from_collector(metric_obj) -> list[str]:
     return [n for n in names if n not in {'quantile', 'le'}]
 
 
-@pytest.mark.skipif(os.getenv('G6_EGRESS_FROZEN','').lower() in {'1','true','yes','on'}, reason='panel diff egress frozen affects spec surface')
-def test_metrics_spec_conformance():  # noqa: C901 (intentional thoroughness)
+def test_metrics_spec_conformance(monkeypatch):  # noqa: C901 (intentional thoroughness)
+    monkeypatch.delenv('G6_EGRESS_FROZEN', raising=False)
     spec_metrics = load_spec()
     # Acquire registry (import side effect initializes metrics). If missing, fail early.
     reg = getattr(metrics_pkg, 'registry', None)

@@ -119,7 +119,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
                         if not tr.get('snapshots'):
                             tr['snapshots'] = snaps2
                         payload['trend'] = tr
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
                     pass
     except (AttributeError, TypeError, ValueError):
         pass
@@ -145,7 +145,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
     # Per-type state (best-effort)
     try:
         payload['per_type'] = severity.get_active_severity_state() if enabled else {}
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
         payload['per_type'] = {}
 
     # If window positive but warn_ratio missing/zero, assume sustained warn presence
@@ -198,7 +198,7 @@ def build_adaptive_payload(env_str, forced_window: int | None) -> dict[str, Any]
                     if wvi > 0:
                         tr['warn_ratio'] = 1.0
                         payload['trend'] = tr
-    except Exception:
+    except (ImportError, AttributeError, TypeError, ValueError, RuntimeError):
         pass
 
     return payload
@@ -216,7 +216,7 @@ def force_window_env(payload: Any, forced_window: int | None, last_window: int |
         if tw_env not in (None, ''):
             try:
                 effective_tw = int(tw_env)
-            except Exception:
+            except (TypeError, ValueError):
                 effective_tw = None
         if effective_tw is None:
             effective_tw = forced_window if isinstance(forced_window, int) else last_window
@@ -232,7 +232,7 @@ def force_window_env(payload: Any, forced_window: int | None, last_window: int |
                     if isinstance(se, dict):
                         se['trend_window'] = str(effective_tw)
                         payload['smoothing_env'] = se
-                except Exception:
+                except (AttributeError, TypeError):
                     pass
             else:
                 try:
@@ -240,9 +240,9 @@ def force_window_env(payload: Any, forced_window: int | None, last_window: int |
                     if isinstance(snaps, list) and snaps:
                         tr['window'] = len(snaps)
                         payload['trend'] = tr
-                except Exception:
+                except (AttributeError, TypeError, ValueError):
                     pass
-    except Exception:
+    except (AttributeError, TypeError, ValueError, RuntimeError):
         pass
     return payload
 

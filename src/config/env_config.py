@@ -52,11 +52,12 @@ class EnvConfig:
         Example:
             interval = EnvConfig.get_int('G6_COLLECTION_INTERVAL', 60)
         """
-        cache_key = f"{key}:int:{default}"
+        raw = os.environ.get(key)
+        cache_key = f"{key}:int:{default}:{raw}"
         if cache_key in cls._cache:
             return cls._cache[cache_key]
         
-        value_str = os.environ.get(key, str(default))
+        value_str = raw if raw is not None else str(default)
         try:
             # Handle empty string case
             if not value_str or value_str.strip() == '':
@@ -89,16 +90,23 @@ class EnvConfig:
         Example:
             enabled = EnvConfig.get_bool('G6_METRICS_ENABLED', True)
         """
-        cache_key = f"{key}:bool:{default}"
+        raw = os.environ.get(key)
+        cache_key = f"{key}:bool:{default}:{raw}"
         if cache_key in cls._cache:
             return cls._cache[cache_key]
         
-        value_str = os.environ.get(key, '')
-        if not value_str:
+        # Missing -> default
+        if raw is None:
             cls._cache[cache_key] = default
             return default
-        
-        result = value_str.lower() in ('1', 'true', 'yes', 'on')
+
+        value_str = raw.strip()
+        # Explicitly set empty/whitespace -> False (treat as falsy override)
+        if value_str == "":
+            cls._cache[cache_key] = False
+            return False
+
+        result = value_str.lower() in ('1', 'true', 'yes', 'on', 'y')
         cls._cache[cache_key] = result
         return result
     
@@ -116,11 +124,12 @@ class EnvConfig:
         Example:
             log_level = EnvConfig.get_str('G6_LOG_LEVEL', 'INFO')
         """
-        cache_key = f"{key}:str:{default}"
+        raw = os.environ.get(key)
+        cache_key = f"{key}:str:{default}:{raw}"
         if cache_key in cls._cache:
             return cls._cache[cache_key]
         
-        result = os.environ.get(key, default)
+        result = raw if raw is not None else default
         cls._cache[cache_key] = result
         return result
     
@@ -138,11 +147,12 @@ class EnvConfig:
         Example:
             threshold = EnvConfig.get_float('G6_SUCCESS_THRESHOLD', 0.95)
         """
-        cache_key = f"{key}:float:{default}"
+        raw = os.environ.get(key)
+        cache_key = f"{key}:float:{default}:{raw}"
         if cache_key in cls._cache:
             return cls._cache[cache_key]
         
-        value_str = os.environ.get(key, str(default))
+        value_str = raw if raw is not None else str(default)
         try:
             # Handle empty string case
             if not value_str or value_str.strip() == '':
@@ -176,11 +186,12 @@ class EnvConfig:
         if default is None:
             default = []
         
-        cache_key = f"{key}:list:{separator}:{','.join(default)}"
+        raw = os.environ.get(key)
+        cache_key = f"{key}:list:{separator}:{','.join(default)}:{raw}"
         if cache_key in cls._cache:
             return cls._cache[cache_key]
         
-        value_str = os.environ.get(key, '')
+        value_str = raw or ''
         if not value_str or value_str.strip() == '':
             cls._cache[cache_key] = default
             return default
@@ -206,11 +217,12 @@ class EnvConfig:
         Example:
             data_dir = EnvConfig.get_path('G6_DATA_DIR', 'data/g6_data')
         """
-        cache_key = f"{key}:path:{default}"
+        raw = os.environ.get(key)
+        cache_key = f"{key}:path:{default}:{raw}"
         if cache_key in cls._cache:
             return cls._cache[cache_key]
         
-        path_str = os.environ.get(key, default)
+        path_str = raw if raw is not None else default
         # Normalize path separators
         result = os.path.normpath(path_str) if path_str else default
         cls._cache[cache_key] = result

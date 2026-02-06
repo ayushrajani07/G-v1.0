@@ -1,9 +1,10 @@
 # Minimal G6 Observability Stack Starter - CLEAN VERSION
-# Starts Web API + Grafana + Prometheus
+# Starts Web API + Grafana (optional: Prometheus)
 # Defaults to REQUIRING LOGIN (admin/admin)
 param(
   [int]$GrafanaPort = 3002,
   [int]$WebPort = 9500,
+  [switch]$StartPrometheus,
   [int]$PrometheusPort = 9091,
   [string]$GrafanaDataRoot = 'C:\GrafanaData',
   [switch]$OpenBrowser
@@ -35,12 +36,14 @@ try {
     Write-Host "  Stopped Grafana server" -ForegroundColor Gray
   }
   
-  # Stop Prometheus processes
-  $promProcs = Get-Process prometheus -ErrorAction SilentlyContinue
-  if ($promProcs) {
-    $promProcs | Stop-Process -Force -ErrorAction SilentlyContinue
-    $stoppedCount += @($promProcs).Count
-    Write-Host "  Stopped Prometheus" -ForegroundColor Gray
+  if ($StartPrometheus) {
+    # Stop Prometheus processes
+    $promProcs = Get-Process prometheus -ErrorAction SilentlyContinue
+    if ($promProcs) {
+      $promProcs | Stop-Process -Force -ErrorAction SilentlyContinue
+      $stoppedCount += @($promProcs).Count
+      Write-Host "  Stopped Prometheus" -ForegroundColor Gray
+    }
   }
   
   if ($stoppedCount -eq 0) {
@@ -118,26 +121,32 @@ if (-not (Wait-Http -Url "http://127.0.0.1:$WebPort/health" -MaxTries 20)) {
   Write-Host "Web API ready!" -ForegroundColor Green
 }
 
-# 2. Start Prometheus
-Write-Host "Starting Prometheus on :$PrometheusPort..." -ForegroundColor Green
-$prom = Find-Prometheus
-if (-not $prom) {
-  Write-Host "WARNING: Prometheus not found - skipping" -ForegroundColor Yellow
-  Write-Host "  Install from: https://prometheus.io/download/" -ForegroundColor Gray
-} else {
-  $promCfg = Join-Path $Root 'prometheus.yml'
-  if (-not (Test-Path $promCfg)) {
-    Write-Host "WARNING: prometheus.yml not found - skipping" -ForegroundColor Yellow
+# 2. Start Prometheus (optional)
+$promReady = $false
+if ($StartPrometheus) {
+  Write-Host "Starting Prometheus on :$PrometheusPort..." -ForegroundColor Green
+  $prom = Find-Prometheus
+  if (-not $prom) {
+    Write-Host "WARNING: Prometheus not found - skipping" -ForegroundColor Yellow
+    Write-Host "  Install from: https://prometheus.io/download/" -ForegroundColor Gray
   } else {
-    $promLog = Join-Path $LogDir 'prometheus_stdout.log'
-    $promErr = Join-Path $LogDir 'prometheus_stderr.log'
-    Start-Process -FilePath $prom.Exe -ArgumentList @("--config.file=`"$promCfg`"","--web.listen-address=127.0.0.1:$PrometheusPort","--storage.tsdb.path=`"$DataDir\prometheus`"") -WorkingDirectory $prom.Home -WindowStyle Minimized -RedirectStandardOutput $promLog -RedirectStandardError $promErr
-    if (-not (Wait-Http -Url "http://127.0.0.1:$PrometheusPort/-/ready" -MaxTries 20)) {
-      Write-Host "WARNING: Prometheus not ready" -ForegroundColor Yellow
+    $promCfg = Join-Path $Root 'prometheus.yml'
+    if (-not (Test-Path $promCfg)) {
+      Write-Host "WARNING: prometheus.yml not found - skipping" -ForegroundColor Yellow
     } else {
-      Write-Host "Prometheus ready!" -ForegroundColor Green
+      $promLog = Join-Path $LogDir 'prometheus_stdout.log'
+      $promErr = Join-Path $LogDir 'prometheus_stderr.log'
+      Start-Process -FilePath $prom.Exe -ArgumentList @("--config.file=`"$promCfg`"","--web.listen-address=127.0.0.1:$PrometheusPort","--storage.tsdb.path=`"$DataDir\prometheus`"") -WorkingDirectory $prom.Home -WindowStyle Minimized -RedirectStandardOutput $promLog -RedirectStandardError $promErr
+      if (-not (Wait-Http -Url "http://127.0.0.1:$PrometheusPort/-/ready" -MaxTries 20)) {
+        Write-Host "WARNING: Prometheus not ready" -ForegroundColor Yellow
+      } else {
+        $promReady = $true
+        Write-Host "Prometheus ready!" -ForegroundColor Green
+      }
     }
   }
+} else {
+  Write-Host "Skipping Prometheus (dashboards use Web API + Infinity)" -ForegroundColor Gray
 }
 
 # 3. Provision Grafana datasources and dashboards
@@ -157,45 +166,54 @@ try {
   }
 } catch {}
 
-# Write datasource provisioning (Prometheus + Infinity)
-Set-Content -Path (Join-Path $dsDir 'datasources.yml') -Encoding UTF8 -Value @"
+# Write datasource provisioning (Infinity; optional Prometheus)
+$allowedHosts = @(
+  "http://127.0.0.1:$WebPort",
+  "http://localhost:$WebPort",
+  "127.0.0.1:$WebPort",
+  "localhost:$WebPort"
+)
+$allowedHostsYaml = ($allowedHosts | ForEach-Object { "        - '$_'" }) -join "`n"
+
+if ($StartPrometheus -and $promReady) {
+  Set-Content -Path (Join-Path $dsDir 'datasources.yml') -Encoding UTF8 -Value @"
 apiVersion: 1
 datasources:
+  - name: Infinity
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    uid: INFINITY
+    isDefault: true
+    jsonData:
+      allowedHosts:
+$allowedHostsYaml
+    editable: true
   - name: Prometheus
     type: prometheus
     access: proxy
     uid: PROM
     url: 'http://127.0.0.1:$PrometheusPort'
-    isDefault: true
+    isDefault: false
     jsonData:
       httpMethod: POST
       timeInterval: 5s
     editable: true
+"@
+} else {
+  Set-Content -Path (Join-Path $dsDir 'datasources.yml') -Encoding UTF8 -Value @"
+apiVersion: 1
+datasources:
   - name: Infinity
     type: yesoreyeram-infinity-datasource
     access: proxy
     uid: INFINITY
-    isDefault: false
+    isDefault: true
     jsonData:
       allowedHosts:
-        - 'http://127.0.0.1:9500'
-        - 'http://localhost:9500'
-        - '127.0.0.1:9500'
-        - 'localhost:9500'
-    editable: true
-  - name: G6 Infinity
-    type: yesoreyeram-infinity-datasource
-    access: proxy
-    uid: G6_INFINITY
-    isDefault: false
-    jsonData:
-      allowedHosts:
-        - 'http://127.0.0.1:9500'
-        - 'http://localhost:9500'
-        - '127.0.0.1:9500'
-        - 'localhost:9500'
+$allowedHostsYaml
     editable: true
 "@
+}
 
 # Write dashboard provisioning
 Set-Content -Path (Join-Path $dbDir 'dashboards.yml') -Encoding UTF8 -Value @"

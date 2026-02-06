@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 try:
     from src.error_handling import get_error_handler, ErrorCategory, ErrorSeverity, safe_read_csv_rows
-except Exception:  # pragma: no cover
+except (ImportError, AttributeError):  # pragma: no cover
     get_error_handler = None  # type: ignore
     ErrorCategory = None  # type: ignore
     ErrorSeverity = None  # type: ignore
@@ -34,7 +34,7 @@ def parse_time_any(s: str) -> str:
     dt = None
     try:
         dt = datetime.fromisoformat(iso_try)
-    except Exception:
+    except ValueError:
         pass
     if dt is None:
         # Try multiple timestamp formats found in CSV files
@@ -53,7 +53,7 @@ def parse_time_any(s: str) -> str:
             try:
                 dt = datetime.strptime(s, fmt)
                 break
-            except Exception:
+            except ValueError:
                 continue
     if dt is None:
         return s
@@ -76,11 +76,20 @@ def parse_time_epoch_ms(s: str) -> int | None:
         raw = (s or '').strip()
         if not raw:
             return None
+        # Accept epoch strings (seconds or ms) commonly produced by dashboards/exporters
+        if raw.isdigit():
+            try:
+                # Heuristic: >=13 digits => ms, else seconds
+                if len(raw) >= 13:
+                    return int(raw[:13])
+                return int(raw) * 1000
+            except (TypeError, ValueError, OverflowError):
+                pass
         iso = raw.replace(' ', 'T') if ('T' not in raw and ' ' in raw) else raw
         dt = None
         try:
             dt = datetime.fromisoformat(iso)
-        except Exception:
+        except ValueError:
             pass
         if dt is None:
             # Try multiple timestamp formats found in CSV files
@@ -99,7 +108,7 @@ def parse_time_epoch_ms(s: str) -> int | None:
                 try:
                     dt = datetime.strptime(raw, fmt)
                     break
-                except Exception:
+                except ValueError:
                     continue
         if dt is None:
             return None
@@ -108,7 +117,7 @@ def parse_time_epoch_ms(s: str) -> int | None:
             ist = timezone(timedelta(hours=5, minutes=30))
             dt = dt.replace(tzinfo=ist)
         return int(dt.timestamp() * 1000)
-    except Exception:
+    except (TypeError, ValueError, OverflowError, OSError):
         return None
 
 
@@ -175,13 +184,13 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
     try:
         st = path.stat()
         mtime_ns = int(getattr(st, 'st_mtime_ns', int(st.st_mtime * 1e9)))
-    except Exception:
+    except OSError:
         mtime_ns = 0
     cached = _CSV_CACHE.get(path)
     if cached and cached[0] == mtime_ns:
         try:
             _CSV_CACHE.move_to_end(path)
-        except Exception:
+        except KeyError:
             pass
         return cached[1]
     rows: list[dict[str, Any]] = []
@@ -207,22 +216,22 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
                     else:
                         try:
                             obj[col] = float(val)
-                        except Exception:
+                        except (TypeError, ValueError):
                             obj[col] = None
                 if have_ce:
                     try:
                         obj['ce'] = float(str(r.get('ce')))
-                    except Exception:
+                    except (TypeError, ValueError):
                         obj['ce'] = None
                 if have_pe:
                     try:
                         obj['pe'] = float(str(r.get('pe')))
-                    except Exception:
+                    except (TypeError, ValueError):
                         obj['pe'] = None
                 if have_idx:
                     try:
                         obj['index_price'] = float(str(r.get('index_price')))
-                    except Exception:
+                    except (TypeError, ValueError):
                         obj['index_price'] = None
                 if have_iv:
                     for col in ('ce_iv', 'pe_iv'):
@@ -232,7 +241,7 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
                         else:
                             try:
                                 obj[col] = float(str(v))
-                            except Exception:
+                            except (TypeError, ValueError):
                                 obj[col] = None
                 if have_greeks:
                     for col in (
@@ -245,7 +254,7 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
                         else:
                             try:
                                 obj[col] = float(str(v))
-                            except Exception:
+                            except (TypeError, ValueError):
                                 obj[col] = None
                 rows.append(obj)
         try:
@@ -254,12 +263,16 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
                     if rv is None:
                         return -1
                     return int(rv)
-                except Exception:
+                except (TypeError, ValueError, OverflowError):
                     return -1
             rows.sort(key=lambda r: _ts_key_val(r.get('ts')))
-        except Exception:
+        except (TypeError, ValueError):
             pass
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         # Record error via centralized handler; fallback if handler unavailable
         try:
             if get_error_handler and ErrorCategory and ErrorSeverity:
@@ -274,7 +287,7 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
                 )
             else:
                 safe_read_csv_rows(path)  # will record if handler wired
-        except Exception:
+        except (AttributeError, TypeError, ValueError, OSError):
             pass
         rows = []
     try:
@@ -283,9 +296,9 @@ def load_csv_rows_full(path: Path) -> list[dict[str, Any]]:
             try:
                 while len(_CSV_CACHE) >= CSV_CACHE_MAX and _CSV_CACHE:
                     _CSV_CACHE.popitem(last=False)
-            except Exception:
+            except KeyError:
                 pass
             _CSV_CACHE[path] = (mtime_ns, rows)
-    except Exception:
+    except (TypeError, ValueError):
         pass
     return rows

@@ -352,7 +352,7 @@ Example greeks block:
 - [ ] `missing_mask` remains 0 during normal operation
 - [ ] Prometheus shows IV success > 0 and failures stable/low
 - [ ] Influx `option_data` points include Greeks fields matching CSV rows
-- [ ] Orchestrator runner (`scripts/run_orchestrator_loop.py`) in use; no new logs from legacy loop warning; `run_live.py` not used in automation
+- [ ] Orchestrator runner (`scripts/run_orchestrator_loop.py`) in use; no new logs from legacy loop warning; legacy run-live launcher removed (ensure no automation still references it)
 
 ## Rollback Plan
 If issues arise:
@@ -399,7 +399,7 @@ Rollback guidance: Re-introducing the legacy script is NOT recommended; instead,
 | Date | Change | Rationale | Safeguards |
 |------|--------|-----------|------------|
 | 2025-09-28 | `src/unified_main.py` removed (fail-fast stub) | Consolidated execution paths under orchestrator loop | Import-time hard failure + safeguard test |
-| 2025-09-28 | Deprecated flags removed (`G6_ENABLE_LEGACY_LOOP`, etc.) | Eliminate dead branching | Safeguard test scans active src |
+| 2025-09-28 | Deprecated legacy-loop gating flags removed | Eliminate dead branching | Safeguard test scans active src |
 | 2025-09-28 | Archived stubs raise with guidance | Preserve messaging without code path risk | Archived excluded from scans |
 | 2025-09-28 | Docs updated to new runner | Single canonical invocation | Planned doc lint (future) |
 | 2025-09-28 | Added `test_safeguard_legacy_loop_removed.py` | Prevent resurrection | Targeted pattern scan |

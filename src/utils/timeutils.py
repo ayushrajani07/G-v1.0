@@ -337,6 +337,20 @@ def round_to_30s_ist(dt: datetime, strategy: str = 'nearest') -> datetime:
     return rounded_ist
 
 
+def round_to_60s_ist(dt: datetime, strategy: str = 'floor') -> datetime:
+    """Return dt rounded to the nearest minute boundary in IST.
+
+    - Preserves timezone awareness and returns an aware datetime in IST.
+    - If input is naive, assumes UTC (consistent with project convention).
+    - Default strategy is 'floor' to avoid future-minute drift.
+    """
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    dt_ist = dt.astimezone(IST)
+    rounded_ist = round_timestamp(dt_ist, step_seconds=60, strategy=strategy)
+    return rounded_ist.replace(second=0, microsecond=0)
+
+
 def format_ist_hms_30s(dt: datetime, strategy: str = 'nearest') -> str:
     """Format a datetime as IST HH:MM:SS after 30s rounding.
 
@@ -386,6 +400,14 @@ def format_ist_dt_30s(dt: datetime, strategy: str = 'nearest', fmt: str = '%d-%m
     return round_to_30s_ist(dt, strategy=strategy).strftime(fmt)
 
 
+def format_ist_dt_60s(dt: datetime, strategy: str = 'floor', fmt: str = '%d-%m-%Y %H:%M:%S') -> str:
+    """Return full date+time string in IST after 60s rounding.
+
+    Default strategy is 'floor' to keep bucket-aligned timestamps monotonic.
+    """
+    return round_to_60s_ist(dt, strategy=strategy).strftime(fmt)
+
+
 def format_any_to_ist_dt_30s(ts: datetime | float | int | str, strategy: str = 'nearest', fmt: str = '%d-%m-%Y %H:%M:%S') -> str | None:
     """Accept heterogeneous timestamp input and return IST date+time string (30s rounding).
 
@@ -411,5 +433,6 @@ __all__ = [
     'is_market_open','market_hours_check','next_market_open','time_until_market_open','format_ist_time',
     'get_market_session_bounds','compute_weekly_expiry','compute_next_weekly_expiry','compute_monthly_expiry',
     'compute_next_monthly_expiry','round_timestamp','format_rounded_timestamp','round_to_30s_ist','format_ist_hms_30s',
-    'format_any_to_ist_hms_30s','format_ist_dt_30s','format_any_to_ist_dt_30s'
+    'format_any_to_ist_hms_30s','format_ist_dt_30s','format_any_to_ist_dt_30s',
+    'round_to_60s_ist','format_ist_dt_60s'
 ]

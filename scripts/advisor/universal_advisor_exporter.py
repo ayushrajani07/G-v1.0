@@ -74,11 +74,14 @@ def run_cycle(indices: List[str], windows: List[int], horizons: List[int], param
         for code, active in flags.items():
             if active:
                 g_flag.labels(index=idx, code=code).set(1)
-  # Export composite risk metrics if engine emitted any (they appear in metrics list)
-  for m in report.get('metrics', []):
-    if m.get('name') == 'advisor_composite_risk':
-      labels = m.get('labels', {})
-      g_composite_risk.labels(index=labels.get('index','UNKNOWN'), type=labels.get('type','generic')).set(float(m.get('value', 1)))
+    # Export composite risk metrics if engine emitted any (they appear in metrics list)
+    for m in report.get('metrics', []):
+      if m.get('name') == 'advisor_composite_risk':
+        labels = m.get('labels', {})
+        g_composite_risk.labels(
+          index=labels.get('index', 'UNKNOWN'),
+          type=labels.get('type', 'generic'),
+        ).set(float(m.get('value', 1)))
 
 def loop(indices: List[str], interval: int, windows: List[int], horizons: List[int], params: dict):
     while not shutdown:

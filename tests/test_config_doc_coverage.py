@@ -8,7 +8,6 @@ Strategy:
 5. Allow a baseline file (tests/config_doc_baseline.txt) for transitional adoption (should remain empty now).
 
 Flags:
-  G6_SKIP_CONFIG_DOC_VALIDATION=1  -> skip test (emergency only)
   G6_WRITE_CONFIG_DOC_BASELINE=1    -> rewrite baseline file with current missing keys
   G6_CONFIG_DOC_STRICT=1            -> fail if baseline not empty (CI enforced)
 
@@ -22,13 +21,14 @@ from __future__ import annotations
 import json, os, re, ast, pathlib, pytest
 from typing import Set, Iterable
 
+pytestmark = pytest.mark.slow
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DOC_FILE = ROOT / 'docs' / 'config_dict.md'
 BASELINE_FILE = ROOT / 'tests' / 'config_doc_baseline.txt'
 CONFIG_DIR = ROOT / 'config'
 SOURCE_DIR = ROOT / 'src'
 
-SKIP_FLAG = 'G6_SKIP_CONFIG_DOC_VALIDATION'
 GEN_BASELINE_FLAG = 'G6_WRITE_CONFIG_DOC_BASELINE'
 STRICT_FLAG = 'G6_CONFIG_DOC_STRICT'
 
@@ -128,7 +128,6 @@ def load_documented_keys() -> Set[str]:
         doc_keys.add(m.group(1))
     return doc_keys
 
-@pytest.mark.skipif(os.getenv(SKIP_FLAG, '').lower() in {'1','true','yes','on'}, reason='config doc validation skipped')
 def test_all_config_keys_are_documented():
     # 1. Collect keys from JSON config files
     json_keys: Set[str] = set()

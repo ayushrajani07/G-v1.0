@@ -1,12 +1,6 @@
-import os, threading, time
+import os, threading, time, importlib
 from types import SimpleNamespace
 from collections import Counter
-
-# Enable batching for the test
-os.environ['G6_KITE_QUOTE_BATCH'] = '1'
-os.environ['G6_KITE_QUOTE_BATCH_WINDOW_MS'] = '20'
-
-from src.broker.kite import quotes  # after env flags
 
 class DummyKite:
     def __init__(self):
@@ -23,12 +17,19 @@ class Settings: kite_timeout_sec = 2.0
 class Provider(SimpleNamespace):
     pass
 
-def _worker(provider, syms, out_list):
-    res = quotes.get_quote(provider, syms)
-    out_list.append(res)
 
+def test_quote_batching_collapses_calls(monkeypatch):
+    # Enable batching for the test
+    monkeypatch.setenv('G6_KITE_QUOTE_BATCH', '1')
+    monkeypatch.setenv('G6_KITE_QUOTE_BATCH_WINDOW_MS', '20')
 
-def test_quote_batching_collapses_calls():
+    from src.broker.kite import quotes as quotes_mod  # after env flags
+    quotes_mod = importlib.reload(quotes_mod)
+
+    def _worker(provider, syms, out_list):
+        res = quotes_mod.get_quote(provider, syms)
+        out_list.append(res)
+
     provider = Provider(kite=DummyKite(), _settings=Settings(), _auth_failed=False, _api_rl=None,
                         _rl_fallback=None, _rl_quote_fallback=None, _synthetic_quotes_used=0, _last_quotes_synthetic=False)
     outputs = []

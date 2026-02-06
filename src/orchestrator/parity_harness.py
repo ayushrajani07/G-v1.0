@@ -46,7 +46,9 @@ from .cycle import run_cycle  # type: ignore
 # Lazy import of legacy helpers to keep module import cost low in normal runtime
 try:  # pragma: no cover - import errors handled gracefully in tests
     from src.unified_main import run_collection_cycle  # type: ignore
-except Exception:  # pragma: no cover
+except BaseException as e:  # pragma: no cover
+    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+        raise
     run_collection_cycle = None  # type: ignore
 
 
@@ -76,7 +78,7 @@ def _collect_csv_snapshot(base_dir: str, index_keys: list[str]) -> dict[str, dic
                     full = os.path.join(idx_dir, p)
                     if os.path.isdir(full):
                         expiry_dirs.append(p)
-        except Exception:
+        except (OSError, IOError, PermissionError, TypeError, ValueError):
             pass
         expiry_dirs.sort()
         expiry_counts: dict[str, int] = {}
@@ -96,7 +98,7 @@ def _collect_csv_snapshot(base_dir: str, index_keys: list[str]) -> dict[str, dic
                             rows += max(0, len(lines) - 1)
                         else:
                             rows += len(lines)
-                except Exception:
+                except (OSError, IOError, UnicodeError, ValueError, TypeError):
                     continue
             expiry_counts[exp] = rows
             total += rows
@@ -138,7 +140,9 @@ def run_parity_cycle(config, use_enhanced: bool = False) -> dict[str, Any]:
     if run_collection_cycle is not None:
         try:
             run_collection_cycle(config, providers, csv_sink, influx_sink, metrics, False, legacy_params)
-        except Exception:
+        except BaseException as e:
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             # Intentionally swallow to still allow new path comparison (will show zero counts)
             pass
 
@@ -156,7 +160,9 @@ def run_parity_cycle(config, use_enhanced: bool = False) -> dict[str, Any]:
         # Currently, run_cycle(ctx) doesn't accept an enhanced mode flag; keep
         # the parameter in this harness for forward-compat, but ignore here.
         run_cycle(ctx)
-    except Exception:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         pass
     new_snapshot = _collect_csv_snapshot(base_dir, list(new_params.keys()))
 
@@ -171,7 +177,7 @@ def write_parity_report(config, path: str) -> str:
     try:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=2, sort_keys=True)
-    except Exception as e:  # pragma: no cover
+    except (OSError, IOError, TypeError, ValueError) as e:  # pragma: no cover
         try:
             get_error_handler().handle_error(
                 e,
@@ -182,7 +188,7 @@ def write_parity_report(config, path: str) -> str:
                 message="parity_report_write_failed",
                 context={"path": path},
             )
-        except Exception:
+        except (AttributeError, TypeError, RuntimeError):
             pass
     return path
 

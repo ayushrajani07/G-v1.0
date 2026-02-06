@@ -680,7 +680,7 @@ def process_expiry(
                         except (TypeError, ValueError, AttributeError):
                             logger.debug('recovery_strategy_invoke_failed index=%s rule=%s', index_symbol, expiry_rule, exc_info=True)
                 distinct_foreign: set = set()
-                for _sym, _row in _orig_enriched_snapshot.items():
+                for _row in _orig_enriched_snapshot.values():
                     raw_exp = _row.get('expiry') or _row.get('expiry_date') or _row.get('instrument_expiry')
                     if raw_exp:
                         import datetime as _dt
@@ -695,7 +695,7 @@ def process_expiry(
                                 continue
                 if len(distinct_foreign) <= 3:  # accept small distinct set
                     if salvage_flag:
-                        for _sym, _row in _orig_enriched_snapshot.items():
+                        for _row in _orig_enriched_snapshot.values():
                             _row['expiry'] = expiry_date
                         enriched_data = _orig_enriched_snapshot
                         logger.warning('foreign_expiry_salvage_applied index=%s rule=%s salvage_count=%d distinct_foreign=%s', index_symbol, expiry_rule, len(enriched_data), list(distinct_foreign)[:3])
@@ -712,7 +712,7 @@ def process_expiry(
             if (field_cov is None or field_cov == 0) and enriched_data:
                 # Determine if every enriched quote lacks core fields (volume, oi, avg_price)
                 missing_all = True
-                for _sym,_row in enriched_data.items():
+                for _row in enriched_data.values():
                     if any(k in _row for k in ('volume','oi','avg_price')):
                         missing_all = False
                         break

@@ -1,0 +1,127 @@
+from __future__ import annotations
+
+from typing import Any
+
+
+def build_option_row(
+    *,
+    ts_str_rounded: str,
+    index: str,
+    expiry_code: str,
+    expiry_date_str: str,
+    offset: int,
+    index_price: float,
+    atm_strike: float,
+    offset_price: float,
+    # prices
+    ce_price: float,
+    pe_price: float,
+    tp_price: float,
+    # averages
+    ce_avg: float,
+    pe_avg: float,
+    avg_tp: float,
+    # volumes/oi
+    ce_vol: int,
+    pe_vol: int,
+    ce_oi: int,
+    pe_oi: int,
+    # greeks
+    ce_iv: float,
+    pe_iv: float,
+    ce_delta: float,
+    pe_delta: float,
+    ce_theta: float,
+    pe_theta: float,
+    ce_vega: float,
+    pe_vega: float,
+    ce_gamma: float,
+    pe_gamma: float,
+    ce_rho: float,
+    pe_rho: float,
+    # changes
+    tp_net_change: float,
+    tp_day_change: float,
+    tp_net_change_pct: float,
+    tp_day_change_pct: float,
+) -> tuple[list[str], list[Any]]:
+    """Build the per-offset option row (header + row).
+
+    Extracted from `CsvSink._prepare_option_row` to make schema changes testable.
+    """
+
+    header = [
+        "timestamp",
+        "index",
+        "expiry_tag",
+        "expiry_date",
+        "offset",
+        "index_price",
+        "atm",
+        "strike",
+        "ce",
+        "pe",
+        "tp",
+        "avg_ce",
+        "avg_pe",
+        "avg_tp",
+        "ce_vol",
+        "pe_vol",
+        "ce_oi",
+        "pe_oi",
+        "ce_iv",
+        "pe_iv",
+        "ce_delta",
+        "pe_delta",
+        "ce_theta",
+        "pe_theta",
+        "ce_vega",
+        "pe_vega",
+        "ce_gamma",
+        "pe_gamma",
+        "ce_rho",
+        "pe_rho",
+        "tp_net_change",
+        "tp_day_change",
+        "tp_net_change_pct",
+        "tp_day_change_pct",
+    ]
+
+    row: list[Any] = [
+        ts_str_rounded,
+        index,
+        expiry_code,
+        expiry_date_str,
+        offset,
+        index_price,
+        atm_strike,
+        offset_price,
+        ce_price,
+        pe_price,
+        tp_price,
+        ce_avg,
+        pe_avg,
+        avg_tp,
+        ce_vol,
+        pe_vol,
+        ce_oi,
+        pe_oi,
+        ce_iv,
+        pe_iv,
+        ce_delta,
+        pe_delta,
+        ce_theta,
+        pe_theta,
+        ce_vega,
+        pe_vega,
+        ce_gamma,
+        pe_gamma,
+        ce_rho,
+        pe_rho,
+        tp_net_change,
+        tp_day_change,
+        tp_net_change_pct,
+        tp_day_change_pct,
+    ]
+
+    return header, row

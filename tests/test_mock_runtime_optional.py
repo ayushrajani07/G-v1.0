@@ -1,8 +1,6 @@
 import json
 import pytest
 
-pytestmark = pytest.mark.optional
-
 
 def test_single_mock_cycle(run_mock_cycle):
     data = run_mock_cycle(cycles=1, interval=2)

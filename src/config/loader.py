@@ -105,15 +105,12 @@ def _increment_deprecated_metrics(cfg: dict[str, Any], metrics: Any) -> None:
     if not metrics or not hasattr(metrics, 'config_deprecated_keys'):
         return
     # Re-run lightweight legacy detection inline (avoid importing validation internals)
-    legacy_keys = []
-    for k in ("index_params", "orchestration", "kite"):
-        if k in cfg:
-            legacy_keys.append(k)
+    legacy_keys = [k for k in ("index_params", "orchestration", "kite") if k in cfg]
     storage = cfg.get("storage", {})
     if isinstance(storage, dict):
-        for k in ("influx_enabled", "influx_url", "influx_org", "influx_bucket"):
-            if k in storage:
-                legacy_keys.append(f"storage.{k}")
+        legacy_keys.extend(
+            [f"storage.{k}" for k in ("influx_enabled", "influx_url", "influx_org", "influx_bucket") if k in storage]
+        )
     for key in legacy_keys:
         try:
             metrics.config_deprecated_keys.labels(key=key).inc()
@@ -226,7 +223,7 @@ def load_and_validate_config(path: str | os.PathLike[str], *, metrics: Any = Non
                     indices = raw2.get('indices')
                     if isinstance(indices, dict):
                         delta = 0
-                        for sym, spec in indices.items():
+                        for spec in indices.values():
                             if not isinstance(spec, dict):
                                 continue
                             exps = spec.get('expiries')
@@ -295,9 +292,8 @@ def load_and_validate_config(path: str | os.PathLike[str], *, metrics: Any = Non
                 if provider_obj is None:
                     problems.append(f"E-PROV-NOTFOUND:{idx}:{provider_name}")
                     continue
-                for r in required:
-                    if not hasattr(provider_obj, r):
-                        problems.append(f"E-PROV-MISSING:{idx}:{provider_name}:{r}")
+                missing = [r for r in required if not hasattr(provider_obj, r)]
+                problems.extend(f"E-PROV-MISSING:{idx}:{provider_name}:{r}" for r in missing)
         if problems:
             # Raise aggregated error for clarity. Use ConfigValidationError to align with existing handling.
             detail = ';'.join(problems)

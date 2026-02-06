@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 def _estimate_series() -> int:
     try:
         collectors = getattr(REGISTRY, '_names_to_collectors', {})  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError):
         return 0
 
     def _safe_count(collector) -> int:
@@ -41,12 +41,14 @@ def _estimate_series() -> int:
                 try:
                     samples = getattr(metric, 'samples', [])
                     return len(samples)
-                except Exception:
+                except (AttributeError, TypeError):
                     return 0
             for metric in collector.collect():  # type: ignore[attr-defined]
                 count += _count_samples(metric)
             return count
-        except Exception:
+        except BaseException as e:
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             return 0
 
     total = 0
@@ -82,7 +84,7 @@ def evaluate_cardinality_guard(ctx, force: bool = False):
             if metrics and hasattr(metrics, 'cardinality_guard_trips'):
                 try:
                     metrics.cardinality_guard_trips.inc()  # type: ignore[attr-defined]
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
                     pass
         elif disabled:
             allow_reenable = force or (last_toggle and (now - float(last_toggle) >= min_disable))
@@ -90,7 +92,9 @@ def evaluate_cardinality_guard(ctx, force: bool = False):
                 action = 'reenable'
                 ctx.set_flag('per_option_metrics_disabled', False)  # type: ignore[attr-defined]
                 ctx.set_flag('cardinality_last_toggle', now)  # type: ignore[attr-defined]
-    except Exception:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         logger.debug("cardinality guard evaluation error", exc_info=True)
 
     if action:

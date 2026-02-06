@@ -78,7 +78,9 @@ def _normalize_fields(fields: Mapping[str, Any]) -> dict[str, Any]:
                 out[k] = v
             else:
                 out[k] = repr(v)
-        except Exception:  # pragma: no cover - defensive
+        except BaseException as e:  # pragma: no cover - defensive
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             out[k] = "<unrepr>"
     return out
 
@@ -115,7 +117,9 @@ def log_event(event: str, level: int = logging.INFO, /, **fields: Any) -> None:
             legacy_line = _legacy_formatter(event, norm)
             if legacy_line:
                 _logger.log(level, legacy_line)
-        except Exception:  # pragma: no cover - legacy emit should never fail pipeline
+        except BaseException as e:  # pragma: no cover - legacy emit should never fail pipeline
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             _logger.debug("legacy_formatter.error event=%s", event)
 
 @dataclass

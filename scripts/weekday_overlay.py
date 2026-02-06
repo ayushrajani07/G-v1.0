@@ -35,6 +35,9 @@ WEEKDAY_NAMES = [
 
 _ESSENTIAL_INDICES = ("NIFTY", "BANKNIFTY", "FINNIFTY", "SENSEX")
 
+# Backward compatible alias used by some orchestration scripts.
+INDEX_DEFAULT = list(_ESSENTIAL_INDICES)
+
 
 def _parse_time_key(ts: str) -> str:
     """Extract HH:MM:SS from various timestamp formats.

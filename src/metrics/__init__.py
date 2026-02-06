@@ -191,6 +191,7 @@ _prev_ctx = EnvConfig.get_str('G6_METRICS_IMPORT_CONTEXT', '')
 try:
 	__os.environ['G6_METRICS_IMPORT_CONTEXT'] = 'facade'
 	from .metrics import (
+		ALWAYS_ON_GROUPS,
 		MetricsRegistry,
 		get_init_trace,
 		get_metrics_metadata,  # legacy metadata accessor
@@ -541,6 +542,7 @@ else:
 _imp('end metrics/__init__')
 
 __all__ = [
+	"ALWAYS_ON_GROUPS",
 	"MetricsRegistry",
 	"setup_metrics_server",
 	"get_metrics_singleton",

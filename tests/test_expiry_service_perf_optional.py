@@ -1,4 +1,3 @@
-import os
 import time
 import datetime as dt
 import pytest
@@ -7,10 +6,7 @@ from src.utils.expiry_rules import select_expiry as legacy_select
 from src.utils.expiry_service import ExpiryService
 
 
-pytestmark = pytest.mark.skipif(
-    os.getenv("G6_ENABLE_PERF_TESTS", "0") not in {"1","true"},
-    reason="Set G6_ENABLE_PERF_TESTS=1 to run performance micro-benchmarks"
-)
+pytestmark = pytest.mark.slow
 
 
 def test_expiry_service_perf_parity():

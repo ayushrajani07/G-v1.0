@@ -165,8 +165,10 @@ def enrich_quotes_async(
     else:
         mode = 'async-batch'
         exec_inst = executor or EnrichmentExecutor.get_shared()
-        for chunk in _chunk(instruments, int(effective_batch)):
-            futures.append(exec_inst.submit(_call_provider, providers, chunk))
+        futures.extend(
+            exec_inst.submit(_call_provider, providers, chunk)
+            for chunk in _chunk(instruments, int(effective_batch))
+        )
         # Collect with per-future timeout; share total budget proportionally
         per_future_timeout = (timeout_ms / 1000.0) if timeout_ms else None
         for fut in as_completed(futures, timeout=(timeout_ms/1000.0) if timeout_ms else None):

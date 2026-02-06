@@ -2,8 +2,8 @@ import os, time, importlib, sys
 import statistics as stats
 import pytest
 
-# Optional perf test; enable with G6_ENABLE_PERF_TESTS=1
-pytestmark = pytest.mark.skipif(os.getenv('G6_ENABLE_PERF_TESTS','') == '', reason='Set G6_ENABLE_PERF_TESTS=1 to run performance micro-benchmarks')
+# Perf/regression test (enabled via --run-slow or -m slow)
+pytestmark = pytest.mark.slow
 
 ITER = int(os.getenv('G6_BATCH_PERF_ITER', '20000'))
 LABELS = [('ep1','ok'), ('ep2','ok'), ('ep3','err')]

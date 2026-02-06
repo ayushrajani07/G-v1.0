@@ -58,7 +58,10 @@ def iv_estimation_block(ctx, enriched_data, index_symbol, expiry_rule, expiry_da
                     else:
                         iv_fail += 1
                     total_iter += iters
-            except Exception as iv_e:
+            except BaseException as iv_e:
+                import asyncio
+                if isinstance(iv_e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+                    raise
                 logger.debug("IV estimation failed for %s: %s", symbol, iv_e)
         if metrics:
             try:
@@ -76,5 +79,8 @@ def iv_estimation_block(ctx, enriched_data, index_symbol, expiry_rule, expiry_da
                         logger.debug("Failed to observe IV solver iterations: %s", e)
             except (AttributeError, TypeError) as e:
                 logger.debug("Failed updating IV estimation metrics: %s", e, exc_info=True)
-    except Exception as batch_e:
+    except BaseException as batch_e:
+        import asyncio
+        if isinstance(batch_e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         logger.error("IV estimation batch failed for %s %s: %s", index_symbol, expiry_rule, batch_e)

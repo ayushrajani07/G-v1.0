@@ -56,7 +56,7 @@ def _copy_jsonable(obj: Any) -> Any:
         # Handle deepcopy failures
         try:
             return json.loads(json.dumps(obj))
-        except (json.JSONEncodeError, json.JSONDecodeError, TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError, json.JSONDecodeError):
             # Handle JSON serialization failures
             return obj
 
@@ -129,7 +129,7 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
             try:
                 with open(os.path.join(base_dir, base_name + '.full.json'), 'w', encoding='utf-8') as f:
                     json.dump(full_payload, f)
-            except Exception as e:  # pragma: no cover - hygiene tests patch this path
+            except (OSError, IOError, TypeError, ValueError) as e:  # pragma: no cover - hygiene tests patch this path
                 try:
                     get_error_handler().handle_error(
                         e,
@@ -156,9 +156,9 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
                 if hasattr(m, 'panel_diff_bytes_total'):
                     try:
                         m.panel_diff_bytes_total.labels(type='full').inc(size)  # type: ignore[attr-defined]
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError, RuntimeError):
                         pass
-            except Exception:
+            except (AttributeError, TypeError, ValueError, RuntimeError):
                 pass
             _publish_event(
                 'panel_full',
@@ -253,7 +253,7 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
         try:
             with open(diff_path, 'w', encoding='utf-8') as f:
                 json.dump(diff_payload, f)
-        except Exception as e:  # pragma: no cover - hygiene tests patch this path
+        except (OSError, IOError, TypeError, ValueError) as e:  # pragma: no cover - hygiene tests patch this path
             try:
                 get_error_handler().handle_error(
                     e,
@@ -281,7 +281,7 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
                 except (AttributeError, TypeError, RuntimeError):
                     # Handle metric increment failures
                     pass
-        except (AttributeError, TypeError, json.JSONEncodeError, RuntimeError):
+        except (AttributeError, TypeError, ValueError, OverflowError, RuntimeError):
             # Handle metrics or JSON encoding failures
             pass
         _publish_event(
@@ -300,7 +300,7 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
         except (AttributeError, TypeError, RuntimeError):
             # Handle guard enforcement failures
             pass
-    except (AttributeError, TypeError, ValueError, RuntimeError, OSError, IOError, json.JSONEncodeError):
+    except (AttributeError, TypeError, ValueError, OverflowError, RuntimeError, OSError, IOError):
         # Handle diff emission failures
         pass
     # Periodic full snapshot
@@ -311,7 +311,7 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
             try:
                 with open(full_path, 'w', encoding='utf-8') as f:
                     json.dump(full_payload, f)
-            except Exception as e:  # pragma: no cover - hygiene tests patch this path
+            except (OSError, IOError, TypeError, ValueError) as e:  # pragma: no cover - hygiene tests patch this path
                 try:
                     get_error_handler().handle_error(
                         e,
@@ -341,7 +341,7 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
                     except (AttributeError, TypeError, RuntimeError):
                         # Handle metric increment failures
                         pass
-            except (AttributeError, TypeError, json.JSONEncodeError, RuntimeError):
+            except (AttributeError, TypeError, ValueError, OverflowError, RuntimeError):
                 # Handle metrics or JSON encoding failures
                 pass
             _publish_event(
@@ -361,7 +361,7 @@ def emit_panel_artifacts(status: dict[str, Any], *, status_path: str) -> None:
             except (AttributeError, TypeError, RuntimeError):
                 # Handle guard enforcement failures
                 pass
-        except (AttributeError, TypeError, ValueError, RuntimeError, OSError, IOError, json.JSONEncodeError):
+        except (AttributeError, TypeError, ValueError, OverflowError, RuntimeError, OSError, IOError):
             # Handle periodic full snapshot emission failures
             pass
     # Observe latency

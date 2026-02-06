@@ -340,7 +340,7 @@ Also in app.py:
 
 **Status:** COMPLETED (Phase 2 - LOW IMPACT optimizations)  
 **Date:** October 25, 2025  
-**Results:** Archived 2,290 files (renamed to G6_.archived)
+**Results:** Archived 2,290 files (renamed to G6_.archived); later deleted from workspace after verification (January 25, 2026)
 
 ### What Was Done
 1. **Analyzed external/G6_:** Confirmed it contains old backup copies of current code
@@ -358,7 +358,7 @@ Also in app.py:
 ### Archive Strategy
 - **Action:** Renamed `external/G6_/` → `external/G6_.archived/`
 - **Rationale:** Safer than deletion, easy to restore if needed
-- **Alternative:** Could move outside workspace or delete after verification period
+- **Follow-up:** Deleted `external/G6_.archived/` after verification; git history remains the backup
 
 ### Benefits Achieved
 - **Faster searches:** 2,290 fewer files to scan in grep/semantic searches
@@ -378,6 +378,8 @@ After 1-2 weeks of verification, consider:
 - **Option A:** Delete entirely if git history is sufficient backup
 - **Option B:** Move to `C:\Backup\G6_archive\` outside workspace
 - **Option C:** Keep as `.archived` for reference
+
+**Update (2026-01-25):** Option A executed; the archived directory was removed from the repo workspace.
 
 ---
 
@@ -497,7 +499,7 @@ Multiple startup scripts with overlapping functionality:
 ### Recommendation
 1. **obs_start_clean.ps1** is tested and working - consider this the canonical version
 2. **Deprecate** `obs_start.ps1` if not actively used (check VS Code tasks)
-3. **Document** differences between scripts in DEPLOYMENT_GUIDE.md
+3. **Document** differences between scripts in [docs/operations/deployment/DEPLOYMENT_GUIDE.md](docs/operations/deployment/DEPLOYMENT_GUIDE.md)
 
 ### Action Items
 1. Check VS Code tasks - which scripts are actually invoked?
@@ -693,6 +695,7 @@ To restore auto-generated dashboard provisioning:
 3. **Create cleanup branch** - Stage all changes in separate git branch
 4. **Test thoroughly** - Verify Grafana dashboards + all JSON endpoints work
 5. **Update documentation** - DEPRECATION_SUMMARY.md, DEPLOYMENT_GUIDE.md
+5. **Update documentation** - DEPRECATION_SUMMARY.md, [docs/operations/deployment/DEPLOYMENT_GUIDE.md](docs/operations/deployment/DEPLOYMENT_GUIDE.md)
 
 ---
 

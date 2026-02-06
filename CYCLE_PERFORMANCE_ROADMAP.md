@@ -22,7 +22,7 @@ Owner: Orchestrator/Infra
 
 - CSVIO fast-path (append instead of atomic rewrite)
   - Use append mode with periodic flush; rotate hourly to keep files small.
-  - Env: `G6_USE_CSVIO_FACADE=1`, `G6_CSVIO_BACKEND=filesystem`, `G6_CSVIO_FLUSH_MS=500`, `G6_CSVIO_BATCH=2000`.
+  - Env: `G6_CSVIO_BACKEND=filesystem`, `G6_CSVIO_FLUSH_MS=500`, `G6_CSVIO_BATCH=2000`.
   - Keep atomic mode for EOD compaction only.
 
 - HTTP client pooling + keep-alive
@@ -92,7 +92,6 @@ Owner: Orchestrator/Infra
 
 2) CSVIO append + writer thread
 - Env toggles (runtime):
-  - `G6_USE_CSVIO_FACADE=1`
   - `G6_CSVIO_BACKEND=filesystem`
   - `G6_CSVIO_FLUSH_MS=500`
   - `G6_CSVIO_BATCH=2000`
@@ -142,7 +141,6 @@ $py = (Get-Command python).Source
 
 - CSVIO append fast-path (dev):
 ```
-$env:G6_USE_CSVIO_FACADE = '1'
 $env:G6_CSVIO_BACKEND = 'filesystem'
 $env:G6_CSVIO_FLUSH_MS = '500'
 $env:G6_CSVIO_BATCH = '2000'

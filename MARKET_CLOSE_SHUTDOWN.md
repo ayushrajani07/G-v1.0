@@ -6,34 +6,15 @@ Implemented automatic collector shutdown at the end of market trading hours to e
 ## Features Implemented
 
 ### 1. Market Close Detection in Collection Loop
-- **File Modified**: `src/unified_main.py`
-- **Location**: `collection_loop()` function
-- **Trigger**: Only active when `market_hours_only=True`
+- **Implementation**: Orchestrator loop gating utilities
+- **Location**: `src/orchestrator/gating.py` (`should_skip_cycle_market_hours`)
+- **Trigger**: Enabled when market-hours gating is turned on (see Usage)
 
-### 2. Two-Level Market Close Detection
+### 2. Market Hours Gating Behavior
 
-#### Level 1: Next Collection Time Check
-```python
-if market_hours_only:
-    sleep_time = max(0, interval - elapsed)
-    next_collection_time = _dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(seconds=sleep_time)
-    
-    if not is_market_open(reference_time=next_collection_time):
-        logging.info("Market will close before next collection cycle. Stopping collector.")
-        break
-```
-- Calculates when the next collection cycle would occur
-- Checks if market will still be open at that time
-- Stops collector if market will be closed
-
-#### Level 2: Current Market Status Check  
-```python
-if not is_market_open():
-    logging.info("Market has closed. Stopping collector at end of trading hours.")
-    break
-```
-- Checks current market status after each cycle
-- Immediate shutdown if market has closed during processing
+When market-hours gating is enabled, cycles are skipped while the market is closed.
+This prevents unnecessary provider calls and keeps the process idle until the next
+open window.
 
 ### 3. Graceful Shutdown Process
 1. **Detection**: Market close detected via `is_market_open()` function
@@ -53,7 +34,7 @@ python scripts/run_orchestrator_loop.py --config config/g6_config.json --interva
 ```
 
 ### Configuration
-The market close detection is controlled by the `market_hours_only` parameter passed to `collection_loop()`.
+Market-hours gating is controlled by `G6_LOOP_MARKET_HOURS=1` (the runner `--market-hours-only` flag sets it).
 
 ### Market Hours Configuration
 Market hours are defined in `src/utils/market_hours.py`:
@@ -101,10 +82,9 @@ DEFAULT_MARKET_HOURS = {
 - No changes to default configuration or API
 - Graceful degradation if market hours detection fails
 
-### Consistency with Other Loops
-- `src/main.py` already has sophisticated market close logic
-- Implementation follows similar patterns for consistency
-- Enhanced logic available in unified_main.py for newer deployments
+### Notes
+- Legacy references to `collection_loop()` in `src/unified_main.py` are historical; the module is removed.
+- Current gating is implemented via the orchestrator loop (`src/orchestrator/loop.py`) and helpers in `src/orchestrator/gating.py`.
 
 ## Example Log Output
 

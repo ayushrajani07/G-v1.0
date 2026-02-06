@@ -124,7 +124,7 @@ def main():
         # Extract LTP and calculate ATM strike
         ltp = 0
         if isinstance(ltp_data, dict):
-            for key, data in ltp_data.items():
+            for data in ltp_data.values():
                 ltp = data.get('last_price', 0)
         else:
             logger.error("LTP data is not a dict: %s", type(ltp_data))
@@ -134,16 +134,11 @@ def main():
         logger.info("%s current price: %s, ATM strike: %s", index_symbol, ltp, atm_strike)
 
         # Calculate strikes to collect
-        strikes = []
-        for i in range(1, 6):  # 5 strikes on each side
-            strikes.append(atm_strike - (i * 50))  # ITM strikes
-
-        strikes.append(atm_strike)  # ATM strike
-
-        for i in range(1, 6):
-            strikes.append(atm_strike + (i * 50))  # OTM strikes
-
-        strikes.sort()
+        strikes = sorted(
+            [atm_strike - (i * 50) for i in range(1, 6)]  # ITM strikes
+            + [atm_strike]  # ATM strike
+            + [atm_strike + (i * 50) for i in range(1, 6)]  # OTM strikes
+        )
         logger.info("Collecting data for strikes: %s", strikes)
 
         # Get this week's expiry

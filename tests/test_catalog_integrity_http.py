@@ -40,6 +40,7 @@ def test_integrity_summary_and_http(tmp_path, monkeypatch):
     with socket.socket() as s:
         s.bind(('127.0.0.1', 0))
         free_port = s.getsockname()[1]
+    monkeypatch.setenv('G6_CATALOG_HTTP', '1')
     monkeypatch.setenv('G6_CATALOG_HTTP_PORT', str(free_port))
     # Force rebuild on each HTTP /catalog request to avoid loading a previously
     # emitted catalog.json (which may have been created by an earlier test run

@@ -38,20 +38,12 @@ try:
 except Exception:
     pass
 
-# Import from local scripts directory
-try:
-    from scripts.weekday_overlay import (
-        _normalize_indices,
-        update_weekday_master,
-    )
-    INDEX_DEFAULT = ["NIFTY", "BANKNIFTY", "FINNIFTY", "SENSEX"]
-except ImportError:
-    # Fallback to archived version
-    from external.G6_.archived.scripts.weekday_overlay import (  # type: ignore[import-not-found]
-        INDEX_DEFAULT,
-        _normalize_indices,
-        update_weekday_master,
-    )
+# Import from local scripts directory (canonical implementation)
+from scripts.weekday_overlay import (
+    INDEX_DEFAULT,
+    _normalize_indices,
+    update_weekday_master,
+)
 from src.utils.overlay_calendar import is_trading_day
 from src.utils.overlay_quality import write_quality_report
 

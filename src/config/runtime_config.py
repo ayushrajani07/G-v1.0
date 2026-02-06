@@ -15,10 +15,9 @@ Future: extend with validated groups & feature flags once stable.
 """
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 
-from src.config.env_config import EnvConfig
+from src.config.g6_config import get_g6_config
 
 __all__ = [
     "LoopSettings",
@@ -45,33 +44,14 @@ class RuntimeConfig:
 
 _singleton: RuntimeConfig | None = None
 
-def _coerce_int(val: str | None) -> int | None:
-    if val is None or not val.strip():
-        return None
-    try:
-        return int(val)
-    except Exception:
-        return None
-
-def _coerce_float(val: str | None, default: float) -> float:
-    try:
-        return float(val) if val and val.strip() else default
-    except Exception:
-        return default
-
-def _coerce_bool(val: str | None, default: bool) -> bool:
-    if val is None:
-        return default
-    return val.strip().lower() in {"1","true","yes","on"}
-
 def build_runtime_config() -> RuntimeConfig:
-    loop_interval = EnvConfig.get_float("G6_LOOP_INTERVAL_SECONDS", 1.0)
-    max_cycles = EnvConfig.get_int("G6_LOOP_MAX_CYCLES", 0) or None  # 0 means None
-    metrics_enabled_1 = EnvConfig.get_str("G6_METRICS_ENABLED", "")
-    metrics_enabled_2 = EnvConfig.get_str("G6_METRICS_ENABLE", "")
-    metrics_enabled = EnvConfig.get_bool("G6_METRICS_ENABLED", False) if metrics_enabled_1 else (EnvConfig.get_bool("G6_METRICS_ENABLE", False) if metrics_enabled_2 else True)
-    metrics_host = EnvConfig.get_str("G6_METRICS_HOST", "0.0.0.0")
-    metrics_port = EnvConfig.get_int("G6_METRICS_PORT", 9108)
+    # Delegate parsing to the unified G6Config.
+    cfg = get_g6_config(refresh=False)
+    loop_interval = cfg.loop_interval_seconds
+    max_cycles = cfg.loop_max_cycles
+    metrics_enabled = cfg.metrics_enabled
+    metrics_host = cfg.metrics_host
+    metrics_port = cfg.metrics_port
     return RuntimeConfig(
         loop=LoopSettings(interval_seconds=loop_interval, max_cycles=max_cycles),
         metrics=MetricsSettings(enabled=metrics_enabled, host=metrics_host, port=metrics_port),
@@ -80,5 +60,11 @@ def build_runtime_config() -> RuntimeConfig:
 def get_runtime_config(refresh: bool = False) -> RuntimeConfig:
     global _singleton
     if _singleton is None or refresh:
+        if refresh:
+            # Ensure env cache invalidation happens via the unified config.
+            try:
+                get_g6_config(refresh=True)
+            except Exception:
+                pass
         _singleton = build_runtime_config()
     return _singleton

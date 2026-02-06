@@ -340,8 +340,9 @@ def run_pipeline(
     index_params: Mapping[str, dict[str, Any]],
     providers: Any,
     csv_sink: Any,
-    metrics: Any | None = None,
-    *,
+  *args: Any,
+  metrics: Any | None = None,
+  influx_sink: Any | None = None,
     compute_greeks: bool = False,
     risk_free_rate: float = 0.05,
     estimate_iv: bool = False,
@@ -353,6 +354,21 @@ def run_pipeline(
     legacy_baseline: dict[str, Any] | None = None,
 ) -> dict[str, Any]:  # noqa: D401
   """Run collectors via staged pipeline (synthetic quote fallback removed)."""
+  # Backwards-compatible signature handling.
+  # Historical variants seen in the repo/tests:
+  #   run_pipeline(index_params, providers, csv_sink, metrics)
+  #   run_pipeline(index_params, providers, csv_sink, influx_sink, metrics)
+  #   run_pipeline(..., influx_sink=..., metrics=...)
+  if args:
+    if len(args) >= 2:
+      if influx_sink is None:
+        influx_sink = args[0]
+      if metrics is None:
+        metrics = args[1]
+    else:
+      if metrics is None:
+        metrics = args[0]
+
   start_wall = time.time()
   phase_timings = {}
   ctx: CollectorContext = build_collector_context(index_params=index_params, metrics=metrics, debug=EnvConfig.get_bool('G6_COLLECTOR_REFACTOR_DEBUG', False))
@@ -754,10 +770,15 @@ def run_pipeline(
   total_cycle_s: float = time.time() - start_wall
   try:
     if metrics is not None:
-      from prometheus_client import Counter as _C
-      from prometheus_client import Gauge as _G
-      from prometheus_client import Histogram as _H
-      from prometheus_client import Summary as _S
+      try:
+        from prometheus_client import Counter as _C
+        from prometheus_client import Gauge as _G
+        from prometheus_client import Histogram as _H
+        from prometheus_client import Summary as _S
+      except Exception:
+        # Some unit tests stub prometheus_client with only a subset of symbols.
+        # Operational metrics are best-effort; skip if imports are unavailable.
+        raise ImportError
       # Cycle duration histogram (bucket selection conservative)
       if not hasattr(metrics, 'pipeline_cycle_duration_seconds'):
         try:
@@ -806,6 +827,8 @@ def run_pipeline(
           if c and val>0:
             try: c.inc(val)
             except (AttributeError, ValueError, TypeError): pass
+  except ImportError:
+    pass
   except (AttributeError, ValueError, TypeError, RuntimeError):
     # Operational metrics emission may fail
     logger.debug('pipeline_operational_metrics_failed', exc_info=True)

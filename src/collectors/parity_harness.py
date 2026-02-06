@@ -69,9 +69,8 @@ def capture_parity_snapshot(unified_result: dict[str, Any]) -> dict[str, Any]:
 
     for entry in indices_entries:
         index_name = entry.get('index')
-        expiries_out: list[dict[str, Any]] = []
-        for e in entry.get('expiries', []):
-            expiries_out.append({
+        expiries_out: list[dict[str, Any]] = [
+            {
                 'rule': e.get('rule'),
                 'expiry_date': e.get('expiry_date'),
                 'status': e.get('status'),
@@ -79,7 +78,9 @@ def capture_parity_snapshot(unified_result: dict[str, Any]) -> dict[str, Any]:
                 'strike_cov': e.get('strike_coverage'),
                 'field_cov': e.get('field_coverage'),
                 'partial_reason': e.get('partial_reason'),
-            })
+            }
+            for e in entry.get('expiries', [])
+        ]
         # Sort expiries deterministically by (expiry_date, rule)
         expiries_out.sort(key=lambda r: (r.get('expiry_date') or '', r.get('rule') or ''))
         index_snapshot = {

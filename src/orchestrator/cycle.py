@@ -336,7 +336,7 @@ def run_cycle(ctx: RuntimeContext) -> float:
                     # Handle metric access or set failures
                     pass
             completed: set[str] = set()
-            failures: dict[str, Exception] = {}
+            failures: dict[str, BaseException] = {}
             elapsed_map: dict[str, float] = {}
             # Internal submission wrapper to capture start times
             def submit_all(executor):
@@ -373,7 +373,9 @@ def run_cycle(ctx: RuntimeContext) -> float:
                                 # Handle metric access or observe failures
                                 pass
                         completed.add(idx)
-                    except Exception as e:  # noqa
+                    except BaseException as e:  # noqa
+                        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                            raise
                         # Distinguish timeout vs other failure
                         is_timeout = isinstance(e, TimeoutError)
                         failures[idx] = e
@@ -606,47 +608,19 @@ def run_cycle(ctx: RuntimeContext) -> float:
                     _run_uc = run_unified_collectors
                 result = None
                 if callable(_run_uc):
-                    # run_unified_collectors signature changed during refactor:
-                    # now expects (index_params, providers, csv_sink, metrics=None, *, ...)
-                    # Older versions accepted an additional positional influx sink.
-                    try:
-                        import inspect
-
-                        sig = inspect.signature(_run_uc)
-                        params = sig.parameters
-                        accepts_influx = 'influx_sink' in params or 'influx' in params
-                    except Exception:  # pragma: no cover
-                        accepts_influx = False
-
-                    if accepts_influx:
-                        result = _run_uc(
-                            ctx.index_params,
-                            ctx.providers,
-                            ctx.csv_sink,
-                            ctx.influx_sink,
-                            ctx.metrics,
-                            compute_greeks=bool(greeks_cfg.get('enabled')),
-                            risk_free_rate=float(greeks_cfg.get('risk_free_rate', 0.05)),
-                            estimate_iv=bool(greeks_cfg.get('estimate_iv', False)),
-                            iv_max_iterations=int(greeks_cfg.get('iv_max_iterations', 100)),
-                            iv_min=float(greeks_cfg.get('iv_min', 0.01)),
-                            iv_max=float(greeks_cfg.get('iv_max', 5.0)),
-                            build_snapshots=auto_snapshots_flag,
-                        )
-                    else:
-                        result = _run_uc(
-                            ctx.index_params,
-                            ctx.providers,
-                            ctx.csv_sink,
-                            ctx.metrics,
-                            compute_greeks=bool(greeks_cfg.get('enabled')),
-                            risk_free_rate=float(greeks_cfg.get('risk_free_rate', 0.05)),
-                            estimate_iv=bool(greeks_cfg.get('estimate_iv', False)),
-                            iv_max_iterations=int(greeks_cfg.get('iv_max_iterations', 100)),
-                            iv_min=float(greeks_cfg.get('iv_min', 0.01)),
-                            iv_max=float(greeks_cfg.get('iv_max', 5.0)),
-                            build_snapshots=auto_snapshots_flag,
-                        )
+                    result = _run_uc(
+                        ctx.index_params,
+                        ctx.providers,
+                        ctx.csv_sink,
+                        ctx.metrics,
+                        compute_greeks=bool(greeks_cfg.get('enabled')),
+                        risk_free_rate=float(greeks_cfg.get('risk_free_rate', 0.05)),
+                        estimate_iv=bool(greeks_cfg.get('estimate_iv', False)),
+                        iv_max_iterations=int(greeks_cfg.get('iv_max_iterations', 100)),
+                        iv_min=float(greeks_cfg.get('iv_min', 0.01)),
+                        iv_max=float(greeks_cfg.get('iv_max', 5.0)),
+                        build_snapshots=auto_snapshots_flag,
+                    )
                 if auto_snapshots_flag and result and isinstance(result, dict):
                     try:
                         snaps = result.get('snapshots')

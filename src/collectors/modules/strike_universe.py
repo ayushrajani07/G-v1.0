@@ -311,13 +311,11 @@ def _generate_strikes(atm: float, itm: int, otm: int, index_symbol: str, step: f
     # Fallback simplified generation
     if atm <= 0:
         return []
-    arr: list[float] = []
-    for i in range(1, itm + 1):
-        arr.append(float(atm - i * step))
-    arr.append(float(atm))
-    for i in range(1, otm + 1):
-        arr.append(float(atm + i * step))
-    return sorted(arr)
+    return sorted(
+        [float(atm - i * step) for i in range(1, itm + 1)]
+        + [float(atm)]
+        + [float(atm + i * step) for i in range(1, otm + 1)]
+    )
 
 
 def get_cache_diagnostics() -> dict:

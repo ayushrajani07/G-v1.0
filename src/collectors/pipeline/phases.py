@@ -509,7 +509,7 @@ def phase_persist_sim(ctx: Any, state: ExpiryState) -> ExpiryState:
         return state
     try:
         puts = calls = 0
-        for _sym, row in state.enriched.items():
+        for row in state.enriched.values():
             t = (row.get('instrument_type') or row.get('type') or '').upper()
             if t == 'PE':
                 puts += 1

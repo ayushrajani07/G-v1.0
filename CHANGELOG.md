@@ -236,6 +236,10 @@ See `INEFFICIENCIES_REPORT.md` for detailed analysis and methodology.
 - Clarified deprecation gating guidance in metrics module docstring (future removal window unaffected).
 
 ## [2025-09-30]
+### Deprecation / Cleanup
+- Fully removed the legacy panels bridge (`scripts/status_to_panels.py`) from supported workflows; panels JSON artifacts are emitted in-process by the unified summary loop.
+- Dropped remaining bridge-only stubs/tests and removed the deprecated `panels-bridge` CLI subcommand.
+
 ### Refactor (Metrics Modularization Phase – Cache & Panels Integrity Extraction)
 - Extracted remaining inline grouped metric families from `group_registry.py`:
 	- `cache` metrics moved to `src/metrics/cache_metrics.py` (registered under existing alias group `perf_cache` which resolves to `cache` preserving group filtering semantics and spec alignment). Metrics retained: `root_cache_hits`, `root_cache_misses`, `root_cache_evictions`, `root_cache_size`, `root_cache_hit_ratio` (unchanged names & help text).

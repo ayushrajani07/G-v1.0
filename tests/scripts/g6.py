@@ -4,7 +4,6 @@
 Subcommands:
     summary          Launch summary view (unified summary/app.py)
   simulate         Run status simulator (wraps status_simulator.py)
-    panels-bridge    (DEPRECATED) Legacy status->panels bridge (tombstoned)
   integrity        Run one-shot panels integrity check (wraps panels_integrity_check.py)
   bench            Run a lightweight benchmark placeholder (stub)
     retention-scan   Scan CSV storage tree for basic retention metrics
@@ -27,7 +26,6 @@ except ImportError:
 
 import argparse
 import json
-import os
 import subprocess
 import sys
 import time
@@ -81,14 +79,6 @@ def cmd_simulate(args: argparse.Namespace) -> int:
     if args.with_analytics:
         base.append('--with-analytics')
     return _run(base)
-
-
-def cmd_panels_bridge(args: argparse.Namespace) -> int:
-    # Legacy panels bridge has been removed. Print guidance and redirect to summary app.
-    if os.getenv('G6_SUPPRESS_LEGACY_CLI','').lower() not in {'1','true','yes','on'}:
-        print(f'[REMOVED] panels-bridge: use `python -m scripts.summary.app --refresh {args.refresh}` (panels emitted in-process)', file=sys.stderr)
-    # Redirect to unified summary app instead
-    return cmd_summary(args)
 
 
 def cmd_integrity(args: argparse.Namespace) -> int:
@@ -261,12 +251,6 @@ def build_parser() -> argparse.ArgumentParser:
     sim.add_argument('--open-market', action='store_true')
     sim.add_argument('--with-analytics', action='store_true')
     sim.set_defaults(func=cmd_simulate)
-
-    pb = sub.add_parser('panels-bridge', help='Legacy status->panels bridge (temporary)')
-    pb.add_argument('--status-file', default='data/runtime_status.json')
-    pb.add_argument('--refresh', type=float, default=0.5)
-    pb.add_argument('--once', action='store_true')
-    pb.set_defaults(func=cmd_panels_bridge)
 
     integ = sub.add_parser('integrity', help='Run one-shot panels integrity check')
     integ.add_argument('--panels-dir', default='data/panels')

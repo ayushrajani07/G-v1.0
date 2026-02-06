@@ -55,7 +55,7 @@ async def api_info() -> JSONResponse:
                 "concurrency_limit": _MAX_CONCURRENCY,
             }
         )
-    except Exception:
+    except (AttributeError, TypeError, ValueError, OSError):
         return JSONResponse({"version": "0.1.0"})
 
 
@@ -81,7 +81,7 @@ def _norm_offset(s: str | None) -> str:
             return up
         if up.isdigit():
             return f"+{up}"
-    except Exception:
+    except (TypeError, ValueError):
         pass
     return v
 
@@ -127,7 +127,10 @@ async def api_sync_check(
             }
         ]
         return JSONResponse(result)
-    except Exception as e:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         get_error_handler().handle_error(
             e,
             category=ErrorCategory.CONFIGURATION,
@@ -156,7 +159,10 @@ async def api_stats() -> JSONResponse:
                 "avg_ms": round(avg_ms, 2),
                 "max_ms": round(float(v.get("dur_ms_max", 0.0)), 2),
             }
-    except Exception:
+    except BaseException as e:
+        import asyncio
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
+            raise
         pass
     out["concurrency_limit"] = max(1, _MAX_CONCURRENCY)
     return JSONResponse(out)

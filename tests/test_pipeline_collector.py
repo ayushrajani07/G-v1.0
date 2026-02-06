@@ -1,7 +1,7 @@
 import os, json, pathlib, importlib
 import pytest
 
-pytestmark = pytest.mark.serial
+pytestmark = pytest.mark.integration
 
 def test_pipeline_basic(monkeypatch, tmp_path):
     """Enable pipeline flag and ensure run_cycle executes without raising.
@@ -9,8 +9,8 @@ def test_pipeline_basic(monkeypatch, tmp_path):
     We rely on fallback provider methods being present; if real providers are not
     configured the pipeline should still complete quickly with warnings.
     """
-    os.environ['G6_PIPELINE_COLLECTOR'] = '1'
-    os.environ['G6_FORCE_MARKET_OPEN'] = '1'  # bypass market hours if legacy checks appear
+    monkeypatch.setenv('G6_PIPELINE_COLLECTOR', '1')
+    monkeypatch.setenv('G6_FORCE_MARKET_OPEN', '1')  # bypass market hours if legacy checks appear
     # Lazy import bootstrap + cycle
     import pytest
     from src.orchestrator.bootstrap import bootstrap_runtime
@@ -28,5 +28,4 @@ def test_pipeline_basic(monkeypatch, tmp_path):
     elapsed = run_cycle(ctx)  # type: ignore[arg-type]
     assert isinstance(elapsed, float)
     assert elapsed >= 0.0
-    # Disable flag for other tests
-    os.environ.pop('G6_PIPELINE_COLLECTOR', None)
+    # monkeypatch auto-restores env

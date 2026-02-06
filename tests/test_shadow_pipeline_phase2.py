@@ -1,7 +1,7 @@
 import importlib, types
 import pytest
 
-pytestmark = pytest.mark.serial
+pytestmark = pytest.mark.integration
 
 class DummyProviders: ...
 class DummyCtx:
@@ -42,8 +42,8 @@ def test_shadow_pipeline_includes_preventive_and_salvage(monkeypatch):
     setattr(fake_uc, '_enrich_quotes', _enrich_quotes)  # type: ignore[attr-defined]
 
     import sys
-    sys.modules['src.collectors.unified_collectors'] = fake_uc
-    sys.modules['src.collectors.modules.preventive_validate'] = fake_prev
+    monkeypatch.setitem(sys.modules, 'src.collectors.unified_collectors', fake_uc)
+    monkeypatch.setitem(sys.modules, 'src.collectors.modules.preventive_validate', fake_prev)
 
     settings_mod = importlib.import_module('src.collectors.settings')
     importlib.reload(settings_mod)

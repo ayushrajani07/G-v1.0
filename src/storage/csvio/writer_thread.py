@@ -6,7 +6,7 @@ intervals to amortize fsync costs and improve write throughput.
 Environment Variables:
     G6_CSVIO_FLUSH_MS: Flush interval in milliseconds (default 500)
     G6_CSVIO_BATCH: Maximum batch size before forcing flush (default 2000)
-    G6_CSVIO_WRITER_THREAD: Enable writer thread (default 1 when G6_USE_CSVIO_FACADE=1)
+    G6_CSVIO_WRITER_THREAD: Enable writer thread (default 0)
 """
 from __future__ import annotations
 
@@ -250,10 +250,7 @@ def get_writer_thread() -> CsvWriterThread | None:
     # Check if feature is enabled
     from src.config.env_config import EnvConfig
     
-    if not EnvConfig.get_bool('G6_CSVIO_WRITER_THREAD', True):
-        return None
-    
-    if not EnvConfig.get_bool('G6_USE_CSVIO_FACADE', False):
+    if not EnvConfig.get_bool('G6_CSVIO_WRITER_THREAD', False):
         return None
     
     # Get or create singleton instance

@@ -43,7 +43,24 @@ DOC_FILE_CANDIDATE = Path("docs/env_dict.md")
 DEFAULT_OUT = Path("docs/ENV_VARS_AUTO.md")
 DEFAULT_JSON_OUT = Path("docs/ENV_VARS_AUTO.json")
 SCAN_EXTENSIONS = {".py", ".md", ".ps1", ".sh", ".yml", ".yaml"}
-EXCLUDE_DIRS = {".git", "__pycache__", "archive", "logs", "data", "parity_snapshots"}
+EXCLUDE_DIRS = {
+    ".git",
+    "__pycache__",
+    "archive",
+    ".archived",
+    "artifacts",
+    "tools",
+    "logs",
+    "data",
+    "parity_snapshots",
+}
+
+# Avoid scanning the generated inventory outputs themselves to prevent
+# self-referential token retention.
+EXCLUDE_FILES = {
+    Path("docs/ENV_VARS_AUTO.md"),
+    Path("docs/ENV_VARS_AUTO.json"),
+}
 
 
 @dataclass
@@ -62,6 +79,14 @@ def iter_files(root: Path) -> Iterable[Path]:
         # Skip large or generated dirs
         if any(part in EXCLUDE_DIRS for part in p.parts):
             continue
+        try:
+            rel = p.relative_to(root)
+            if rel in EXCLUDE_FILES:
+                continue
+        except Exception:
+            # If relative resolution fails, fall back to best-effort name check
+            if p.name in {"ENV_VARS_AUTO.md", "ENV_VARS_AUTO.json"}:
+                continue
         yield p
 
 

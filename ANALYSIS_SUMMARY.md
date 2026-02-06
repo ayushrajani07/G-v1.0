@@ -292,10 +292,10 @@ grep "Active Deprecations" -A 100 DEPRECATIONS.md | grep '|' | wc -l
 pytest -n auto -q
 
 # Verify legacy loop removed
-grep -r "G6_ENABLE_LEGACY_LOOP" .
+grep -r "LEGACY_LOOP" .
 
 # Verify CSV facade migration
-grep -r "G6_USE_CSVIO_FACADE" .
+grep -r "G6_CSVIO_BACKEND" .
 
 # Check for expired deprecations
 python scripts/check_deprecations.py

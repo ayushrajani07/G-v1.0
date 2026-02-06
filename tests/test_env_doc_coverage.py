@@ -2,6 +2,8 @@ import os, re, pathlib, sys
 
 import pytest
 
+pytestmark = pytest.mark.slow
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DOC_FILE = ROOT / 'docs' / 'env_dict.md'
 AUTO_JSON = ROOT / 'docs' / 'ENV_VARS_AUTO.json'
@@ -17,9 +19,6 @@ BASELINE_FILE = ROOT / 'tests' / 'env_doc_baseline.txt'
 GEN_BASELINE_FLAG = 'G6_WRITE_ENV_DOC_BASELINE'
 STRICT_FLAG = 'G6_ENV_DOC_STRICT'
 
-SKIP_FLAG = 'G6_SKIP_ENV_DOC_VALIDATION'
-
-@pytest.mark.skipif(os.getenv(SKIP_FLAG, '').lower() in {'1','true','yes','on'}, reason=f"Set {SKIP_FLAG}=0 to enable env var documentation coverage test")
 def test_all_g6_env_vars_are_documented():
     """Scan repository for G6_ env var usages and verify each is in env_dict.md.
 

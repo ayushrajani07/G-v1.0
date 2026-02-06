@@ -30,13 +30,11 @@ def compute_strike_universe(atm: float, n_itm: int, n_otm: int, index_symbol: st
     if _legacy_build_strikes is None:
         # Fallback simplified generation; mirrors fallback path in unified collectors
         step = 100.0 if index_symbol in ('BANKNIFTY','SENSEX') else 50.0
-        arr: list[float] = []
-        for i in range(1, n_itm + 1):
-            arr.append(float(atm - i*step))
-        arr.append(float(atm))
-        for i in range(1, n_otm + 1):
-            arr.append(float(atm + i*step))
-        strikes = sorted(arr)
+        strikes = sorted(
+            [float(atm - i * step) for i in range(1, n_itm + 1)]
+            + [float(atm)]
+            + [float(atm + i * step) for i in range(1, n_otm + 1)]
+        )
     else:
         strikes = _legacy_build_strikes(atm, n_itm, n_otm, index_symbol, scale=scale)
     return strikes, {"count": len(strikes), "atm": atm, "itm": n_itm, "otm": n_otm, "scale_applied": scale}

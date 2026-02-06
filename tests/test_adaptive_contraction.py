@@ -1,9 +1,6 @@
 import os
 import datetime
 import pytest
-# Force market open before import so any module-level gating paths treat market as open.
-os.environ.setdefault('G6_FORCE_MARKET_OPEN','1')
-from src.collectors.unified_collectors import run_unified_collectors
 
 class _DummyCsv:
     def write_options_data(self, *a, **k):
@@ -34,7 +31,11 @@ class _Prov:
 
 
 def _run_cycle(params):
-    return run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_DummyCsv(), influx_sink=None, compute_greeks=False)
+    # Import lazily so tests can control env before any module-level gating.
+    import importlib
+    import src.collectors.unified_collectors as uc
+    uc = importlib.reload(uc)
+    return uc.run_unified_collectors(index_params=params, providers=_Prov(), csv_sink=_DummyCsv(), influx_sink=None, compute_greeks=False)
 
 
 def test_adaptive_contraction_returns_toward_baseline(monkeypatch):
@@ -50,9 +51,9 @@ def test_adaptive_contraction_returns_toward_baseline(monkeypatch):
     assert res1.get('status') in ('ok','OK')
     assert res1['indices'] and res1['indices'][0]['expiries']
     # Emulate healthy cycles by repeating (strike coverage ~1, no expansions, no low coverage flags)
-    os.environ['G6_CONTRACT_OK_CYCLES'] = '3'
-    os.environ['G6_CONTRACT_COOLDOWN'] = '1'
-    os.environ['G6_CONTRACT_STEP'] = '2'
+    monkeypatch.setenv('G6_CONTRACT_OK_CYCLES', '3')
+    monkeypatch.setenv('G6_CONTRACT_COOLDOWN', '1')
+    monkeypatch.setenv('G6_CONTRACT_STEP', '2')
     for _ in range(4):
         _run_cycle(params)
     # After enough cycles, strikes_itm/otm should have contracted (unless already at baseline)
@@ -75,6 +76,4 @@ def test_adaptive_contraction_returns_toward_baseline(monkeypatch):
         # Edge: contraction may still be pending due to cooldown; allow but log
         pass
 
-    # Cleanup env
-    for k in ['G6_CONTRACT_OK_CYCLES','G6_CONTRACT_COOLDOWN','G6_CONTRACT_STEP']:
-        os.environ.pop(k, None)
+    # monkeypatch fixture handles env cleanup

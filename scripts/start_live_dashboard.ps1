@@ -22,8 +22,8 @@ Register-EngineEvent -SourceIdentifier PowerShell.Exiting -SupportEvent -Action 
 }
 
 try {
-    # Start the unified summary app (legacy summary_view.py removed 2025-10-03)
-    & "C:/Users/ASUS/Documents/G6/qq/g6_reorganized/.venv/Scripts/python.exe" -m scripts.summary.app --refresh 2
+    # Canonical launcher
+    & "$PSScriptRoot\start.ps1" -Mode summary -Refresh 2
 }
 finally {
     Write-Host "`nCleaning up..." -ForegroundColor Yellow

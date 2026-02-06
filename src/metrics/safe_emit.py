@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import functools
 import logging
+import asyncio
+import concurrent.futures
 from collections.abc import Callable
 
 from . import generated as m
@@ -51,7 +53,9 @@ def safe_emit(_func: Callable | None = None, *, emitter: str | None = None) -> C
             ident = _emitter_name(func, emitter)
             try:
                 return func(*args, **kwargs)
-            except Exception as exc:  # noqa: BLE001 broad to ensure containment
+            except BaseException as exc:  # noqa: BLE001 broad to ensure containment
+                if isinstance(exc, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError, concurrent.futures.CancelledError)):
+                    raise
                 # Increment per-failure counter
                 try:
                     m.m_emission_failures_total_labels(ident).inc()  # type: ignore[attr-defined]

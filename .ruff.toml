@@ -31,11 +31,7 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
 
-[lint.per-file-ignores]
-"tests/**" = [
-  # Tests often use reassignments/fixtures/dynamic constructs; keep lenient initially
-]
-
+# Exclude non-source trees from linting/formatting.
 exclude = [
   ".git",
   ".venv",
@@ -47,4 +43,9 @@ exclude = [
   "results",
   "models",
   "node_modules",
+]
+
+[lint.per-file-ignores]
+"tests/**" = [
+  # Tests often use reassignments/fixtures/dynamic constructs; keep lenient initially
 ]

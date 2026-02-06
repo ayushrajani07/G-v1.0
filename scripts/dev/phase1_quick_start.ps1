@@ -26,7 +26,6 @@ if ($Workers -le 0) {
 }
 
 # Set CSVIO fast-path environment toggles
-$env:G6_USE_CSVIO_FACADE = '1'
 $env:G6_CSVIO_BACKEND = 'filesystem'
 $env:G6_CSVIO_FLUSH_MS = [string]$FlushMs
 $env:G6_CSVIO_BATCH = [string]$Batch

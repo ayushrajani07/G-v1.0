@@ -66,3 +66,10 @@ PR Checklist Template (for execution phase):
 - [ ] CHANGELOG updated
 - [ ] Grep confirms zero references
 - [ ] Squash & merge
+
+Update (2026-01-26):
+- [x] Removed files
+- [x] Updated docs
+- [x] Updated tests
+- [x] CHANGELOG updated
+- [x] Grep confirms zero references (non-archived operational paths)

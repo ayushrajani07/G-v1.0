@@ -72,6 +72,7 @@ def publish_cycle_panels(
     success_rate_pct: float | None,
     metrics: Any | None = None,
     csv_sink: Any | None = None,
+    influx_sink: Any | None = None,
     providers: Any | None = None,
 ) -> None:
     """Publish panel data using the high-level metrics processor.

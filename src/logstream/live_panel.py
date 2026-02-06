@@ -147,8 +147,7 @@ def build_live_panel(*, cycle: int, cycle_time: float, success_rate: float | Non
         return f"{BORDER_V} {l} {BORDER_V}"
 
     out = [top]
-    for l in content_lines:
-        out.append(wrap(l))
+    out.extend(wrap(l) for l in content_lines)
     out.append(bottom)
     panel = '\n'.join(out)
     if _needs_ascii_fallback():

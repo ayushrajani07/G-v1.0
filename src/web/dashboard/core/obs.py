@@ -14,7 +14,9 @@ def obs_begin(kind: str) -> float:
     try:
         OBS[kind]["count"] += 1
         OBS[kind]["in_flight"] += 1
-    except Exception:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         pass
     return time.perf_counter()
 
@@ -27,17 +29,23 @@ def obs_end(kind: str, t0: float, *, ok: bool) -> None:
             OBS[kind]["dur_ms_max"] = dt_ms
         if not ok:
             OBS[kind]["errors"] += 1
-    except Exception:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         pass
     finally:
         try:
             OBS[kind]["in_flight"] = max(0, int(OBS[kind]["in_flight"]) - 1)
-        except Exception:
+        except BaseException as e:
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             pass
 
 
 def obs_too_many(kind: str) -> None:
     try:
         OBS[kind]["too_many"] += 1
-    except Exception:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         pass

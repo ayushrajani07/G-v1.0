@@ -26,6 +26,8 @@ import json
 import logging
 import time
 
+from src.utils.index_quote_instruments import get_index_quote_instrument
+
 logger = logging.getLogger(__name__)
 
 try:  # error handler optional during early extraction
@@ -183,14 +185,7 @@ def write_runtime_status(
                 if prim:
                     # Try provider.get_ltp with an instrument tuple pattern the mock supports
                     try:
-                        # Map index to canonical instrument tuple used elsewhere
-                        idx_map: dict[str, tuple[str, str]] = {
-                            'NIFTY': ('NSE', 'NIFTY 50'),
-                            'BANKNIFTY': ('NSE', 'NIFTY BANK'),
-                            'FINNIFTY': ('NSE', 'NIFTY FIN SERVICE'),
-                            'SENSEX': ('BSE', 'SENSEX'),
-                        }
-                        inst = idx_map.get(idx, ('NSE', idx))
+                        inst = get_index_quote_instrument(idx)
                         if hasattr(prim, 'get_ltp'):
                             raw = prim.get_ltp([inst])
                             # When list supplied, mock returns dict keyed by instrument
@@ -219,13 +214,7 @@ def write_runtime_status(
                 try:
                     prim2 = getattr(providers, 'primary_provider', None)
                     if prim2 and hasattr(prim2, 'get_quote'):
-                        idx_map2: dict[str, tuple[str, str]] = {
-                            'NIFTY': ('NSE', 'NIFTY 50'),
-                            'BANKNIFTY': ('NSE', 'NIFTY BANK'),
-                            'FINNIFTY': ('NSE', 'NIFTY FIN SERVICE'),
-                            'SENSEX': ('BSE', 'SENSEX'),
-                        }
-                        inst = idx_map2.get(idx, ('NSE', idx))
+                        inst = get_index_quote_instrument(idx)
                         qd = prim2.get_quote([inst])
                         if isinstance(qd, dict):
                             for v in qd.values():
@@ -522,7 +511,7 @@ def write_runtime_status(
             except (AttributeError, TypeError, RuntimeError):
                 # Handle error handler access failures
                 pass
-    except (OSError, IOError, json.JSONEncodeError, TypeError) as e:  # pragma: no cover
+    except (OSError, IOError, TypeError, ValueError, OverflowError) as e:  # pragma: no cover
         # Handle file I/O, JSON encoding, or type errors
         try:
             get_error_handler().handle_error(

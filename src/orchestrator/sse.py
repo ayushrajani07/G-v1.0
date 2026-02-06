@@ -166,7 +166,7 @@ def serve_events_sse(
                 handler.wfile.flush()
                 last_event_id = event.event_id
                 last_heartbeat = time.time()
-            except (OSError, IOError, json.JSONEncodeError, UnicodeDecodeError, BrokenPipeError, ConnectionResetError):
+            except (OSError, IOError, TypeError, ValueError, OverflowError, UnicodeDecodeError, BrokenPipeError, ConnectionResetError):
                 # Handle write, encoding, or connection failures
                 raise
 
@@ -348,7 +348,7 @@ def serve_adaptive_theme_sse(
             try:
                 handler.wfile.write(f"data: {data}\n\n".encode())
                 handler.wfile.flush()
-            except (OSError, IOError, BrokenPipeError, ConnectionResetError, json.JSONEncodeError):
+            except (OSError, IOError, TypeError, ValueError, OverflowError, BrokenPipeError, ConnectionResetError):
                 # Handle write, encoding, or connection failures
                 break
             last_payload = full_payload

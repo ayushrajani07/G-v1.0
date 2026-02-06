@@ -1,6 +1,0 @@
-- name: g6_collection_cycles
-  type: counter
-  labels: []
-  group: core
-  stability: stable
-  description: cycles (autogen)

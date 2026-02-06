@@ -20,12 +20,42 @@ Durable: avoid removal of keys; add new keys at end to preserve backward compat.
 """
 from __future__ import annotations
 
+import re
 import time
 from typing import Any
 
 from src.utils.color import colorize, severity_color
 
+try:  # optional (avoid import cycles for lightweight use)
+    from src.config.env_config import EnvConfig
+except Exception:  # pragma: no cover
+    EnvConfig = None  # type: ignore
+
 ISO_TS = False  # if True, include human time; keep false for headless ingestion
+
+
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _visible_len(s: str) -> int:
+    return len(_ANSI_RE.sub("", s))
+
+
+def _pad_visible(s: str, width: int, *, align: str = "left") -> str:
+    """Pad a string to a visible width, ignoring ANSI escape sequences."""
+    if width <= 0:
+        return s
+    vis = _visible_len(s)
+    pad = max(0, width - vis)
+    if pad == 0:
+        return s
+    if align == "right":
+        return (" " * pad) + s
+    if align == "center":
+        left = pad // 2
+        right = pad - left
+        return (" " * left) + s + (" " * right)
+    return s + (" " * pad)
 
 def _ts() -> str:
     now = time.time()
@@ -197,38 +227,168 @@ def format_cycle_table(*,
         status_tokens.append('OK')
     status = '+'.join(status_tokens)
 
-    # Prepare raw values (without units for sizing, then append units where useful)
-    row = {
-        'Dur(s)': f"{duration_s:.2f}",
-        'Opts': str(options),
-        'OpM': f"{options_per_min:.1f}" if options_per_min is not None else '-',
-        'API(ms)': f"{api_latency_ms:.1f}" if api_latency_ms is not None else '-',
-        'API%': f"{api_success_pct:.1f}" if api_success_pct is not None else '-',
-        'Coll%': f"{collection_success_pct:.1f}" if collection_success_pct is not None else '-',
-        'CPU%': f"{cpu:.1f}" if cpu is not None else '-',
-        'Mem(MB)': f"{mem_mb:.1f}" if mem_mb is not None else '-',
-        'Idx': str(indices),
-        'Stall': str(stall_flag) if stall_flag is not None else '-',
-        'Status': status,
-    }
+    # In human mode, default to the compact table shown in operator screenshots.
+    # Can be overridden with G6_CYCLE_TABLE_COMPACT=0/1.
+    human_mode = False
+    compact = False
+    try:
+        if EnvConfig is not None:
+            human_mode = EnvConfig.get_bool('G6_HUMAN_MODE', False)
+            compact = EnvConfig.get_bool('G6_CYCLE_TABLE_COMPACT', human_mode)
+    except Exception:
+        compact = False
+
+    # Prepare raw values (without units for sizing)
+    if compact:
+        row = {
+            'Dur(s)': f"{duration_s:.2f}",
+            'Opts': str(options),
+            'Opm': f"{options_per_min:.1f}" if options_per_min is not None else '-',
+            'API(ms)': f"{api_latency_ms:.1f}" if api_latency_ms is not None else '-',
+            'Coll%': f"{collection_success_pct:.1f}" if collection_success_pct is not None else '-',
+            'Status': status,
+        }
+    else:
+        row = {
+            'Dur(s)': f"{duration_s:.2f}",
+            'Opts': str(options),
+            'OpM': f"{options_per_min:.1f}" if options_per_min is not None else '-',
+            'API(ms)': f"{api_latency_ms:.1f}" if api_latency_ms is not None else '-',
+            'API%': f"{api_success_pct:.1f}" if api_success_pct is not None else '-',
+            'Coll%': f"{collection_success_pct:.1f}" if collection_success_pct is not None else '-',
+            'CPU%': f"{cpu:.1f}" if cpu is not None else '-',
+            'Mem(MB)': f"{mem_mb:.1f}" if mem_mb is not None else '-',
+            'Idx': str(indices),
+            'Stall': str(stall_flag) if stall_flag is not None else '-',
+            'Status': status,
+        }
     headers = list(row.keys())
     # Compute widths
     widths = {h: max(len(h), len(row[h])) for h in headers}
-    # Build header line
-    header_line = ' '.join(f"{h:<{widths[h]}}" for h in headers)
-    # Apply color AFTER width calc so we don't distort alignment (raw width measurement used plain text above)
-    colored_values = []
+
+    numeric_cols = {
+        'Dur(s)', 'Opts', 'OpM', 'Opm', 'OpM', 'API(ms)', 'API%', 'Coll%', 'CPU%', 'Mem(MB)', 'Idx', 'Stall'
+    }
+
+    # Build header line (simple; no ANSI)
+    header_cells = []
     for h in headers:
-        val = row[h]
+        align = "right" if h in numeric_cols else "left"
+        header_cells.append(_pad_visible(h, widths[h], align=align))
+    header_line = ' '.join(header_cells)
+
+    # Apply color AFTER width calc so we don't distort alignment.
+    value_cells = []
+    for h in headers:
+        raw_val = row[h]
+        val = raw_val
         if h == 'Status':
-            col, bold = severity_color(val)
-            val = colorize(val, col, bold=bold)
-        colored_values.append(f"{val:<{widths[h]}}")
-    value_line = ' '.join(colored_values)
+            col, bold = severity_color(raw_val)
+            val = colorize(raw_val, col, bold=bold)
+        align = "right" if h in numeric_cols else "left"
+        value_cells.append(_pad_visible(val, widths[h], align=align))
+    value_line = ' '.join(value_cells)
     return header_line, value_line
 
+
+def format_indices_table(indices: list[dict[str, Any]], *, max_rows: int = 8) -> str:
+    """Human-friendly compact per-index table (best-effort fields).
+
+    Intended for terminal readability; safe to call even with partial/missing keys.
+    """
+    rows: list[dict[str, str]] = []
+    for ix in (indices or [])[:max_rows]:
+        try:
+            name = str(ix.get('index') or ix.get('idx') or ix.get('name') or '?')
+            status = str(ix.get('status') or 'unknown')
+            err = str(ix.get('error') or ix.get('err') or 'none')
+            if not err or err.lower() in ('none', 'null', 'nan'):
+                err = 'none'
+
+            # legs/options
+            legs = ix.get('option_count')
+            if not isinstance(legs, (int, float)):
+                try:
+                    legs = sum(int(e.get('options') or 0) for e in (ix.get('expiries') or []) if isinstance(e, dict))
+                except Exception:
+                    legs = 0
+
+            attempts = ix.get('attempts')
+            # Some paths store attempts/failures per expiry; keep best-effort fallbacks.
+            if not isinstance(attempts, (int, float)):
+                attempts = ix.get('attempts_total') or ix.get('attempts_sum') or '-'
+
+            atm = ix.get('atm') or ix.get('atm_strike')
+            strike_cov = ix.get('strike_coverage_avg') or ix.get('strike_coverage')
+
+            # If not present at index-level, compute from expiry list.
+            if not isinstance(strike_cov, (int, float)):
+                try:
+                    vals = []
+                    for e in (ix.get('expiries') or []):
+                        if not isinstance(e, dict):
+                            continue
+                        v = e.get('strike_coverage')
+                        if isinstance(v, (int, float)):
+                            vals.append(float(v))
+                    if vals:
+                        strike_cov = sum(vals) / len(vals)
+                except Exception:
+                    pass
+
+            def _fmt_cov(v: Any) -> str:
+                if isinstance(v, (int, float)):
+                    # Support both 0..1 and 0..100
+                    vv = float(v)
+                    if vv <= 1.0:
+                        vv *= 100.0
+                    return f"{vv:.0f}%" if vv >= 10 else f"{vv:.1f}%"
+                return '-'
+
+            rows.append({
+                'Idx': name,
+                'Legs': str(int(legs) if isinstance(legs, (int, float)) else legs),
+                'Att': str(int(attempts) if isinstance(attempts, (int, float)) else attempts),
+                'CovS': _fmt_cov(strike_cov),
+                'ATM': str(int(atm)) if isinstance(atm, (int, float)) else '-',
+                'Status': status,
+                'Err': err if err else 'none',
+            })
+        except Exception:
+            continue
+
+    if not rows:
+        return "INDICES (none)"
+
+    # Drop Err column if everything is 'none' (common case).
+    any_err = any((r.get('Err') or 'none').lower() not in ('none', '-') for r in rows)
+    headers = ['Idx', 'Legs', 'Att', 'CovS', 'ATM', 'Status'] + (['Err'] if any_err else [])
+    widths = {h: len(h) for h in headers}
+    for r in rows:
+        for h in headers:
+            widths[h] = max(widths[h], len(str(r.get(h, ''))))
+
+    numeric = {'Legs', 'Att', 'CovS', 'ATM'}
+    header_line = ' '.join(_pad_visible(h, widths[h], align=('right' if h in numeric else 'left')) for h in headers)
+
+    out_lines = ["INDICES", header_line]
+    for r in rows:
+        status_raw = r.get('Status', 'unknown')
+        status_colored = status_raw
+        try:
+            col, bold = severity_color(status_raw)
+            status_colored = colorize(status_raw, col, bold=bold)
+        except Exception:
+            pass
+        cells = []
+        for h in headers:
+            v = status_colored if h == 'Status' else str(r.get(h, ''))
+            cells.append(_pad_visible(v, widths[h], align=('right' if h in numeric else 'left')))
+        out_lines.append(' '.join(cells))
+    return "\n".join(out_lines)
+
 __all__ = [
-    'format_cycle', 'format_index', 'format_start', 'format_cycle_pretty', 'format_cycle_table', 'format_cycle_readable'
+    'format_cycle', 'format_index', 'format_start', 'format_cycle_pretty', 'format_cycle_table', 'format_cycle_readable', 'format_indices_table'
 ]
 
 def format_cycle_readable(*,

@@ -53,9 +53,7 @@ def validate_runtime_status(obj: dict[str, Any], *, strict: bool = False) -> lis
     if not isinstance(obj, dict):
         return ["Root must be object"]
     # Required fields
-    for k in REQUIRED_TOP:
-        if k not in obj:
-            errors.append(f"Missing required field: {k}")
+    errors.extend([f"Missing required field: {k}" for k in REQUIRED_TOP if k not in obj])
     # Basic types
     if isinstance(obj.get("timestamp"), str):
         if not obj["timestamp"].endswith("Z"):
@@ -86,9 +84,9 @@ def validate_runtime_status(obj: dict[str, Any], *, strict: bool = False) -> lis
                 errors.append(f"indices_info.{name} must be object")
                 continue
             # required subfields
-            for req in ("ltp", "options"):
-                if req not in sub:
-                    errors.append(f"indices_info.{name} missing {req}")
+            errors.extend(
+                [f"indices_info.{name} missing {req}" for req in ("ltp", "options") if req not in sub]
+            )
             # ltp numeric/null
             if "ltp" in sub and sub["ltp"] is not None and not _is_number(sub["ltp"]):
                 errors.append(f"indices_info.{name}.ltp must be number or null")
@@ -108,9 +106,7 @@ def validate_runtime_status(obj: dict[str, Any], *, strict: bool = False) -> lis
             errors.append(f"{key} must be <= {hi}")
     if strict:
         known = set(_known_top_level_keys())
-        for k in obj.keys():
-            if k not in known:
-                errors.append(f"Unknown top-level field: {k}")
+        errors.extend([f"Unknown top-level field: {k}" for k in obj.keys() if k not in known])
     return errors
 
 __all__ = ["validate_runtime_status"]

@@ -19,7 +19,8 @@ except Exception as e:
     raise
 
 HOTSPOTS: list[str] = [
-    'src/web/dashboard/routes/path_forecast.py',
+    'src/web/dashboard/routes/path_forecast/_router.py',
+    'src/web/dashboard/routes/path_forecast/_json_handler.py',
     'src/storage/csv_sink.py',
     'src/web/dashboard/routes/ml.py',
     'src/collectors/unified_collectors.py',

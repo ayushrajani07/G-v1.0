@@ -81,37 +81,35 @@ except Exception as e:
 **Goal:** Remove deprecated orchestration loop
 
 **Current State:**
-- `unified_main.collection_loop` - Deprecated since 2025-09-26
-- Still gated behind `G6_ENABLE_LEGACY_LOOP=1`
-- Grace period expired (2+ months)
+- `unified_main` legacy entrypoint has already been removed (module now raises at import).
+- Legacy-loop gating flags are no longer supported.
+- Remaining work is documentation convergence and ensuring no automation references the removed entrypoint.
 
 **Action Items:**
-- [ ] Day 1: Run tests with legacy loop disabled to confirm stability
-- [ ] Day 2: Remove `unified_main.collection_loop` function
-- [ ] Day 2: Remove `G6_ENABLE_LEGACY_LOOP` flag handling
-- [ ] Day 3: Remove `G6_SUPPRESS_LEGACY_LOOP_WARN` flag
-- [ ] Day 3: Update all documentation references
-- [ ] Day 4: Remove related tests
-- [ ] Day 5: Final integration test
+- [x] Legacy loop removed (module tombstoned; import raises)
+- [x] Legacy gating flags removed from runtime behavior
+- [ ] Update remaining documentation references (historical notes should clearly say REMOVED)
+- [ ] Confirm no external automation / scripts still reference `unified_main` or legacy flags
 
 **Files to Modify:**
 ```
 src/unified_main.py
-src/orchestrator/loop.py
-tests/test_legacy_loop_gating.py
-tests/test_deprecation_legacy_loop.py
-docs/env_dict.md
+DEPRECATIONS.md
+MIGRATION.md
 README.md
 ```
 
 **Validation:**
 ```bash
-# Ensure no references remain
-grep -r "G6_ENABLE_LEGACY_LOOP" .
-grep -r "collection_loop" src --include="*.py"
+# Ensure no runtime references remain (docs may retain historical mentions)
+grep -r "LEGACY_LOOP" src --include="*.py"
+grep -r "unified_main" src --include="*.py"
+
+# Tests that enforce removal should remain green
+pytest -q -k "legacy_loop"
 ```
 
-**Deliverable:** PR removing legacy loop with passing tests
+**Deliverable:** Doc convergence PR + legacy-loop removal tests green
 
 ---
 
@@ -121,28 +119,26 @@ grep -r "collection_loop" src --include="*.py"
 
 **Current State:**
 - Multiple writers: csv_sink.py, csv_writer.py, csv_batcher.py
-- Facade migration incomplete (`G6_USE_CSVIO_FACADE=0` opt-out)
-- Parallel implementations create data integrity risk
+- CSV write paths are now centralized via `src.storage.csvio.api` (CSVIO) through `CsvWriter`.
+- Remaining work is to keep documentation and scripts aligned, and to expand targeted tests/benchmarks.
 
 **Action Items:**
-- [ ] Week 1: Audit all CSV write call sites
-- [ ] Week 1: Verify facade covers all use cases
-- [ ] Week 2: Migrate remaining direct write calls to facade
-- [ ] Week 2: Remove `G6_USE_CSVIO_FACADE` flag
-- [ ] Week 2: Delete legacy write implementations
-- [ ] Week 3: Comprehensive integration tests
-- [ ] Week 3: Performance benchmark (ensure no regression)
+- [x] Audit core storage writers (sink/batcher/aggregator)
+- [x] Centralize writes via CSVIO and remove legacy inline writes
+- [x] Retire CSVIO opt-out toggle (always-on CSVIO; backend via `G6_CSVIO_BACKEND`)
+- [x] Add/extend targeted integration tests for high-volume and Windows locking edge cases
+- [x] Performance benchmark (ensure no regression)
 
 **Migration Checklist:**
 ```python
-# Before:
-from src.storage.csv_writer import CsvWriter
-writer = CsvWriter()
-writer.write_direct(path, data)
+# Preferred: use CSVIO directly
+from src.storage.csvio import api as csvio_api
+csvio_api.append_one(path, row, header)
 
-# After:
-from src.storage.csvio.api import write_csv_atomic
-write_csv_atomic(path, data, schema_version="v2")
+# Or via the stable wrapper used by CsvSink
+from src.storage.csv_writer import CsvWriter
+writer = CsvWriter(base_dir)
+writer.append_many_rows(path, rows, header)
 ```
 
 **Deliverable:** Single CSV write path with comprehensive tests
@@ -161,13 +157,13 @@ write_csv_atomic(path, data, schema_version="v2")
 - 8 different test categories with env variable gates
 
 **Action Items:**
-- [ ] Week 4: Audit all `@pytest.mark.serial` tests
+- [x] Week 4: Audit all `@pytest.mark.serial` tests (active tests no longer use `serial`; legacy suites moved under `.archived/`)
 - [ ] Week 4-5: Refactor tests to remove global state
-- [ ] Week 5: Fix metrics registry isolation (proper fixtures)
+- [x] Week 5: Fix metrics registry isolation (reset semantics via `src.metrics.registry.get_registry(reset=True)` + unit test)
 - [ ] Week 5: Remove `metrics_no_reset` marker
-- [ ] Week 6: Simplify to 3 markers: unit, integration, slow
+- [x] Week 6: Simplify to 3 markers: unit, integration, slow (converted legacy `optional` to `slow`; keep unmarked tests as unit)
 - [ ] Week 6: Remove env variable test gates
-- [ ] Week 7: Update CI configuration
+- [x] Week 7: Update CI configuration (doc-governance workflows enable slow tests explicitly)
 
 **Test Isolation Pattern:**
 ```python
@@ -198,13 +194,13 @@ def test_metrics(metrics_registry):
 **Goal:** Single configuration system with clear policies
 
 **Action Items:**
-- [ ] Week 4: Document all `G6_*` variables with categories
-- [ ] Week 4: Mark which are startup-only vs. runtime-reload
-- [ ] Week 5: Create single `Config` class
-- [ ] Week 5: Migrate all env parsing to Config.__init__
+- [x] Week 4: Document all `G6_*` variables with categories (generated doc: `docs/ENV_VARS_CLASSIFICATION.md`)
+- [x] Week 4: Mark which are startup-only vs. runtime-reload (documented policy: EnvConfig caching => startup-only by default)
+- [x] Week 5: Create single `Config` class (introduced `src.config.g6_config.G6Config`)
+- [x] Week 5: Migrate all env parsing to Config.__init__ (env parsing centralized in `G6Config.__init__`; `runtime_config` delegates)
 - [ ] Week 5: Remove dynamic reload mechanisms
 - [ ] Week 6: Update all call sites
-- [ ] Week 6: Add startup validation (fail on unknown vars)
+- [x] Week 6: Add startup validation (fail on unknown vars) (implemented via `src.config.env_unknown.validate_unknown_env_vars()` in `src.orchestrator.bootstrap.bootstrap_runtime`)
 
 **Config Structure:**
 ```python
@@ -339,13 +335,13 @@ README.md                   # Quick start only (max 300 lines)
 **Goal:** Async I/O and proper backpressure
 
 **Action Items:**
-- [ ] Week 8: Profile current CSV write latency
-- [ ] Week 9: Implement async CSV writer with queue
-- [ ] Week 9: Add write latency metrics
-- [ ] Week 10: Implement hard memory limits
-- [ ] Week 10: Add memory backpressure metrics
-- [ ] Week 11: Integration testing under load
-- [ ] Week 11: Performance benchmark comparison
+- [x] Week 8: Profile current CSV write latency
+- [x] Week 9: Implement async CSV writer with queue
+- [x] Week 9: Add write latency metrics
+- [x] Week 10: Implement hard memory limits
+- [x] Week 10: Add memory backpressure metrics
+- [x] Week 11: Integration testing under load
+- [x] Week 11: Performance benchmark comparison
 
 **Async Writer Pattern:**
 ```python
@@ -504,7 +500,7 @@ echo "Bare exceptions: $(grep -r 'except Exception:' src --include="*.py" | wc -
 echo "Serial tests: $(grep -r '@pytest.mark.serial' tests --include="*.py" | wc -l)"
 echo "Root markdown files: $(ls *.md | wc -l)"
 echo "Active deprecations: $(grep 'Active Deprecations' -A 100 DEPRECATIONS.md | grep '|' | wc -l)"
-echo "Legacy loops: $(grep -r 'G6_ENABLE_LEGACY_LOOP' . --include="*.py" | wc -l)"
+echo "Legacy loops: $(grep -r 'LEGACY_LOOP' . --include="*.py" | wc -l)"
 ```
 
 ---

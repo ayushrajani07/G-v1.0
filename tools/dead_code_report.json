@@ -1,9 +1,17 @@
 {
-  "total_findings": 0,
+  "total_findings": 698,
   "new_items": [],
   "summary": {
-    "total": 0,
-    "by_type": {}
+    "total": 698,
+    "by_type": {
+      "attribute": 55,
+      "class": 23,
+      "function": 154,
+      "import": 5,
+      "method": 170,
+      "property": 5,
+      "variable": 286
+    }
   },
-  "allowlist_size": 0
+  "allowlist_size": 698
 }

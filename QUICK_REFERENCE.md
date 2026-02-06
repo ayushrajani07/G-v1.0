@@ -48,7 +48,7 @@ https://github.com/YOUR_USERNAME/G-v1.0
 ```
 
 ## Need Help?
-- 📖 Read: `GITHUB_SETUP.md`
+- 📖 Read: [docs/development/GITHUB_SETUP.md](docs/development/GITHUB_SETUP.md)
 - ✅ Check: `PRE_PUSH_CHECKLIST.md`
 - 💾 Backup: `.env.backup`
 

@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.web.dashboard.app import app
-from src.web.dashboard.routes import path_forecast as path_mod
+import src.web.dashboard.routes.path_forecast._router as path_mod
 
 
 @pytest.fixture

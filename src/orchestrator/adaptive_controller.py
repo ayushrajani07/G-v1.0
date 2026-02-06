@@ -147,7 +147,7 @@ def evaluate_adaptive_controller(ctx, elapsed: float, interval: float) -> None: 
     cardinality_active = False
     try:
         cardinality_active = bool(ctx.flag('cardinality_guard_active'))  # type: ignore[attr-defined]
-    except Exception:
+    except (AttributeError, TypeError, ValueError, KeyError):
         cardinality_active = False
 
     # Decision logic

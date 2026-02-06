@@ -189,7 +189,7 @@ find src/storage -name "*.py" -exec grep -l "write.*csv\|CSV" {} \;
 ```bash
 # Day 1-2: Remove Legacy Code
 - Remove old csv_writer implementations
-- Remove G6_USE_CSVIO_FACADE flag checks
+- Remove CSVIO feature-flag checks (CSVIO is always-on)
 - Update imports throughout codebase
 - Consolidate test files
 
@@ -222,7 +222,7 @@ find src/storage -name "*.py" -exec grep -l "write.*csv\|CSV" {} \;
 
 #### Rollback Plan
 - Keep backups for 30 days
-- Feature flag: `G6_USE_CSVIO_FACADE=0` (temporary)
+- CSVIO is always-on; rollback is via disabling writes and restoring backups
 - Restore script: `scripts/restore_csv_backup.sh`
 - Data validation script available
 

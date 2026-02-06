@@ -26,6 +26,8 @@ import os
 import socket
 import sys
 
+from src.config.env_config import EnvConfig
+
 # Optional imports
 try:
     from src.tools import token_manager as tm  # local import; optional deps inside
@@ -60,7 +62,7 @@ def basic_system_check(ctx) -> bool:
         with open(test_file, 'w') as f:
             f.write('ok')
         os.remove(test_file)
-    except Exception as e:
+    except (OSError, IOError, PermissionError, ValueError, TypeError) as e:
         ok = False
         logger.error("[startup] Data directory not writable (%s): %s", data_dir, e)
     # Essential env (optional advisory list)
@@ -93,7 +95,7 @@ def metrics_and_storage_health(ctx) -> None:
                         host,
                         port,
                     )
-    except Exception:
+    except (OSError, IOError, ValueError, TypeError, AttributeError, KeyError):
         logger.debug("[startup] metrics reachability probe failed", exc_info=True)
     # Influx configuration sanity (do NOT attempt auth here)
     try:
@@ -105,7 +107,7 @@ def metrics_and_storage_health(ctx) -> None:
                 logger.warning("[startup] Influx enabled but missing fields: %s", ','.join(missing))
             else:
                 logger.info("[startup] Influx config present (bucket=%s)", influx_cfg.get('bucket'))
-    except Exception:
+    except (AttributeError, TypeError, KeyError, ValueError):
         logger.debug("[startup] influx config probe failed", exc_info=True)
 
 # ---------------------------------------------------------------------------
@@ -132,7 +134,9 @@ def kite_auth_validation(ctx) -> None:
     # Load .env if possible (logs internally)
     try:
         tm.load_env_vars()
-    except Exception:  # pragma: no cover - defensive
+    except BaseException as e:  # pragma: no cover - defensive
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         logger.debug("[startup] .env load attempt failed", exc_info=True)
     api_key = os.getenv("KITE_API_KEY")
     api_secret = os.getenv("KITE_API_SECRET")
@@ -148,40 +152,60 @@ def kite_auth_validation(ctx) -> None:
                 return
             else:
                 logger.warning("[startup] Existing Kite access token invalid; attempting automated refresh")
-        except Exception:  # pragma: no cover
+        except BaseException as e:  # pragma: no cover
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             logger.debug("[startup] Unexpected error during token validation; proceeding to refresh", exc_info=True)
     else:
         logger.info("[startup] No Kite access token present; attempting automated acquisition")
     # Attempt automated (browser) acquisition WITHOUT interactive manual prompts to avoid blocking
     try:
         acquired = tm.acquire_or_refresh_token(auto_open_browser=True, interactive=False, validate_after=True)
-    except Exception as e:  # noqa: BLE001
+    except BaseException as e:  # noqa: BLE001
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         logger.debug("[startup] acquire_or_refresh_token raised; treating as failure: %s", e, exc_info=True)
         acquired = False
     if acquired:
         logger.info("[startup] Kite access token acquired/refreshed successfully")
-        # Ensure the already-constructed provider instance (if any) picks up the new token.
+        # Important: the orchestrator may have already constructed a KiteProvider
+        # and underlying KiteConnect client *before* this refresh.
+        # Ensure the refreshed token is propagated into the centralized ProviderConfig
+        # snapshot and re-bound onto any existing provider instance.
         try:
-            from src.provider.config import get_provider_config  # type: ignore
-            cfg = get_provider_config(refresh=True)
-        except Exception:
-            cfg = None
-        try:
-            from src.broker.kite.auth import update_credentials_auth  # type: ignore
-        except Exception:
-            update_credentials_auth = None  # type: ignore
-        try:
-            providers = getattr(ctx, 'providers', None)
-            primary = getattr(providers, 'primary_provider', None) if providers is not None else None
-            if cfg is not None and primary is not None and update_credentials_auth is not None:
-                update_credentials_auth(
-                    primary,
-                    api_key=getattr(cfg, 'api_key', None),
-                    access_token=getattr(cfg, 'access_token', None),
-                    rebuild=True,
-                )
-        except Exception:
-            logger.debug("[startup] provider credential refresh after token acquisition failed", exc_info=True)
+            api_key2 = os.getenv("KITE_API_KEY")
+            access_token2 = os.getenv("KITE_ACCESS_TOKEN")
+            if api_key2 and access_token2:
+                try:
+                    from src.provider.config import update_provider_credentials  # local import
+                except (ImportError, AttributeError):  # pragma: no cover - optional in minimal envs
+                    update_provider_credentials = None  # type: ignore
+
+                if update_provider_credentials is not None:
+                    try:
+                        update_provider_credentials(api_key=api_key2, access_token=access_token2)
+                    except (AttributeError, TypeError, ValueError, RuntimeError):
+                        logger.debug("[startup] ProviderConfig update failed", exc_info=True)
+
+                # Rebind onto any existing provider client.
+                try:
+                    providers = getattr(ctx, 'providers', None)
+                    primary = getattr(providers, 'primary_provider', None) if providers else None
+                    if primary is not None:
+                        if hasattr(primary, 'update_credentials'):
+                            primary.update_credentials(api_key=api_key2, access_token=access_token2, rebuild=True)
+                        else:
+                            kc = getattr(primary, 'kite', None)
+                            if kc is not None and hasattr(kc, 'set_access_token'):
+                                kc.set_access_token(access_token2)
+                except BaseException as e:
+                    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                        raise
+                    logger.debug("[startup] Provider client rebind failed", exc_info=True)
+        except BaseException as e:  # pragma: no cover
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
+            logger.debug("[startup] Post-refresh token propagation failed", exc_info=True)
     else:
         logger.warning("[startup] Automated Kite token acquisition failed or skipped (headless/manual needed)")
         logger.warning("[startup] Run: python -m src.tools.token_manager  (for guided refresh flows)")
@@ -220,12 +244,12 @@ def resolve_expiries(ctx) -> dict[str, dict[str,str]]:
         logger.warning("[startup] ctx.providers missing; cannot perform provider-based expiry resolution")
         return mapping
 
-    legacy_mode = os.getenv('G6_STARTUP_LEGACY_PLACEHOLDERS','').lower() in {'1','true','yes','on'}
-    if os.getenv('G6_EXPIRY_RULE_RESOLUTION'):
+    legacy_mode = EnvConfig.get_bool('G6_STARTUP_LEGACY_PLACEHOLDERS', False)
+    if EnvConfig.is_set('G6_EXPIRY_RULE_RESOLUTION'):
         logger.info("[startup] G6_EXPIRY_RULE_RESOLUTION env is deprecated; provider-based resolution always used")
 
     RULE_TAGS = {'this_week','next_week','this_month','next_month'}
-    trace = os.getenv('G6_STARTUP_EXPIRY_TRACE','').lower() in {'1','true','yes','on'}
+    trace = EnvConfig.get_bool('G6_STARTUP_EXPIRY_TRACE', False)
 
     # Optional: legacy placeholder function (only if explicitly requested)
     def _legacy_placeholder(tag: str):  # pragma: no cover - transitional
@@ -254,7 +278,9 @@ def resolve_expiries(ctx) -> dict[str, dict[str,str]]:
                         len(raw_list),
                         raw_list[:8],
                     )
-            except Exception:  # pragma: no cover - diagnostic only
+            except BaseException as e:  # pragma: no cover - diagnostic only
+                if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                    raise
                 logger.debug("[startup] raw expiry trace failed for %s", index, exc_info=True)
         for tag in tags or []:
             iso: str
@@ -269,7 +295,7 @@ def resolve_expiries(ctx) -> dict[str, dict[str,str]]:
                     try:
                         row[tag] = _legacy_placeholder(tag)
                         continue
-                    except Exception:
+                    except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
                         row[tag] = 'UNKNOWN'
                         continue
                 try:
@@ -280,14 +306,16 @@ def resolve_expiries(ctx) -> dict[str, dict[str,str]]:
                     else:  # unexpected type; attempt string coercion
                         iso = str(resolved)
                     row[tag] = iso
-                except Exception as e:  # noqa: BLE001
+                except BaseException as e:  # noqa: BLE001
+                    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                        raise
                     logger.warning("[startup] expiry resolution failed index=%s tag=%s err=%s", index, tag, e)
                     # Fallback: attempt legacy placeholder if available, else UNKNOWN
                     if not legacy_mode:
                         try:
                             row[tag] = _legacy_placeholder(tag)
                             continue
-                        except Exception:
+                        except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
                             pass
                     row[tag] = 'UNKNOWN'
                 continue
@@ -324,7 +352,7 @@ def market_hours_message(ctx) -> None:
     if is_market_open is None or seconds_until_market_open is None:
         logger.debug("[startup] market hours helpers unavailable")
         return
-    force_open = os.getenv('G6_FORCE_MARKET_OPEN') in ('1','true','yes','on')
+    force_open = EnvConfig.get_bool('G6_FORCE_MARKET_OPEN', False)
     if force_open:
         logger.info("[startup] Forcing inside market hours (G6_FORCE_MARKET_OPEN=1)")
         return
@@ -338,7 +366,9 @@ def market_hours_message(ctx) -> None:
                 logger.info("[startup] Market closed; next open in ~%d min (%d sec)", mins, int(secs))
             else:
                 logger.info("[startup] Market closed; next open time unknown")
-    except Exception:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         logger.debug("[startup] market hours probe failed", exc_info=True)
 
 # ---------------------------------------------------------------------------

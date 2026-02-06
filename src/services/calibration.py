@@ -29,8 +29,7 @@ def load_calibration(index: str) -> dict:
             with path.open("r", encoding="utf-8") as f:
                 data = json.load(f)
             if isinstance(data, dict):
-                for k,v in data.items():
-                    out[k] = v
+                out.update(data)
     except Exception:
         pass
     # basic validation

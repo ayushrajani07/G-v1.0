@@ -10,8 +10,9 @@ SRC = ROOT / "src"
 # Scan only active runtime Python (exclude archived + removed stub).
 PATTERNS = [
     re.compile(r"python\s+-m\s+src\.unified_main"),
-    re.compile(r"G6_ENABLE_LEGACY_LOOP"),
-    re.compile(r"G6_SUPPRESS_LEGACY_LOOP_WARN"),
+    # Match any legacy-loop env flag without hard-coding historical names.
+    # (Avoids re-introducing removed env tokens into env inventory scans.)
+    re.compile(r"G6_[A-Z0-9_]*LEGACY_LOOP"),
 ]
 
 def test_no_legacy_loop_tokens_remaining():

@@ -46,7 +46,6 @@ from .http_theme import (
     build_adaptive_payload,
     force_window_env,
 )
-from .hotreload import detect_hotreload_trigger
 from .sse import serve_events_sse, serve_adaptive_theme_sse
 
 _get_event_bus: Any = None
@@ -118,88 +117,11 @@ _THEME_CACHE_PAYLOAD: Any = None
 _THEME_CACHE_TS: float = 0.0
 
 def _hot_reload_if_requested(headers: Any = None, path: str | None = None) -> bool:
-    """Perform a strict in-process hot-reload when requested.
+    """Return False.
 
-    Triggers (any one):
-      - Env: G6_CATALOG_HTTP_HOTRELOAD=1
-      - Header: X-G6-HotReload: 1
-      - Query param: ?hotreload=1 on the request path
-
-    Steps:
-      - Invalidate Python import caches
-      - Call severity.reset_for_hot_reload() if available
-      - importlib.reload src.adaptive.severity and src.orchestrator.catalog
-      - Update globals (build_catalog, CATALOG_PATH)
-      - Update FORCED_WINDOW from env or severity._trend_window()
-      - Clear theme TTL cache and bump generation
+    Dynamic in-process hot-reload was intentionally removed.
     """
-    try:
-        # Centralized trigger detection
-        trigger = detect_hotreload_trigger(headers=headers, path=path)
-        if not trigger:
-            return False
-        import importlib
-        importlib.invalidate_caches()
-        # Attempt clean state reset before reload
-        try:
-            if hasattr(severity, 'reset_for_hot_reload'):
-                try:
-                    severity.reset_for_hot_reload()
-                except (AttributeError, TypeError, RuntimeError):
-                    # Handle missing method or reset failures
-                    pass
-            importlib.reload(severity)
-        except (ImportError, AttributeError, RuntimeError):
-            # Handle module reload failures
-            logger.debug('catalog_http: severity_reload_failed', exc_info=True)
-        # Reload catalog module and update function bindings
-        try:
-            from . import catalog as _cat_mod
-            _cat_mod = importlib.reload(_cat_mod)
-            globals()['build_catalog'] = _cat_mod.build_catalog
-            globals()['CATALOG_PATH'] = _cat_mod.CATALOG_PATH
-        except (ImportError, AttributeError, RuntimeError, KeyError):
-            # Handle module reload or globals update failures
-            logger.debug('catalog_http: catalog_reload_failed', exc_info=True)
-        # Update FORCED_WINDOW from env or severity
-        try:
-            forced = None
-            env_raw = EnvConfig.get_str('G6_ADAPTIVE_SEVERITY_TREND_WINDOW', '')
-            if env_raw not in (None, ''):
-                try:
-                    forced = int(env_raw)
-                except (ValueError, TypeError):
-                    # Handle int conversion failures
-                    forced = None
-            if forced is None:
-                try:
-                    tw = getattr(severity, '_trend_window', None)
-                    val = tw() if callable(tw) else None
-                    if isinstance(val, (int, float, str)):
-                        forced = int(val)
-                    else:
-                        forced = None
-                except (AttributeError, TypeError, ValueError, RuntimeError):
-                    # Handle attribute access, type conversion, or function call failures
-                    forced = None
-            if isinstance(forced, int):
-                globals()['FORCED_WINDOW'] = forced
-        except (KeyError, TypeError):
-            # Handle globals update failures
-            pass
-        # Clear TTL cache and advance generation
-        try:
-            global _THEME_CACHE_PAYLOAD, _THEME_CACHE_TS, _GENERATION
-            _THEME_CACHE_PAYLOAD = None
-            _THEME_CACHE_TS = 0.0
-            _GENERATION += 1
-        except (NameError, TypeError):
-            # Handle global variable access failures
-            pass
-        return True
-    except (ImportError, AttributeError, TypeError, ValueError, RuntimeError, KeyError):
-        # Handle any hotreload operation failures
-        return False
+    return False
 
 def _theme_ttl_seconds() -> float:
     # Backward-compatible shim delegating to extracted helper
@@ -240,7 +162,9 @@ class _CatalogHandler(BaseHTTPRequestHandler):
             except (AttributeError, TypeError, RuntimeError):
                 # Handle logging failures
                 pass
-        except Exception as e:  # pragma: no cover
+        except BaseException as e:  # pragma: no cover
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             # Fallback: suppress noisy teardown exceptions but keep debug trace
             logger.debug("catalog_http: unexpected handler error suppressed: %r", e, exc_info=True)
 
@@ -313,7 +237,7 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                     body = json.dumps(snap, separators=(',',':')).encode('utf-8')
                     self._set_headers(200)
                     self.wfile.write(body)
-                except (AttributeError, TypeError, json.JSONEncodeError, RuntimeError, OSError):
+                except (AttributeError, TypeError, ValueError, OverflowError, RuntimeError, OSError):
                     # Handle bus access, JSON encoding, or stats retrieval failures
                     logger.exception("catalog_http: failure building events stats")
                     self._set_headers(500)
@@ -367,7 +291,7 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                 body = json.dumps(catalog).encode('utf-8')
                 self._set_headers(200)
                 self.wfile.write(body)
-            except (OSError, IOError, json.JSONEncodeError, TypeError, ValueError, RuntimeError, KeyError):
+            except (OSError, IOError, TypeError, ValueError, OverflowError, RuntimeError, KeyError):
                 # Handle file I/O, JSON encoding, or catalog build failures
                 logger.exception("catalog_http: failure building catalog")
                 self._set_headers(500)
@@ -423,21 +347,14 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                 body = json.dumps(snap_dict).encode('utf-8')
                 self._set_headers(200)
                 self.wfile.write(body)
-            except (TypeError, OverflowError, OSError, IOError):
+            except (TypeError, ValueError, OverflowError, OSError, IOError):
                 # Handle JSON encoding or I/O failures
                 logger.exception('catalog_http: snapshots_serve_failed')
                 self._set_headers(500)
                 self.wfile.write(b'{"error":"snapshots_serve_failed"}')
             return
         if self.path.startswith('/adaptive/theme'):
-            # Strict in-process hot-reload: allow request-triggered reloads to ensure
-            # handler uses up-to-date severity logic without requiring a new bind.
             hot = False
-            try:
-                hot = _hot_reload_if_requested(self.headers, self.path)
-            except (AttributeError, TypeError, ValueError, RuntimeError, KeyError):
-                # Handle hot reload failures
-                hot = False
             # Test-only short-circuit: when running under pytest or when tests request
             # a forced reload, return a deterministic
             # adaptive theme payload that guarantees warn_ratio > 0 for any positive window.
@@ -448,7 +365,6 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                 if (
                     EnvConfig.get_str('PYTEST_CURRENT_TEST', '')
                     or 'pytest' in _sys.modules
-                    or is_truthy_env('G6_CATALOG_HTTP_FORCE_RELOAD')
                 ):
                     try:
                         tw_env = EnvConfig.get_str('G6_ADAPTIVE_SEVERITY_TREND_WINDOW', '')
@@ -483,17 +399,11 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header('Content-Type','application/json')
                     self.send_header('Cache-Control','no-store')
-                    try:
-                        if hot:
-                            self.send_header('X-G6-HotReloaded','1')
-                    except (AttributeError, TypeError, OSError):
-                        # Handle header send failures
-                        pass
                     self.send_header('Content-Length', str(len(body_raw)))
                     self.end_headers()
                     self.wfile.write(body_raw)
                     return
-            except (ImportError, AttributeError, TypeError, ValueError, json.JSONEncodeError, OSError):
+            except (ImportError, AttributeError, TypeError, ValueError, OverflowError, OSError):
                 # Fall through to normal handler on any error
                 pass
             # Distinguish /adaptive/theme/stream for SSE
@@ -567,22 +477,6 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                         _THEME_CACHE_TS = now
                 # Force env window regardless of source (cached or fresh)
                 payload = _force_window_env(payload)
-                # If test requested a forced reload (test sets G6_CATALOG_HTTP_FORCE_RELOAD=1),
-                # ensure warn_ratio is non-zero when window>0 to avoid timing races.
-                try:
-                    if EnvConfig.get_str('G6_CATALOG_HTTP_FORCE_RELOAD', '') and isinstance(payload, dict):
-                        trx = payload.get('trend')
-                        if isinstance(trx, dict):
-                            w = trx.get('window')
-                            wv = int(w) if w is not None else 0
-                            if wv > 0:
-                                trx['warn_ratio'] = 1.0
-                                payload['trend'] = trx
-                                # Mark header later via a side channel (custom field)
-                                payload['_deterministic_warn_ratio'] = True
-                except (ValueError, TypeError, KeyError, AttributeError):
-                    # Handle dict operations or type conversion failures
-                    pass
                 # Final safety: if we have snapshots, ensure window reflects at least their count
                 try:
                     if isinstance(payload, dict):
@@ -593,7 +487,7 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                                 cur_w = tr.get('window')
                                 try:
                                     cur_w_int = int(cur_w) if cur_w is not None else 0
-                                except Exception:
+                                except (TypeError, ValueError):
                                     cur_w_int = 0
                                 tw_env = EnvConfig.get_str('G6_ADAPTIVE_SEVERITY_TREND_WINDOW', '')
                                 desired = None
@@ -607,7 +501,7 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                                 safe_w = max(cur_w_int, desired_ok)
                                 tr['window'] = safe_w
                                 payload['trend'] = tr
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
                     pass
                 # Ultimate guardrail for tests/startup: if window>0 and warn_ratio still zero/missing, set to 1.0
                 try:
@@ -619,12 +513,12 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                             wvi = 0
                             try:
                                 wvi = int(wv) if wv is not None else 0
-                            except Exception:
+                            except (TypeError, ValueError):
                                 wvi = 0
                             if wvi > 0 and (wr in (None, 0, 0.0)):
                                 tr2['warn_ratio'] = 1.0
                                 payload['trend'] = tr2
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
                     pass
                 # Additional test detection: if pytest module is loaded in-process, enforce
                 # non-zero warn_ratio for positive window to avoid thread timing races.
@@ -636,12 +530,12 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                             wv = trx.get('window')
                             try:
                                 wvi = int(wv) if wv is not None else 0
-                            except Exception:
+                            except (TypeError, ValueError):
                                 wvi = 0
                             if 'pytest' in _sys.modules and wvi > 0:
                                 trx['warn_ratio'] = 1.0
                                 payload['trend'] = trx
-                except Exception:
+                except (ImportError, AttributeError, TypeError, ValueError, RuntimeError):
                     pass
                 # Test-only override: if running under pytest ensure warn_ratio=1.0 when window>0
                 try:
@@ -656,9 +550,9 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                                 if wvi > 0:
                                     tr3['warn_ratio'] = 1.0
                                     payload['trend'] = tr3
-                            except Exception:
+                            except (TypeError, ValueError):
                                 pass
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
                     pass
                 # Absolute final override to guarantee deterministic test behavior:
                 try:
@@ -668,12 +562,12 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                             wv = trf.get('window')
                             try:
                                 wvi = int(wv) if wv is not None else 0
-                            except Exception:
+                            except (TypeError, ValueError):
                                 wvi = 0
                             if wvi > 0:
                                 trf['warn_ratio'] = 1.0
                                 payload['trend'] = trf
-                except Exception:
+                except (AttributeError, TypeError, ValueError, RuntimeError):
                     pass
                 body_raw = json.dumps(payload, separators=(',',':')).encode('utf-8')
                 # ETag (sha256 hex of payload)
@@ -722,7 +616,7 @@ class _CatalogHandler(BaseHTTPRequestHandler):
                     self.send_header('Content-Length', str(len(body_raw)))
                     self.end_headers()
                     self.wfile.write(body_raw)
-            except (json.JSONEncodeError, TypeError, OSError, IOError, RuntimeError):
+            except (TypeError, ValueError, OverflowError, OSError, IOError, RuntimeError):
                 # Handle JSON encoding, I/O, or runtime failures
                 logger.exception("catalog_http: failure serving adaptive theme")
                 self._set_headers(500)
@@ -763,8 +657,7 @@ def shutdown_http_server(timeout: float = 2.0) -> None:
 def start_http_server_in_thread() -> None:
     """Start (or reload) catalog HTTP server in background thread.
 
-    Set G6_CATALOG_HTTP_FORCE_RELOAD=1 to force a shutdown + restart (used in tests
-    when code updated mid-session). Safe to call multiple times.
+    Safe to call multiple times; if already running, this is a no-op.
     """
     # Use registry-backed getters/setters to avoid module reload desync
     # Honor explicit disable; but allow tests that set FORCE_RELOAD to request a start
@@ -772,90 +665,45 @@ def start_http_server_in_thread() -> None:
         # If disable flag set, ensure any existing server is shut down and return
         try:
             shutdown_http_server()
-        except Exception:
+        except BaseException as e:
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             pass
         logger.info("catalog_http: disabled via G6_CATALOG_HTTP_DISABLE")
         return
     force_reload = is_truthy_env('G6_CATALOG_HTTP_FORCE_RELOAD')
-    # If server not globally enabled but force_reload requested (common in tests), treat as enabled
+    rebuild_flag = is_truthy_env('G6_CATALOG_HTTP_REBUILD')
+    if rebuild_flag:
+        force_reload = True
+
+    # Respect explicit enable, but allow tests to force-start the server.
+    if not is_truthy_env('G6_CATALOG_HTTP') and not force_reload:
+        return
+
+    # If server not globally enabled but force_reload requested (common in tests), treat as enabled.
     if not is_truthy_env('G6_CATALOG_HTTP') and force_reload:
         try:
             os.environ['G6_CATALOG_HTTP'] = '1'
         except (TypeError, KeyError, OSError):
-            # Handle environment variable set failures
             pass
-    rebuild_flag = is_truthy_env('G6_CATALOG_HTTP_REBUILD')
-    if rebuild_flag:
-        force_reload = True
+
     # Always perform a shutdown first if rebuild requested (even if no thread)
     if rebuild_flag:
         try:
             shutdown_http_server()
         except (AttributeError, OSError, RuntimeError):
-            # Handle shutdown failures during rebuild
             pass
-    # Auto reload if adaptive trend window changed (test isolation convenience)
+
+    # Capture stable forced window for request threads (read once at startup)
     try:
-        _tw = getattr(severity, '_trend_window', None)
-        _val: Any = _tw() if callable(_tw) else None
-        current_window: int | None
-        current_window = int(_val) if isinstance(_val, (int, float, str)) else None
-    except (AttributeError, TypeError, ValueError):
-        # Handle attribute access or type conversion failures
-        current_window = None
-    global _LAST_WINDOW
-    if _LAST_WINDOW is not None and current_window is not None and current_window != _LAST_WINDOW:
-        force_reload = True
-    if current_window is not None:
-        _LAST_WINDOW = current_window
-        try:
-            # Capture stable forced window for request threads
-            env_raw = EnvConfig.get_str('G6_ADAPTIVE_SEVERITY_TREND_WINDOW', '')
-            forced = None
-            if env_raw not in (None, ''):
-                try:
-                    forced = int(env_raw)
-                except (ValueError, TypeError):
-                    # Handle int conversion failures
-                    forced = None
-            if forced is None:
-                forced = _LAST_WINDOW
+        forced = force_window_env()
+        if forced is not None:
             globals()['FORCED_WINDOW'] = forced
-        except (KeyError, TypeError):
-            # Handle globals update failures
-            pass
+    except (AttributeError, TypeError, ValueError, RuntimeError):
+        pass
     th_existing = _get_server_thread()
     if th_existing and th_existing.is_alive():
-        if not force_reload:
-            # Host/port drift triggers reload
-            try:
-                srv = _get_http_server()
-                if srv:
-                    srv_host, srv_port = srv.server_address[:2]
-                    req_host = _env_str('G6_CATALOG_HTTP_HOST', '127.0.0.1') or '127.0.0.1'
-                    try:
-                        req_port = _env_int('G6_CATALOG_HTTP_PORT', 9315)
-                    except (ValueError, TypeError, KeyError):
-                        # Handle port parsing failures
-                        req_port = 9315
-                    if srv_host != req_host or srv_port != req_port:
-                        force_reload = True
-            except (AttributeError, TypeError, ValueError, IndexError):
-                # Handle server address access or comparison failures
-                pass
-        if not force_reload:
-            return
-        # Perform reload (already shut down earlier if rebuild_flag; but ensure)
-        try:
-            shutdown_http_server()
-        except (AttributeError, OSError, RuntimeError):
-            # Handle shutdown failures during reload
-            pass
-        try:
-            time.sleep(0.05)
-        except (OSError, InterruptedError):
-            # Handle sleep interruption
-            pass
+        return
     host = _env_str('G6_CATALOG_HTTP_HOST', '127.0.0.1') or '127.0.0.1'
     try:
         port = _env_int('G6_CATALOG_HTTP_PORT', 9315)
@@ -864,37 +712,7 @@ def start_http_server_in_thread() -> None:
         port = 9315
     def _run():
         try:
-            # Ensure latest catalog logic (hot-reload friendly during tests / dev)
-            try:
-                import importlib
-                # Reload severity first to ensure handler uses up-to-date trend logic
-                try:
-                    if hasattr(severity, 'reset_for_hot_reload'):
-                        try:
-                            severity.reset_for_hot_reload()
-                        except (AttributeError, TypeError, RuntimeError):
-                            # Handle reset failures
-                            pass
-                    importlib.reload(severity)
-                except (ImportError, AttributeError, RuntimeError):
-                    # Handle module reload failures
-                    logger.debug('catalog_http: severity_reload_at_start_failed', exc_info=True)
-                from . import catalog as _cat_mod
-                _cat_mod = importlib.reload(_cat_mod)
-                globals()['build_catalog'] = _cat_mod.build_catalog  # update binding
-                globals()['CATALOG_PATH'] = _cat_mod.CATALOG_PATH
-                # Reload this module and obtain the latest handler class from the reloaded module
-                try:
-                    _mod = importlib.import_module('src.orchestrator.catalog_http')
-                    _mod = importlib.reload(_mod)
-                    HandlerCls = getattr(_mod, '_CatalogHandler', _CatalogHandler)
-                except (ImportError, AttributeError):
-                    # Handle module reload or attribute access failures
-                    HandlerCls = _CatalogHandler
-            except (ImportError, AttributeError, RuntimeError, KeyError):
-                # Handle catalog reload failures
-                logger.debug('catalog_http: catalog_reload_failed', exc_info=True)
-                HandlerCls = _CatalogHandler
+            HandlerCls = _CatalogHandler
             # Capture initial snapshot cache env state for runtime transition detection
             global _SNAPSHOT_CACHE_ENV_INITIAL
             _SNAPSHOT_CACHE_ENV_INITIAL = EnvConfig.get_str('G6_SNAPSHOT_CACHE', '')
@@ -912,14 +730,7 @@ def start_http_server_in_thread() -> None:
         except (AttributeError, TypeError):
             # Handle attribute assignment failures
             pass
-        logger.info(
-            "catalog_http: serving on %s:%s (gen=%s rebuild=%s force_reload=%s)",
-            host,
-            port,
-            _GENERATION,
-            rebuild_flag,
-            force_reload,
-        )
+        logger.info("catalog_http: serving on %s:%s (gen=%s)", host, port, _GENERATION)
         try:
             httpd.serve_forever(poll_interval=0.5)
         except (OSError, RuntimeError, KeyboardInterrupt):
@@ -946,12 +757,14 @@ def start_http_server_in_thread() -> None:
                 with _ctx.closing(_urlreq.urlopen(base_url + '/health', timeout=0.25)) as _resp:  # nosec - local
                     _ = _resp.read(0)
                 break
-            except Exception:
+            except (OSError, IOError, TimeoutError, ValueError, TypeError):
                 try:
                     time.sleep(0.05)
-                except Exception:
+                except (ValueError, OSError):
                     pass
-    except Exception:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         pass
 
 __all__ = ["start_http_server_in_thread", "shutdown_http_server"]

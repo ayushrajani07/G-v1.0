@@ -46,9 +46,6 @@ def run_plot_script(monkeypatch, tmp_path: Path, layout: str):
     monkeypatch.setenv("G6_OVERLAY_VIS_CHUNK_SIZE", "1024")
     monkeypatch.setenv("G6_TIME_TOLERANCE_SECONDS", "0")
 
-    # Deprecated panels env removed; ensure absence
-    monkeypatch.delenv("G6_SUMMARY_PANELS_MODE", raising=False)
-
     # Use monkeypatch to set sys.argv
     monkeypatch.setenv("_PYTEST_RUN", "1")
     import sys

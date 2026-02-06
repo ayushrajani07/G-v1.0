@@ -44,9 +44,19 @@ def append_forecast_snapshot(
         out_dir = cfg.base_dir / idx
         _ensure_dir(out_dir)
         fpath = out_dir / f"{day_str}.csv"
-        # Extract q50 path
-        q50_key = min(qmap.keys(), key=lambda q: abs(float(q) - 0.5)) if qmap else 0.5
-        series = list(qmap.get(q50_key, ()))
+        # Extract q50 path (tolerate mixed key types and ignore non-numeric keys)
+        q50_key = None
+        best_dist = None
+        for k in (qmap or {}).keys():
+            try:
+                qf = float(k)
+            except Exception:
+                continue
+            d = abs(qf - 0.5)
+            if best_dist is None or d < best_dist:
+                best_dist = d
+                q50_key = k
+        series = list(qmap.get(q50_key, ())) if q50_key is not None else []
         # Meta fields
         m = dict(meta or {})
         mode = str(m.get("mode") or m.get("mode_used") or "").lower()
@@ -118,12 +128,46 @@ def append_quantile_bands_snapshot(
                 existing_cols = None
                 existing_all_cols = None
 
-        # If no existing header, use quantiles from qmap sorted ascending
+        def _numeric_qs() -> list[float]:
+            out: list[float] = []
+            for k in (qmap or {}).keys():
+                try:
+                    out.append(float(k))
+                except Exception:
+                    continue
+            # sort/dedupe for stable header
+            try:
+                return sorted(set(out))
+            except Exception:
+                return out
+
+        # If no existing header, use numeric quantiles from qmap sorted ascending
         if not existing_cols:
-            qs_sorted = sorted(qmap.keys()) if qmap else [0.1, 0.5, 0.9]
+            qs_sorted = _numeric_qs() if qmap else [0.1, 0.5, 0.9]
+            if not qs_sorted:
+                qs_sorted = [0.1, 0.5, 0.9]
             qcols = [f"q{int(float(q)*100):02d}" for q in qs_sorted]
         else:
             qcols = existing_cols
+
+        def _nearest_series(target_q: float) -> Sequence[float]:
+            best_key = None
+            best_d = None
+            for k in (qmap or {}).keys():
+                try:
+                    qf = float(k)
+                except Exception:
+                    continue
+                d = abs(qf - target_q)
+                if best_d is None or d < best_d:
+                    best_d = d
+                    best_key = k
+            if best_key is None:
+                return []
+            try:
+                return qmap.get(best_key) or []
+            except Exception:
+                return []
 
         # Map from column name to series
         col_to_series: dict[str, Sequence[float]] = {}
@@ -132,13 +176,7 @@ def append_quantile_bands_snapshot(
                 q = float(int(qc[1:]) / 100.0)
             except Exception:
                 q = 0.5
-            series = qmap.get(q)
-            if series is None:
-                # try approximate match to nearest available quantile
-                if qmap:
-                    q_near = min(qmap.keys(), key=lambda x: abs(float(x) - q))
-                    series = qmap.get(q_near)
-            col_to_series[qc] = list(series) if series is not None else []
+            col_to_series[qc] = list(_nearest_series(q))
 
         new_file = not fpath.exists()
         with fpath.open("a", encoding="utf-8", newline="") as f:

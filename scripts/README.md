@@ -13,6 +13,16 @@ Run directly (optional):
 powershell -ExecutionPolicy Bypass -File .\scripts\auto_stack.ps1
 ```
 
+## Transition docs: backlog extraction
+
+If you're validating feasibility of the transition/migration plans, generate a single backlog from the key docs:
+
+```powershell
+python scripts/docs/extract_transition_backlog.py --out-dir artifacts --format both --verify-file-refs
+```
+
+See [scripts/docs/README_TRANSITION_BACKLOG.md](scripts/docs/README_TRANSITION_BACKLOG.md) for the workflow.
+
 ## init_menu.py (Interactive setup)
 
 A simple, dependency-free menu to configure and launch common tools with organized submenus:
@@ -126,7 +136,7 @@ python -m scripts.summary.app --refresh 0.5 --status-file data/runtime_status.js
 
 Notes:
 - Frontend displays use IST HH:MM:SS; backend JSON remains ISO.
-- Legacy bridge (`status_to_panels.py`) has been removed from the workflow; all panel JSON produced in-process.
+- Legacy out-of-process bridge has been removed from the workflow; all panel JSON produced in-process.
 
 ## Maintenance Utilities
 

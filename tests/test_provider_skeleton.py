@@ -7,10 +7,8 @@ objects so downstream refactors have a safety net.
 from __future__ import annotations
 import os
 
-# Ensure skeleton flag does not disable anything accidentally
-os.environ.setdefault("G6_PROVIDER_SKELETON", "1")
-
-def test_facade_imports():
+def test_facade_imports(monkeypatch):
+    monkeypatch.setenv('G6_PROVIDER_SKELETON', '1')
     from src.provider import get_instruments, get_expiry_dates, get_weekly_expiries, get_monthly_expiries, resolve_expiry, provider_diagnostics  # noqa: E501
     assert callable(get_instruments)
     assert callable(get_expiry_dates)
@@ -20,13 +18,15 @@ def test_facade_imports():
     assert callable(provider_diagnostics)
 
 
-def test_facade_instruments_empty_list_shape():
+def test_facade_instruments_empty_list_shape(monkeypatch):
+    monkeypatch.setenv('G6_PROVIDER_SKELETON', '1')
     from src.provider import get_instruments
     out = get_instruments(exchange="NFO", force_refresh=True)
     assert isinstance(out, list)
 
 
-def test_facade_expiries_list_shape():
+def test_facade_expiries_list_shape(monkeypatch):
+    monkeypatch.setenv('G6_PROVIDER_SKELETON', '1')
     from src.provider import get_expiry_dates, get_weekly_expiries, get_monthly_expiries
     exp_all = get_expiry_dates("NIFTY")
     assert isinstance(exp_all, list)
@@ -36,20 +36,23 @@ def test_facade_expiries_list_shape():
     assert isinstance(monthly, list)
 
 
-def test_facade_resolve_expiry_rule_safe():
+def test_facade_resolve_expiry_rule_safe(monkeypatch):
+    monkeypatch.setenv('G6_PROVIDER_SKELETON', '1')
     from src.provider import resolve_expiry
     d = resolve_expiry("NIFTY", "current-week")
     # Date or fallback object
     assert hasattr(d, 'year')
 
 
-def test_facade_provider_diagnostics_shape():
+def test_facade_provider_diagnostics_shape(monkeypatch):
+    monkeypatch.setenv('G6_PROVIDER_SKELETON', '1')
     from src.provider import provider_diagnostics
     snap = provider_diagnostics()
     assert isinstance(snap, dict)
 
 
-def test_facade_legacy_singleton_identity():
+def test_facade_legacy_singleton_identity(monkeypatch):
+    monkeypatch.setenv('G6_PROVIDER_SKELETON', '1')
     from src.provider import _debug_legacy_provider_id, get_instruments, get_expiry_dates  # type: ignore
     first_id = _debug_legacy_provider_id()
     # Trigger some calls to ensure lazy init executed

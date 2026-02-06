@@ -14,8 +14,5 @@ $dir = Split-Path $StatusFile -Parent
 if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
 
 Write-Host "Starting G6 in MOCK mode (interval=$Interval, status=$StatusFile) [orchestrator loop]" -ForegroundColor Cyan
-if (-not $env:G6_SUPPRESS_LEGACY_LOOP_WARN) {
-    Write-Host "(Legacy unified_main path deprecated; using orchestrator loop runner)" -ForegroundColor Yellow
-}
 
-python scripts/run_orchestrator_loop.py --config config/g6_config.json --interval $Interval --cycles 0 --auto-snapshots
+& "$PSScriptRoot\start.ps1" -Mode mock -Interval $Interval -Cycles 0 -StatusFile $StatusFile -Attach:$Attach

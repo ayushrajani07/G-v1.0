@@ -229,12 +229,12 @@ scrape_configs:
 **See HIGH_IMPACT_OPTIMIZATION_REPORT.md for Phase 2 details**
 
 ### Medium Impact (Future):
-- [ ] **Simplify metrics_cache.py** - Remove fields only used by HTML dashboard
-- [ ] **Move DEBUG endpoints to separate module** - Cleaner production code
+- [x] **Simplify metrics_cache.py** - Remove fields only used by HTML dashboard (COMPLETED: src/web/dashboard/metrics_cache.py caches raw-only ParsedMetrics)
+- [x] **Move DEBUG endpoints to separate module** - Cleaner production code (COMPLETED: debug routes isolated in src/web/dashboard/debug.py and gated by G6_DASHBOARD_DEBUG)
 
 ### Low Impact (Future):
-- [ ] **Clean up external/G6_ directory** - Remove backup/archived code
-- [ ] **Consolidate startup scripts** - Single canonical version
+- [x] **Clean up external/G6_ directory** - Removed archived backup tree (external/G6_.archived) after migrating any remaining script imports
+- [x] **Consolidate startup scripts** - Single canonical version
 
 **Completed Reduction:** ~1300 lines removed (Phase 1: ~200, Phase 2: ~1100)
 
@@ -276,9 +276,9 @@ scrape_configs:
 - ✅ OPTIMIZATION_OPPORTUNITIES.md - Additional optimization analysis
 
 ### Files to Update (if further cleanup proceeds):
-- [ ] DEPLOYMENT_GUIDE.md - Remove references to deprecated services
-- [ ] README.md - Update architecture diagrams showing 3 services instead of 5
-- [ ] OPERATOR_MANUAL.md - Update troubleshooting sections
+- [x] DEPLOYMENT_GUIDE.md - Remove references to deprecated services
+- [x] README.md - Update architecture diagrams showing 3 services instead of 5
+- [x] OPERATOR_MANUAL.md - Update troubleshooting sections
 
 ---
 

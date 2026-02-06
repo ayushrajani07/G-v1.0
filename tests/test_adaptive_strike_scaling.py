@@ -1,6 +1,4 @@
 import os
-# Ensure passthrough env cleared globally for this test module so adaptive.py reads correct mode
-os.environ.pop('G6_ADAPTIVE_SCALE_PASSTHROUGH', None)
 
 from src.orchestrator.context import RuntimeContext
 from src.orchestrator.cycle import run_cycle
@@ -35,9 +33,9 @@ class DummyProviders:
         return ['2025-12-31']
 
 
-def _run_cycles(ctx, elapsed_values, interval):
+def _run_cycles(ctx, elapsed_values, interval, monkeypatch):
     # Simulate cycles by mocking elapsed via environment interval and overriding timing logic through direct pass
-    os.environ['G6_CYCLE_INTERVAL'] = str(interval)
+    monkeypatch.setenv('G6_CYCLE_INTERVAL', str(interval))
     for e in elapsed_values:
         # We can't inject elapsed directly; run_cycle computes it. Instead, fast path run_cycle and then manually call adaptive.
         # Simplify by calling update_strike_scaling directly (import from module).
@@ -46,21 +44,22 @@ def _run_cycles(ctx, elapsed_values, interval):
         ctx.cycle_count += 1
 
 
-def test_adaptive_scale_down_and_restore():
+def test_adaptive_scale_down_and_restore(monkeypatch):
     # Force disable passthrough (explicit) so mutation path may activate; if an external
     # test toggles it later we still accept non-mutation as long as scale factor falls.
-    os.environ['G6_ADAPTIVE_SCALE_PASSTHROUGH'] = '0'
-    os.environ['G6_ADAPTIVE_STRIKE_SCALING'] = '1'
-    os.environ['G6_ADAPTIVE_STRIKE_BREACH_THRESHOLD'] = '3'
-    os.environ['G6_ADAPTIVE_STRIKE_RESTORE_HEALTHY'] = '5'
-    os.environ['G6_ADAPTIVE_STRIKE_REDUCTION'] = '0.8'
+    monkeypatch.delenv('G6_ADAPTIVE_SCALE_PASSTHROUGH', raising=False)
+    monkeypatch.setenv('G6_ADAPTIVE_SCALE_PASSTHROUGH', '0')
+    monkeypatch.setenv('G6_ADAPTIVE_STRIKE_SCALING', '1')
+    monkeypatch.setenv('G6_ADAPTIVE_STRIKE_BREACH_THRESHOLD', '3')
+    monkeypatch.setenv('G6_ADAPTIVE_STRIKE_RESTORE_HEALTHY', '5')
+    monkeypatch.setenv('G6_ADAPTIVE_STRIKE_REDUCTION', '0.8')
     ctx = RuntimeContext(config={}, providers=DummyProviders(), metrics=DummyMetrics())
     ctx.index_params = {
         'NIFTY': {'enable': True, 'strikes_itm': 10, 'strikes_otm': 10, 'expiries': ['this_week']},
     }
     interval = 60.0
     # 3 consecutive breaches (elapsed > 0.85 * interval = 51)
-    _run_cycles(ctx, [55, 56, 57], interval)
+    _run_cycles(ctx, [55, 56, 57], interval, monkeypatch)
     # Expect scale factor stored; strikes may or may not mutate depending on global env interplay.
     mutated_itm = ctx.index_params['NIFTY']['strikes_itm']
     mutated_otm = ctx.index_params['NIFTY']['strikes_otm']
@@ -70,12 +69,12 @@ def test_adaptive_scale_down_and_restore():
     assert 0.79 < scale < 0.81
 
     # 4 healthy cycles (< 51) should not restore yet (restore threshold=5)
-    _run_cycles(ctx, [40, 40, 40, 40], interval)
+    _run_cycles(ctx, [40, 40, 40, 40], interval, monkeypatch)
     # If in mutating mode counts remain at reduced value (8); in passthrough they stayed 10.
     assert ctx.index_params['NIFTY']['strikes_itm'] in (8, 10)
 
     # Next healthy cycle triggers restore (scale back toward 1.0 => 8 /0.8 = 10 target)
-    _run_cycles(ctx, [40], interval)
+    _run_cycles(ctx, [40], interval, monkeypatch)
     # After restore: in mutating mode counts return to baseline; in passthrough they were already baseline.
     assert ctx.index_params['NIFTY']['strikes_itm'] == 10
     assert ctx.index_params['NIFTY']['strikes_otm'] == 10

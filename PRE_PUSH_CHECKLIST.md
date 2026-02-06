@@ -5,7 +5,7 @@
 - [x] `.env.example` - Template for environment variables (already exists)
 - [x] `README.md` - Comprehensive documentation (already exists)
 - [x] `setup_git_and_push.ps1` - Automated setup script (created)
-- [x] `GITHUB_SETUP.md` - Step-by-step guide (created)
+- [x] `docs/development/GITHUB_SETUP.md` - Step-by-step guide (created)
 - [x] `.env.backup` - Backup of your .env file (created)
 
 ## Security Checks ✅
@@ -168,7 +168,7 @@ gh auth login
 
 ## Support Files
 
-- 📖 **GITHUB_SETUP.md** - Detailed setup instructions
+- 📖 **docs/development/GITHUB_SETUP.md** - Detailed setup instructions
 - 🔧 **setup_git_and_push.ps1** - Automated setup script
 - 📝 **.env.example** - Environment template for users
 - 📚 **README.md** - Project documentation

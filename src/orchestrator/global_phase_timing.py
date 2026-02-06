@@ -45,7 +45,7 @@ def reset_for_cycle(cycle_ts: int | None) -> None:
         return
     try:
         ts_int = int(cycle_ts) if cycle_ts is not None else 0
-    except Exception:
+    except (TypeError, ValueError):
         ts_int = 0
     if _ACTIVE_CYCLE_TS != ts_int:
         _ACTIVE_CYCLE_TS = ts_int
@@ -57,7 +57,7 @@ def record_phases(phases: dict[str, float] | None) -> None:
     for k, v in phases.items():
         try:
             fv = float(v)
-        except Exception:
+        except (TypeError, ValueError):
             continue
         _ACC[k] = _ACC.get(k, 0.0) + fv
 
@@ -73,7 +73,7 @@ def emit_global(indices_total: int, cycle_ts: int | None, logger_name: str = 'co
         ]
         try:
             ts_int = int(cycle_ts or 0)
-        except Exception:
+        except (TypeError, ValueError):
             ts_int = 0
         logger.info(
             "PHASE_TIMING_GLOBAL cycle_ts=%s indices=%s %s | total=%.3fs",
@@ -82,7 +82,9 @@ def emit_global(indices_total: int, cycle_ts: int | None, logger_name: str = 'co
             ' | '.join(parts),
             total_ph,
         )
-    except Exception:
+    except BaseException as e:
+        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+            raise
         logger.debug('phase_timing_global_emit_failed', exc_info=True)
     finally:
         # Always clear after emission to avoid accidental carry over

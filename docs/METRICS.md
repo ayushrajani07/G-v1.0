@@ -423,7 +423,7 @@ Generated on: 2025-09-21
 ---
 ## Adaptive Analytics Alerts Panel (New)
 
-The `adaptive_alerts` panel (JSON written by `status_to_panels` via `panels.factory`) surfaces a compact, aggregated view of adaptive analytics alert activity so operators can quickly assess emerging risk / degradation signals without parsing raw status history.
+The `adaptive_alerts` panel (JSON emitted in-process by the unified summary loop via the panels writer) surfaces a compact, aggregated view of adaptive analytics alert activity so operators can quickly assess emerging risk / degradation signals without parsing raw status history.
 
 Panel File: `data/panels/adaptive_alerts.json`
 

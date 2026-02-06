@@ -1,7 +1,5 @@
 import json, os, sys, subprocess, pathlib, pytest
 
-pytestmark = pytest.mark.optional
-
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / 'scripts' / 'dead_code_scan.py'
 

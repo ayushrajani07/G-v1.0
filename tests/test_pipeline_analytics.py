@@ -1,14 +1,14 @@
 import os
 import pytest
 
-pytestmark = pytest.mark.serial
+pytestmark = pytest.mark.integration
 
 def test_pipeline_analytics_iv_greeks(monkeypatch, tmp_path):
-    os.environ['G6_PIPELINE_COLLECTOR'] = '1'
-    os.environ['G6_FORCE_MARKET_OPEN'] = '1'
+    monkeypatch.setenv('G6_PIPELINE_COLLECTOR', '1')
+    monkeypatch.setenv('G6_FORCE_MARKET_OPEN', '1')
     # Enable greeks + iv estimation via config flags (simulate config override through env if supported)
-    os.environ['G6_COMPUTE_GREEKS'] = '1'
-    os.environ['G6_ESTIMATE_IV'] = '1'
+    monkeypatch.setenv('G6_COMPUTE_GREEKS', '1')
+    monkeypatch.setenv('G6_ESTIMATE_IV', '1')
     import pytest
     from src.orchestrator.bootstrap import bootstrap_runtime
     from src.collectors.pipeline import build_default_pipeline, ExpiryWorkItem
@@ -39,6 +39,4 @@ def test_pipeline_analytics_iv_greeks(monkeypatch, tmp_path):
         iv = first.get('iv') or first.get('implied_vol')
         has_greek = any(first.get(k) not in (None, 0, 0.0) for k in ('delta','gamma','theta','vega','rho'))
         assert iv is not None or has_greek
-    os.environ.pop('G6_PIPELINE_COLLECTOR', None)
-    os.environ.pop('G6_COMPUTE_GREEKS', None)
-    os.environ.pop('G6_ESTIMATE_IV', None)
+    # monkeypatch auto-restores env

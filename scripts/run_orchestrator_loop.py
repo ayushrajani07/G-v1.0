@@ -29,7 +29,8 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from src.config.env_config import EnvConfig
-from src.config.runtime_config import get_runtime_config
+from src.config.g6_config import get_g6_config
+from src.utils.logging_utils import setup_logging
 from src.orchestrator.bootstrap import bootstrap_runtime  # type: ignore
 from src.orchestrator.context import RuntimeContext  # type: ignore
 from src.orchestrator.cycle import run_cycle  # type: ignore
@@ -42,17 +43,68 @@ except Exception:  # pragma: no cover
     def flush_deferred_cycle_tables():  # type: ignore
         pass
 
-LOG_FORMAT = "[%(asctime)s] %(levelname)s %(name)s: %(message)s"
-logging.basicConfig(level=EnvConfig.get_str("G6_LOG_LEVEL", "INFO"), format=LOG_FORMAT)
 logger = logging.getLogger("run_orchestrator_loop")
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Orchestrator Loop Runner")
     p.add_argument("--config", default="config/g6_config.json", help="Config JSON path")
-    p.add_argument("--interval", type=float, default=30.0, help="Cycle interval seconds")
+    p.add_argument(
+        "--interval",
+        type=float,
+        default=None,
+        help="Cycle interval seconds (default: 30; override with G6_LOOP_INTERVAL_SECONDS)",
+    )
     p.add_argument("--cycles", type=int, default=0, help="Number of cycles (0=unbounded)")
     p.add_argument("--auto-snapshots", action="store_true", help="Enable auto snapshots (sets env toggle)")
     p.add_argument("--parallel", action="store_true", help="Enable parallel per-index collection")
+    # Output/logging presentation (maps to env)
+    p.add_argument("--concise", action="store_true", help="Force concise logging mode (sets G6_CONCISE_LOGS=1)")
+    p.add_argument("--verbose", action="store_true", help="Force verbose logging (sets G6_CONCISE_LOGS=0 and disables quiet mode)")
+    p.add_argument("--quiet", action="store_true", help="Suppress most logs; keep cycle summaries & warnings/errors (sets G6_QUIET_MODE=1)")
+    p.add_argument(
+        "--human",
+        action="store_true",
+        help="Human-friendly output preset (single header + readable cycle table; implies --quiet unless overridden)",
+    )
+    p.add_argument(
+        "--market-hours-only",
+        action="store_true",
+        help="Skip cycles when market is closed (sets G6_LOOP_MARKET_HOURS=1)",
+    )
+    p.add_argument(
+        "--force-market-open",
+        "--force-open",
+        action="store_true",
+        help="Bypass market-hours gating (sets G6_FORCE_MARKET_OPEN=1)",
+    )
+    p.add_argument(
+        "--force-market-open-if-next-open-gt-minutes",
+        type=float,
+        default=None,
+        metavar="MINUTES",
+        help=(
+            "Bypass market-hours gating only when the next market open is more than MINUTES away "
+            "(sets G6_FORCE_MARKET_OPEN_IF_NEXT_OPEN_GT_MINUTES). Example: 120"
+        ),
+    )
+    # Interactive market prompt is enabled by default for operator ergonomics.
+    # You can disable it explicitly (useful for non-interactive runs).
+    g_prompt = p.add_mutually_exclusive_group()
+    g_prompt.add_argument(
+        "--interactive-market-prompt",
+        action="store_true",
+        help="(Default) When market is closed, prompt in terminal to force-open for this run",
+    )
+    g_prompt.add_argument(
+        "--no-interactive-market-prompt",
+        action="store_true",
+        help="Disable the interactive market-closed prompt",
+    )
+    p.add_argument("--cycle-output", choices=("pretty", "raw", "both"), default=None, help="Override cycle output mode (G6_CYCLE_OUTPUT)")
+    p.add_argument("--cycle-style", choices=("legacy", "readable"), default=None, help="Override cycle style (G6_CYCLE_STYLE)")
+    p.add_argument("--single-header", action="store_true", help="Emit daily header once (sets G6_SINGLE_HEADER_MODE=1)")
+    p.add_argument("--compact-banners", action="store_true", help="Use compact banners (sets G6_COMPACT_BANNERS=1)")
+    p.add_argument("--phase-timing", action="store_true", help="Include PHASE_TIMING line in human/quiet output")
     return p.parse_args(argv)
 
 def _load_env_overlay() -> None:
@@ -135,6 +187,52 @@ def _maybe_auth_preflight() -> bool:
     return True
 
 def ensure_env(args: argparse.Namespace) -> None:
+    # Default presentation preset: match operator screenshot-style console output.
+    # This script is an operator-facing runner, so we default to human-friendly,
+    # compact, minimal-noise output unless the user explicitly overrides via env/flags.
+    os.environ.setdefault("G6_HUMAN_MODE", "1")
+    os.environ.setdefault("G6_CONCISE_LOGS", "1")
+    os.environ.setdefault("G6_SINGLE_HEADER_MODE", "1")
+    os.environ.setdefault("G6_COMPACT_BANNERS", "1")
+    os.environ.setdefault("G6_CYCLE_OUTPUT", "pretty")
+    os.environ.setdefault("G6_CYCLE_STYLE", "readable")
+    os.environ.setdefault("G6_CYCLE_TABLE_COMPACT", "1")
+    os.environ.setdefault("G6_CYCLE_TABLE_HEADER_ONCE", "1")
+    os.environ.setdefault("G6_PHASE_TIMING_MULTILINE", "1")
+    os.environ.setdefault("G6_CONSOLE_SHOW_PHASE_TIMING", "1")
+    os.environ.setdefault("G6_HUMAN_SHOW_ATM", "1")
+    os.environ.setdefault("G6_HUMAN_SHOW_INDEX_TABLE", "1")
+    os.environ.setdefault("G6_HUMAN_HIDE_INDEX_LINES", "1")
+    os.environ.setdefault("G6_HUMAN_INDEX_TABLE_MAX_ROWS", "6")
+    # Re-print cycle header periodically so logs remain readable mid-scroll.
+    os.environ.setdefault("G6_CYCLE_TABLE_HEADER_EVERY", "25")
+    # Visual spacing between blocks (cycle row / indices table / phase timing).
+    os.environ.setdefault("G6_HUMAN_SPACERS", "1")
+    os.environ.setdefault("G6_HUMAN_SPACER_LINES", "1")
+    # Keep operator console readable: do not print full Python tracebacks by default.
+    os.environ.setdefault("G6_CONSOLE_TRACEBACKS", "0")
+    # Append IST timestamp at the end of each cycle.
+    os.environ.setdefault("G6_CYCLE_END_IST", "1")
+
+    # Win-win speedup: cache option instrument resolution when strikes/expiry unchanged.
+    # Safe because it only reuses results for identical (index, expiry, strikes) and only for a short TTL.
+    os.environ.setdefault("G6_INSTRUMENTS_CACHE_TTL_SEC", "900")
+
+    # Win-win speedup: cache option instruments *universe* used to build the expiry map.
+    # Bounded and short TTL to avoid memory growth; does not reduce completeness.
+    os.environ.setdefault("G6_UNIVERSE_CACHE_TTL_SEC", "300")
+    os.environ.setdefault("G6_UNIVERSE_CACHE_MAX_ENTRIES", "8")
+    os.environ.setdefault("G6_UNIVERSE_CACHE_MAX_INSTRUMENTS", "200000")
+
+    # Cache the built expiry map too (derived from universe); avoids rebuilding when universe unchanged.
+    os.environ.setdefault("G6_EXPIRY_MAP_CACHE_TTL_SEC", "300")
+
+    # NOTE: Avoid defaults that could reduce completeness (e.g., cycle time budgets).
+    os.environ.setdefault("G6_CYCLE_SHOW_IST_TS", "1")
+    # Default quiet unless user explicitly chose verbose.
+    if not getattr(args, 'verbose', False):
+        os.environ.setdefault("G6_QUIET_MODE", "1")
+
     if args.auto_snapshots:
         os.environ.setdefault("G6_AUTO_SNAPSHOTS", "1")
         os.environ.setdefault("G6_SNAPSHOT_CACHE", "1")
@@ -144,6 +242,107 @@ def ensure_env(args: argparse.Namespace) -> None:
         os.environ.setdefault("G6_CATALOG_HTTP", "1")
     if args.cycles > 0 and not EnvConfig.get_str("G6_LOOP_MAX_CYCLES", ''):
         os.environ["G6_LOOP_MAX_CYCLES"] = str(args.cycles)
+
+    if args.market_hours_only:
+        os.environ.setdefault("G6_LOOP_MARKET_HOURS", "1")
+
+    # Market-hours overrides
+    if getattr(args, 'force_market_open', False):
+        os.environ["G6_FORCE_MARKET_OPEN"] = "1"
+        logger.warning("Market gate override enabled: force market open (G6_FORCE_MARKET_OPEN=1)")
+    if getattr(args, 'force_market_open_if_next_open_gt_minutes', None) is not None:
+        os.environ["G6_FORCE_MARKET_OPEN_IF_NEXT_OPEN_GT_MINUTES"] = str(args.force_market_open_if_next_open_gt_minutes)
+        logger.warning(
+            "Market gate override enabled: force market open if next open > %sm (G6_FORCE_MARKET_OPEN_IF_NEXT_OPEN_GT_MINUTES)",
+            args.force_market_open_if_next_open_gt_minutes,
+        )
+
+    # Interactive prompt default: enabled unless explicitly disabled.
+    if not getattr(args, 'no_interactive_market_prompt', False):
+        os.environ.setdefault("G6_MARKET_GATE_INTERACTIVE_PROMPT", "1")
+
+    # Presentation preset: human (kept for backward-compat; defaults are already applied above)
+    if args.human:
+        os.environ.setdefault("G6_HUMAN_MODE", "1")
+
+    if args.phase_timing:
+        os.environ["G6_SHOW_PHASE_TIMING"] = "1"
+        os.environ.setdefault("G6_CONSOLE_SHOW_PHASE_TIMING", "1")
+        os.environ.setdefault("G6_PHASE_TIMING_MULTILINE", "1")
+
+    # Logging mode precedence: quiet > verbose > concise > existing env
+    if args.quiet:
+        os.environ["G6_CONCISE_LOGS"] = "1"
+        os.environ.setdefault("G6_QUIET_MODE", "1")
+    elif args.verbose:
+        os.environ["G6_CONCISE_LOGS"] = "0"
+        os.environ.pop("G6_QUIET_MODE", None)
+    elif args.concise:
+        os.environ["G6_CONCISE_LOGS"] = "1"
+        os.environ.pop("G6_QUIET_MODE", None)
+
+    # Fine-grained cycle output controls
+    if args.cycle_output:
+        os.environ["G6_CYCLE_OUTPUT"] = str(args.cycle_output)
+    if args.cycle_style:
+        os.environ["G6_CYCLE_STYLE"] = str(args.cycle_style)
+    if args.single_header:
+        os.environ["G6_SINGLE_HEADER_MODE"] = "1"
+    if args.compact_banners:
+        os.environ["G6_COMPACT_BANNERS"] = "1"
+
+    # EnvConfig caches parsed env values; clear it after we mutate env so later
+    # EnvConfig.get_* calls (e.g., banner / loop settings) reflect CLI flags.
+    try:
+        EnvConfig.clear_cache()
+    except Exception:
+        pass
+
+
+def _init_logging(args: argparse.Namespace) -> None:
+    """Initialize logging consistently across scripts.
+
+    Key goals:
+    - Minimal, readable terminal output by default (message-only)
+    - Suppress bulky per-expiry / STRUCT / PHASE_TIMING spam in the console
+      while preserving full logs for file/diagnostics.
+    """
+    # In verbose mode, opt out of console suppression.
+    if getattr(args, 'verbose', False):
+        os.environ.setdefault('G6_VERBOSE_CONSOLE', '1')
+        os.environ.setdefault('G6_CONSOLE_SHOW_STRUCT_EVENTS', '1')
+        os.environ.setdefault('G6_CONSOLE_SHOW_PHASE_TIMING', '1')
+        os.environ.setdefault('G6_CONSOLE_SHOW_EXPIRY_DETAIL', '1')
+        os.environ.setdefault('G6_CONSOLE_SHOW_INDEX_DETAIL', '1')
+        os.environ.setdefault('G6_CONSOLE_SHOW_PERSIST_FLOW', '1')
+        os.environ.setdefault('G6_CONSOLE_SHOW_NO_EXPIRY_WARNINGS', '1')
+        os.environ.setdefault('G6_CONSOLE_SHOW_METRICS_GOVERNANCE', '1')
+
+    # If the user didn't request phase timing, keep it hidden on console.
+    if getattr(args, 'phase_timing', False):
+        os.environ.setdefault('G6_CONSOLE_SHOW_PHASE_TIMING', '1')
+
+    # Silence high-volume structured event spam at the origin for this runner
+    # (can be overridden by explicitly setting env before launch).
+    if not getattr(args, 'verbose', False):
+        os.environ.setdefault(
+            'G6_STRUCT_EVENTS_SUPPRESS',
+            'instrument_prefilter_summary adaptive_summary option_match_stats strike_cluster',
+        )
+
+    try:
+        EnvConfig.clear_cache()
+    except Exception:
+        pass
+
+    level = EnvConfig.get_str('G6_LOG_LEVEL', 'INFO')
+    log_file = EnvConfig.get_str('G6_LOG_FILE', 'logs/g6_platform.log')
+    setup_logging(level=level, log_file=log_file)
+
+
+def _apply_presentation_logging() -> None:
+    """Deprecated: presentation is now handled by src.utils.logging_utils.setup_logging."""
+    return
 
 
 def build_cycle_fn():
@@ -155,6 +354,9 @@ def build_cycle_fn():
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     ensure_env(args)
+
+    _init_logging(args)
+
     # Auth preflight (interactive prompt if Kite token missing)
     if not _maybe_auth_preflight():
         return 2
@@ -186,14 +388,24 @@ def main(argv: list[str]) -> int:
         os.environ['G6_AUTO_SNAPSHOTS'] = '1'
 
     cycle_fn = build_cycle_fn()
-    rcfg = get_runtime_config(refresh=True)
-    effective_interval = args.interval if args.interval != 30.0 else rcfg.loop.interval_seconds
-    # If CLI interval explicitly provided (different from default), prefer it and update runtime config (one-off)
-    if args.interval != 30.0 and args.interval != rcfg.loop.interval_seconds:
-        # Rebuild singleton with overridden interval (non-invasive); this keeps future adopters consistent
+    # Interval resolution precedence:
+    # 1) CLI --interval when provided
+    # 2) Env/config via G6Config (G6_LOOP_INTERVAL_SECONDS)
+    # 3) Final fallback to 30s
+    g6_cfg = get_g6_config(refresh=True)
+    if args.interval is not None:
         os.environ['G6_LOOP_INTERVAL_SECONDS'] = str(args.interval)
-        rcfg = get_runtime_config(refresh=True)
-        effective_interval = rcfg.loop.interval_seconds
+        try:
+            EnvConfig.clear_cache()
+        except Exception:
+            pass
+        g6_cfg = get_g6_config(refresh=True)
+    effective_interval = g6_cfg.loop_interval_seconds
+    try:
+        if not isinstance(effective_interval, (int, float)) or float(effective_interval) <= 0:
+            effective_interval = 30.0
+    except Exception:
+        effective_interval = 30.0
     logger.info(
         "Starting orchestrator loop interval=%.2fs parallel=%s auto_snapshots=%s max_cycles_env=%s",
         effective_interval,

@@ -136,10 +136,8 @@ def diff_reduced(a: dict[str, Any], b: dict[str, Any], *, rtol: float = DEFAULT_
     # Section presence
     a_keys = set(a.keys())
     b_keys = set(b.keys())
-    for k in sorted(a_keys - b_keys):
-        diffs.append({"category": "extra_section", "section": k})
-    for k in sorted(b_keys - a_keys):
-        diffs.append({"category": "missing_section", "section": k})
+    diffs.extend({"category": "extra_section", "section": k} for k in sorted(a_keys - b_keys))
+    diffs.extend({"category": "missing_section", "section": k} for k in sorted(b_keys - a_keys))
     # Compare overlapping
     for k in sorted(a_keys & b_keys):
         va = a[k]
@@ -163,9 +161,16 @@ def diff_reduced(a: dict[str, Any], b: dict[str, Any], *, rtol: float = DEFAULT_
                 # For indices list compare per-position dict fields
                 for i, (ia, ib) in enumerate(zip(va, vb, strict=False)):
                     if isinstance(ia, dict) and isinstance(ib, dict):
-                        for fk in ("index", "status", "option_count", "expiry_count"):
-                            if ia.get(fk) != ib.get(fk):
-                                diffs.append({"category": "field_value_drift", "field": f"{k}[{i}].{fk}", "a": ia.get(fk), "b": ib.get(fk)})
+                        diffs.extend(
+                            {
+                                "category": "field_value_drift",
+                                "field": f"{k}[{i}].{fk}",
+                                "a": ia.get(fk),
+                                "b": ib.get(fk),
+                            }
+                            for fk in ("index", "status", "option_count", "expiry_count")
+                            if ia.get(fk) != ib.get(fk)
+                        )
         else:
             if va != vb:
                 diffs.append({"category": "field_value_drift", "field": k, "a": va, "b": vb})

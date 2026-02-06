@@ -177,7 +177,7 @@ class DummyKiteProvider:  # pragma: no cover - logic exercised indirectly in tes
         pair = ("NSE", "NIFTY 50")
         ltp_resp = self.get_ltp([pair])
         price_ok = False
-        for _k, _v in ltp_resp.items():
+        for _v in ltp_resp.values():
             if isinstance(_v, dict) and isinstance(_v.get('last_price'), (int, float)) and _v['last_price'] > 0:
                 price_ok = True
                 break

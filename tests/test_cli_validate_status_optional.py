@@ -12,8 +12,6 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.optional
-
 
 def test_dev_tools_validate_status(run_mock_cycle, tmp_path):
     status_path = tmp_path / 'status.json'

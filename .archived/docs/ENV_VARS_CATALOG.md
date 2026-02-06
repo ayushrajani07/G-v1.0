@@ -79,7 +79,6 @@ G6_CATALOG_EVENTS_LIMIT | int | 20 | Y | Max recent events.
 G6_CATALOG_HTTP | bool | off | Y | Start /catalog HTTP server.
 G6_CATALOG_HTTP_DISABLE | bool | off | Y | Hard override to prevent starting the catalog HTTP server even if enabling conditions (flags or implied by snapshots/pa…
 G6_CATALOG_HTTP_FORCED | bool | off | Y | Force-enable catalog HTTP when snapshots/panels conditions met (internal helper usage).
-G6_CATALOG_HTTP_FORCE_RELOAD | bool | off | Y | On next catalog HTTP access triggers controlled server restart (hot reload) for testing.
 G6_CATALOG_HTTP_HOST | str | 127.0.0.1 | Y | Bind host.
 G6_CATALOG_HTTP_PORT | int | 9315 | Y | Bind port.
 G6_CATALOG_HTTP_REBUILD | bool | off | Y | Rebuild catalog each request instead of cached file.

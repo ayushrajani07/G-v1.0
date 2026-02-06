@@ -1,5 +1,5 @@
-# G6 Stack Launcher
-# Stops existing services, launches all services, waits for health checks, displays status
+# G6 Stack Launcher (LEGACY)
+# Deprecated: use scripts/start.ps1 -Mode obs
 
 param(
     [switch]$SkipPrometheus,
@@ -10,11 +10,11 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  G6 Stack Launcher" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
+Write-Host "[DEPRECATED] scripts/start_stack.ps1" -ForegroundColor Yellow
+Write-Host "Use: .\\scripts\\start.ps1 -Mode obs" -ForegroundColor Gray
+
+& "$PSScriptRoot\start.ps1" -Mode obs -OpenBrowser:$OpenBrowser -StartPrometheus:(-not $SkipPrometheus)
+return
 
 $repoRoot = Split-Path $PSScriptRoot -Parent
 

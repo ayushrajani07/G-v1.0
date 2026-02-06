@@ -79,7 +79,7 @@ class MetricsCache:
         try:
             with urllib.request.urlopen(self.endpoint, timeout=self.timeout) as resp:
                 text = resp.read().decode('utf-8', errors='replace')
-        except Exception as e:
+        except (OSError, TimeoutError, ValueError) as e:
             # Route network/endpoint fetch failure; caller will keep old data
             get_error_handler().handle_error(
                 e,
@@ -115,7 +115,9 @@ class MetricsCache:
                 except ValueError:
                     continue
                 parsed.setdefault(name, []).append(MetricSample(value=value, labels=labels))
-        except Exception as e:
+        except BaseException as e:
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             get_error_handler().handle_error(
                 e,
                 category=ErrorCategory.DATA_PARSING,
@@ -143,7 +145,9 @@ class MetricsCache:
     def _safe_fetch_once(self) -> ParsedMetrics | None:
         try:
             return self._fetch()
-        except Exception as e:  # pragma: no cover - background safety
+        except BaseException as e:  # pragma: no cover - background safety
+            if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit)):
+                raise
             get_error_handler().handle_error(
                 e,
                 category=ErrorCategory.RESOURCE,

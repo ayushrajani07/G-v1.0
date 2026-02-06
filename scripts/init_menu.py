@@ -31,7 +31,7 @@ except ImportError:
 #  - CSV Audit (scripts/csv_audit.py)
 #  - CSV Backfill (scripts/csv_backfill.py) DRY-RUN and EXEC modes
 #  - Status Simulator only (dev_tools simulate-status)
-#  - Quick Unified Collectors Cycle (if launch_platform is extended later)
+#  - Quick Unified Collectors Cycle (run_orchestrator_loop is canonical)
 #
 # This structure is intentionally linear for clarity; advanced grouping kept minimal
 # to avoid nested menus explosion.

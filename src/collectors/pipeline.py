@@ -134,7 +134,7 @@ class IVEstimationBlock(AnalyticsBlock):
         if spot <= 0:
             # best-effort: try provider ATM fallback later
             return
-        for symbol, data in ee.enriched.items():
+        for data in ee.enriched.values():
             try:
                 if float(data.get('iv', 0)) > 0:
                     continue
@@ -170,7 +170,7 @@ class GreeksBlock(AnalyticsBlock):
         spot = float(ee.work.index_price or 0)
         if spot <= 0:
             return
-        for symbol, data in ee.enriched.items():
+        for data in ee.enriched.values():
             try:
                 strike = float(data.get('strike') or data.get('strike_price') or 0)
                 if strike <= 0:
@@ -271,7 +271,9 @@ class CollectorPipeline:
 def build_default_pipeline(
     providers,
     csv_sink,
+    *args,
     metrics=None,
+    influx_sink=None,
     compute_greeks: bool = False,
     estimate_iv: bool = False,
     risk_free_rate: float = 0.05,
@@ -280,6 +282,19 @@ def build_default_pipeline(
     iv_max: float = 5.0,
     iv_precision: float = 1e-5,
 ) -> CollectorPipeline:
+    # Signature compatibility:
+    #   build_default_pipeline(providers, csv_sink, metrics)
+    #   build_default_pipeline(providers, csv_sink, influx_sink, metrics)
+    if args:
+        if len(args) >= 2:
+            if influx_sink is None:
+                influx_sink = args[0]
+            if metrics is None:
+                metrics = args[1]
+        else:
+            if metrics is None:
+                metrics = args[0]
+
     adapter = ProvidersAdapter(providers, metrics=metrics)
     # Optional ExpiryService use (feature flagged)
     expiry_service = build_expiry_service()
