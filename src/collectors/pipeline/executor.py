@@ -22,6 +22,7 @@ from src.metrics import get_metrics, MetricsRegistry
 from src.collectors.helpers.cycle_tables import record_pipeline_summary
 
 from .error_helpers import add_phase_error
+from .phase_result import PhaseRun, PipelineSummary
 from .state import ExpiryState
 from .struct_events import emit_struct_event
 
@@ -102,7 +103,7 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
         # Config snapshot generation failed
         pass
 
-    phase_runs: list[dict[str, Any]] = []
+    phase_runs: list[PhaseRun] = []
     # Metrics gating (Wave 4 W4-05)
     _retry_metrics_enabled = _env_bool('G6_PIPELINE_RETRY_METRICS', True)
     # Lazy metric holders (attached once to avoid repeated registry lookups)
@@ -270,12 +271,14 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
             except Exception:
                 pass
         try:
-            phase_runs.append({
-                'phase': phase_name,
-                'final_outcome': final_outcome,
-                'attempts': attempts,
-                'duration_ms': round(total_duration_ms, 3),
-            })
+            phase_runs.append(
+                PhaseRun(
+                    phase=phase_name,
+                    final_outcome=str(final_outcome),
+                    attempts=int(attempts),
+                    duration_ms=float(round(total_duration_ms, 3)),
+                )
+            )
         except Exception:
             pass
         if final_outcome in ('abort','fatal','recoverable','recoverable_exhausted','unknown'):
@@ -314,20 +317,8 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
         # Attach cycle summary optionally after structured errors projection
         if _env_bool('G6_PIPELINE_CYCLE_SUMMARY', True):  # default on
             try:
-                ok_count = sum(1 for r in phase_runs if r['final_outcome']=='ok')
-                errored = [r for r in phase_runs if r['final_outcome']!='ok']
-                retries = [r for r in phase_runs if r['attempts']>1]
-                summary = {
-                    'phases_total': len(phase_runs),
-                    'phases_ok': ok_count,
-                    'phases_error': len(errored),
-                    'phases_with_retries': len(retries),
-                    'retry_enabled': bool(retry_enabled),
-                    'error_outcomes': {o: sum(1 for r in phase_runs if r['final_outcome']==o) for o in {r['final_outcome'] for r in phase_runs if r['final_outcome']!='ok'}},
-                    'aborted_early': any(r['final_outcome']=='abort' for r in phase_runs),
-                    'fatal': any(r['final_outcome']=='fatal' for r in phase_runs),
-                    'recoverable_exhausted': any(r['final_outcome']=='recoverable_exhausted' for r in phase_runs),
-                }
+                summary_obj = PipelineSummary.from_runs(phase_runs, retry_enabled=bool(retry_enabled))
+                summary = summary_obj.to_dict()
                 state.meta['pipeline_summary'] = summary
                 # Cycle level metrics (success gauge + counters + ratios + rolling window + trends ingestion)
                 try:  # pragma: no cover - metric emissions are straightforward
