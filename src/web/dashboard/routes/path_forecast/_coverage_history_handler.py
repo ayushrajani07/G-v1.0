@@ -11,7 +11,8 @@ from .._date_norm import resolve_date
 from .._now_norm import build_realized_map_and_times, nearest_time_key
 
 from ._bands_archive import iter_bands_quantile_rows
-from ._api_contract import base_headers
+from ._api_contract import add_common_headers, base_headers
+from ._archive_paths import bands_archive_path
 
 
 async def handle_path_coverage_history(
@@ -48,11 +49,7 @@ async def handle_path_coverage_history(
             index=idx,
             date=(the_date.isoformat() if the_date else None),
         )
-        try:
-            hdr_base["X-Expiry-Tag"] = str(expiry_tag or "")
-            hdr_base["X-Offset"] = str(offset or "")
-        except (TypeError, ValueError):
-            pass
+        add_common_headers(hdr_base, expiry_tag=str(expiry_tag or ""), offset=str(offset or ""))
 
         base = project_root() / "data" / "g6_data"
         p_live = find_live_csv(base, idx, expiry_tag, offset, the_date)
@@ -76,11 +73,10 @@ async def handle_path_coverage_history(
             hdr_base["X-Empty-Reason"] = "no_realized_map"
             return JSONResponse([], headers=hdr_base)
         now_ms = int(ts_sorted[-1])
+        add_common_headers(hdr_base, expiry_tag=str(expiry_tag or ""), offset=str(offset or ""), gen_ms=now_ms)
 
         # Load bands archive rows for the day (only entries for the selected horizon)
-        arch_dir = project_root() / "data" / "ml" / "path_forecasts" / idx
-        day_str = the_date.strftime("%Y-%m-%d")
-        arch_file_bands = arch_dir / f"{day_str}_bands.csv"
+        arch_file_bands = bands_archive_path(project_root=project_root, index=idx, d=the_date)
         if not arch_file_bands.exists():
             hdr_base["X-Empty-Reason"] = "bands_archive_missing"
             return JSONResponse([], headers=hdr_base)

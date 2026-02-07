@@ -75,6 +75,7 @@ from ._coverage_history_csv_handler import handle_path_coverage_history_csv as _
 from ._advisor_flags_handler import handle_path_advisor_flags as _handle_path_advisor_flags
 from ._forecast_meta_handler import handle_path_forecast_meta as _handle_path_forecast_meta
 from ._reset_defaults_handler import handle_reset_defaults as _handle_reset_defaults
+from ._archive_paths import calibration_dir
 
 router = APIRouter()
 _CACHE_TTL_MS = 20_000
@@ -164,7 +165,7 @@ def _load_calibration(index: str) -> dict:
     try:
         import json as _json
         idx = normalize_index(index)
-        p = _project_root() / "data" / "ml" / "path_forecasts" / "_calibration" / f"{idx}.json"
+        p = calibration_dir(project_root=_project_root) / f"{idx}.json"
         if p.exists():
             with p.open("r", encoding="utf-8") as f:
                 data = _json.load(f)

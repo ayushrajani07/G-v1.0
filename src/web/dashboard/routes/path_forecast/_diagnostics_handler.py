@@ -12,7 +12,8 @@ from .._date_norm import resolve_date
 from .._now_norm import build_realized_map_and_times, now_and_cutoff
 
 from ._bands_archive import iter_bands_quantile_rows, parse_float, parse_int
-from ._api_contract import base_headers, error_payload
+from ._api_contract import add_common_headers, base_headers, error_payload
+from ._archive_paths import forecast_archive_path
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +44,7 @@ async def handle_path_diagnostics(
             index=idx_norm,
             date=(the_date.isoformat() if the_date else None),
         )
-        try:
-            hdr_base["X-Expiry-Tag"] = str(expiry_tag or "")
-            hdr_base["X-Offset"] = str(offset or "")
-        except (TypeError, ValueError):
-            pass
+        add_common_headers(hdr_base, expiry_tag=str(expiry_tag or ""), offset=str(offset or ""))
 
         eff_tag = normalize_expiry_tag(idx_norm, expiry_tag)
         p_live = find_live_csv((project_root() / "data" / "g6_data"), idx_norm, eff_tag, offset, the_date)
@@ -62,7 +59,7 @@ async def handle_path_diagnostics(
                         offset=offset,
                         date=(the_date.isoformat() if the_date else None),
                     ),
-                    status_code=404,
+                    status_code=200,
                     headers=hdr_base,
                 )
         except HTTPException:
@@ -77,7 +74,7 @@ async def handle_path_diagnostics(
                     offset=offset,
                     date=(the_date.isoformat() if the_date else None),
                 ),
-                status_code=404,
+                status_code=200,
                 headers=hdr_base,
             )
 
@@ -92,7 +89,7 @@ async def handle_path_diagnostics(
                     offset=offset,
                     date=(the_date.isoformat() if the_date else None),
                 ),
-                status_code=503,
+                status_code=200,
                 headers=hdr_base,
             )
 
@@ -112,10 +109,11 @@ async def handle_path_diagnostics(
                     offset=offset,
                     date=(the_date.isoformat() if the_date else None),
                 ),
-                status_code=503,
+                status_code=200,
                 headers=hdr_base,
             )
         now_ms, cutoff_gen = now_and_cutoff(ts_sorted, window_minutes)
+        add_common_headers(hdr_base, expiry_tag=str(eff_tag or ""), offset=str(offset or ""), gen_ms=now_ms)
         if now_ms is None or cutoff_gen is None:
             hdr_base["X-Empty-Reason"] = "no_realized_timestamps"
             return JSONResponse(
@@ -126,14 +124,12 @@ async def handle_path_diagnostics(
                     offset=offset,
                     date=(the_date.isoformat() if the_date else None),
                 ),
-                status_code=503,
+                status_code=200,
                 headers=hdr_base,
             )
 
         # Locate archive file for today
-        arch_dir = project_root() / "data" / "ml" / "path_forecasts" / idx_norm
-        day_str = the_date.strftime("%Y-%m-%d")
-        arch_file = arch_dir / f"{day_str}.csv"
+        arch_file = forecast_archive_path(project_root=project_root, index=idx_norm, d=the_date)
         if not arch_file.exists():
             hdr_base["X-Empty-Reason"] = "archive_missing"
             return JSONResponse(
@@ -195,7 +191,8 @@ async def handle_path_diagnostics(
         coverage_by_h: dict[int, float] = {}
         bandw_by_h: dict[int, float] = {}
         try:
-            arch_file_bands = arch_dir / f"{day_str}_bands.csv"
+            from ._archive_paths import bands_archive_path
+            arch_file_bands = bands_archive_path(project_root=project_root, index=idx_norm, d=the_date)
             if arch_file_bands.exists():
                 # Accumulators per horizon
                 cover_counts: dict[int, int] = {h: 0 for h in Hs}

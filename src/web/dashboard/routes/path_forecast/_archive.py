@@ -88,6 +88,7 @@ def _apply_calibration_and_archive(
     try:
         from typing import Dict, Sequence, cast
 
+        # Reuse the same resolved base dir; rebuild config only if prior block failed
         arch_dir = _resolve_project_root() / "data" / "ml" / "path_forecasts"
         _acfg2 = _archive_config(arch_dir)
         qmap_cast2 = cast(

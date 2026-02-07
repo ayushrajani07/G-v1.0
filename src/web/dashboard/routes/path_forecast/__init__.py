@@ -14,11 +14,11 @@ router = _router.router
 
 
 def __getattr__(name: str):  # pragma: no cover
-	return getattr(_router, name)
+    return getattr(_router, name)
 
 
 def __dir__() -> list[str]:  # pragma: no cover
-	return sorted(set(globals().keys()) | set(dir(_router)))
+    return sorted(set(globals().keys()) | set(dir(_router)))
 
 
 __all__ = ["router"]

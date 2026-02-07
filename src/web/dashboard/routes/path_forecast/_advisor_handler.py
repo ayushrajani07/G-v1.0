@@ -14,6 +14,7 @@ from .._date_norm import resolve_date
 from .._now_norm import build_realized_map_and_times, nearest_time_key, now_and_cutoff
 
 from ._bands_archive import detect_quantile_columns, parse_float, parse_int
+from ._archive_paths import bands_archive_path
 
 
 async def handle_path_advisor(
@@ -179,9 +180,7 @@ async def handle_path_advisor(
         summary.update({"band_scale": band_scale, "target": target})
 
         # Coverage and samples using bands archive (calibrated view)
-        arch_dir = project_root() / "data" / "ml" / "path_forecasts" / idx
-        day_str = the_date.strftime("%Y-%m-%d")
-        arch_file_bands = arch_dir / f"{day_str}_bands.csv"
+        arch_file_bands = bands_archive_path(project_root=project_root, index=idx, d=the_date)
         cov = None
         samples = 0
         bw_mean = None

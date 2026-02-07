@@ -5,6 +5,8 @@ from pathlib import Path
 
 from src.web.dashboard.core.paths import project_root as _project_root
 
+from ._archive_paths import calibration_dir as _calibration_dir, calibration_history_dir as _calibration_history_dir
+
 from .._index_norm import normalize_index
 
 logger = logging.getLogger(__name__)
@@ -76,9 +78,8 @@ def _load_profiles() -> dict[str, dict]:
 
 
 def _calibration_dirs() -> tuple[Path, Path]:
-    base = _project_root() / "data" / "ml" / "path_forecasts"
-    cal_dir = base / "_calibration"
-    hist_dir = base / "_calibration_history"
+    cal_dir = _calibration_dir(project_root=_project_root)
+    hist_dir = _calibration_history_dir(project_root=_project_root)
     try:
         cal_dir.mkdir(parents=True, exist_ok=True)
         hist_dir.mkdir(parents=True, exist_ok=True)

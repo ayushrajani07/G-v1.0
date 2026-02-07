@@ -11,7 +11,8 @@ from .._date_norm import resolve_date
 from .._now_norm import infer_now_ms_from_rows
 
 from ._bands_archive import iter_bands_quantile_rows
-from ._api_contract import base_headers
+from ._api_contract import add_common_headers, base_headers
+from ._archive_paths import bands_archive_path
 
 
 async def handle_path_prediction_history(
@@ -46,12 +47,12 @@ async def handle_path_prediction_history(
             index=idx,
             date=(the_date.isoformat() if the_date else None),
         )
-        try:
-            hdr_base["X-Expiry-Tag"] = str(expiry_tag or "")
-            hdr_base["X-Offset"] = str(offset or "")
-            hdr_base["X-Profile"] = (str(profile).lower() if profile else "")
-        except (TypeError, ValueError, AttributeError):
-            pass
+        add_common_headers(
+            hdr_base,
+            expiry_tag=str(expiry_tag or ""),
+            offset=str(offset or ""),
+            profile=(str(profile).lower() if profile else ""),
+        )
 
         # Resolve 'now' via live_csv for robust windowing (falls back to archive if needed)
         eff_tag = normalize_expiry_tag(idx, expiry_tag)
@@ -69,9 +70,7 @@ async def handle_path_prediction_history(
             now_ms = None
 
         # Locate bands archive for the day
-        arch_dir = project_root() / "data" / "ml" / "path_forecasts" / idx
-        day_str = the_date.strftime("%Y-%m-%d")
-        arch_file_bands = arch_dir / f"{day_str}_bands.csv"
+        arch_file_bands = bands_archive_path(project_root=project_root, index=idx, d=the_date)
         if not arch_file_bands.exists():
             hdr_base["X-Empty-Reason"] = "bands_archive_missing"
             return JSONResponse([], headers=hdr_base)
@@ -97,6 +96,7 @@ async def handle_path_prediction_history(
         entries.sort(key=lambda x: x[0])
         if now_ms is None:
             now_ms = entries[-1][0]
+        add_common_headers(hdr_base, expiry_tag=str(expiry_tag or ""), offset=str(offset or ""), profile=(str(profile).lower() if profile else ""), gen_ms=now_ms)
         cutoff = int(now_ms) - int(window_minutes) * 60_000
         filtered = [e for e in entries if e[0] >= cutoff]
 

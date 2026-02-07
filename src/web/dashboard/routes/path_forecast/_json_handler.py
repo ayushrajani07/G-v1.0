@@ -19,7 +19,7 @@ from ._qmap import (
     _recentering_shift,
     _sanitize_qmap,
 )
-from ._api_contract import base_headers
+from ._api_contract import base_headers, add_common_headers
 
 logger = logging.getLogger(__name__)
 
@@ -80,11 +80,7 @@ async def handle_path_forecast_json(
             index=idx_norm,
             date=(the_date.isoformat() if the_date else None),
         )
-        try:
-            hdr_base["X-Expiry-Tag"] = str(eff_tag or "")
-            hdr_base["X-Offset"] = str(offset or "")
-        except (TypeError, ValueError):
-            pass
+        add_common_headers(hdr_base, expiry_tag=str(eff_tag or ""), offset=str(offset or ""), profile=profile, gen_ms=ref_now_ms)
 
         if rows is None:
             try:
@@ -404,7 +400,14 @@ async def handle_path_forecast_json(
         except (TypeError, ValueError):
             pass
 
-        return JSONResponse(out, headers=headers)
+        # Merge common contract headers (index/date/expiry/offset/gen/profile) with ribbon diagnostics.
+        # Prefer the more specific ribbon diagnostics on key conflicts.
+        final_headers = dict(hdr_base)
+        try:
+            final_headers.update(headers)
+        except (TypeError, ValueError):
+            pass
+        return JSONResponse(out, headers=final_headers)
 
     except HTTPException:
         raise

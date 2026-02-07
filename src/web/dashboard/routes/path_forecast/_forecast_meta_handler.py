@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from ._api_contract import base_headers, error_payload
+from ._api_contract import add_common_headers, base_headers, error_payload
 
 
 async def handle_path_forecast_meta(
@@ -50,17 +50,13 @@ async def handle_path_forecast_meta(
 
         requested_day = the_date.isoformat() if the_date else None
         hdr_base = base_headers(route_version="meta-v1", index=idx_norm, date=requested_day)
-        try:
-            hdr_base["X-Expiry-Tag"] = str(eff_tag or "")
-            hdr_base["X-Offset"] = str(offset or "")
-            hdr_base["X-Gen-Ms"] = str(ref_now_ms or "")
-            hdr_base["X-Gen-Iso"] = (
-                dt_module.datetime.fromtimestamp(ref_now_ms / 1000).replace(microsecond=0).isoformat()
-                if ref_now_ms
-                else ""
-            )
-        except (TypeError, ValueError, AttributeError):
-            pass
+        add_common_headers(
+            hdr_base,
+            expiry_tag=str(eff_tag or ""),
+            offset=str(offset or ""),
+            profile=profile,
+            gen_ms=(int(ref_now_ms) if isinstance(ref_now_ms, int) else None),
+        )
 
         if rows is None:
             return JSONResponse(

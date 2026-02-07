@@ -11,6 +11,7 @@ from .._now_norm import infer_now_ms_from_rows
 
 from ._bands_archive import detect_quantile_columns, iter_dict_rows, parse_float, parse_int
 from ._api_contract import base_headers
+from ._archive_paths import bands_archive_path
 
 
 async def handle_path_prediction_history_csv(
@@ -70,9 +71,7 @@ async def handle_path_prediction_history_csv(
                 raise
             now_ms = None
 
-        arch_dir = project_root() / "data" / "ml" / "path_forecasts" / idx
-        day_str = the_date.strftime("%Y-%m-%d")
-        arch_file_bands = arch_dir / f"{day_str}_bands.csv"
+        arch_file_bands = bands_archive_path(project_root=project_root, index=idx, d=the_date)
         if not arch_file_bands.exists():
             hdr_base["X-Empty-Reason"] = "bands_archive_missing"
             return PlainTextResponse(

@@ -40,6 +40,7 @@ from .routes.live import router as live_router
 from .routes.overlay import router as overlay_router
 from .routes.system import router as system_router
 from .routes.path_forecast import router as path_forecast_router
+from .routes.ml import router as ml_router
 try:
     # Advisor router provides universal advisor endpoints
     from .routes.advisor import router as advisor_router
@@ -261,6 +262,7 @@ app.include_router(live_router)
 app.include_router(overlay_router)
 app.include_router(system_router)
 app.include_router(path_forecast_router)
+app.include_router(ml_router)
 # Memory status endpoint (lightweight; avoid dedicated router for single path)
 try:
     from src.utils.memory_manager import get_memory_manager as _get_mm
@@ -957,27 +959,6 @@ async def health_metrics() -> JSONResponse:
         'advisor_age_minutes': advisor_age_minutes,
     })
 
-# --------------------------- Ensemble & Forecast API (minimal placeholders) ---------------------------
-# Tests expect CSV-style text responses for ensemble k calibration, weights, and quarantine log.
-# Implement lightweight endpoints reading sidecar/log files under data/ml/live_predictions rooted at project_root().
-from fastapi.responses import PlainTextResponse
-from .core import paths as _paths_core
-from src.utils.timeutils import utc_now_z as _utc_now_z
-try:
-    from src.path_forecast.composite import CompositePathForecaster, CompositeConfig
-except BaseException as e:
-    import asyncio
-    if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
-        raise
-    CompositePathForecaster = None  # type: ignore
-    CompositeConfig = None  # type: ignore
-
-def _ml_live_predictions_dir() -> Path:
-    try:
-        return _paths_core.project_root() / 'data' / 'ml' / 'live_predictions'
-    except (AttributeError, TypeError, ValueError, OSError):
-        return Path('data/ml/live_predictions')
-
 # --------------------------- Alerts File Write Endpoint ---------------------------
 @app.post('/api/alerts/file')
 async def alert_webhook_file(request: Request) -> JSONResponse:
@@ -1047,179 +1028,3 @@ async def alert_webhook_file(request: Request) -> JSONResponse:
         return JSONResponse({'error': 'write_failed'}, status_code=500)
     return JSONResponse({'written': len(lines), 'file': str(log_fp)})
 
-@app.get('/api/ml/ensemble/k_calibration')
-async def api_ml_ensemble_k_calibration(index: str, horizon: str | None = None) -> PlainTextResponse:
-    """Return k calibration CSV row from <index>_ensemble_k_calibration.json sidecar.
-
-    Header: timestamp,recommended_k,k_smooth,effective_cov,band_radius,target,index,horizon,n
-    Missing file -> 404.
-    """
-    base = _ml_live_predictions_dir()
-    fp = base / f'{index}_ensemble_k_calibration.json'
-    if not fp.exists():
-        return PlainTextResponse('not found', status_code=404)
-    try:
-        data = _json.loads(fp.read_text(encoding='utf-8'))
-    except (OSError, UnicodeError, ValueError, TypeError) as e:
-        get_error_handler().handle_error(e, category=ErrorCategory.FILE_IO, severity=ErrorSeverity.LOW, component='web.dashboard.app', function_name='api_ml_ensemble_k_calibration', message='failed_read')
-        return PlainTextResponse('read error', status_code=500)
-    # Build header/row
-    header = 'timestamp,recommended_k,k_smooth,effective_cov,band_radius,target,index,horizon,n'
-    ts = str(data.get('timestamp', ''))
-    recommended_k = data.get('recommended_k')
-    k_smooth = data.get('k_smooth')
-    effective_cov = data.get('effective_cov')
-    band_radius = data.get('band_radius')
-    target = data.get('target')
-    n = data.get('n')
-    horizon_val = horizon or str(data.get('horizon', ''))
-    # Format k_smooth to two decimals when numeric (tests expect e.g. 1.10 not 1.1)
-    if k_smooth is not None:
-        try:
-            k_smooth_fmt = f"{float(k_smooth):.2f}"
-        except (TypeError, ValueError):
-            k_smooth_fmt = str(k_smooth)
-    else:
-        k_smooth_fmt = ''
-    row = f"{ts},{recommended_k},{k_smooth_fmt},{effective_cov},{band_radius},{target},{index},{horizon_val},{n}"
-    return PlainTextResponse(f"{header}\n{row}")
-
-@app.get('/api/ml/ensemble/weights')
-async def api_ml_ensemble_weights(index: str, horizon: str) -> PlainTextResponse:
-    """Return model weight CSV from <index>_ensemble_weights.json sidecar.
-
-    Header: timestamp,model,weight,rmse,index,horizon sorted by weight desc.
-    Non-numeric weight -> 0.0.
-    Missing file -> 404.
-    """
-    base = _ml_live_predictions_dir()
-    fp = base / f'{index}_ensemble_weights.json'
-    if not fp.exists():
-        return PlainTextResponse('not found', status_code=404)
-    try:
-        data = _json.loads(fp.read_text(encoding='utf-8'))
-    except (OSError, UnicodeError, ValueError, TypeError) as e:
-        get_error_handler().handle_error(e, category=ErrorCategory.FILE_IO, severity=ErrorSeverity.LOW, component='web.dashboard.app', function_name='api_ml_ensemble_weights', message='failed_read')
-        return PlainTextResponse('read error', status_code=500)
-    weights: dict[str, Any] = data.get('weights', {}) if isinstance(data.get('weights'), dict) else {}
-    rmse: dict[str, Any] = data.get('rmse', {}) if isinstance(data.get('rmse'), dict) else {}
-    rows: list[tuple[str, float, float]] = []
-    for model, w in weights.items():
-        try:
-            w_val = float(w)
-        except (TypeError, ValueError):
-            w_val = 0.0
-        try:
-            rmse_val = float(rmse.get(model, 0.0))
-        except (TypeError, ValueError):
-            rmse_val = 0.0
-        rows.append((model, w_val, rmse_val))
-    rows.sort(key=lambda x: x[1], reverse=True)
-    header = 'timestamp,model,weight,rmse,index,horizon'
-    ts = str(data.get('timestamp', ''))
-    out_lines = [header]
-    for model, w_val, rmse_val in rows:
-        out_lines.append(f"{ts},{model},{w_val:.6f},{rmse_val:.6f},{index},{horizon}")
-    return PlainTextResponse('\n'.join(out_lines))
-
-@app.get('/api/ml/ensemble/quarantine_log')
-async def api_ml_ensemble_quarantine_log(index: str, horizon: str | None = None, tail: int = 200) -> PlainTextResponse:
-    """Return quarantine log CSV from <index>_ensemble_quarantine.log.
-
-    Header: timestamp,event,model,z,dis,until_ms,horizon. Lines with fewer than 3 fields skipped.
-    tail parameter limits returned rows after filtering (default 200). Missing file -> 404.
-    """
-    base = _ml_live_predictions_dir()
-    fp = base / f'{index}_ensemble_quarantine.log'
-    if not fp.exists():
-        return PlainTextResponse('not found', status_code=404)
-    try:
-        raw_lines = fp.read_text(encoding='utf-8').splitlines()
-    except (OSError, UnicodeError, ValueError, TypeError) as e:
-        get_error_handler().handle_error(e, category=ErrorCategory.FILE_IO, severity=ErrorSeverity.LOW, component='web.dashboard.app', function_name='api_ml_ensemble_quarantine_log', message='failed_read')
-        return PlainTextResponse('read error', status_code=500)
-    header = 'timestamp,event,model,z,dis,until_ms,horizon'
-    rows: list[str] = []
-    for ln in raw_lines:
-        parts = [p.strip() for p in ln.split(',')]
-        if len(parts) < 3:
-            continue  # malformed
-        # Expect format: ts,event,model,(extras... horizon=H)
-        ts, event, model, *extras = parts
-        z = ''
-        dis = ''
-        until_ms = ''
-        h_val = ''
-        for ex in extras:
-            if ex.startswith('z='):
-                z = ex.split('=',1)[1]
-            elif ex.startswith('dis='):
-                dis = ex.split('=',1)[1]
-            elif ex.startswith('until='):
-                until_ms = ex.split('=',1)[1]
-            elif ex.startswith('horizon='):
-                h_val = ex.split('=',1)[1]
-        if horizon and h_val and h_val != horizon:
-            continue
-        rows.append(f"{ts},{event},{model},{z},{dis},{until_ms},{h_val}")
-    if tail > 0 and len(rows) > tail:
-        rows = rows[-tail:]
-    return PlainTextResponse('\n'.join([header] + rows))
-
-# --------------------------- Path Forecast Endpoint (composite) ---------------------------
-@app.get('/api/ml/forecast/path')
-async def api_ml_forecast_path(index: str, horizon: int = 60, quantiles: str = '0.1,0.5,0.9', bucket_ms: int = 60000) -> PlainTextResponse:
-    """Return composite path forecast quantiles as CSV.
-
-    CSV header: timestamp,index,horizon,quantile,future_ts,value
-    Each row: request timestamp (iso), index, horizon (minutes), quantile, future epoch ms, value
-    Falls back to placeholder NAN rows if forecaster unavailable.
-    """
-    req_ts = _utc_now_z()
-    q_list: list[float] = []
-    for part in str(quantiles).split(','):
-        part = part.strip()
-        if not part:
-            continue
-        try:
-            q_list.append(float(part))
-        except (TypeError, ValueError):
-            continue
-    if not q_list:
-        q_list = [0.1, 0.5, 0.9]
-    # Attempt composite forecast if available
-    rows: list[str] = []
-    header = 'timestamp,index,horizon,quantile,future_ts,value'
-    if CompositePathForecaster is None or CompositeConfig is None:
-        # Placeholder output: single future point per quantile with NAN
-        now_ms = int(time.time()*1000)
-        rows.extend(
-            f"{req_ts},{index},{horizon},{q:.3f},{now_ms + bucket_ms},{float('nan')}" for q in q_list
-        )
-        return PlainTextResponse('\n'.join([header] + rows))
-    try:
-        root = _paths_core.project_root() / 'data' / 'g6_data'
-    except (AttributeError, TypeError, ValueError, OSError):
-        root = Path('data/g6_data')
-    try:
-        cfg = CompositeConfig(root=root, window=60, k=15, min_days=3)
-        fore = CompositePathForecaster(cfg)
-        now_ms = int(time.time()*1000)
-        # Minimal recent window: empty -> internal logic handles
-        times, qmap = fore.forecast_path([], context={'index': index, 'now_ms': now_ms, 'live_rows': []}, quantiles=q_list, horizon_minutes=int(horizon), bucket_ms=int(bucket_ms))
-        for q in q_list:
-            vals = list(qmap.get(q, []))
-            rows.extend(
-                f"{req_ts},{index},{horizon},{q:.3f},{ft},{(vals[i] if i < len(vals) else float('nan'))}"
-                for i, ft in enumerate(times)
-            )
-    except BaseException as e:
-        import asyncio
-        if isinstance(e, (KeyboardInterrupt, SystemExit, GeneratorExit, asyncio.CancelledError)):
-            raise
-        get_error_handler().handle_error(e, category=ErrorCategory.ML, severity=ErrorSeverity.LOW, component='web.dashboard.app', function_name='api_ml_forecast_path', message='forecast_error')
-        now_ms = int(time.time()*1000)
-        rows.extend(
-            f"{req_ts},{index},{horizon},{q:.3f},{now_ms + bucket_ms},{float('nan')}" for q in q_list
-        )
-    return PlainTextResponse('\n'.join([header] + rows))

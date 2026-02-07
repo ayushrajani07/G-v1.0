@@ -11,6 +11,7 @@ from .._date_norm import resolve_date
 from .._now_norm import build_realized_map_and_times, nearest_time_key, now_and_cutoff
 
 from ._bands_archive import detect_quantile_columns, parse_float, parse_int
+from ._archive_paths import bands_archive_path, calibration_history_dir
 
 
 def _compute_calibration_suggestion(
@@ -59,9 +60,7 @@ def _compute_calibration_suggestion(
         raise HTTPException(status_code=503, detail="no realized timestamps")
 
     # Load bands archive (today)
-    arch_dir = project_root() / "data" / "ml" / "path_forecasts" / idx
-    day_str = the_date.strftime("%Y-%m-%d")
-    arch_file_bands = arch_dir / f"{day_str}_bands.csv"
+    arch_file_bands = bands_archive_path(project_root=project_root, index=idx, d=the_date)
     if not arch_file_bands.exists():
         raise HTTPException(status_code=404, detail="no bands archive for date")
 
@@ -238,7 +237,7 @@ async def handle_path_calibration_history(
 
     idx = normalize_index(index)
     hdr_base = base_headers(route_version="calhist-v1", index=idx, date=None)
-    hist_dir = project_root() / "data" / "ml" / "path_forecasts" / "_calibration_history"
+    hist_dir = calibration_history_dir(project_root=project_root)
     p_hist = hist_dir / f"{idx}.csv"
     if not p_hist.exists():
         try:
