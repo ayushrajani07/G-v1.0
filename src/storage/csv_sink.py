@@ -31,6 +31,34 @@ from .csv_sink_overview_utils import (
 )
 from .csv_sink_option_row_utils import build_option_row as _build_option_row
 from .csv_sink_parse_utils import get_float as _get_float, get_int as _get_int
+from .csv_sink_compat_utils import (
+    compute_net_and_day_changes as _compute_net_and_day_changes_pure,
+    allowed_expiry_tags_list_from_config as _allowed_expiry_tags_list_from_config_pure,
+    build_disallowed_expiry_skipped_metrics as _build_disallowed_expiry_skipped_metrics_pure,
+    g6_config_json_path_from_module_file as _g6_config_json_path_from_module_file_pure,
+    is_expiry_tag_disallowed as _is_expiry_tag_disallowed_pure,
+    compute_pcr_strict_from_oi as _compute_pcr_strict_from_oi_pure,
+    build_invalid_expiry_date_skipped_metrics as _build_invalid_expiry_date_skipped_metrics_pure,
+    is_expiry_date_disallowed as _is_expiry_date_disallowed_pure,
+    resolve_index_price as _resolve_index_price_pure,
+    select_nearest_atm_last_price as _select_nearest_atm_last_price_pure,
+    update_daily_open_tracking as _update_daily_open_tracking_pure,
+    select_row_closest_to_time as _select_row_closest_to_time_pure,
+    parse_prev_close_values_from_overview_row as _parse_prev_close_values_from_overview_row_pure,
+    build_misclass_quarantine_record as _build_misclass_quarantine_record_pure,
+    build_return_metrics as _build_return_metrics_pure,
+    compute_change_metrics as _compute_change_metrics_pure,
+    compute_pcr as _compute_pcr_pure,
+    determine_expiry_code as _determine_expiry_code_pure,
+    is_iso_date_tag as _is_iso_date_tag_pure,
+    expected_expiry_tags_from_config as _expected_expiry_tags_from_config_pure,
+    load_json_file as _load_json_file_pure,
+    should_emit_missing_expiry_advisory as _should_emit_missing_expiry_advisory_pure,
+    normalize_expiry_rule_tag as _normalize_expiry_rule_tag_pure,
+    parse_expiry_to_date as _parse_expiry_to_date_pure,
+    prune_mixed_expiry_instruments as _prune_mixed_expiry_instruments_pure,
+    validate_grouped_strike_schema as _validate_grouped_strike_schema_pure,
+)
 from .csv_sink_tp_utils import (
     compute_tp_change_metrics as _compute_tp_change_metrics,
     parse_date_key_from_ts_str_rounded as _parse_date_key_from_ts_str_rounded,
@@ -455,38 +483,27 @@ class CsvSink:
         # ---------------- Config-based expiry enforcement (Task 29) ----------------
         if supplied_tag:
             try:
-                if not hasattr(self, '_config_cache'):
-                    proj_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
-                    cfg_path = os.path.join(proj_root, 'config', 'g6_config.json')
-                    with open(cfg_path, encoding='utf-8') as _cf:
-                        self._config_cache = json.load(_cf)
-                indices_cfg = (self._config_cache or {}).get('indices', {})
-                _allowed_raw = indices_cfg.get(index, {}).get('expiries')
-                allowed = _allowed_raw if isinstance(_allowed_raw, list) else []
-                if allowed and expiry_code not in allowed:
+                if getattr(self, '_config_cache', None) is None:
+                    cfg_path = _g6_config_json_path_from_module_file_pure(__file__)
+                    self._config_cache = _load_json_file_pure(cfg_path) or {}
+
+                allowed = _allowed_expiry_tags_list_from_config_pure(self._config_cache, index=index)
+                if _is_expiry_tag_disallowed_pure(expiry_code=expiry_code, allowed=allowed):
                     if self._concise:
                         self.logger.debug("CSV_SKIPPED_DISALLOWED index=%s tag=%s allowed=%s", index, expiry_code, allowed)
                     else:
                         self.logger.info("Skipping disallowed expiry tag for %s: %s not in %s", index, expiry_code, allowed)
                     self._metric_inc('csv_skipped_disallowed', 1, {'index': index, 'expiry': expiry_code})
-                    return ({
-                        'expiry_code': expiry_code,
-                        'pcr': 0,
-                        'timestamp': timestamp,
-                        'day_width': 0,
-                        'skipped': True,
-                    } if return_metrics else None)
+                    return (
+                        _build_disallowed_expiry_skipped_metrics_pure(expiry_code=expiry_code, timestamp=timestamp)
+                        if return_metrics
+                        else None
+                    )
             except (OSError, IOError, FileNotFoundError, PermissionError, json.JSONDecodeError, KeyError, TypeError, ValueError, AttributeError) as cfg_e:  # pragma: no cover
                 self.logger.debug("Config enforcement failed for %s %s: %s", index, expiry_code, cfg_e)
 
         # Get or calculate index price
-        if not index_price:
-            defaults = {"NIFTY": 24800, "BANKNIFTY": 54200, "FINNIFTY": 25900, "MIDCPNIFTY": 22000, "SENSEX": 80900}
-            index_price = defaults.get(index, 0)
-            for data in options_data.values():
-                if 'index_price' in data:
-                    index_price = float(data['index_price'])
-                    break
+        index_price = _resolve_index_price_pure(index=index, index_price=index_price, options_data=options_data)
 
         # Calculate ATM strike (factored out)
         atm_strike = self._compute_atm_strike(index, float(index_price))
@@ -496,25 +513,21 @@ class CsvSink:
             self.logger.info("Index %s price: %s, ATM strike: %s", index, index_price, atm_strike)
 
         # Calculate PCR for this expiry
-        put_oi = sum(float(data.get('oi', 0)) for data in options_data.values() if data.get('instrument_type') == 'PE')
-        call_oi = sum(float(data.get('oi', 0)) for data in options_data.values() if data.get('instrument_type') == 'CE')
-        pcr = put_oi / call_oi if call_oi > 0 else 0
+        pcr = _compute_pcr_strict_from_oi_pure(options_data)
 
         # ---------------- Allowed expiry_dates validation (Task 39) ----------------
         try:
             allowed_set = getattr(self, 'allowed_expiry_dates', None)
-            if allowed_set and isinstance(allowed_set, (set, list, tuple)) and exp_date not in allowed_set:
+            if _is_expiry_date_disallowed_pure(exp_date=exp_date, allowed_expiry_dates=allowed_set):
                 if self._concise:
                     self.logger.debug("CSV_SKIP_INVALID_EXPIRY index=%s tag=%s expiry=%s", index, expiry_code, expiry_str)
                 else:
                     self.logger.warning("Skipping write: expiry_date %s not in allowed set for %s (size=%s)", expiry_str, index, len(allowed_set))
-                return ({
-                    'expiry_code': expiry_code,
-                    'pcr': 0,
-                    'timestamp': timestamp,
-                    'day_width': 0,
-                    'skipped_invalid_expiry': True,
-                } if return_metrics else None)
+                return (
+                    _build_invalid_expiry_date_skipped_metrics_pure(expiry_code=expiry_code, timestamp=timestamp)
+                    if return_metrics
+                    else None
+                )
         except (TypeError, KeyError, AttributeError) as e:
             self.logger.debug("Failed to validate expiry date for %s: %s", index, e)
         except (ValueError, RuntimeError) as e:
@@ -526,78 +539,57 @@ class CsvSink:
             day_width = float(index_ohlc.get('high', 0)) - float(index_ohlc.get('low', 0))
 
         # ---- Compute ATM total premium (tp) for overview, and index/tp changes ----
-        def _nearest_price(instrument_type: str) -> float:
-            best_diff: float | None = None
-            best_price = 0.0
-            for od in options_data.values():
-                if od.get('instrument_type') != instrument_type:
-                    continue
-                try:
-                    k = float(od.get('strike', 0) or 0)
-                except (TypeError, ValueError) as e:
-                    self.logger.debug("Failed to parse strike value: %s", e)
-                    continue
-                except (OverflowError, RuntimeError) as e:
-                    self.logger.debug("Unexpected error parsing strike: %s", e)
-                    continue
-                diff = abs(k - atm_strike)
-                if best_diff is None or diff < best_diff:
-                    try:
-                        best_price = float(od.get('last_price', 0) or 0)
-                        best_diff = diff
-                    except (TypeError, ValueError) as e:
-                        self.logger.debug("Failed to parse last_price: %s", e)
-                    except (OverflowError, RuntimeError) as e:
-                        self.logger.debug("Unexpected error parsing price: %s", e)
-            return best_price
-
-        ce_atm = _nearest_price('CE')
-        pe_atm = _nearest_price('PE')
+        ce_atm = _select_nearest_atm_last_price_pure(options_data=options_data, atm_strike=atm_strike, instrument_type='CE')
+        pe_atm = _select_nearest_atm_last_price_pure(options_data=options_data, atm_strike=atm_strike, instrument_type='PE')
         tp_value = float(ce_atm) + float(pe_atm)
 
         # Prepare daily open tracking for index/tp and load previous closes
         date_key = timestamp.strftime('%Y-%m-%d')
-        try:
-            self._ensure_prev_close_loaded(index=index, date_key=date_key)
-        except (IOError, OSError, csv.Error, KeyError, ValueError):
-            pass
+        self._ensure_prev_close_loaded_best_effort(index=index, date_key=date_key)
 
         current_time = timestamp.time()
         market_open_time = datetime.time(9, 15)
         market_open_window = datetime.time(9, 30)
-        if self._index_open_date.get(index) != date_key:
-            if market_open_time <= current_time <= market_open_window:
-                self._index_open_date[index] = date_key
-                self._index_open_price[index] = float(index_price or 0.0)
-            elif current_time < market_open_time:
-                self._index_open_date[index] = date_key
-                self._index_open_price[index] = float(index_price or 0.0)
-            else:
-                self._index_open_date[index] = date_key
-                self._index_open_price[index] = float(index_price or 0.0)
-        elif self._index_open_date.get(index) == date_key and market_open_time <= current_time <= market_open_window:
-            self._index_open_price[index] = float(index_price or 0.0)
 
-        if self._tp_open_date.get(index) != date_key:
-            if market_open_time <= current_time <= market_open_window:
-                self._tp_open_date[index] = date_key
-                self._tp_open[index] = float(tp_value)
-            elif current_time < market_open_time:
-                self._tp_open_date[index] = date_key
-                self._tp_open[index] = float(tp_value)
-            else:
-                self._tp_open_date[index] = date_key
-                self._tp_open[index] = float(tp_value)
-        elif self._tp_open_date.get(index) == date_key and market_open_time <= current_time <= market_open_window:
-            self._tp_open[index] = float(tp_value)
+        idx_open_date, idx_open_price = _update_daily_open_tracking_pure(
+            stored_date_key=self._index_open_date.get(index),
+            stored_open_value=self._index_open_price.get(index),
+            date_key=date_key,
+            current_time=current_time,
+            current_value=float(index_price or 0.0),
+            market_open_time=market_open_time,
+            market_open_window_end=market_open_window,
+        )
+        self._index_open_date[index] = idx_open_date
+        self._index_open_price[index] = idx_open_price
+
+        tp_open_date, tp_open_value = _update_daily_open_tracking_pure(
+            stored_date_key=self._tp_open_date.get(index),
+            stored_open_value=self._tp_open.get(index),
+            date_key=date_key,
+            current_time=current_time,
+            current_value=float(tp_value),
+            market_open_time=market_open_time,
+            market_open_window_end=market_open_window,
+        )
+        self._tp_open_date[index] = tp_open_date
+        self._tp_open[index] = tp_open_value
 
         prev_close_idx = self._index_prev_close.get(index)
-        index_net_change = float(index_price or 0.0) - float(prev_close_idx) if prev_close_idx is not None else 0.0
-        index_day_change = float(index_price or 0.0) - float(self._index_open_price.get(index, index_price or 0.0))
+        index_net_change, index_day_change = _compute_net_and_day_changes_pure(
+            current_value=float(index_price or 0.0),
+            prev_close_value=prev_close_idx,
+            day_open_value=self._index_open_price.get(index),
+            day_open_fallback=float(index_price or 0.0),
+        )
 
         prev_close_tp = self._tp_prev_close.get(index)
-        tp_net_change = float(tp_value) - float(prev_close_tp) if prev_close_tp is not None else 0.0
-        tp_day_change = float(tp_value) - float(self._tp_open.get(index, tp_value))
+        tp_net_change, tp_day_change = _compute_net_and_day_changes_pure(
+            current_value=float(tp_value),
+            prev_close_value=prev_close_tp,
+            day_open_value=self._tp_open.get(index),
+            day_open_fallback=float(tp_value),
+        )
 
         self._prune_mixed_expiry(options_data, exp_date, index=index, expiry_code=expiry_code)
         self._advise_missing_expiries(index=index, expiry_code=expiry_code, timestamp=timestamp)
@@ -732,7 +724,7 @@ class CsvSink:
         """
         # Parse date
         try:
-            exp_date = expiry if isinstance(expiry, datetime.date) else datetime.datetime.strptime(str(expiry), '%Y-%m-%d').date()
+            exp_date = _parse_expiry_to_date_pure(expiry)
         except (ValueError, TypeError, AttributeError) as e:
             # Fallback: treat unparsable expiry as today (should be rare) to avoid crash; logs at warning.
             self.logger.warning("CSV_EXPIRY_PARSE_FALLBACK index=%s raw=%s: %s", index, expiry, e)
@@ -741,8 +733,8 @@ class CsvSink:
             self.logger.error("Unexpected error parsing expiry for %s: %s", index, e, exc_info=True)
             exp_date = datetime.date.today()
         
-        supplied_tag = (expiry_rule_tag.strip() if isinstance(expiry_rule_tag, str) and expiry_rule_tag.strip() else None)
-        if supplied_tag and re.fullmatch(r"\d{4}-\d{2}-\d{2}", supplied_tag):
+        supplied_tag = _normalize_expiry_rule_tag_pure(expiry_rule_tag)
+        if supplied_tag and _is_iso_date_tag_pure(supplied_tag):
             self.logger.debug("CSV_EXPIRY_TAG_RAW_DATE index=%s tag=%s -> falling back to heuristic classification", index, supplied_tag)
             supplied_tag = None
         
@@ -771,15 +763,7 @@ class CsvSink:
         return exp_date, expiry_code, supplied_tag, expiry_str
 
     def _determine_expiry_code(self, exp_date: datetime.date, today: datetime.date | None = None) -> str:
-        today = today or datetime.date.today()
-        days_to_expiry = (exp_date - today).days
-        if days_to_expiry <= 7:
-            return "this_week"
-        if days_to_expiry <= 14:
-            return "next_week"
-        if exp_date.month == today.month:
-            return "this_month"
-        return "next_month"
+        return _determine_expiry_code_pure(exp_date, today=today)
 
     def _prune_mixed_expiry(
         self,
@@ -796,33 +780,7 @@ class CsvSink:
         """
         if not options_data:
             return 0  # type: ignore[unreachable]
-        dropped = 0
-        safe_expected = exp_date
-        for sym, data in list(options_data.items()):
-            try:
-                raw_exp = data.get('expiry') or data.get('expiry_date') or data.get('instrument_expiry')
-                if not raw_exp:
-                    continue
-                # Normalize candidate to date
-                if isinstance(raw_exp, datetime.datetime):
-                    cand_date = raw_exp.date()
-                elif isinstance(raw_exp, datetime.date):
-                    cand_date = raw_exp
-                else:
-                    cand_date = None
-                    for fmt in ('%Y-%m-%d','%d-%m-%Y','%Y-%m-%d %H:%M:%S'):
-                        try:
-                            cand_date = datetime.datetime.strptime(str(raw_exp), fmt).date()
-                            break
-                        except (ValueError, TypeError):
-                            continue
-                    if cand_date is None:
-                        continue
-                if cand_date != safe_expected:
-                    options_data.pop(sym, None)
-                    dropped += 1
-            except (KeyError, AttributeError, ValueError, TypeError):
-                continue
+        dropped = _prune_mixed_expiry_instruments_pure(options_data, expected_expiry=exp_date)
         if dropped:
             try:
                 try:
@@ -862,23 +820,23 @@ class CsvSink:
             if self._advisory_emitted.get(key):  # already emitted for day
                 return
             # Lazy config load
-            if not hasattr(self, '_config_cache'):
-                cfg_path = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')), 'config', 'g6_config.json')
-                with open(cfg_path, encoding='utf-8') as _cf:
-                    self._config_cache = json.load(_cf)
-            indices_cfg = (self._config_cache or {}).get('indices', {})
-            _exp_list = indices_cfg.get(index, {}).get('expiries')
-            expected_tags = set(_exp_list) if isinstance(_exp_list, list) else set()
-            if not expected_tags:
-                return  # nothing to compare
-            missing = expected_tags - seen
-            if missing and len(seen) >= 1:  # at least one observed, others missing
+            if getattr(self, '_config_cache', None) is None:
+                cfg_path = _g6_config_json_path_from_module_file_pure(__file__)
+                self._config_cache = _load_json_file_pure(cfg_path) or {}
+
+            expected_tags = _expected_expiry_tags_from_config_pure(self._config_cache, index=index)
+            should_emit, missing = _should_emit_missing_expiry_advisory_pure(
+                seen=seen,
+                expected=expected_tags,
+                already_emitted=bool(self._advisory_emitted.get(key)),
+            )
+            if should_emit:
                 self._advisory_emitted[key] = True
                 if self._concise:
                     self.logger.debug("CSV_EXPIRY_ADVISORY index=%s seen=%s missing=%s", index, sorted(seen), sorted(missing))
                 else:
                     self.logger.info("Advisory: Not all configured expiries observed for %s today. Seen=%s Missing=%s", index, sorted(seen), sorted(missing))
-        except (KeyError, TypeError, ValueError):  # pragma: no cover
+        except (OSError, IOError, FileNotFoundError, PermissionError, json.JSONDecodeError, KeyError, TypeError, ValueError, AttributeError):  # pragma: no cover
             pass
 
     def _validate_schema(self, *, index: str, expiry_code: str, strike_data: dict[float, dict[str, Any]]) -> list[str]:
@@ -890,27 +848,7 @@ class CsvSink:
         - Collect issue codes in list (ordering preserved by iteration)
         Returns list of issue identifiers.
         Mutates strike_data in-place (behavior-preserving)."""
-        schema_issues: list[str] = []
-        for strike_key, leg_map in list(strike_data.items()):
-            try:
-                if strike_key <= 0:
-                    schema_issues.append(f"invalid_strike:{strike_key}")
-                    strike_data.pop(strike_key, None)
-                    continue
-                for leg_type in ('CE','PE'):
-                    leg = leg_map.get(leg_type)
-                    if leg:
-                        inst_type = (leg.get('instrument_type') or '').upper()
-                        if inst_type not in ('CE','PE'):
-                            schema_issues.append(f"missing_or_bad_type:{strike_key}:{leg_type}")
-                            leg_map[leg_type] = None
-            except (TypeError, KeyError, AttributeError, ValueError) as e:
-                # Defensive: continue collecting other issues
-                self.logger.debug("Error validating strike %s: %s", strike_key, e)
-                continue
-            except (RuntimeError, OverflowError) as e:
-                self.logger.warning("Unexpected error in schema validation for strike %s: %s", strike_key, e)
-                continue
+        schema_issues = _validate_grouped_strike_schema_pure(strike_data)
         
         if schema_issues:
             try:
@@ -1869,47 +1807,10 @@ class CsvSink:
                         rdr = csv.DictReader(fh)
                         # Find row closest to 15:30 (3:30 PM) for previous day close
                         target_time = datetime.time(15, 30)
-                        closest_row = None
-                        min_time_diff = None
-                        
-                        for r in rdr:
-                            try:
-                                # Parse timestamp from row (format may vary)
-                                ts_str = r.get('timestamp', '')
-                                if not ts_str:
-                                    continue
-                                # Try parsing common formats
-                                row_time = None
-                                for fmt in ['%Y-%m-%d %H:%M:%S', '%d-%m-%Y %H:%M:%S', '%Y-%m-%d %H:%M']:
-                                    try:
-                                        dt = datetime.datetime.strptime(ts_str, fmt)
-                                        row_time = dt.time()
-                                        break
-                                    except ValueError:
-                                        continue
-                                
-                                if row_time:
-                                    # Calculate time difference to 15:30
-                                    time_diff = abs((datetime.datetime.combine(datetime.date.today(), row_time) - 
-                                                    datetime.datetime.combine(datetime.date.today(), target_time)).total_seconds())
-                                    if min_time_diff is None or time_diff < min_time_diff:
-                                        min_time_diff = time_diff
-                                        closest_row = r
-                            except (KeyError, TypeError, ValueError):
-                                # If timestamp parsing fails, keep last row as fallback
-                                closest_row = r
+                        closest_row = _select_row_closest_to_time_pure(rows=rdr, target_time=target_time)
                         
                         if closest_row:
-                            # index_price prev close
-                            try:
-                                prev_idx_close = float(closest_row.get('index_price', '') or 0.0)
-                            except (ValueError, TypeError):
-                                prev_idx_close = None
-                            # tp prev close (may be absent on older schema)
-                            try:
-                                prev_tp_close = float(closest_row.get('tp', '') or 0.0)
-                            except (ValueError, TypeError):
-                                prev_tp_close = None
+                            prev_idx_close, prev_tp_close = _parse_prev_close_values_from_overview_row_pure(closest_row)
                             break
                 except (IOError, OSError, csv.Error, KeyError):
                     continue
@@ -1921,6 +1822,19 @@ class CsvSink:
         except (IOError, OSError, KeyError, ValueError):
             # Best-effort; leave unset on failure
             self._prev_close_loaded_date[index] = date_key
+
+    def _ensure_prev_close_loaded_best_effort(self, *, index: str, date_key: str) -> None:
+        """Best-effort wrapper around `_ensure_prev_close_loaded`.
+
+        Centralizes exception swallowing so callers don't need local try/except blocks.
+        """
+
+        try:
+            self._ensure_prev_close_loaded(index=index, date_key=date_key)
+        except (IOError, OSError, csv.Error, KeyError, ValueError, TypeError) as e:
+            logger.debug('Failed to ensure prev close loaded: %s', e)
+        except (RuntimeError, AttributeError) as e:  # pragma: no cover
+            logger.debug('Unexpected prev close load error: %s', e)
 
     def _write_overview_file(
         self,
@@ -2037,14 +1951,15 @@ class CsvSink:
 
         # Use last seen index/tp values and prev closes tracked during write_options_data calls
         date_key = timestamp.strftime('%Y-%m-%d')
-        try:
-            self._ensure_prev_close_loaded(index=index, date_key=date_key)
-        except (IOError, OSError, KeyError, csv.Error) as e:
-            logger.debug('Failed to ensure prev close loaded: %s', e)
+        self._ensure_prev_close_loaded_best_effort(index=index, date_key=date_key)
         idx_price = float(self._index_last_price.get(index, 0.0))
-        idx_day_ch = float(idx_price - float(self._index_open_price.get(index, idx_price)))
         idx_prev_close = self._index_prev_close.get(index)
-        idx_net = float(idx_price - float(idx_prev_close)) if idx_prev_close is not None else 0.0
+        idx_net, idx_day_ch = _compute_net_and_day_changes_pure(
+            current_value=idx_price,
+            prev_close_value=idx_prev_close,
+            day_open_value=self._index_open_price.get(index),
+            day_open_fallback=idx_price,
+        )
 
         use_vix = float(vix) if vix is not None else float(self._last_vix or 0.0)
         header, row = _build_overview_snapshot_row(
@@ -2535,23 +2450,7 @@ class CsvSink:
         Mirrors legacy inline logic: sum PE oi / sum CE oi; ignores malformed entries.
         Returns 0.0 if CE OI aggregate is zero or missing.
         """
-        try:
-            put_oi = 0.0
-            call_oi = 0.0
-            for data in options_data.values():
-                try:
-                    typ = (data.get('instrument_type') or '').upper()
-                    raw_oi = data.get('oi', 0)
-                    oi_val = float(raw_oi) if isinstance(raw_oi, (int, float)) or (isinstance(raw_oi, str) and raw_oi.replace('.', '', 1).isdigit()) else 0.0
-                    if typ == 'PE':
-                        put_oi += oi_val
-                    elif typ == 'CE':
-                        call_oi += oi_val
-                except (ValueError, TypeError) as e:
-                    continue
-            return put_oi / call_oi if call_oi > 0 else 0.0
-        except (ValueError, TypeError) as e:
-            return 0.0
+        return _compute_pcr_pure(options_data)
 
     def _align_row_to_header(self, file_header: list[str], row: list[Any], header: list[str]) -> list[Any]:
         """Align a single row to an existing file header adding derived columns.
@@ -2676,18 +2575,14 @@ class CsvSink:
 
     def _build_return_metrics(self, *, expiry_code: str, pcr: float, timestamp: datetime.datetime, day_width: float, index_price: float, flags: dict[str, bool] | None = None) -> dict[str, Any]:
         """Build metrics payload filtering out falsey flags (legacy test helper)."""
-        payload = {
-            'expiry_code': expiry_code,
-            'pcr': float(pcr),
-            'timestamp': timestamp,
-            'day_width': float(day_width),
-            'index_price': float(index_price),
-        }
-        if flags:
-            for k, v in flags.items():
-                if v:
-                    payload[k] = True
-        return payload
+        return _build_return_metrics_pure(
+            expiry_code=expiry_code,
+            pcr=pcr,
+            timestamp=timestamp,
+            day_width=day_width,
+            index_price=index_price,
+            flags=flags,
+        )
 
     def _init_batch_state_if_needed(self, *, index: str, expiry_code: str, timestamp: datetime.datetime) -> tuple[bool, tuple[str, str, str]]:
         """Initialize batch buffers for (index, expiry_code, date) when batching enabled."""
@@ -2703,17 +2598,7 @@ class CsvSink:
 
     def _compute_change_metrics(self, *, current: float, prev_close: float | None, open_value: float | None) -> tuple[float, float, float, float]:
         """Compute net/day absolute and percentage changes with zero/None guards."""
-        try:
-            net = float(current - float(prev_close)) if isinstance(prev_close, (int, float)) else 0.0
-        except (ValueError, TypeError) as e:
-            net = 0.0
-        try:
-            day = float(current - float(open_value)) if isinstance(open_value, (int, float)) else 0.0
-        except (ValueError, TypeError) as e:
-            day = 0.0
-        net_pct = (net / float(prev_close) * 100.0) if isinstance(prev_close, (int, float)) and float(prev_close) != 0.0 else 0.0
-        day_pct = (day / float(open_value) * 100.0) if isinstance(open_value, (int, float)) and float(open_value) != 0.0 else 0.0
-        return net, day, net_pct, day_pct
+        return _compute_change_metrics_pure(current=current, prev_close=prev_close, open_value=open_value)
 
     # ------------------------------------------------------------------
     # Additional Legacy Private Helpers (restored for test compatibility)
@@ -2728,41 +2613,16 @@ class CsvSink:
         expiry_str, offset, index_price, atm_strike.
         Returns a record containing top-level metadata plus a nested 'row' object.
         """
-        ts = kwargs.get('ts')
-        index = kwargs.get('index')
-        original_code = kwargs.get('original_code')
-        canonical_code = kwargs.get('canonical_code')
-        expiry_str = kwargs.get('expiry_str')
-        offset_raw = kwargs.get('offset')
-        index_price_raw = kwargs.get('index_price')
-        atm_raw = kwargs.get('atm_strike')
-        # Normalizations
-        try:
-            offset = int(float(offset_raw))
-        except (ValueError, TypeError) as e:
-            offset = 0
-        try:
-            index_price = float(index_price_raw)
-        except (ValueError, TypeError) as e:
-            index_price = 0.0
-        try:
-            atm_strike = float(atm_raw)
-        except (ValueError, TypeError) as e:
-            atm_strike = 0.0
-        record = {
-            'ts': str(ts),
-            'index': str(index) if index is not None else '',
-            'original_expiry_code': str(original_code) if original_code is not None else '',
-            'canonical_expiry_code': str(canonical_code) if canonical_code is not None else '',
-            'reason': 'expiry_misclassification',
-            'row': {
-                'expiry_date': str(expiry_str) if expiry_str is not None else '',
-                'offset': offset,
-                'index_price': index_price,
-                'atm_strike': atm_strike,
-            },
-        }
-        return record
+        return _build_misclass_quarantine_record_pure(
+            ts=kwargs.get('ts'),
+            index=kwargs.get('index'),
+            original_code=kwargs.get('original_code'),
+            canonical_code=kwargs.get('canonical_code'),
+            expiry_str=kwargs.get('expiry_str'),
+            offset=kwargs.get('offset'),
+            index_price=kwargs.get('index_price'),
+            atm_strike=kwargs.get('atm_strike'),
+        )
 
     def _reorder_time_columns(
         self,

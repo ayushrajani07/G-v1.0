@@ -39,6 +39,10 @@ logs/
 *.log
 g6_platform.log
 
+# Local pytest artifacts (created during test runs)
+.summary_metrics_http_body_full.txt
+.summary_metrics_http_trace.txt
+
 # --- Editor / OS junk ---
 .DS_Store
 Thumbs.db

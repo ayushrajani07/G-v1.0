@@ -18,6 +18,13 @@ This section is a **handover snapshot** for another local agent.
     - `_json_ribbon.py` (output shaping / ribbon widening safety)
     - `_tp_series_handler.py`, `_prediction_history_handler.py`, `_stats_handler.py` (endpoint implementations)
 
+- **ML routes split completed**
+  - The historical `src/web/dashboard/routes/ml.py` god-file has been decomposed into the `src/web/dashboard/routes/ml/` package.
+  - FastAPI wiring lives in `src/web/dashboard/routes/ml/_router.py`; endpoint logic is now in focused handler modules:
+    - `predictions.py`, `ensemble.py`, `diagnostics.py`, `delta.py`, `correlations.py`, `model_matrix.py`, `move_stats.py`
+  - Shared helpers used across handlers are centralized in `src/web/dashboard/routes/ml/_common.py`.
+  - Back-compat router wiring lives in `src/web/dashboard/routes/ml_legacy.py` (trimmed to router wiring only; no endpoint logic remains).
+
 - **Tests added for new helpers / stability**
   - Added unit tests for date/now/index normalization helpers and CSV time parsing.
   - Added targeted tests for orchestrator resilience and storage utilities.
@@ -33,9 +40,9 @@ This section is a **handover snapshot** for another local agent.
 
 ### Still high-risk / remaining work
 
-- **`src/web/dashboard/routes/ml.py` remains a god-file**
-  - Still large and exception-heavy; it should be decomposed similar to `routes/path_forecast/`.
-  - Recommended approach: create `src/web/dashboard/routes/ml/` package and move endpoint implementations into small handler modules.
+- **ML routes are still duplicated across entrypoints**
+  - `src/web/dashboard/app.py` still defines ML endpoints directly (historical), while the modular handlers now live in `src/web/dashboard/routes/ml/`.
+  - Recommended next step: pick a single source of truth (preferably `routes/ml/`) and migrate `app.py` to `include_router(...)`, then delete duplicate route bodies.
 
 - **Storage hotspot remains**
   - `src/storage/csv_sink.py` is still the top coverage-risk hotspot; extraction of pure row-shaping utilities + tests is the highest-leverage next step.
@@ -47,7 +54,7 @@ This section is a **handover snapshot** for another local agent.
 
 ### Suggested next PR-sized tasks
 
-1. Split `src/web/dashboard/routes/ml.py` into a package with handler modules (mechanical move first; no behavior change).
+1. Migrate ML endpoints out of `src/web/dashboard/app.py` to `src/web/dashboard/routes/ml/` router(s) and delete duplicate endpoint bodies.
 2. Extract pure CSV row-building utilities from `src/storage/csv_sink.py` into small modules and add 10–20 focused unit tests.
 3. Reduce catch-all exceptions in the remaining top 3 hotspots and route errors through the centralized error handler where appropriate.
 
@@ -88,7 +95,8 @@ From artifacts/maintainability/file_hotspots.md:
 
 - src/web/dashboard/routes/path_forecast.py (historical: ~3319 LOC; pre-refactor)
   - Update (2026-02-05): decomposed into `src/web/dashboard/routes/path_forecast/` package (router: `_router.py`, logic in handler modules)
-- src/web/dashboard/routes/ml.py (2775 LOC, 147 catch-all exceptions)
+- src/web/dashboard/routes/ml.py (historical: 2775 LOC, 147 catch-all exceptions)
+  - Update (2026-02-06): replaced by `src/web/dashboard/routes/ml/` handler package + `src/web/dashboard/routes/ml_legacy.py` (compat router; now thin wiring-only)
 - src/web/dashboard/app.py (1154 LOC, 53 catch-all exceptions)
 
 **Why these are likely spaghetti**
@@ -221,7 +229,8 @@ These patterns create long-term “spaghetti pressure” even if each file indiv
 
 If the goal is to quickly reduce spaghetti and remove nonviable code without destabilizing production paths:
 
-1. **Split the biggest route modules** (`routes/path_forecast/` package, `routes/ml.py`) into submodules.
+1. **Split the biggest route modules** (`routes/path_forecast/` package, `routes/ml/` package + `routes/ml_legacy.py`) into submodules.
+  - Update (2026-02-07): ML is split into `routes/ml/`; `ml_legacy.py` is wiring-only; remaining work is de-duplicating `app.py` route bodies.
 2. **Put tests around CSV persistence** (even 10–20 focused tests around row-shaping + I/O invariants).
 3. **Reduce broad exception handling** in collector pipeline hotspots; adopt a consistent error taxonomy.
 4. **Run dead-code triage**: remove clearly unused scripts and consolidate duplicate script copies.
@@ -280,7 +289,7 @@ Stop Point
 
 Targets
 - src/web/dashboard/routes/path_forecast.py (historical; now decomposed into `src/web/dashboard/routes/path_forecast/`)
-- src/web/dashboard/routes/ml.py (2775 LOC)
+- src/web/dashboard/routes/ml.py (historical; now decomposed into `src/web/dashboard/routes/ml/` + `src/web/dashboard/routes/ml_legacy.py`)
 - src/web/dashboard/app.py (1154 LOC)
 
 Strategy
@@ -442,5 +451,5 @@ Acceptance Criteria
 
 - Week 2
   - PR1.2: add 3–5 endpoint contract tests for path_forecast
-  - PR2.1: extract 2–3 pure helpers from src/storage/csv_sink.py + tests
+  - PR2.1: extract pure helpers from src/storage/csv_sink.py into src/storage/csv_sink_compat_utils.py (daily open tracking, net/day changes, prev-close selection/parsing) + add focused unit tests
 
