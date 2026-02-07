@@ -116,3 +116,45 @@ def test_csv_sink_duplicate_suppression_same_timestamp(tmp_path: Path) -> None:
 
     rows_after = _read_csv_rows(option_file)
     assert rows_after == rows_before
+
+
+def test_csv_sink_no_double_write_with_batching(tmp_path: Path, monkeypatch) -> None:
+    # Enable batching but do not auto-flush on threshold.
+    monkeypatch.setenv('G6_CSV_BATCH_FLUSH', '10')
+    base_dir = tmp_path / 'data'
+    sink = CsvSink(base_dir=str(base_dir))
+
+    index = 'SENSEX'
+    expiry_date = _dt.date(2026, 2, 10)
+    ts = _dt.datetime(2026, 2, 7, 9, 15, 0)
+    options_data = _options_pair(strike=100.0, expiry_date=expiry_date)
+
+    # Two identical calls (same logical row) should not produce duplicate buffered rows.
+    sink.write_options_data(
+        index,
+        expiry_date,
+        options_data,
+        ts,
+        index_price=100.0,
+        expiry_rule_tag='this_week',
+        suppress_overview=True,
+    )
+    sink.write_options_data(
+        index,
+        expiry_date,
+        options_data,
+        ts,
+        index_price=100.0,
+        expiry_rule_tag='this_week',
+        suppress_overview=True,
+    )
+
+    # Force flush the batch key.
+    batch_key = (index, 'this_week', ts.strftime('%Y-%m-%d'))
+    sink._maybe_flush_batch(batching_enabled=True, batch_key=batch_key, force_flush=True)  # noqa: SLF001
+
+    option_file = base_dir / index / 'this_week' / '0' / f"{ts.strftime('%Y-%m-%d')}.csv"
+    assert option_file.exists(), 'expected option file'
+    rows = _read_csv_rows(option_file)
+    # header + one data row
+    assert len(rows) == 2

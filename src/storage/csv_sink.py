@@ -1144,6 +1144,10 @@ class CsvSink:
                 buf['rows'].append(row)
                 self._batch_counts[batch_key] = self._batch_counts.get(batch_key, 0) + 1
 
+                # Important: preserve duplicate suppression semantics even when buffering.
+                # Without this, repeated calls in the same cycle can buffer duplicate rows.
+                self._last_row_keys[row_sig] = row[0]
+
                 # Backpressure: enforce hard caps on in-memory batch buffers
                 self._enforce_batch_memory_limits(batch_key=batch_key)
             else:
