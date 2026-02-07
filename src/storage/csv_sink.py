@@ -1499,21 +1499,18 @@ class CsvSink:
                 if not os.path.isfile(option_file):
                     continue
                 try:
-                    with open(option_file, encoding='utf-8') as fh:
-                        rdr = csv.DictReader(fh)
-                        last = None
-                        for r in rdr:
-                            last = r
-                        if last is None:
-                            continue
-                        try:
-                            prev_tp = float(last.get('tp', '') or 0.0)
-                        except (ValueError, TypeError):
-                            prev_tp = None
-                        if prev_tp is not None:
-                            self._tp_prev_close_by_key[key] = prev_tp
-                            break
-                except (IOError, OSError, csv.Error) as e:
+                    rows = self.writer.read_csv(option_file) if getattr(self, 'writer', None) else []
+                    last = rows[-1] if rows else None
+                    if last is None:
+                        continue
+                    try:
+                        prev_tp = float(last.get('tp', '') or 0.0)
+                    except (ValueError, TypeError):
+                        prev_tp = None
+                    if prev_tp is not None:
+                        self._tp_prev_close_by_key[key] = prev_tp
+                        break
+                except (IOError, OSError, csv.Error, AttributeError, TypeError, ValueError) as e:
                     self.logger.debug("Error reading prev close CSV: %s", e)
                     continue
             self._tp_prev_loaded_date_by_key[key] = date_key
@@ -1803,16 +1800,15 @@ class CsvSink:
                 if not os.path.isfile(fp):
                     continue
                 try:
-                    with open(fp, encoding='utf-8') as fh:
-                        rdr = csv.DictReader(fh)
-                        # Find row closest to 15:30 (3:30 PM) for previous day close
-                        target_time = datetime.time(15, 30)
-                        closest_row = _select_row_closest_to_time_pure(rows=rdr, target_time=target_time)
-                        
-                        if closest_row:
-                            prev_idx_close, prev_tp_close = _parse_prev_close_values_from_overview_row_pure(closest_row)
-                            break
-                except (IOError, OSError, csv.Error, KeyError):
+                    rows = self.writer.read_csv(fp) if getattr(self, 'writer', None) else []
+                    # Find row closest to 15:30 (3:30 PM) for previous day close
+                    target_time = datetime.time(15, 30)
+                    closest_row = _select_row_closest_to_time_pure(rows=rows, target_time=target_time)
+
+                    if closest_row:
+                        prev_idx_close, prev_tp_close = _parse_prev_close_values_from_overview_row_pure(closest_row)
+                        break
+                except (IOError, OSError, csv.Error, KeyError, AttributeError, TypeError, ValueError):
                     continue
             if prev_idx_close is not None:
                 self._index_prev_close[index] = prev_idx_close
@@ -2012,25 +2008,26 @@ class CsvSink:
             self.logger.warning("No overview file found for %s on %s", index, date_str)
             return {}
 
-        # Read CSV file
-        overview_data = {}
-        with open(overview_file) as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                timestamp = row['timestamp']
-                overview_data[timestamp] = {
-                    'index': row['index'],
-                    'pcr_this_week': float(row.get('pcr_this_week', 0)),
-                    'pcr_next_week': float(row.get('pcr_next_week', 0)),
-                    'pcr_this_month': float(row.get('pcr_this_month', 0)),
-                    'pcr_next_month': float(row.get('pcr_next_month', 0)),
-                    'day_width': float(row.get('day_width', 0)),
-                    'expiries_expected': int(row.get('expiries_expected', 0)) if 'expiries_expected' in row else 0,
-                    'expiries_collected': int(row.get('expiries_collected', 0)) if 'expiries_collected' in row else 0,
-                    'expected_mask': int(row.get('expected_mask', 0)) if 'expected_mask' in row else 0,
-                    'collected_mask': int(row.get('collected_mask', 0)) if 'collected_mask' in row else 0,
-                    'missing_mask': int(row.get('missing_mask', 0)) if 'missing_mask' in row else 0
-                }
+        # Read CSV file (via CsvWriter -> CSVIO)
+        overview_data: dict[str, dict[str, Any]] = {}
+        rows = self.writer.read_csv(overview_file) if getattr(self, 'writer', None) else []
+        for row in rows:
+            timestamp = row.get('timestamp')
+            if not timestamp:
+                continue
+            overview_data[str(timestamp)] = {
+                'index': row.get('index', ''),
+                'pcr_this_week': float(row.get('pcr_this_week', 0) or 0),
+                'pcr_next_week': float(row.get('pcr_next_week', 0) or 0),
+                'pcr_this_month': float(row.get('pcr_this_month', 0) or 0),
+                'pcr_next_month': float(row.get('pcr_next_month', 0) or 0),
+                'day_width': float(row.get('day_width', 0) or 0),
+                'expiries_expected': int(row.get('expiries_expected', 0) or 0) if 'expiries_expected' in row else 0,
+                'expiries_collected': int(row.get('expiries_collected', 0) or 0) if 'expiries_collected' in row else 0,
+                'expected_mask': int(row.get('expected_mask', 0) or 0) if 'expected_mask' in row else 0,
+                'collected_mask': int(row.get('collected_mask', 0) or 0) if 'collected_mask' in row else 0,
+                'missing_mask': int(row.get('missing_mask', 0) or 0) if 'missing_mask' in row else 0,
+            }
 
         self.logger.info("Read overview data from %s", overview_file)
         return overview_data
@@ -2075,34 +2072,33 @@ class CsvSink:
             self.logger.warning("No option file found for %s %s offset %s on %s", index, expiry_code, offset, date_str)
             return []
 
-        # Read CSV file
-        with open(option_file) as f:
-            reader = csv.DictReader(f)
+        # Read CSV file (via CsvWriter -> CSVIO)
+        rows = self.writer.read_csv(option_file) if getattr(self, 'writer', None) else []
 
-            def _map_row(r: dict[str, Any]) -> dict[str, Any]:
-                # Backward compatibility: legacy columns 'strike' (index price)
-                # and 'offset_price' (strike) may exist
-                index_price_val = float(r.get('index_price', r.get('strike', 0)))
-                if 'index_price' in r:
-                    strike_val = float(r.get('strike', r.get('offset_price', 0)))
-                else:
-                    strike_val = float(r.get('offset_price', 0))
-                return {
-                    'timestamp': r['timestamp'],
-                    'index': r['index'],
-                    'expiry_tag': r['expiry_tag'],
-                    'offset': int(r['offset']),
-                    'index_price': index_price_val,
-                    'atm': float(r['atm']),
-                    'strike': strike_val,
-                    'ce': float(r['ce']),
-                    'pe': float(r['pe']),
-                    'tp': float(r['tp']),
-                    'avg_ce': float(r['avg_ce']),
-                    'avg_pe': float(r['avg_pe']),
-                    'avg_tp': float(r['avg_tp']),
-                    'ce_vol': int(r['ce_vol']),
-                    'pe_vol': int(r['pe_vol']),
+        def _map_row(r: dict[str, Any]) -> dict[str, Any]:
+            # Backward compatibility: legacy columns 'strike' (index price)
+            # and 'offset_price' (strike) may exist
+            index_price_val = float(r.get('index_price', r.get('strike', 0)) or 0)
+            if 'index_price' in r:
+                strike_val = float(r.get('strike', r.get('offset_price', 0)) or 0)
+            else:
+                strike_val = float(r.get('offset_price', 0) or 0)
+            return {
+                'timestamp': r.get('timestamp', ''),
+                'index': r.get('index', ''),
+                'expiry_tag': r.get('expiry_tag', ''),
+                'offset': int(r.get('offset', 0) or 0),
+                'index_price': index_price_val,
+                'atm': float(r.get('atm', 0) or 0),
+                'strike': strike_val,
+                'ce': float(r.get('ce', 0) or 0),
+                'pe': float(r.get('pe', 0) or 0),
+                'tp': float(r.get('tp', 0) or 0),
+                'avg_ce': float(r.get('avg_ce', 0) or 0),
+                'avg_pe': float(r.get('avg_pe', 0) or 0),
+                'avg_tp': float(r.get('avg_tp', 0) or 0),
+                'ce_vol': int(r.get('ce_vol', 0) or 0),
+                'pe_vol': int(r.get('pe_vol', 0) or 0),
                     'ce_oi': int(r['ce_oi']),
                     'pe_oi': int(r['pe_oi']),
                     'ce_iv': float(r['ce_iv']),
@@ -2115,25 +2111,29 @@ class CsvSink:
                     'pe_vega': float(r['pe_vega']),
                     'ce_gamma': float(r['ce_gamma']),
                     'pe_gamma': float(r['pe_gamma']),
-                    'ce_rho': float(r.get('ce_rho', 0)),
-                    'pe_rho': float(r.get('pe_rho', 0)),
-                }
+                'ce_iv': float(r.get('ce_iv', 0) or 0),
+                'pe_iv': float(r.get('pe_iv', 0) or 0),
+                'ce_delta': float(r.get('ce_delta', 0) or 0),
+                'pe_delta': float(r.get('pe_delta', 0) or 0),
+                'ce_theta': float(r.get('ce_theta', 0) or 0),
+                'pe_theta': float(r.get('pe_theta', 0) or 0),
+                'ce_vega': float(r.get('ce_vega', 0) or 0),
+                'pe_vega': float(r.get('pe_vega', 0) or 0),
+                'ce_gamma': float(r.get('ce_gamma', 0) or 0),
+                'pe_gamma': float(r.get('pe_gamma', 0) or 0),
+                'ce_rho': float(r.get('ce_rho', 0) or 0),
+                'pe_rho': float(r.get('pe_rho', 0) or 0),
+                'tp_net_change': float(r.get('tp_net_change', 0) or 0),
+                'tp_day_change': float(r.get('tp_day_change', 0) or 0),
+                'tp_net_change_pct': float(r.get('tp_net_change_pct', 0) or 0),
+                'tp_day_change_pct': float(r.get('tp_day_change_pct', 0) or 0),
+            }
 
-            option_data = [_map_row(row) for row in reader]
-
-        self.logger.info("Read %s option records from %s", len(option_data), option_file)
-        return option_data
-
-    # Add this method to the CsvSink class
-
-    def check_health(self) -> dict[str, Any]:
-        """
-        Check if the CSV sink is healthy.
-        
-        Returns:
-            Dict with health status information
-        """
         try:
+            return [_map_row(r) for r in rows]
+        except (KeyError, TypeError, ValueError) as e:
+            self.logger.debug("Error mapping option rows: %s", e)
+            return []
             components: list[dict[str, Any]] = []
             status_ok = True
             # Ensure base dir exists
@@ -2428,8 +2428,7 @@ class CsvSink:
         if not os.path.exists(cfg_path):
             return {'valid': False, 'error': 'missing'}
         try:
-            with open(cfg_path, encoding='utf-8') as f:
-                data = json.load(f)
+            data = _load_json_file_pure(cfg_path)
             indices = data.get('indices', {}) if isinstance(data, dict) else {}
             summary: dict[str, int] = {}
             for k, v in indices.items():
