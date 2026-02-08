@@ -634,6 +634,17 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
                 pass
     except Exception:
         pass
+
+    # Optional: append to a diagnostics store (JSONL) for offline inspection.
+    # Done after summary/structured error projection so the record is richer.
+    try:
+        store_path = _env_str('G6_PIPELINE_DIAGNOSTICS_STORE_PATH', '').strip()
+        if store_path:
+            from .diagnostics_store import write_expiry_diagnostics
+
+            write_expiry_diagnostics(state, path=store_path)
+    except Exception:
+        pass
     return state
 
 
