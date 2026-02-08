@@ -26,10 +26,12 @@ except ImportError:
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
+from collections import deque
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
@@ -229,6 +231,124 @@ def cmd_retention_scan(args: argparse.Namespace) -> int:
     return 0
 
 
+def _iter_jsonl(path: Path, *, last: int = 0) -> list[dict]:
+    if last and last > 0:
+        buf: deque[dict] = deque(maxlen=int(last))
+        with path.open('r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    buf.append(json.loads(line))
+                except Exception:
+                    continue
+        return list(buf)
+    out: list[dict] = []
+    with path.open('r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                out.append(json.loads(line))
+            except Exception:
+                continue
+    return out
+
+
+def cmd_pipeline_diagnostics(args: argparse.Namespace) -> int:
+    """Query the pipeline diagnostics JSONL store.
+
+    This reads the JSONL written by `G6_PIPELINE_DIAGNOSTICS_STORE_PATH` and can
+    filter by index/rule and phase outcomes.
+    """
+    default_path = os.getenv('G6_PIPELINE_DIAGNOSTICS_STORE_PATH', '') or 'data/pipeline/expiry_diagnostics.jsonl'
+    path = Path(args.path or default_path)
+    if not path.exists():
+        msg = {"error": "missing_path", "path": str(path)}
+        if args.format == 'jsonl':
+            print(json.dumps(msg))
+        else:
+            print(json.dumps(msg, indent=2, sort_keys=True) if args.pretty else json.dumps(msg))
+        return 2
+
+    try:
+        records = _iter_jsonl(path, last=int(args.last or 0))
+    except Exception as e:  # noqa: BLE001
+        msg = {"error": "read_failed", "path": str(path), "detail": str(e)}
+        print(json.dumps(msg))
+        return 2
+
+    def _match(rec: dict) -> bool:
+        if args.index and str(rec.get('index', '')) != args.index:
+            return False
+        if args.rule and str(rec.get('rule', '')) != args.rule:
+            return False
+        if args.has_errors:
+            errs = rec.get('errors') or []
+            err_recs = rec.get('error_records') or []
+            meta = rec.get('meta') or {}
+            summ = meta.get('pipeline_summary') or {}
+            if not errs and not err_recs and int(summ.get('phases_error', 0) or 0) == 0:
+                return False
+        if args.phase_outcome:
+            meta = rec.get('meta') or {}
+            runs = meta.get('phase_runs') or []
+            try:
+                if not any(r.get('final_outcome') == args.phase_outcome for r in runs if isinstance(r, dict)):
+                    return False
+            except Exception:
+                return False
+        if args.phase:
+            meta = rec.get('meta') or {}
+            runs = meta.get('phase_runs') or []
+            try:
+                if not any(r.get('phase') == args.phase for r in runs if isinstance(r, dict)):
+                    return False
+            except Exception:
+                return False
+        return True
+
+    filtered = [r for r in records if isinstance(r, dict) and _match(r)]
+
+    if args.summary:
+        by_index: dict[str, int] = {}
+        by_rule: dict[str, int] = {}
+        outcomes: dict[str, int] = {}
+        for r in filtered:
+            by_index[str(r.get('index', ''))] = by_index.get(str(r.get('index', '')), 0) + 1
+            by_rule[str(r.get('rule', ''))] = by_rule.get(str(r.get('rule', '')), 0) + 1
+            meta = r.get('meta') or {}
+            summ = meta.get('pipeline_summary') or {}
+            for k, v in (summ.get('error_outcomes') or {}).items():
+                try:
+                    outcomes[str(k)] = outcomes.get(str(k), 0) + int(v)
+                except Exception:
+                    continue
+        payload = {
+            "path": str(path),
+            "count": len(filtered),
+            "by_index": dict(sorted(by_index.items())),
+            "by_rule": dict(sorted(by_rule.items())),
+            "phase_error_outcomes": dict(sorted(outcomes.items())),
+        }
+        if args.pretty:
+            print(json.dumps(payload, indent=2, sort_keys=True))
+        else:
+            print(json.dumps(payload, sort_keys=True))
+        return 0
+
+    if args.format == 'json':
+        print(json.dumps(filtered, indent=2, sort_keys=True) if args.pretty else json.dumps(filtered))
+        return 0
+
+    # Default: jsonl
+    for r in filtered:
+        print(json.dumps(r, ensure_ascii=False, default=str, separators=(',', ':')))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog='g6', description='Unified G6 operational CLI', add_help=True)
     sub = p.add_subparsers(dest='cmd')  # don't require; we'll show help if missing
@@ -271,6 +391,19 @@ def build_parser() -> argparse.ArgumentParser:
     diag = sub.add_parser('diagnostics', help='Emit governance + version diagnostics JSON')
     diag.add_argument('--pretty', action='store_true')
     diag.set_defaults(func=cmd_diagnostics)
+
+    pdiag = sub.add_parser('pipeline-diagnostics', help='Query pipeline diagnostics JSONL store')
+    pdiag.add_argument('--path', default='', help='Path to diagnostics JSONL (defaults to env G6_PIPELINE_DIAGNOSTICS_STORE_PATH or data/pipeline/expiry_diagnostics.jsonl)')
+    pdiag.add_argument('--index', default='', help='Filter by index (exact match)')
+    pdiag.add_argument('--rule', default='', help='Filter by expiry rule (exact match)')
+    pdiag.add_argument('--has-errors', action='store_true', help='Only records with any errors')
+    pdiag.add_argument('--phase', default='', help='Filter if phase appears in meta.phase_runs')
+    pdiag.add_argument('--phase-outcome', default='', help='Filter if any phase has given final_outcome in meta.phase_runs')
+    pdiag.add_argument('--last', type=int, default=0, help='Only read last N JSONL records (0=all)')
+    pdiag.add_argument('--summary', action='store_true', help='Emit aggregated counts JSON instead of records')
+    pdiag.add_argument('--format', choices=('jsonl', 'json'), default='jsonl')
+    pdiag.add_argument('--pretty', action='store_true')
+    pdiag.set_defaults(func=cmd_pipeline_diagnostics)
 
     ver = sub.add_parser('version', help='Show CLI and schema version info')
     ver.add_argument('--json', action='store_true', help='Emit version info as JSON')
