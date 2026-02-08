@@ -4,6 +4,7 @@ from src.collectors.pipeline.executor import execute_phases
 from src.collectors.pipeline.state import ExpiryState
 from src.collectors.errors import PhaseAbortError, PhaseRecoverableError
 import os
+from src.config.env_config import EnvConfig
 
 class Ctx: providers: Any=None
 
@@ -56,3 +57,26 @@ def test_cycle_summary_retry(monkeypatch):
     assert summ['phases_total']==1
     assert summ['phases_with_retries']==1
     assert summ['phases_error']==0  # final outcome ok
+
+
+def test_cycle_summary_phase_runs_attached_when_enabled(monkeypatch):
+    monkeypatch.setenv('G6_PIPELINE_INCLUDE_DIAGNOSTICS', '1')
+    EnvConfig.clear_cache()
+    st = _mk()
+
+    def a(_c, s):
+        s.meta['a'] = 1
+        return s
+
+    def b(_c, s):
+        s.meta['b'] = 1
+        return s
+
+    out = execute_phases(Ctx(), st, [a, b])
+    runs = out.meta.get('phase_runs')
+    assert isinstance(runs, list)
+    assert len(runs) == 2
+    assert runs[0]['phase'] == 'a'
+    assert runs[0]['final_outcome'] == 'ok'
+    assert runs[0]['attempts'] == 1
+    assert 'duration_ms' in runs[0]

@@ -284,6 +284,25 @@ def execute_phases(ctx: Any, state: ExpiryState, phases: list[Callable[..., Expi
         if final_outcome in ('abort','fatal','recoverable','recoverable_exhausted','unknown'):
             # stop further phases on any non-ok outcome to preserve original semantics
             break
+
+    # Optional: attach per-phase run details for diagnostics/debugging.
+    # Kept behind flag to avoid inflating state.meta in production.
+    try:
+        if _env_bool('G6_PIPELINE_INCLUDE_DIAGNOSTICS', False):
+            runs_payload = [r.to_dict() for r in phase_runs]
+            state.meta['phase_runs'] = runs_payload
+            # Stable content hash (useful for tests/telemetry diffs)
+            try:
+                import hashlib
+                import json
+
+                state.meta['phase_runs_hash'] = hashlib.sha256(
+                    json.dumps(runs_payload, sort_keys=True).encode('utf-8')
+                ).hexdigest()[:16]
+            except Exception:
+                pass
+    except Exception:
+        pass
     # Optional JSON export of structured errors (snapshot) when enabled
     try:
         if _env_bool('G6_PIPELINE_STRUCT_ERROR_EXPORT', False) and state.error_records:
