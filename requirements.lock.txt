@@ -2,7 +2,7 @@
 # Generated on 2025-11-12 from the active environment
 
 # Web/API stack
-fastapi==0.121.1
+fastapi==0.121.3
 starlette==0.50.0
 pydantic==2.12.4
 uvicorn==0.38.0
